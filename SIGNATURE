@@ -14,12 +14,12 @@ not run its Makefile.PL or Build.PL.
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA1
 
-SHA1 3bdae9ab69a3a85f1754106343d85e938da88919 Changes
+SHA1 dcdabc116a16a44638a8abbba525f38cdccd9b1b Changes
 SHA1 f5a02a65c7d73ceb666d3351cdede865555f5fd4 MANIFEST
 SHA1 8541c8988476422ee38fbc8714c1dd45b212f7fb MANIFEST.SKIP
-SHA1 f0b01e69627c50d4b0f21951c83b42f5f984401e META.yml
-SHA1 db5fea4bc733a2f849d7fe0da3daa3c41789c241 Makefile.PL
-SHA1 bf62a486592e2983bc4a40a6c45e6fbdf7b00956 SearchBuilder.pm
+SHA1 79802b33f821283c641859c21d1605510b6e7964 META.yml
+SHA1 9921c69b0d05a54c5bb744a13cf1538bb06c4d82 Makefile.PL
+SHA1 c3b01e05d62949d2bb7f56023a815da80a4f4ff5 SearchBuilder.pm
 SHA1 943d4cd29b40706072b2f828d6caa30e30f28f57 SearchBuilder/Handle.pm
 SHA1 68a6d7d744e5d123e3c8b59041d12253fcee5d04 SearchBuilder/Handle/Informix.pm
 SHA1 35f764ab7e3c675ffc568f5bcb1ebf921813d801 SearchBuilder/Handle/ODBC.pm
@@ -30,7 +30,7 @@ SHA1 dc7f365069e7b7d01cbfc614b338a2b487c8c940 SearchBuilder/Handle/Sybase.pm
 SHA1 cf4420e25ae28aa09fbf5e12643ff43f6a2d9241 SearchBuilder/Handle/mysql.pm
 SHA1 e9716814b99c423b8e3f46c68a86363047b408fd SearchBuilder/Handle/mysqlPP.pm
 SHA1 0c6007609af96ff2a2ccff9482e4f951aea68f9e SearchBuilder/Record.pm
-SHA1 516b34ff038733cd5ac9363635ee306e6611a433 SearchBuilder/Record/Cachable.pm
+SHA1 ca8536396598df112d5f021cc63c5d8dde63e54a SearchBuilder/Record/Cachable.pm
 SHA1 437511f27cc1319839143e560368fa1ceb4d697a SearchBuilder/Union.pm
 SHA1 54200a94ac7a154d6913e5f5fac41994f5c962f0 inc/Module/Install.pm
 SHA1 9d69487127cef5f79db775e9a3de93bb9d90cd71 inc/Module/Install/Base.pm
@@ -41,7 +41,7 @@ SHA1 e9c6a5881fc60173fbc8d479c1afd2ce3b43bef1 t/pod.t
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.2.4 (Darwin)
 
-iD8DBQFBONIxEi9d9xCOQEYRAnAxAJ9oCnsCG010lE6yGml+OJuToZot8gCgj0Vv
-EMPzNgKKg6OtNC/qWETf7J8=
-=90b3
+iD8DBQFBRfWaEi9d9xCOQEYRAlu+AJ90aYv/zz5rMSWhUvLuAGfP50RMaACgjP4v
+/zeoBrl+9Z20Sh7Meo+wkzE=
+=cUH/
 -----END PGP SIGNATURE-----

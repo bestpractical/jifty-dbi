@@ -120,13 +120,13 @@ sub _DoSearch {
         # TODO: finer-grained eval and cheking.
        my  $records = $self->_Handle->SimpleQuery($QueryString);
         my $counter;
+        $self->{'rows'} = 0;
         while ( my $row = $records->fetchrow_hashref() ) {
-            $self->{'items'}[$counter] = $self->NewItem();
-            $self->{'items'}[$counter]->LoadFromHash($row);
-            $counter++;
+            my $item = $self->NewItem();
+            $item->LoadFromHash($row);
+            $self->AddRecord($item);
         }
 
-        $self->{'rows'} = $counter;
         $self->{'must_redo_search'} = 0;
     };
 
@@ -134,6 +134,20 @@ sub _DoSearch {
 }
 
 # }}}
+
+=head2 AddRecord RECORD
+
+    Adds a record object to this collection
+
+=cut
+
+sub AddRecord {
+    my $self = shift;
+    my $record = shift;
+   push @{$self->{'items'}}, $record;
+   $self->{'rows'}++; 
+}
+
 
 # {{{ sub _DoCount
 
@@ -1306,6 +1320,28 @@ Returns the total number of potential records in the set, ignoring any
 LimitClause.
 
 =cut
+
+# 22:24 [Robrt(500@outer.space)] It has to do with Caching.
+# 22:25 [Robrt(500@outer.space)] The documentation says it ignores the limit.
+# 22:25 [Robrt(500@outer.space)] But I don't believe thats true.
+# 22:26 [msg(Robrt)] yeah. I
+# 22:26 [msg(Robrt)] yeah. I'm not convinced it does anything useful right now
+# 22:26 [msg(Robrt)] especially since until a week ago, it was setting one variable and returning another
+# 22:27 [Robrt(500@outer.space)] I remember.
+# 22:27 [Robrt(500@outer.space)] It had to do with which Cached value was returned.
+# 22:27 [msg(Robrt)] (given that every time we try to explain it, we get it Wrong)
+# 22:27 [Robrt(500@outer.space)] Because Count can return a different number than actual NumberOfResults
+# 22:28 [msg(Robrt)] in what case?
+# 22:28 [Robrt(500@outer.space)] CountAll _always_ used the return value of _DoCount(), as opposed to Count which would return the cached number of 
+#           results returned.
+# 22:28 [Robrt(500@outer.space)] IIRC, if you do a search with a Limit, then raw_rows will == Limit.
+# 22:31 [msg(Robrt)] ah.
+# 22:31 [msg(Robrt)] that actually makes sense
+# 22:31 [Robrt(500@outer.space)] You should paste this conversation into the CountAll docs.
+# 22:31 [msg(Robrt)] perhaps I'll create a new method that _actually_ do that.
+# 22:32 [msg(Robrt)] since I'm not convinced it's been doing that correctly
+
+
 
 sub CountAll {
     my $self = shift;
