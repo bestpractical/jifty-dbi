@@ -413,78 +413,80 @@ sub DESTROY {
 
 # {{{ sub AUTOLOAD 
 
-sub AUTOLOAD  {
-  my $self = shift;
-  
-  no strict 'refs';
+sub AUTOLOAD {
+    my $self = shift;
 
-  if ($AUTOLOAD =~ /.*::(\w+)/o &&  $self->_Accessible($1,'read') )  {
-    my $Attrib = $1;
-
-    *{$AUTOLOAD} = sub { return ($_[0]->_Value($Attrib))};
-    return($self->_Value($Attrib));
-  } elsif ($AUTOLOAD =~ /.*::[sS]et_?(\w+)/o) {
-
-    if ($self->_Accessible($1,'write')) {
-      my $Attrib = $1;
-
-      *{$AUTOLOAD} = sub {  
-        return ($_[0]->_Set(Field => $Attrib, Value => $_[1]))
-      };
-
-      my $Value = shift @_;
-      return($self->_Set(Field => $Attrib, Value => $Value));
+    no strict 'refs';
+    my $Attrib;
+    if ( $AUTOLOAD =~ /.*::(\w+)/o ) {
+        $Attrib = $1;
     } 
-
-    elsif ($self->_Accessible($1, 'read')) {
-      *{$AUTOLOAD} = sub {
-        return (0, 'Immutable field');
-      };
-      return(0, 'Immutable field');
-    } 
-    else { 
-      return(0, 'Nonexistant field?');
+    if ( $Attrib &&  $self->_Accessible( $Attrib, 'read' ) ) {
+        *{$AUTOLOAD} = sub { return ( $_[0]->_Value($Attrib) ) };
+        return ( $self->_Value($Attrib) );
     }
-  } elsif ($AUTOLOAD =~ /.*::(\w+?)_?[oO]bj$/o) {
-    if ($self->_Accessible($1,'object')) {
-      my $Attrib = $1;
-      *{$AUTOLOAD} = sub {
-      	my $s = shift;
-      	return $s->_Object(
-      			Field => $Attrib,
-      			Args => [@_],
-      		);
-      };
-      return $self->_Object( Field => $Attrib, Args => [@_] );
-    } else {
-      return(0, 'No object mapping for field');
+    elsif ( $AUTOLOAD =~ /.*::[sS]et_?(\w+)/o ) {
+            $Attrib = $1;
+
+        if ( $self->_Accessible( $Attrib, 'write' ) ) {
+
+            *{$AUTOLOAD} = sub {
+                return ( $_[0]->_Set( Field => $Attrib, Value => $_[1] ) );
+            };
+
+            my $Value = shift @_;
+            return ( $self->_Set( Field => $Attrib, Value => $Value ) );
+        }
+
+        elsif ( $self->_Accessible( $Attrib, 'read' ) ) {
+            *{$AUTOLOAD} = sub {
+                return ( 0, 'Immutable field' );
+            };
+            return ( 0, 'Immutable field' );
+        }
+        else {
+            return ( 0, 'Nonexistant field?' );
+        }
     }
-  }
-
-
-  #Previously, I checked for writability here. but I'm not sure that's the
-  #right idea. it breaks the ability to do ValidateQueue for a ticket
-  #on creation.
-
-  elsif ($AUTOLOAD =~ /.*::[vV]alidate_?(\w+)/o ) {
-    my $Attrib = $1;
-
-    *{$AUTOLOAD} = sub {  return ($_[0]->_Validate($Attrib, $_[1]))};
-    my $Value = shift @_;
-    return($self->_Validate($Attrib, $Value));
+    elsif ( $AUTOLOAD =~ /.*::(\w+?)_?[oO]bj$/o ) {
+        $Attrib = $1;
+        if ( $self->_Accessible( $Attrib, 'object' ) ) {
+            *{$AUTOLOAD} = sub {
+                my $s = shift;
+                return $s->_Object(
+                    Field => $Attrib,
+                    Args  => [@_],
+                );
+            };
+            return $self->_Object( Field => $Attrib, Args => [@_] );
+        }
+        else {
+            return ( 0, 'No object mapping for field' );
+        }
     }
 
-  
-  # TODO: if autoload = 0 or 1 _ then a combination of lowercase and _ chars, 
-  # turn them into studlycapped phrases
-  
-  else {
-    my ($package, $filename, $line);
-    ($package, $filename, $line) = caller;
-    
-    die "$AUTOLOAD Unimplemented in $package. ($filename line $line) \n";
-  }
-  
+    #Previously, I checked for writability here. but I'm not sure that's the
+    #right idea. it breaks the ability to do ValidateQueue for a ticket
+    #on creation.
+
+    elsif ( $AUTOLOAD =~ /.*::[vV]alidate_?(\w+)/o ) {
+        $Attrib = $1;
+
+        *{$AUTOLOAD} = sub { return ( $_[0]->_Validate( $Attrib, $_[1] ) ) };
+        my $Value = shift @_;
+        return ( $self->_Validate( $Attrib, $Value ) );
+    }
+
+    # TODO: if autoload = 0 or 1 _ then a combination of lowercase and _ chars,
+    # turn them into studlycapped phrases
+
+    else {
+        my ( $package, $filename, $line );
+        ( $package, $filename, $line ) = caller;
+
+        die "$AUTOLOAD Unimplemented in $package. ($filename line $line) \n";
+    }
+
 }
 
 # }}}
