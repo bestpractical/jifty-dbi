@@ -119,7 +119,7 @@ sub LoadByCols {
 sub __Set () {
     my ( $self, %attr ) = @_;
 
-    $self->_expire( $self->_primary_RecordCache_key() );
+    $self->_expire();
     return $self->SUPER::__Set(%attr);
 
 }
@@ -132,7 +132,7 @@ sub __Set () {
 sub Delete () {
     my ($self) = @_;
 
-    $self->_expire( $self->_primary_RecordCache_key() );
+    $self->_expire();
 
     return $self->SUPER::Delete();
 
@@ -163,10 +163,6 @@ sub _fetch () {
 
 }
 
-sub id {
-    my $self = shift;
-    return ( $self->{'_id'} ||= $self->SUPER::id );
-}
 
 sub __Value {
     my $self  = shift;
