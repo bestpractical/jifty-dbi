@@ -71,7 +71,6 @@ sub LoadFromHash {
     $self->{'_SB_Record_Primary_RecordCache_key'} = undef;
     my ( $rvalue, $msg ) = $self->SUPER::LoadFromHash(@_);
 
-    $self->{'_id'} = $self->SUPER::id;
     my $cache_key = $self->_primary_RecordCache_key();
 
     ## Check the return value, if its good, cache it!
@@ -93,7 +92,6 @@ sub LoadByCols {
     ## Generate the cache key
     my $alt_key = $self->_gen_alternate_RecordCache_key(%attr);
     if ( $self->_fetch( $self->_lookup_primary_RecordCache_key($alt_key) ) ) {
-        $self->{'_id'} = $self->SUPER::id();
         return ( 1, "Fetched from cache" );
     }
 
@@ -109,7 +107,6 @@ sub LoadByCols {
         $self->_KeyCache->set( $alt_key, $self->_primary_RecordCache_key);
 
     }
-    $self->{'_id'} = $self->SUPER::id();
     return ( $rvalue, $msg );
 
 }
@@ -168,7 +165,7 @@ sub _fetch () {
 
 sub id {
     my $self = shift;
-    return ( $self->{'_id'} );
+    return ( $self->{'_id'} ||= $self->SUPER::id );
 }
 
 sub __Value {
