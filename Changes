@@ -14,7 +14,7 @@ Revision history for Perl extension DBIx::SearchBuilder.
     - SearchBuilder now truncates strings before inserting them into character
       types in the database as mysql generally does. Additionally, it truncates
       things at utf8 character boundaries...as mysql does not.
-    
+    - Fix for an undefined record cache warning on load from Autrijus Tang    
 
 
 1.12
