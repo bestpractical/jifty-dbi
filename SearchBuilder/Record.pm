@@ -25,7 +25,6 @@ DBIx::SearchBuilder::Record - Perl extension for subclassing, so you can deal wi
 
       $self->_Handle($DBIxHandle);
       $self->Table("Users");
-      return($self->SUPER::_Init(@_));
   }
  
 

@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder.pm,v 1.35 2001/10/17 22:13:59 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder.pm,v 1.37 2001/10/29 03:52:44 jesse Exp $
 
 # {{{ Version, package, new, etc
 
@@ -7,7 +7,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "0.46";
+$VERSION = "0.47";
 
 =head1 NAME
 
@@ -460,17 +460,17 @@ Limit takes a paramhash.
 
 # VALUE should always be set and will always be quoted. 
 
-# IMO (TobiX) we
-# shouldn't use quoted values, we should rather use placeholders and
-# pass the arguments when executing the statement.  This will also
-# allow us to alter limits and reexecute the search with a low cost by
-# keeping the statement handler.
-
 # ENTRYAGGREGATOR can be AND or OR (or anything else valid to aggregate two
 clauses in SQL
 
-# OPERATOR is whatever should be putted in between the FIELD and the
-# VALUE.
+OPERATOR is the SQL operator to use for this phrase.  =, !=, LIKE. NOT LIKE
+In the case of LIKE, the string ins surrounded in % signs.  Yes. this is a bug.
+
+STARTSWITH is like LIKE, except it only appends a % at the end of the string
+
+ENDSWITH is like LIKE, except it prepends a % to the beginning of the string
+
+
 
 on some databases, such as postgres, setting CASESENSITIVE to 1 will make
 this search case sensitive
@@ -502,9 +502,18 @@ sub Limit  {
     
     if ($args{'FIELD'}) {
 	#If it's a like, we supply the %s around the search term
-	if ($args{'OPERATOR'} =~ /LIKE/) {
+	if ($args{'OPERATOR'} =~ /LIKE/i) {
 	    $args{'VALUE'} = "%".$args{'VALUE'} ."%";
 	}
+	elsif ($args{'OPERATOR'} =~ /STARTSWITH/i) {
+	    $args{'VALUE'} = $args{'VALUE'}."%";
+	    $args{'OPERATOR'} = "LIKE";
+	}	
+	elsif ($args{'OPERATOR'} =~ /ENDSWITH/i) {
+	    $args{'VALUE'} = "%".$args{'VALUE'};
+	    $args{'OPERATOR'} = "LIKE";
+	}	
+
 	
 	#if we're explicitly told not to to quote the value or
 	# we're doing an IS or IS NOT (null), don't quote the operator. 
