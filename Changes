@@ -1,5 +1,8 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+1.00_04	- Move Postgres specific join behaviour to the superclass so 
+	  everyone gets the benefit.
+
 1.00_03 - Remove "AS" from table name aliases on joins, since Oracle
           doesn't like em.
 

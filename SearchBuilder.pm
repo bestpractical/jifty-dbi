@@ -5,7 +5,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "1.00_03";
+$VERSION = "1.00_04";
 
 =head1 NAME
 
@@ -313,28 +313,7 @@ Build up all of the joins we need to perform this query
 sub _BuildJoins {
     my $self = shift;
 
-    # if we have a handle specific query builder, let's use that
-    if ( $self->_Handle->can('_BuildJoins') ) {
         return ( $self->_Handle->_BuildJoins($self) );
-    }
-
-    #Otherwise, let's do something generic
-
-    my $join_clause = $self->{'table'} . " main";
-
-    foreach my $join ( keys %{ $self->{'left_joins'} } ) {
-        $join_clause = "( "
-          . $join_clause
-          . $self->{'left_joins'}{$join}{'alias_string'}
-          . " ON  ("
-          . join ( ') AND ( ',
-                   values %{ $self->{'left_joins'}{$join}{'criteria'} } )
-          . "))";
-    }
-    my $aliases = join ( ", ", @{ $self->{'aliases'} } );
-    $join_clause .= ", $aliases" if ($aliases);
-
-    return ($join_clause);
 
 }
 
