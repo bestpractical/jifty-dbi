@@ -1,5 +1,3 @@
-# $Header: /home/jesse/DBIx-SearchBuilder/history/SearchBuilder.pm,v 1.41 2002/02/11 22:53:01 jesse Exp $
-
 # {{{ Version, package, new, etc
 
 package DBIx::SearchBuilder;
@@ -7,7 +5,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "0.70";
+$VERSION = "0.71";
 
 =head1 NAME
 

@@ -4,8 +4,9 @@ use Carp;
 use DBI;
 use strict;
 use Class::ReturnValue;
-use vars qw($VERSION @ISA $DBIHandle $DEBUG);
+use vars qw($VERSION @ISA $DBIHandle $DEBUG $TRANSCOUNT);
 
+$TRANSCOUNT = 0;
 
 $VERSION = '$Version$';
 
@@ -461,12 +462,18 @@ sub CaseSensitive {
 Tells DBIx::SearchBuilder to begin a new SQL transaction. This will
 temporarily suspend Autocommit mode.
 
+Emulates nested transactions, by keeping a transaction stack depth.
+
 =cut
 
 sub BeginTransaction {
     my $self = shift;
-    #Carp::cluck();
-    return($self->dbh->begin_work);
+    $TRANSCOUNT++;
+    if ($TRANSCOUNT > 1 ) {
+        return ($TRANSCOUNT);
+    } else {
+        return($self->dbh->begin_work);
+    }
 }
 
 # }}}
@@ -482,7 +489,14 @@ This will turn Autocommit mode back on.
 
 sub Commit {
     my $self = shift;
-    return($self->dbh->commit);
+    unless ($TRANSCOUNT) {Carp::confess("Attempted to commit a transaction with none in progress")};
+    $TRANSCOUNT--;
+
+    if ($TRANSCOUNT == 0 ) {
+        return($self->dbh->commit);
+    } else { #we're inside a transaction
+        return($TRANSCOUNT);
+    }
 }
 
 # }}}
@@ -498,7 +512,14 @@ This will turn Autocommit mode back on.
 
 sub Rollback {
     my $self = shift;
-    return($self->dbh->rollback);
+    unless ($TRANSCOUNT) {Carp::confess("Attempted to rollback a transaction with none in progress")};
+    $TRANSCOUNT--;
+
+    if ($TRANSCOUNT == 0 ) {
+        return($self->dbh->rollback);
+    } else { #we're inside a transaction
+        return($TRANSCOUNT);
+    }
 }
 
 # }}}
