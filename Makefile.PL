@@ -5,5 +5,5 @@ version_from('SearchBuilder.pm');
 requires('DBI');
 requires('Class::ReturnValue', 0.40);
 
-&Meta->write;
 &Makefile->write;
+&Meta->write;

@@ -1,5 +1,5 @@
 This file contains message digests of all files listed in MANIFEST,
-signed via the Module::Signature module, version 0.37.
+signed via the Module::Signature module, version 0.35.
 
 To verify the content in this distribution, first make sure you have
 Module::Signature installed, then type:
@@ -17,9 +17,9 @@ Hash: SHA1
 SHA1 e5940d6d90b042ec302f7d989d0b673b42d2a9b8 Changes
 SHA1 b0ce864348c4270aeba74aa089f052464442e263 MANIFEST
 SHA1 b063da3f93fa6305a080cfd238282bf3ee7f8888 MANIFEST.SKIP
-SHA1 674659ae871667b219cd09f8930543a0f03772cf META.yml
-SHA1 7d39dfda212a6558dae2123aa958e033c8f310bd Makefile.PL
-SHA1 aa59506616c244c727313aa280d8dbd52b9a7624 SearchBuilder.pm
+SHA1 8cb26ae73593d0bf200a13b97ee2e916c85f2e69 META.yml
+SHA1 42a7d726a314465af0b0b2249ffee0eba4841274 Makefile.PL
+SHA1 663104e7bd93560a5748cffc5a5a177d081a58cb SearchBuilder.pm
 SHA1 47e0932f707b28fb6296b72b62ce27817264eded SearchBuilder/Handle.pm
 SHA1 68a6d7d744e5d123e3c8b59041d12253fcee5d04 SearchBuilder/Handle/Informix.pm
 SHA1 35f764ab7e3c675ffc568f5bcb1ebf921813d801 SearchBuilder/Handle/ODBC.pm
@@ -30,18 +30,16 @@ SHA1 cf4420e25ae28aa09fbf5e12643ff43f6a2d9241 SearchBuilder/Handle/mysql.pm
 SHA1 e9716814b99c423b8e3f46c68a86363047b408fd SearchBuilder/Handle/mysqlPP.pm
 SHA1 bbacd3a9ab0bb8ff7ccb733fdcf0ac2f9ce0a3e8 SearchBuilder/Record.pm
 SHA1 f0f291ca7532d913b84c290ae7d8e05d85ded271 SearchBuilder/Record/Cachable.pm
-SHA1 f9569c4340d4105598a318f7c736e2a10108347e inc/Module/Install.pm
-SHA1 adfe7bd31491c5499b508340aa6d1af75b39160e inc/Module/Install/Base.pm
-SHA1 c5e4dd819a1bd9613e95a47ace2a4558f32eef53 inc/Module/Install/Can.pm
-SHA1 fc88b7b683e3f0527b05ee500ee41eb379df1432 inc/Module/Install/Fetch.pm
-SHA1 107ac73515efc2b423994623342b4f7faf898000 inc/Module/Install/Makefile.pm
-SHA1 02a89263781b0a3364d09c3c8f2bafb83f1f4549 inc/Module/Install/Metadata.pm
-SHA1 eb3a15cf26737881d10b02c51d5074cc9fe10443 inc/Module/Install/Win32.pm
+SHA1 98c3ada349cd0f2bdec1f4db090745abbed2db71 inc/Module/Install.pm
+SHA1 7eabc5bd2ae92791a6053f1fdf52bf5ef2a565b0 inc/Module/Install/Base.pm
+SHA1 c35c64a7408e717f5aa8b9bc9d5ff4cc253e83d2 inc/Module/Install/Makefile.pm
+SHA1 3f6d682e0e55fd264ec9836e88c7ff2644ed6006 inc/Module/Install/Metadata.pm
 SHA1 71ce3b59b3feeca937fccd3f18c146d8ccbbf6a5 test.pl
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.3 (GNU/Linux)
+Version: GnuPG v1.0.6 (GNU/Linux)
+Comment: For info see http://www.gnupg.org
 
-iD8DBQE/0tVuQaM/s3DrrJARAtnoAKCGzXOTznz60v+th7O/TuFQfXUWpgCgl5Gs
-nc+2HaeMNKiJiEhNCDw8fo4=
-=pwiD
+iEYEARECAAYFAj/Rd/wACgkQQaM/s3DrrJCq6QCgyW6GSMtFMRlVrKC+4sp9Nbyz
+IQQAniHYSxWS/8GHZOkYuedFldnLVi9O
+=J/zL
 -----END PGP SIGNATURE-----

@@ -1,10 +1,14 @@
-name: DBIx::SearchBuilder
-version: 0.95_01
+name: DBIx-SearchBuilder
+version: 0.95_02
+license: unknown
 distribution_type: module
 requires:
   DBI: 0
   Class::ReturnValue: 0.4
+no_index:
+  directory:
+    - inc
 private:
   directory:
     - inc
-generated_by: Module::Install version 0.24
+generated_by: Module::Install version 0.27
