@@ -1,4 +1,4 @@
-#$Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Record.pm,v 1.7 2000/10/17 06:59:17 jesse Exp $
+#$Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Record.pm,v 1.8 2000/11/21 07:49:56 jesse Exp $
 package DBIx::SearchBuilder::Record;
 
 use strict;
@@ -59,7 +59,9 @@ sub AUTOLOAD  {
     return($self->_Value($Attrib));
   }
     
-  elsif ($AUTOLOAD =~ /.*::Set(\w+)/ && $self->_Accessible($1,'write')) {
+  elsif ( ($AUTOLOAD =~ /.*::Set(\w+)/ or
+           $AUTOLOAD =~ /.*::set_(\w+)/ ) &&
+          $self->_Accessible($1,'write')) {
     my $Attrib = $1;
 
     *{$AUTOLOAD} = sub {  return ($_[0]->_Set(Field => $Attrib, Value => $_[1]))};
@@ -196,7 +198,6 @@ sub Load  {
   }
 
 # }}}
-
 # {{{ sub LoadByCol 
 
 =head2 LoadByCol
@@ -212,8 +213,36 @@ sub LoadByCol  {
     my $col = shift;
     my $val = shift;
     
-    $val = $self->_Handle->safe_quote($val);
-    my $QueryString = "SELECT  * FROM ".$self->Table." WHERE $col = $val";
+    return($self->LoadByCols($col => $val));
+    
+  }
+
+# }}}
+
+# {{{ sub LoadByCols
+
+=head2 LoadByCol
+
+Takes a hash of columns and values.The column can be any table column.  
+
+=cut
+
+sub LoadByCols  {
+    my $self = shift;
+    my %hash  = (@_);
+
+    my ($key, @phrases, $val);
+    foreach $key (keys %hash) {
+	
+	$val = $self->_Handle->safe_quote($hash{$key});	
+	my $phrase = "$key = $val";
+	push (@phrases, $phrase);
+    }	
+    
+    
+    
+    my $QueryString = "SELECT  * FROM ".$self->Table." WHERE ". 
+      join(' AND ', @phrases) ;
     return ($self->_LoadFromSQL($QueryString));
   }
 
@@ -233,7 +262,7 @@ sub LoadById  {
     my $id = shift;
 
     $id = 0 if (!defined($id));
-    return ($self->LoadByCol('id',$id));
+    return ($self->LoadByCols('id',$id));
 }
 # }}}  
 
