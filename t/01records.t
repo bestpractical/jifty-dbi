@@ -9,7 +9,7 @@ eval "use DBD::SQLite";
 if ($@) { 
 plan skip_all => "DBD::SQLite required for testing database interaction" 
 } else{
-plan tests => 23;
+plan tests => 31;
 }
     my $handle;
 use_ok('DBIx::SearchBuilder::Handle::SQLite');
@@ -38,14 +38,31 @@ ok($rec->Load($id), "Loaded the record");
 
 
 is($rec->id, $id, "The record has its id");
-
 is ($rec->Name, 'Jesse', "The record's name is Jesse");
 
-my ($val,$msg) = $rec->SetName('Obra');
-
+my ($val, $msg) = $rec->SetName('Obra');
 ok($val, $msg) ;
-
 is($rec->Name, 'Obra', "We did actually change the name");
+
+# Validate immutability of the field id
+($val, $msg) = $rec->Setid( $rec->id + 1 );
+ok(!$val, $msg);
+is($msg, 'Immutable field', 'id is immutable field');
+is($rec->id, $id, "The record still has its id");
+
+# Check some non existant field
+ok( !eval{ $rec->SomeUnexpectedField }, "The record has no 'SomeUnexpectedField'");
+{
+	# test produce DBI warning
+	local $SIG{__WARN__} = sub {return};
+	is( $rec->_Value( 'SomeUnexpectedField' ), undef, "The record has no 'SomeUnexpectedField'");
+}
+($val, $msg) = $rec->SetSomeUnexpectedField( 'foo' );
+ok(!$val, $msg);
+is($msg, 'Nonexistant field?', "Field doesn't exist");
+($val, $msg) = $rec->_Set('SomeUnexpectedField', 'foo');
+ok(!$val, "$msg");
+
 
 # Validate truncation on update
 

@@ -41,9 +41,7 @@ sub Insert  {
     # We really don't want an empty id
     
     my $sth = $self->SUPER::Insert($table, %args);
-    if (!$sth) {
-	    return ($sth);
-     }
+    return unless $sth;
 
     # If we have set an id, then we want to use that, otherwise, we want to lookup the last _new_ rowid
     $self->{'id'}= $args{'id'} || $self->dbh->func('last_insert_rowid');
