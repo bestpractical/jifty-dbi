@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder.pm,v 1.25 2001/06/19 04:22:32 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder.pm,v 1.27 2001/07/11 00:09:36 jesse Exp $
 
 # {{{ Version, package, new, etc
 
@@ -7,7 +7,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "0.39";
+$VERSION = "0.40";
 
 =head1 NAME
 
@@ -485,6 +485,7 @@ sub Limit  {
 		QUOTEVALUE => 1,
 		ENTRYAGGREGATOR => 'or',
 		OPERATOR => '=',
+		SUBCLAUSE => undef,
 		LEFTJOIN => undef,
 		@_ # get the real argumentlist
 	       );
@@ -508,9 +509,7 @@ sub Limit  {
 	    $args{'VALUE'} = $self->_Handle->dbh->quote($args{'VALUE'});
 	}
     }
-    
-    
-    
+        
     $Alias = $self->_GenericRestriction(%args);
 
     warn "No table alias set!"
@@ -580,7 +579,10 @@ sub _GenericRestriction  {
 		LEFTJOIN => undef,
 		ENTRYAGGREGATOR => undef,
 		OPERATOR => '=',
+		SUBCLAUSE => undef,
 		@_);
+    
+    my ($Clause, $QualifiedField);
     
     #TODO: $args{'VALUE'} should take an array of values and generate 
     # the proper where clause.
@@ -588,7 +590,10 @@ sub _GenericRestriction  {
     #If we're performing a left join, we really want the alias to be the 
     #left join criterion.
     
-    $args{'ALIAS'} = $args{'LEFTJOIN'} if ( defined $args{'LEFTJOIN'});
+    if (( defined $args{'LEFTJOIN'}) && 
+	(!defined $args{'ALIAS'})) {
+	$args{'ALIAS'} = $args{'LEFTJOIN'} 
+    }
     
     # {{{ if there's no alias set, we need to set it
     
@@ -614,29 +619,40 @@ sub _GenericRestriction  {
     
     # }}}    
     
-    #Set this to the name of the field and the alias.
-    my $QualifiedField = $args{'ALIAS'}.".".$args{'FIELD'};
+    # Set this to the name of the field and the alias, unless we've been
+    # handed a subclause name
+    
+    
+    
+    $QualifiedField =  $args{'ALIAS'}.".".$args{'FIELD'};
+    
+    if ($args{'SUBCLAUSE'}) {
+	$Clause = $args{'SUBCLAUSE'};
+    }	
+    else {
+	$Clause = $QualifiedField;
+    }
     
     print STDERR "$self->_GenericRestriction QualifiedField=$QualifiedField\n" 
       if ($self->DEBUG);
-
+    
     my ($restriction);
 
     # If we're trying to get a leftjoin restriction, lets set
     # $restriction to point htere. otherwise, lets construct normally
 
     if ($args{'LEFTJOIN'})  {
-	$restriction = \$self->{'left_joins'}{$args{'ALIAS'}}{'criteria'}{"$QualifiedField"};
+	$restriction = \$self->{'left_joins'}{$args{'LEFTJOIN'}}{'criteria'}{"$Clause"};
     }
     else {
-	$restriction = \$self->{'restrictions'}{"$QualifiedField"};
+	$restriction = \$self->{'restrictions'}{"$Clause"};
     }
     # If it's a new value or we're overwriting this sort of restriction, 
     
     if (((exists $args{'ENTRYAGGREGATOR'}) and 
 	 ($args{'ENTRYAGGREGATOR'} || "" ) eq 'none') or 
 	(!$$restriction) ) {
-
+	
 	$$restriction = "($QualifiedField $args{'OPERATOR'} $args{'VALUE'})";  
 	
     }
