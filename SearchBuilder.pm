@@ -5,7 +5,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "0.74";
+$VERSION = "0.75";
 
 =head1 NAME
 
@@ -193,7 +193,7 @@ sub _DoCount  {
     #TODO refactor DoSearch and DoCount such that we only have
     # one place where we build most of the querystring
     
-    $QueryString = "SELECT count(main.id) FROM " . $self->_TableAliases . " ";
+    $QueryString = "SELECT count(DISTINCT main.id) FROM " . $self->_TableAliases . " ";
 
     $QueryString .= $self->_LeftJoins . " ";
    
@@ -689,15 +689,22 @@ sub _GenericRestriction  {
 
     my $clause = "($QualifiedField $args{'OPERATOR'} $args{'VALUE'})";  
  
+    # Juju because this should come _AFTER_ the EA
+    my $prefix = "";
+    if ($self->{_open_parens}{$Clause}) {
+      $prefix = " ( " x $self->{_open_parens}{$Clause};
+      delete $self->{_open_parens}{$Clause};
+    }
+
     if (((exists $args{'ENTRYAGGREGATOR'}) and 
 	 ($args{'ENTRYAGGREGATOR'} || "" ) eq 'none') or 
 	(!$$restriction) ) {
 	
-	$$restriction = $clause;
+	$$restriction = $prefix . $clause;
 	
     }
     else {
-	$$restriction .= $args{'ENTRYAGGREGATOR'} . $clause; 
+	$$restriction .= $args{'ENTRYAGGREGATOR'} . $prefix . $clause; 
     }
     
     return ($args{'ALIAS'});
@@ -705,6 +712,25 @@ sub _GenericRestriction  {
 }
 
 # }}}
+
+# {{{ Parentheses Control
+sub _OpenParen {
+  my ($self,$clause) = @_;
+  $self->{_open_parens}{$clause}++;
+}
+
+# Immediate Action
+sub _CloseParen {
+  my ($self,$clause) = @_;
+  my $restriction = \$self->{'restrictions'}{"$clause"};
+  if (!$$restriction) {
+    $$restriction = " ) ";
+  } else {
+    $$restriction .= " ) ";
+  }
+}
+# }}}
+
 
 # {{{ sub _AddRestriction
 sub _AddSubClause {
@@ -776,7 +802,7 @@ sub _CompileGenericRestrictions  {
     $self->{'subclauses'}{'generic_restrictions'} = undef;
     
     #Go through all the restrictions of this type. Buld up the generic subclause
-    foreach $restriction (keys %{ $self->{'restrictions'}}) {
+    foreach $restriction (sort keys %{ $self->{'restrictions'}}) {
 	if (defined $self->{'subclauses'}{'generic_restrictions'}) {
 	    $self->{'subclauses'}{'generic_restrictions'} .= " AND ";
 	}
