@@ -1,6 +1,10 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
-0.77 Jan 15 2002
+0.78 Jan 16 2003
+        - SB->Count should return no results unless the search is limited
+        - Eliminate a warning on empty searches
+
+0.77 Jan 15 2003
 
         - No longer attempt to cache (and fail) objects that haven't been database-loaded
 

@@ -5,7 +5,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "0.77";
+$VERSION = "0.78";
 
 =head1 NAME
 
@@ -798,7 +798,8 @@ sub _WhereClause {
 sub _CompileGenericRestrictions {
     my $self = shift;
     my ($restriction);
-    $self->{'subclauses'}{'generic_restrictions'} = undef;
+
+    delete $self->{'subclauses'}{'generic_restrictions'};
 
     #Go through all the restrictions of this type. Buld up the generic subclause
     foreach $restriction ( sort keys %{ $self->{'restrictions'} } ) {
@@ -1156,9 +1157,12 @@ Returns the number of records in the set.
 sub Count {
     my $self = shift;
 
+    # An unlimited search returns no tickets    
+    return 0 unless ($self->_isLimited);
+
+
     # If we haven't actually got all objects loaded in memory, we
     # really just want to do a quick count from the database.
-
     if ( $self->{'must_redo_search'} ) {
 
         # If we haven't already asked the database for the row count, do that
