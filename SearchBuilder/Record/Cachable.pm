@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Record/Cachable.pm,v 1.1 2001/05/09 00:21:28 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Record/Cachable.pm,v 1.2 2001/05/12 18:48:21 jesse Exp $
 # DBIx::SearchBuilder::Record::Cachable by <mhat@netlag.com>
 
 package DBIx::SearchBuilder::Record::Cachable; 
@@ -151,7 +151,7 @@ sub _store () {
 
 sub _gen_cache_key {
   my ($this, %attr) = @_;
-  my $cache_key="";
+  my $cache_key = $this->Table() . ":";
   while (my ($key, $value) = each %attr) {
     $cache_key .= $key . '=' . $value . ',';
   }
