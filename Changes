@@ -1,5 +1,8 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+1.00_01 - Better handling of case insensitive comparisons on Postgres
+	- Proper support for query paging on SQLite
+		
 0.99	- Bundled changes from 0.98* and released production version
 	  Removed duplicate code in cache expiry routines
           Experimental SearchBuilder::Union collection object.
