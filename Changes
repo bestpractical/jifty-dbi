@@ -1,5 +1,8 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+0.92    Sept 4, 2003
+        - Fixed a bug that caused certain types of pre-canned table aliases to fail to work on join
+
 0.90    Aug 8, 2003
         - Disable Class::ReturnValue's stack trace feature as it interacted poorly with a stack containing lots of data 
 

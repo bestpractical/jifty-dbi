@@ -123,26 +123,25 @@ This performs the join.
 sub Join {
 
     my $self = shift;
-    my %args = ( SearchBuilder => undef,
-                 TYPE          => 'normal',
-                 FIELD1        => undef,
-                 ALIAS1        => undef,
-                 TABLE2        => undef,
-                 FIELD2        => undef,
-                 ALIAS2        => undef,
-                 @_ );
+    my %args = (
+        SearchBuilder => undef,
+        TYPE          => 'normal',
+        FIELD1        => undef,
+        ALIAS1        => undef,
+        TABLE2        => undef,
+        FIELD2        => undef,
+        ALIAS2        => undef,
+        @_
+    );
 
     my $string;
 
     my $alias;
 
-
-
-    #If we're handed in an ALIAS2, we need to go remove it from the Aliases array.
-    # Basically, if anyone generates an alias and then tries to use it in a join later, we want to be smart about
-    # creating joins, so we need to go rip it out of the old aliases table and drop it in as an explicit join
+#If we're handed in an ALIAS2, we need to go remove it from the Aliases array.
+# Basically, if anyone generates an alias and then tries to use it in a join later, we want to be smart about
+# creating joins, so we need to go rip it out of the old aliases table and drop it in as an explicit join
     if ( $args{'ALIAS2'} ) {
-
 
         # this code is slow and wasteful, but it's clear.
         my @aliases = @{ $args{'SearchBuilder'}->{'aliases'} };
@@ -152,73 +151,64 @@ sub Join {
                 $args{'TABLE2'} = $1;
                 $alias = $2;
 
-
             }
             else {
                 push @new_aliases, $old_alias;
             }
         }
-
-        # if we can't do that, can we reverse the join and have it work?
+        # If we found an alias, great. let's just pull out the table and alias for the other item
         unless ($alias) {
-
+            # if we can't do that, can we reverse the join and have it work?
             my $a1 = $args{'ALIAS1'};
             my $f1 = $args{'FIELD1'};
-        $args{'ALIAS1'} = $args{'ALIAS2'};
-        $args{'FIELD1'} = $args{'FIELD2'};
-        $args{'ALIAS2'} = $a1;
-        $args{'FIELD2'} = $f1;
+            $args{'ALIAS1'} = $args{'ALIAS2'};
+            $args{'FIELD1'} = $args{'FIELD2'};
+            $args{'ALIAS2'} = $a1;
+            $args{'FIELD2'} = $f1;
 
+            @aliases     = @{ $args{'SearchBuilder'}->{'aliases'} };
+            @new_aliases = ();
+            foreach my $old_alias (@aliases) {
+                if ( $old_alias =~ /^(.*?) ($args{'ALIAS2'})$/ ) {
+                    $args{'TABLE2'} = $1;
+                    $alias = $2;
 
-        @aliases = @{ $args{'SearchBuilder'}->{'aliases'} };
-         @new_aliases = ();
-        foreach my $old_alias (@aliases) {
-            if ( $old_alias =~ /^(.*?) ($args{'ALIAS2'})$/ ) {
-                $args{'TABLE2'} = $1;
-                $alias = $2;
-
-
+                }
+                else {
+                    push @new_aliases, $old_alias;
+                }
             }
-            else {
-                push @new_aliases, $old_alias;
-            }
-        }
-
-
 
         }
 
         unless ($alias) {
-            return($self->SUPER::Join(%args));
+            return ( $self->SUPER::Join(%args) );
         }
-
+        if ($args{'ALIAS1'}) {
+            return ( $self->SUPER::Join(%args) );
+        }
 
         $args{'SearchBuilder'}->{'aliases'} = \@new_aliases;
     }
 
-
-
     else {
         $alias = $args{'SearchBuilder'}->_GetAlias( $args{'TABLE2'} );
-
 
     }
 
     if ( $args{'TYPE'} =~ /LEFT/i ) {
 
-        $string = " LEFT JOIN ".$args{'TABLE2'}." as $alias ";
+        $string = " LEFT JOIN " . $args{'TABLE2'} . " as $alias ";
 
     }
     else {
 
-        $string = " JOIN ".$args{'TABLE2'}." as $alias ";
+        $string = " JOIN " . $args{'TABLE2'} . " as $alias ";
 
     }
     $args{'SearchBuilder'}->{'left_joins'}{"$alias"}{'alias_string'} = $string;
-    $args{'SearchBuilder'}->{'left_joins'}{"$alias"}{'depends_on'} = $args{'ALIAS1'};
-    $args{'SearchBuilder'}->{'left_joins'}{"$alias"}{'criteria'}
-      { 'criterion' . $args{'SearchBuilder'}->{'criteria_count'}++ } =
-      " $args{'ALIAS1'}.$args{'FIELD1'} = $alias.$args{'FIELD2'}";
+    $args{'SearchBuilder'}->{'left_joins'}{"$alias"}{'depends_on'}   = $args{'ALIAS1'};
+    $args{'SearchBuilder'}->{'left_joins'}{"$alias"}{'criteria'} { 'criterion' . $args{'SearchBuilder'}->{'criteria_count'}++ } = " $args{'ALIAS1'}.$args{'FIELD1'} = $alias.$args{'FIELD2'}";
 
     return ($alias);
 }
