@@ -1,11 +1,11 @@
-#$Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Record.pm,v 1.12 2000/12/24 04:29:15 jesse Exp $
+#$Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Record.pm,v 1.13 2001/01/10 04:49:15 jesse Exp $
 package DBIx::SearchBuilder::Record;
 
 use strict;
 use vars qw($VERSION @ISA $AUTOLOAD);
 
 
-$VERSION = '0.10';
+$VERSION = '$VERSION$';
 
 
 =head1 NAME
@@ -60,14 +60,14 @@ DBIx::SearchBuilder::Record - Perl extension for subclassing, so you can deal wi
       # note two __s in __Value.  Subclasses may muck with _Value, but they should
       # never touch __Value
 
-      if ($try eq $self->__Value('Password') {
+      if ($try eq $self->__Value('Password')) {
 	  return (1);
       }
       else { 
 	  return (undef); 
-     }
-}
-
+      }
+      
+  }
 
  # Override DBIx::SearchBuilder::Create to do some checking on create
  sub Create {
@@ -101,6 +101,7 @@ DBIx::SearchBuilder::Record is designed to work with DBIx::SearchBuilder.
 
 sub new  {
     my $proto = shift;
+   
     my $class = ref($proto) || $proto;
     my $self  = {};
     bless ($self, $class);
@@ -433,14 +434,18 @@ sub _LoadFromSQL  {
     
     my $sth = $self->_Handle->SimpleQuery($QueryString);
     
-    #TODO: COMPATIBILITY PROBLEM with fetchrow_hashref!
-    #Some DBMS'es returns uppercase, some returns lowercase,
-    #and mysql return mixedcase!
 
     #TODO this only gets the first row. we should check if there are more.
-    $self->{'values'} = $sth->fetchrow_hashref;
+
+    eval {
+	$self->{'values'} = $sth->fetchrow_hashref;
+    };
+    if ($@){ 
+	warn $@;
+    }
+    
     unless ($self->{'values'}) {
-#	warn "something might be wrong here; row not found. SQL: $QueryString";
+	#warn "something might be wrong here; row not found. SQL: $QueryString";
 	return undef;
     }
 

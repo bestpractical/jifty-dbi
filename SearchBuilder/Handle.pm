@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle.pm,v 1.7 2001/01/03 19:41:20 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle.pm,v 1.10 2001/01/10 22:07:41 jesse Exp $
 package DBIx::SearchBuilder::Handle;
 use Carp;
 use DBI;
@@ -91,7 +91,8 @@ sub Insert {
     "(". join(", ", @vals). ")";
   #warn $QueryString;
 
-  $self->SimpleQuery($QueryString);
+   my $sth =  $self->SimpleQuery($QueryString);
+   return ($sth);
 }
 # }}}
 
@@ -171,43 +172,45 @@ don\'t quote the NEW_VALUE
 =cut
 
 sub UpdateTableValue  {
-  my $self = shift;
-  
-  my $Table = shift;
-  my $Col = shift;
-  my $NewValue = shift;
-  my $Record = shift;
-  my $is_sql = shift;
-  my $QueryString;
-  
-  # quote the value
-  # TODO: We need some general way to escape SQL functions.
-  $NewValue=$self->safe_quote($NewValue) unless ($is_sql);
-  # build the query string
-  $QueryString = "UPDATE $Table SET $Col = $NewValue WHERE id = $Record";
-  
-  
-  my $sth = $self->dbh->prepare($QueryString);
-  if (!$sth) {
+    my $self = shift;
     
-    if ($main::debug) {
-      die "Error:" . $self->dbh->errstr . "\n";
+    my $Table = shift;
+    my $Col = shift;
+    my $NewValue = shift;
+    my $Record = shift;
+    my $is_sql = shift;
+    my $QueryString;
+    
+    # quote the value
+    # TODO: We need some general way to escape SQL functions.
+    $NewValue=$self->safe_quote($NewValue) unless ($is_sql);
+    # build the query string
+    $QueryString = "UPDATE $Table SET $Col = $NewValue WHERE id = $Record";
+    
+  
+    my $sth = $self->dbh->prepare($QueryString);
+    
+    if (!$sth) {
+	
+	if ($main::debug) {
+	    die "Error:" . $self->dbh->errstr . "\n";
+	}
+	else {
+	    return (0);
+	}
     }
-    else {
-      return (0);
-  }
-  }
-  if (!$sth->execute) {
-    if ($self->{'debug'}) {
-      die "Error:" . $sth->errstr . "\n";
-    }
-    else {
-      return(0);
+    if (!$sth->execute) {
+	if ($self->{'debug'}) {
+	    die "Error:" . $sth->errstr . "\n";
+	}
+	else {
+	    
+	    return(0);
+	}
+	
     }
     
-  }
-  
-  return (1); #Update Succeded
+    return (1); #Update Succeded
 }
 
 # }}}
@@ -221,29 +224,37 @@ Execute the SQL string specified in QUERY_STRING
 =cut
 
 sub SimpleQuery  {
-  my $self = shift;
-  my $QueryString = shift;
-  
-  my $sth = $self->dbh->prepare($QueryString);
-  if (!$sth) {
-    if ($main::debug) {
-      die "Error:" . $self->dbh->errstr . "\n";
-    }
-    else {
-      return (0);
-    }
-  }
-  if (!$sth->execute) {
-    if ($self->{'debug'}) {
-      die "Error:" . $sth->errstr . "\n";
-    }
-    else {
-      return(0);
-    }
+    my $self = shift;
+    my $QueryString = shift;
     
-  }
-  return ($sth);
-  
+	my $sth = $self->dbh->prepare($QueryString);
+	if (!$sth) {
+	    if ($main::debug) {
+		die "$self couldn't prepare the query '$QueryString'" . 
+		  $self->dbh->errstr . "\n";
+	    }
+	    else {
+		warn "$self couldn't prepare the query '$QueryString'" . 
+	      $self->dbh->errstr . "\n";
+		return (undef);
+	    }
+	}
+	if (!$sth->execute) {
+	    if ($self->{'debug'}) {
+		die "$self couldn't execute the query '$QueryString'" . 
+		  $self->dbh->errstr . "\n";
+		
+	    }
+	    else {
+		warn "$self couldn't execute the query '$QueryString'" . 
+		  $self->dbh->errstr . "\n";
+		return(undef);
+	    }
+	    
+	   }
+       return ($sth);
+    
+    
 }
 
 # }}}
@@ -261,7 +272,7 @@ sub FetchResult {
   my $self = shift;
   my $query = shift;
   my $sth = $self->SimpleQuery($query);
-
+  
   return ($sth->fetchrow);
 }
 # }}}

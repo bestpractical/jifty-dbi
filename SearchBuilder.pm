@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder.pm,v 1.8 2000/12/18 05:58:07 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder.pm,v 1.9 2001/01/10 04:49:15 jesse Exp $
 
 # {{{ Version, package, new, etc
 
@@ -7,7 +7,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "0.15";
+$VERSION = "0.18";
 
 =head1 NAME
 
@@ -30,12 +30,12 @@ DBIx::SearchBuilder - Perl extension for easy SQL SELECT Statement generation
 #instantiate a new object.
 
 sub new  {
-  my $proto = shift;
-  my $class = ref($proto) || $proto;
-  my $self  = {};
-  bless ($self, $class);
-  $self->_Init(@_);
-  return ($self)
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+    my $self  = {};
+    bless ($self, $class);
+    $self->_Init(@_);
+    return ($self)
 }
 # }}}
 
@@ -44,13 +44,13 @@ sub new  {
 #Initialize the object
 
 sub _Init  {
-  my $self = shift;
-  my %args = ( Handle => undef,
-	       @_
-	     );
-  $self->{'DBIxHandle'} = $args{'Handle'}; 
-
-  $self->CleanSlate();
+    my $self = shift;
+    my %args = ( Handle => undef,
+		 @_
+	       );
+    $self->{'DBIxHandle'} = $args{'Handle'}; 
+    
+    $self->CleanSlate();
 }
 
 # }}}
@@ -88,8 +88,8 @@ sub CleanSlate {
 
 # {{{ sub _Handle 
 sub _Handle  {
-  my $self = shift;
-  return ($self->{'DBIxHandle'});
+    my $self = shift;
+    return ($self->{'DBIxHandle'});
 }
 # }}}
 
@@ -99,31 +99,44 @@ sub _DoSearch  {
     my $self = shift;
     my ($QueryString, $Order);
     
-
+    
     $QueryString = "SELECT distinct main.* FROM " . $self->_TableAliases;
-
-   
+    
     $QueryString .= $self->_WhereClause . " ".  $self->{'table_links'}. " " 
-    if ($self->_isLimited > 0);
+      if ($self->_isLimited > 0);
     
     $QueryString .=  $self->_Order . $self->_OrderBy . $self->_Limit;
     
-      print STDERR "DBIx::SearchBuilder->DoSearch Query:  $QueryString\n" 
-	if ($self->DEBUG);
-    
+    print STDERR "DBIx::SearchBuilder->DoSearch Query:  $QueryString\n" 
+      if ($self->DEBUG);
     
     
     # {{{ get $self->{'records'} out of the database
-  $self->{'records'} = $self->_Handle->dbh->prepare($QueryString);
-  
-  if (!$self->{'records'}) {
-    die "Error:" . $self->_Handle->dbh->errstr . "\n";
-  }
-  if (!$self->{'records'}->execute) {
-    die "DBIx::SearchBuilder error:" . $self->{'records'}->errstr . "\n\tQuery String is $QueryString\n";
-  }
+    eval {
+	$self->{'records'} = $self->_Handle->dbh->prepare($QueryString);
+    };
+    if ($@) {
+	warn "$self couldn't prepare '$QueryString' ". $@;
+	return(undef);
+    }	
 
-  # }}}
+    if (!$self->{'records'}) {
+	warn "Error:" . $self->_Handle->dbh->errstr . "\n";
+	return (undef);
+    }
+    eval {
+	if (!$self->{'records'}->execute) {
+	    warn "DBIx::SearchBuilder error:" . $self->{'records'}->errstr . "\n\tQuery String is $QueryString\n";
+	    return(undef);
+	}
+    };
+    if ($@) {
+	warn "$self couldn't execute a search: ".$@;
+	return(undef);
+    }
+      
+
+    # }}}
     
     
     my $counter = 0;
@@ -145,7 +158,7 @@ sub _DoSearch  {
     
     #How many rows did we get out of that?
     $self->{'rows'} = $counter;
-
+    
     # TODO: It makes sense keeping and reusing the records statement
     # handler.  Anyway, I don't see that we need it anymore with the
     # current design, and the statement handler will not easily be
@@ -215,28 +228,21 @@ such that the following call to Next will start over with the first item retriev
 =cut
 
 sub Next  {
-  my $self = shift;
-  my @row;
-  
-  if (!$self->_isLimited) {
-    return(0);
-  }
-  if ($self->{'must_redo_search'} != 0) {
-    $self->_DoSearch();
-  }
-  
-  if ($self->{'itemscount'} < $self->{'rows'}) {
-    #increment the itemcounter.
-    $self->{'itemscount'}++;
-    #serve out that item
-    return ($self->{'items'}[$self->{'itemscount'}]);
-  }
-  else {
-    #we've gone through the whole list.
-    #reset the count.
-    $self->GotoFirstItem();
-    return(undef);
-  }
+    my $self = shift;
+    my @row;
+    
+    return(undef) if (!$self->_isLimited);
+    
+    $self->_DoSearch() if ($self->{'must_redo_search'} != 0);
+    
+    if ($self->{'itemscount'} < $self->{'rows'}) { #return the next item
+	$self->{'itemscount'}++;
+	return ($self->{'items'}[$self->{'itemscount'}]);
+    }
+    else { #we've gone through the whole list. reset the count.
+	$self->GotoFirstItem();
+	return(undef);
+    }
 }
 
 # }}}
@@ -285,7 +291,6 @@ Returns the first item
 
 sub First  {
     my $self = shift;
-    #Reset the itemcount
     $self->GotoFirstItem();
     return ($self->Next);
 }
@@ -818,6 +823,7 @@ sub Count  {
 # }}}
 
 # {{{ sub IsLast
+
 =head2 IsLast
 
 Returns true if the current row is the last record in the set.
@@ -836,8 +842,6 @@ sub IsLast {
 }
 # }}}
 
-
-
 # {{{ sub DEBUG 
 sub DEBUG {
     my $self = shift;
@@ -846,8 +850,6 @@ sub DEBUG {
       }
     return ($self->{'DEBUG'});
   }
-
-# }}}
 
 # }}}
 
