@@ -1,5 +1,8 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+1.21
+    - Oracle LOB handling caused us to corrupt item values on update.
+
 1.20 Tue Jan 18 08:24:15 EST 2005
     - Minor test suite fixes from Ruslan.
 

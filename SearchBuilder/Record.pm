@@ -740,6 +740,10 @@ sub __Set {
     $args{'Table'}       = $self->Table();
     $args{'PrimaryKeys'} = { $self->PrimaryKeys() };
 
+    # The blob handling will destroy $args{'Value'}. But we assign
+    # that back to the object at the end. this works around that
+    my $unmunged_value = $args{'Value'};
+
     unless ( $self->_Handle->KnowsBLOBs ) {
         # Support for databases which don't deal with LOBs automatically
         my $ca = $self->_ClassAccessible();
@@ -771,7 +775,7 @@ sub __Set {
         $self->Load( $self->Id );
     }
     else {
-        $self->{'values'}->{"$column"} = $args{'Value'};
+        $self->{'values'}->{"$column"} = $unmunged_value;
     }
     $ret->as_array( 1, "The new value has been set." );
     return ( $ret->return_value );
