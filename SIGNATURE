@@ -24,7 +24,7 @@ SHA1 47e0932f707b28fb6296b72b62ce27817264eded SearchBuilder/Handle.pm
 SHA1 68a6d7d744e5d123e3c8b59041d12253fcee5d04 SearchBuilder/Handle/Informix.pm
 SHA1 35f764ab7e3c675ffc568f5bcb1ebf921813d801 SearchBuilder/Handle/ODBC.pm
 SHA1 b7fd5ef2fcb2f18ff19a6561bfec4122995daa57 SearchBuilder/Handle/Oracle.pm
-SHA1 b20492f890fa9c34ca3ca38847bcac0b090b1d4a SearchBuilder/Handle/Pg.pm
+SHA1 ca537c2649bfbfbaaff3d62115fbc4ff7ea00096 SearchBuilder/Handle/Pg.pm
 SHA1 4dfd673981bb75c8f630405c419ece75338dec33 SearchBuilder/Handle/SQLite.pm
 SHA1 cf4420e25ae28aa09fbf5e12643ff43f6a2d9241 SearchBuilder/Handle/mysql.pm
 SHA1 e9716814b99c423b8e3f46c68a86363047b408fd SearchBuilder/Handle/mysqlPP.pm
@@ -41,7 +41,7 @@ SHA1 71ce3b59b3feeca937fccd3f18c146d8ccbbf6a5 test.pl
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.2.3 (GNU/Linux)
 
-iD8DBQE/vBGHQaM/s3DrrJARAlV0AJoDifyb3pkSZiYhp5FFSHyE0uGx4wCffjN5
-sF7qWpDJowpm8HGHNqH2Ooc=
-=VB/u
+iD8DBQE/0tVuQaM/s3DrrJARAtnoAKCGzXOTznz60v+th7O/TuFQfXUWpgCgl5Gs
+nc+2HaeMNKiJiEhNCDw8fo4=
+=pwiD
 -----END PGP SIGNATURE-----

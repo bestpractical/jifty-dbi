@@ -271,6 +271,8 @@ sub _MakeClauseCaseInsensitive {
     if  ($operator =~ /LIKE/i ) {
         $operator =~ s/LIKE/ILIKE/ig; 
         return ($field, $operator, $value);
+    } elsif ($operator eq '=') {
+        return ($field,'ILIKE',$value);
     } else {
         $self->SUPER::_MakeClauseCaseInsensitive($field, $operator,$value);
     }
