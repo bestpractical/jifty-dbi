@@ -4,6 +4,7 @@ MANIFEST
 MANIFEST.SKIP
 SearchBuilder.pm
 SearchBuilder/Handle.pm
+SearchBuilder/Union.pm
 SearchBuilder/Record.pm
 SearchBuilder/Handle/mysql.pm
 SearchBuilder/Handle/mysqlPP.pm

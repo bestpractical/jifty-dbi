@@ -1,5 +1,5 @@
 name: DBIx-SearchBuilder
-version: 0.97
+version: 0.98_03
 license: unknown
 distribution_type: module
 build_requires:
