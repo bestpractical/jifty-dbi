@@ -792,10 +792,10 @@ sub LoadByCols  {
 	if (defined $hash{$key} &&  $hash{$key} ne '') {
         my $op;
         my $value;
-        if (ref $hash{$key}) {
+        if (ref $hash{$key} eq 'HASH') {
             $op = $hash{$key}->{operator};
             $value = $hash{$key}->{value};
-        } else {
+       } else {
             $op = '=';
             $value = $hash{$key};
         }
