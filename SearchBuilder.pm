@@ -376,6 +376,8 @@ such that the following call to Next will start over with the first item retriev
 
 =cut
 
+*next = \&Next;
+
 sub Next {
     my $self = shift;
     my @row;
@@ -407,6 +409,7 @@ through the result set.
 
 =cut
 
+*goto_first_item = \&GotoFirstItem;
 sub GotoFirstItem {
     my $self = shift;
     $self->GotoItem(0);
@@ -1285,7 +1288,7 @@ Returns the number of records in the set.
 =cut
 
 
-
+*count = \&Count;
 sub Count {
     my $self = shift;
 
