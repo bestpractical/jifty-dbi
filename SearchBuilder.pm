@@ -5,7 +5,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "1.12_01";
+$VERSION = "1.12";
 
 =head1 NAME
 
@@ -74,6 +74,7 @@ sub CleanSlate {
     $self->{'order'}            = "";
     $self->{'alias_count'}      = 0;
     $self->{'first_row'}        = 0;
+    $self->{'must_redo_search'} = 1;
     @{ $self->{'aliases'} } = ();
 
     delete $self->{'items'}        if ( defined $self->{'items'} );
@@ -208,7 +209,7 @@ sub _DistinctQuery {
     my $table = shift;
 
     # XXX - Postgres gets unhappy with distinct and OrderBy aliases
-    if ($self->{order_clause} =~ /(?<!main)\./) {
+    if (exists $self->{'order_clause'} && $self->{'order_clause'} =~ /(?<!main)\./) {
         $$statementref = "SELECT main.* FROM $$statementref";
     }
     else {

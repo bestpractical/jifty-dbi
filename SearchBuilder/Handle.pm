@@ -441,7 +441,10 @@ Execute the SQL string specified in QUERY_STRING
 sub SimpleQuery  {
     my $self = shift;
     my $QueryString = shift;
-    my @bind_values = (@_);
+    my @bind_values;
+   @bind_values = (@_) if (@_);;
+
+    
 
     my $sth = $self->dbh->prepare($QueryString);
     unless ($sth) {
@@ -474,15 +477,15 @@ sub SimpleQuery  {
     if ($self->LogSQLStatements) {
         $basetime = Time::HiRes::time(); 
     }
-
-    my $executed =$sth->execute(@bind_values);
+    my $executed;
+    eval {     $executed =$sth->execute(@bind_values) };
 
     if ($self->LogSQLStatements) {
             $self->_LogSQLStatement($QueryString ,tv_interval ( $basetime ));
  
     }
 
-    unless($executed ) {
+    if ( $@ or !$executed ) {
         if ($DEBUG) {
             die "$self couldn't execute the query '$QueryString'"
               . $self->dbh->errstr . "\n";

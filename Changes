@@ -1,8 +1,15 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+1.12
+    - Better error handling for some query build failure cases
+    - Corrected query builder for SQLite
+    - More refactoring.
+
 1.11
 
-    - When loading an object whose "id" has been altered, as in the case of RT's "Merge" functionality, the wrong object was returned by the caching layer. Special casing for the "id" method was removed.
+    - When loading an object whose "id" has been altered, as in the case of RT's 
+      "Merge" functionality, the wrong object was returned by the caching layer. 
+       Special casing for the "id" method was removed.
 
 
 1.10
