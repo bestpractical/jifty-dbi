@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle/Oracle.pm,v 1.7 2001/01/25 03:06:31 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle/Oracle.pm,v 1.8 2001/03/07 04:27:30 jesse Exp $
 
 package DBIx::SearchBuilder::Handle::Oracle;
 use DBIx::SearchBuilder::Handle;
@@ -19,15 +19,32 @@ sub new  {
 }
 
 
-=head2 Connect
+# {{{ sub Connect 
 
-Connect takes a hashref and passes it off to SUPER::Connect;
-it returns a database handle.
+=head2 Connect PARAMHASH: Driver, Database, Host, User, Password
+
+Takes a paramhash and connects to your DBI datasource. 
+
 
 =cut
+
+sub Connect  {
+  my $self = shift;
   
-sub Connect {
-    my $self = shift;
+  my %args = ( Driver => undef,
+	       Database => undef,
+	       User => undef,
+	       Password => undef, 
+	       @_);
+  
+  my $dsn = "dbi:$args{'Driver'}:$args{'Database'}";   
+
+  my $handle = DBI->connect_cached($dsn, $args{'User'}, $args{'Password'}) || croak "Connect Failed $DBI::errstr\n" ;
+
+  #Set the handle 
+  $self->dbh($handle);
+
+
     
     $self->SUPER::Connect(@_);
     

@@ -1,4 +1,4 @@
-#$Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle/Pg.pm,v 1.4 2001/01/25 03:06:31 jesse Exp $
+#$Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle/Pg.pm,v 1.5 2001/03/05 04:52:02 jesse Exp $
 # Copyright 1999-2001 Jesse Vincent <jesse@fsck.com>
 
 package DBIx::SearchBuilder::Handle::Pg;
@@ -41,23 +41,28 @@ are an array of key-value pairs to be inserted.
 sub Insert {
     my $self = shift;
     my $table = shift;
-    my @keyvals = (@_);
-    my $sth = $self->SUPER::Insert($table, @keyvals );
+    
+    my $sth = $self->SUPER::Insert($table, @_ );
     
     unless ($sth) {
 	if ($DEBUG) {
 	    die "Error with insert: ". $self->dbh->errstr;
 	}
 	else {
-         return (undef);
-     }
+	    return (undef);
+	}
     }
-    
-    #Lets get the id of that row we just inserted
-    my $sql = "SELECT id FROM $table WHERE oid = ?";
-    my @row = $self->FetchResult($sql, $sth->{'pg_oid_status'});
-    $self->{'id'} = $row[0];
 
+    #Lets get the id of that row we just inserted    
+    my $oid = $sth->{'pg_oid_status'};
+    my $sql = "SELECT id FROM $table WHERE oid = ?";
+    my @row = $self->FetchResult($sql, $oid);
+    unless (@row[0]) {
+	warn "Can't find $table.id  for OID $oid";
+	return(undef);
+    }	
+    $self->{'id'} = $row[0];
+    
     return ($self->{'id'});
 }
 

@@ -1,4 +1,4 @@
-#$Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Record.pm,v 1.20 2001/02/22 03:33:01 jesse Exp $
+#$Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Record.pm,v 1.22 2001/03/05 04:52:01 jesse Exp $
 package DBIx::SearchBuilder::Record;
 
 use strict;
@@ -336,6 +336,9 @@ sub new  {
     $self->_Init(@_);
     $self->{'_AccessibleCache'} = $self->_ClassAccessible()
       if $self->can('_ClassAccessible');
+
+    $self->{'_PrimaryKeys'} = $self->_PrimaryKeys() 
+      if $self->can('_PrimaryKeys');
     return $self;
   }
 
@@ -358,6 +361,19 @@ sub id  {
   }
 
 # }}}
+
+=head2 PrimaryKeys
+
+Matt Knopp owes docs for this function.
+
+=cut
+
+sub PrimaryKeys { 
+    my $self = shift; 
+    my %hash = map { $_ => $self->{'values'}->{$_} } @{$self->{'_PrimaryKeys'}};
+    return (%hash);
+}
+
 
 
 # {{{ Routines dealing with getting and setting row data
@@ -550,16 +566,24 @@ sub _Set {
 sub __Set  {
   my $self = shift;
 
-  my %args = ( Field => undef,
-	       Value => undef,
-	       IsSQL => undef,
+  my %args = ( 'Field' => undef,
+	       'Value' => undef,
+	       'IsSQL' => undef,
 	       @_ );
+
+  $args{'Column'} = $args{'Field'}; 
+  $args{'IsSqlFunction'} = $args{'IsSQL'}; 
+ 
+  ## Cleanup the hash.
+  delete $args{'Field'};
+  delete $args{'IsSQL'};
+
   my ($error_condition);
   
-  if (defined $args{'Field'}) {
-      my $field = lc $args{'Field'};
-      if ((defined $self->__Value($field))  and
-	  ($args{'Value'} eq $self->__Value($field))) {
+  if (defined $args{'Column'}) {
+      my $column = lc $args{'Column'};
+      if ((defined $self->__Value($column))  and
+	  ($args{'value'} eq $self->__Value($column))) {
 	  return (0, "That is already the current value");
       } 
       elsif (!defined ($args{'Value'})) {
@@ -567,16 +591,25 @@ sub __Set  {
       } 
       else {
 
-	my $method = "Validate".$args{'Field'};
-	unless ($self->$method($args{'Value'})) {
-		return(0, 'Illegal value for '.$args{'Field'});
+	  my $method = "Validate".$args{'Column'};
+	  unless ($self->$method($args{'Value'})) {
+	      return(0, 'Illegal value for '.$args{'Column'});
 	  }
-	  $error_condition = $self->_Handle->UpdateTableValue($self->Table, $field,$args{'Value'},$self->id, $args{'IsSQL'});
-	  # TODO: Deal with error handling?
-	  $self->{'values'}->{"$field"} = $args{'Value'};
+
+          $args{'Table'}        = $self->Table();
+          $args{'PrimaryKeys'} = {$self->PrimaryKeys()};
+                       
+
+          $error_condition = $self->_Handle->UpdateRecordValue(%args);
+
+          # TODO: Deal with error handling?
+	  $self->{'values'}->{"$column"} = $args{'Value'};
       }
+      return (1, "The new value has been set.");
   }
-  return (1, "The new value has been set.");
+  else {
+      return(0, 'No column specified');
+  }
 }
 
 # }}}
@@ -700,6 +733,23 @@ sub LoadById  {
 
 # }}}  
 
+sub LoadByPrimaryKeys {
+    my ($self, $data) = @_;
+
+    if (ref($data) eq 'HASH') {
+       my %cols=();
+       foreach (@{$self->{'_PrimaryKeys'}}) {
+         $cols{$_}=$data->{$_} if (exists($data->{$_}));
+       }
+       return ($self->LoadByCols(%cols));
+    } 
+    else { 
+      return (0, "Invalid data");
+    }
+}
+
+
+
 # {{{ sub LoadFromHash
 
 =head2 LoadFromHash
@@ -717,6 +767,7 @@ sub LoadFromHash {
   $self->_DowncaseValuesHash();
   return ($self->{'values'}{'id'});
 }
+
 # }}}
 
 # {{{ sub _LoadFromSQL 
@@ -739,16 +790,21 @@ sub _LoadFromSQL  {
     
     unless ($self->{'values'}) {
 	#warn "something might be wrong here; row not found. SQL: $QueryString";
-	return undef;
+	return (0, "Couldn't find row");
     }
-
+    
     $self->_DowncaseValuesHash();
-
-    unless (defined $self->{'values'}{'id'}) {
-	warn "No id found for this row";
+    
+     ## I guess to be consistant with the old code, make sure the primary  
+    ## keys exist.
+    
+    eval { 
+	$self->PrimaryKeys();
+    }; if ($@) { 
+	return (0, "Missing a primary key?: $@");
     }
-
-    return ($self->{'values'}{'id'});
+    return (1, "Found Object");
+    
   }
 
 # }}}
@@ -789,9 +845,19 @@ sub Delete  {
     
     #TODO Check to make sure the key's not already listed.
     #TODO Update internal data structure
-    my $QueryString = "DELETE FROM ". $self->Table . " WHERE id  = ?"; 
-    
-    return($self->_Handle->SimpleQuery($QueryString, $self->Id));
+
+    ## Constructs the where clause.
+    my @bind=();
+    my %pkeys=$self->PrimaryKeys();
+    my $where  = 'WHERE ';
+    foreach my $key (keys %pkeys) {
+       $where .= $key . "=?" . " AND ";
+       push (@bind, $pkeys{$key});
+    }
+
+    $where =~ s/AND\s$//;
+    my $QueryString = "DELETE FROM ". $self->Table . ' ' . $where;
+    return($self->_Handle->SimpleQuery($QueryString, @bind));
   }
 
 # }}}
@@ -874,7 +940,7 @@ Jesse Vincent, <jesse@fsck.com>
 
 Enhancements by Ivan Kohler, <ivan-rt@420.am>
 
-Docs by Matt Knopp <mknopp@jump.net>
+Docs by Matt Knopp <mhat@netlag.com>
 
 =head1 SEE ALSO
 

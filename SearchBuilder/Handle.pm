@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle.pm,v 1.12 2001/01/25 03:06:31 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle.pm,v 1.13 2001/03/05 04:52:01 jesse Exp $
 package DBIx::SearchBuilder::Handle;
 use Carp;
 use DBI;
@@ -124,7 +124,6 @@ sub Connect  {
 }
 # }}}
 
-
 # {{{ RaiseError
 
 =head2 RaiseError [MODE]
@@ -165,9 +164,6 @@ sub PrintError {
 
 # }}}
 
-
-
-
 # {{{ sub Disconnect 
 
 =head2 Disconnect
@@ -203,10 +199,53 @@ sub dbh {
   return($DBIHandle);
 }
 
-
 # }}}
 
 # {{{ sub UpdateTableValue 
+
+=head2 UpdateRecordValue 
+
+Takes a hash with fields: Table, Column, Value PrimaryKeys, and 
+IsSqlFunction.  Table, and Column should be obvious, Value is where you 
+set the new value you want the column to have. The primary_keys field should 
+be the lvalue of DBIx::SearchBuilder::Record::PrimaryKeys().  Finally 
+sql_function_p is set when the Value is a SQL function.  For example, you 
+might have ('Value'=>'PASSWORD(string)'), by setting sql_function_p that 
+string will be inserted into the query directly rather then as a binding. 
+
+=cut
+
+sub UpdateRecordValue {
+  my $self = shift;
+  my %args = @_;
+
+  my @bind   = ();
+  my $query  = 'UPDATE ' . $args{'Table'}  . ' ';
+     $query .= 'SET '    . $args{'Column'} . '=';
+
+  ## Look and see if the field is being updated via a SQL function. 
+  if ($args{'IsSQLFunction'}) {
+     $query .= $args{'Value'} . ' ';
+  }
+  else {
+     $query .= '? ';
+     push (@bind, $args{'Value'});
+  }
+
+  ## Constructs the where clause.
+  my $where  = 'WHERE ';
+  foreach my $key (keys %{$args{'PrimaryKeys'}}) {
+     $where .= $key . "=?" . " AND ";
+     push (@bind, $args{'PrimaryKeys'}{$key});
+  }
+     $where =~ s/AND\s$//;
+  
+  my $query_str = $query . $where;
+  return ($self->SimpleQuery($query_str, @bind));
+}
+
+
+
 
 =head2 UpdateTableValue TABLE COLUMN NEW_VALUE RECORD_ID IS_SQL
 
@@ -217,22 +256,16 @@ don\'t quote the NEW_VALUE
 
 sub UpdateTableValue  {
     my $self = shift;
-    
-    my $Table = shift;
-    my $Col = shift;
-    my $NewValue = shift;
-    my $Record = shift;
-    my $is_sql = shift;
 
-    if ( $is_sql ) {
-	return ($self->SimpleQuery( "UPDATE $Table SET $Col = $NewValue WHERE id = ?",
-				    $Record
-				  ));
-    } else { 
-	return ($self->SimpleQuery( "UPDATE $Table SET $Col = ? WHERE id = ?",
-				    $NewValue, $Record
-				  ));
-    }
+    ## This is just a wrapper to UpdateRecordValue().     
+    my %args = (); 
+    $args{'Table'}  = shift;
+    $args{'Column'} = shift;
+    $args{'Value'}  = shift;
+    $args{'PrimaryKeys'}   = shift; 
+    $args{'IsSQLFunction'} = shift;
+
+    return $self->UpdateRecordValue(%args)
 }
 # }}}
 
