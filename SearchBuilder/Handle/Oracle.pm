@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle/Oracle.pm,v 1.3 2000/09/07 04:28:15 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle/Oracle.pm,v 1.6 2000/10/23 22:01:34 jesse Exp $
 
 package DBIx::SearchBuilder::Handle::Oracle;
 use DBIx::SearchBuilder::Handle;
@@ -30,7 +30,7 @@ sub Connect {
     $self->dbh->{LongTruncOk}=1;
     $self->dbh->{LongReadLen}=8000;
     
-    $self->dbh->SimpleQuery("ALTER SESSION set NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS'");
+    $self->SimpleQuery("ALTER SESSION set NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS'");
     
     return ($Handle); 
 }
@@ -48,54 +48,44 @@ are an array of key-value pairs to be inserted.
 sub Insert  {
 	my $self = shift;
 	my $table = shift;
- my @keyvalpairs = (@_);
-    my ($cols, $vals);
-    
-    while (my $key = shift @keyvalpairs) {
-      my $value = shift @keyvalpairs;
-      $cols .= $key . ", ";
-      if (defined ($value)) {
-	  $value = $self->safe_quote($value)
-	      unless ($key=~/^(Created|LastUpdated)$/ && $value=~/^now\(\)$/i);
-	  $vals .= "$value, ";
-      }
-      else {
-	$vals .= "NULL, ";
-      }
-    }	
-    
-    $cols =~ s/, $//;
-    $vals =~ s/, $//;
-    #TODO Check to make sure the key's not already listed.
-    #TODO update internal data structure
-    my $QueryString = "INSERT INTO ".$self->{'table'}." ($cols) VALUES ($vals)";
-    my $sth = $self->SimpleQuery($QueryString);
-    if (!$sth) {
-       if ($main::debug) {
-	die "Error with $QueryString";
-      }
-       else {
-	 return (0);
-       }
-     }
+    my ($sth);
 
- # Oracle Hack to replace non-supported mysql_rowid call
+
+
+  # Oracle Hack to replace non-supported mysql_rowid call
  
-    $QueryString = "SELECT ".$self->{'table'}."_NUM.currval FROM DUAL";
+    $QueryString = "SELECT ".$table."_seq.nextval FROM DUAL";
  
     $sth = $self->SimpleQuery($QueryString);
     if (!$sth) {
        if ($main::debug) {
-	die "Error with $QueryString";
+    	die "Error with $QueryString";
       }
        else {
-	 return (0);
+	 return (undef);
        }
      }
- #probably better/more efficient way to do following
- #needs error checking
-     my @row = $sth->fetchrow_array;
-     $self->{'id'}=$row[0];
+
+     #needs error checking
+    my @row = $sth->fetchrow_array;
+
+    my $unique_id = $row[0];
+
+    #TODO: don't hardcode this to id pull it from somewhere else
+    #call super::Insert with the new column id.
+
+   $sth =  $self->SUPER::Insert( $table, 'id', $unique_id, @_);
+
+   unless ($sth) {
+     if ($main::debug) {
+        die "Error with $QueryString: ". $self->dbh->errstr;
+    }
+     else {
+         return (undef);
+     }
+   }
+
+    $self->{'id'} = $unique_id;
     return( $self->{'id'}); #Add Succeded. return the id
   }
 

@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle.pm,v 1.4 2000/09/15 04:57:53 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle.pm,v 1.6 2000/10/17 06:59:17 jesse Exp $
 package DBIx::SearchBuilder::Handle;
 use Carp;
 use DBI;
@@ -6,12 +6,10 @@ use strict;
 use vars qw($VERSION @ISA $DBIHandle);
 
 
-$VERSION = '0.02';
-
+$VERSION = '0.06';
 
 
 #instantiate a new object.
-
 
 
 # {{{ sub new 
@@ -24,38 +22,35 @@ sub new  {
     return $self;
   }
 
-=head2 new
-
-Takes a single argument. The name of the database driver we want to be using.
-Currently, we support Oracle and mysql (with those capitalizations).
-
-We work a little bit of magic to hand things off to the proper subclass's 
-'new' object. If this is just the wrong way to do things, point me in the 
-right direction, please!
-
-=cut
-
-#if(0) { #Too clever for our own good
-#sub new {
-#    my $class = shift;
-#    my $type = shift;
-#    my ($str, $self);
-#    
-    #We didn't really want the class. we just needed to get the type. lets put it back on the stack.
-#    push @_, $class;
-
-    #Load the right database driver 
-#    require "DBIx::SearchBuilder::Handle::$type";
-
-    #Let's return its creator
-#    eval "return(DBIx::SearchBuilder::Handle::$type->new(\@_));";
-
-
-
-#}
-#}
-
 # }}}
+
+sub Insert {
+  my($self, $table, @pairs) = @_;
+  my(@cols, @vals);
+
+#  my %seen; #only the *first* value is used - allows drivers to specify default
+  while ( my $key = shift @pairs ) {
+    my $value = shift @pairs;
+#    next if $seen{$key}++;
+    push @cols, $key;
+    if ( defined($value) ) {
+      $value = $self->safe_quote($value)
+        unless ( $key eq 'Created' || $key eq 'LastUpdated' )
+               && lc($value) eq 'now()';
+      push @vals, $value;
+    } else {
+      push @vals, 'NULL';
+    }
+  }
+
+  my $QueryString =
+    "INSERT INTO $table (". join(", ", @cols). ") VALUES ".
+    "(". join(", ", @vals). ")";
+  #warn $QueryString;
+
+  $self->SimpleQuery($QueryString);
+}
+
 
 # {{{ sub Connect 
 sub Connect  {
@@ -70,7 +65,7 @@ sub Connect  {
   
   my $dsn;
   
-  $dsn = "dbi:$args{'Driver'}:$args{'Database'}:$args{'Host'}";
+  $dsn = "dbi:$args{'Driver'}:dbname=$args{'Database'};host=$args{'Host'}";
   
   $DBIHandle = DBI->connect_cached($dsn, $args{'User'}, $args{'Password'}) || croak "Connect Failed $DBI::errstr\n" ;
 
@@ -197,7 +192,7 @@ sub safe_quote  {
    my $self = shift;
    my $in_val = shift;
    my ($out_val);
-   if (!$in_val) {
+   if (!defined $in_val) {
      return ("''");
      
    }
@@ -249,7 +244,7 @@ Jesse Vincent, jesse@fsck.com
 
 =head1 SEE ALSO
 
-perl(1), DBIx::SearchBuilder
+perl(1), L<DBIx::SearchBuilder>
 
 =cut
 

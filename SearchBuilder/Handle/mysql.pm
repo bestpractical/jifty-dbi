@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle/mysql.pm,v 1.1 2000/09/11 16:53:00 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle/mysql.pm,v 1.3 2000/10/17 06:59:17 jesse Exp $
 
 package DBIx::SearchBuilder::Handle::mysql;
 use DBIx::SearchBuilder::Handle;
@@ -6,13 +6,6 @@ use DBIx::SearchBuilder::Handle;
 
 
 
-sub new  {
-      my $proto = shift;
-      my $class = ref($proto) || $proto;
-      my $self  = {};
-      bless ($self, $class);
-      return ($self);
-}
 
 # {{{ sub Insert
 
@@ -25,38 +18,14 @@ are an array of key-value pairs to be inserted.
 
 sub Insert  {
     my $self = shift;
-    my $table = shift;
-    my @keyvalpairs = (@_);
 
-    my ($cols, $vals);
-    
-    while (my $key = shift @keyvalpairs) {
-      my $value = shift @keyvalpairs;
-    
-      $cols .= $key . ", ";
-      if (defined ($value)) {
-	  $value = $self->safe_quote($value)
-	      unless ($key=~/^(Created|LastUpdated)$/ && $value=~/^now\(\)$/i);
-	  $vals .= "$value, ";
-      }
-      else {
-	$vals .= "NULL, ";
-      }
-    }	
-    
-    $cols =~ s/, $//;
-    $vals =~ s/, $//;
-    #TODO Check to make sure the key's not already listed.
-    #TODO update internal data structure
-    my $QueryString = "INSERT INTO ".$table." ($cols) VALUES ($vals)";
-
-    my $sth = $self->SimpleQuery($QueryString);
+    my $sth = $self->SUPER::Insert(@_);
     if (!$sth) {
        if ($main::debug) {
-	die "Error with $QueryString";
+       	die "Error with $QueryString: ". $self->dbh->errstr;
       }
        else {
-	 return (0);
+	    return (0);
        }
      }
 

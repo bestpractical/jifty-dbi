@@ -1,9 +1,11 @@
 Changes
 Makefile.PL
 MANIFEST
+MANIFEST.SKIP
 SearchBuilder.pm
 SearchBuilder/Handle.pm
 SearchBuilder/Record.pm
 SearchBuilder/Handle/mysql.pm
 SearchBuilder/Handle/Oracle.pm
+SearchBuilder/Handle/Pg.pm
 test.pl

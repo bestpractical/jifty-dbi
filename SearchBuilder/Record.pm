@@ -1,4 +1,4 @@
-#$Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Record.pm,v 1.4 2000/09/15 04:57:53 jesse Exp $
+#$Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Record.pm,v 1.7 2000/10/17 06:59:17 jesse Exp $
 package DBIx::SearchBuilder::Record;
 
 use strict;
@@ -52,7 +52,7 @@ sub AUTOLOAD  {
   
   no strict 'refs';
 
-  if ($AUTOLOAD =~ /.*::(\w+)/ && $self->_Accessible($1,'read')) {
+  if ($AUTOLOAD =~ /.*::(\w+)/ &&  $self->_Accessible($1,'read') )  {
     my $Attrib = $1;
 
     *{$AUTOLOAD} = sub { return ($_[0]->_Value($Attrib))};
@@ -171,7 +171,7 @@ sub _Validate  {
     #check for nonprintables
     #If it's a blob, check for length
     #In an ideal world, if this is a link to another table, check the dependency.
-    
+   return(1); 
   }	
 
 # }}}	
@@ -199,6 +199,14 @@ sub Load  {
 
 # {{{ sub LoadByCol 
 
+=head2 LoadByCol
+
+Takes two arguments, a column and a value. The column can be any table column
+which contains unique values.  Behavior when using a non-unique value is
+undefined
+
+=cut
+
 sub LoadByCol  {
     my $self = shift;
     my $col = shift;
@@ -212,6 +220,14 @@ sub LoadByCol  {
 # }}}
 
 # {{{ sub LoadById 
+
+=head2 LoadById
+
+Loads a record by its primary key.
+TODO: BUG: Column name is currently hard coded to 'id'
+
+=cut
+
 sub LoadById  {
     my $self = shift;
     my $id = shift;
@@ -251,11 +267,12 @@ sub _LoadFromSQL  {
 	return undef;
     }
 
+    $self->_DowncaseValuesHash();
+
     unless ($self->{'values'}{'id'}) {
-	warn "something wrong here";
+	warn "No id found for this row";
     }
 
-    $self->_DowncaseValuesHash();
     return ($self->{'values'}{'id'});
   }
 
@@ -267,9 +284,27 @@ sub _LoadFromSQL  {
 
 # {{{ sub Create 
 
+=head2 Create
+
+Takes an array of key-value pairs and drops any keys that aren't known
+as columns for this recordtype
+
+=cut 
+
 sub Create  {
     my $self = shift;
-    return ($self->_Handle->Insert($self->Table, @_));
+
+    my %attribs = @_;
+
+    my ($key);
+    foreach $key (keys %attribs) {	
+	my $validate = 
+	"unless (\$self->Validate$key(\$attribs{\$key})) {
+		delete	\$attribs{\$key};
+	}";
+	eval ($validate); #TODO check error conditions	
+    }
+    return ($self->_Handle->Insert($self->Table, %attribs));
   }
 
 # }}}
