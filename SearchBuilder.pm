@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder.pm,v 1.16 2001/03/11 07:33:10 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder.pm,v 1.19 2001/05/11 16:29:45 jesse Exp $
 
 # {{{ Version, package, new, etc
 
@@ -7,7 +7,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "0.26";
+$VERSION = "!!VERSION!!";
 
 =head1 NAME
 
@@ -78,9 +78,10 @@ sub CleanSlate {
     $self->{'order'} = "";
     $self->{'alias_count'} = 0;
     $self->{'first_row'} = 0;
-    delete $self->{'items'} if ($self->{'items'});
-    delete $self->{'subclauses'} if ($self->{'subclauses'});
-    delete $self->{'restrictions'} if ($self->{'restrictions'});
+    delete $self->{'items'} if (defined $self->{'items'});
+    delete $self->{'raw_rows'} if (defined $self->{'raw_rows'});
+    delete $self->{'subclauses'} if (defined $self->{'subclauses'});
+    delete $self->{'restrictions'} if (defined $self->{'restrictions'});
 
     #we have no limit statements. DoSearch won't work.
     $self->_isLimited(0);
@@ -173,6 +174,64 @@ sub _DoSearch  {
     $self->{'must_redo_search'}=0;
     
     return($self->Count);
+}
+
+# }}}
+
+# {{{ sub _DoCount
+
+sub _DoCount  {
+    my $self = shift;
+    my ($QueryString, $Order);
+
+    #TODO refactor DoSearch and DoCount such that we only have
+    # one place where we build most of the querystring
+    
+    $QueryString = "SELECT count(main.id) FROM " . $self->_TableAliases;
+    
+    $QueryString .= $self->_WhereClause . " ".  $self->{'table_links'}. " " 
+      if ($self->_isLimited > 0);
+    
+    $QueryString .=  $self->_OrderClause . $self->_LimitClause;
+    
+    print STDERR "DBIx::SearchBuilder->DoSearch Query:  $QueryString\n" 
+      if ($self->DEBUG);
+    
+    
+    # {{{ get count out of the database
+    eval {
+	$self->{'records'} = $self->_Handle->dbh->prepare($QueryString);
+    };
+    if ($@) {
+	warn "$self couldn't prepare '$QueryString' ". $@;
+	return(undef);
+    }	
+
+    if (!$self->{'records'}) {
+	warn "Error:" . $self->_Handle->dbh->errstr . "\n";
+	return (undef);
+    }
+    eval {
+	if (!$self->{'records'}->execute) {
+	    warn "DBIx::SearchBuilder error:" . $self->{'records'}->errstr . "\n\tQuery String is $QueryString\n";
+	    return(undef);
+	}
+    };
+    if ($@) {
+	warn "$self couldn't execute a search: ".$@;
+	return(undef);
+    }
+      
+
+    # }}}
+        
+    my @row = $self->{'records'}->fetchrow_array();
+    $self->{'raw_rows'} = $row[0];
+    
+    $self->{records}->finish;
+    delete $self->{records};
+
+    return($self->{'raw_rows'});
 }
 
 # }}}
@@ -659,9 +718,9 @@ ORDER defaults to ASC(ending).  DESC(ending) is also a valid value for OrderBy
 
 sub OrderBy {
     my $self = shift;
-    my %args = ( ALIAS => 'main',
-		 FIELD => $self->{'primary_key'},
-		 ORDER => 'ASC',
+    my %args = ( ALIAS => undef,
+		 FIELD => undef,
+		 ORDER => undef,
 		 @_
 	       );
     $self->{'order_by_alias'} = $args{'ALIAS'};
@@ -686,20 +745,27 @@ sub OrderBy {
 returns the ORDER BY clause for the search.
 
 =cut
+
 sub _OrderClause {
     my $self = shift;
     
+    my $clause = "";
+
     #If we don't have an order defined, set the defaults
-    unless ((defined $self->{'order_by_alias'}) and 
-	    (defined $self->{'order_by_field'}) and
-	    (defined $self->{'order_by_order'})) {
-	$self->OrderBy();
+    unless ((defined $self->{'order_by_alias'}) and
+            (defined $self->{'order_by_field'}) and
+            (defined $self->{'order_by_order'})) {
+        $self->OrderBy();
     }
-	    
-    return (" ORDER BY " . $self->{'order_by_alias'} . 
-	    "." . $self->{'order_by_field'} . 
-	    " " . $self->{'order_by_order'});
-    
+   
+    if ($self->{'order_by_field'}) {
+        $clause = "ORDER BY ";
+        $clause .= $self->{'order_by_alias'} . "."      if ($self->{'order_by_alias'});
+        $clause .= $self->{'order_by_field'}; 
+        $clause .=  " " . $self->{'order_by_order'} if ($self->{'order_by_order'});
+    }
+
+    return ($clause);
 }
 
 # }}}
@@ -894,9 +960,20 @@ Returns the number of records in the set.
 sub Count  {
     my $self = shift;
     
+
+    # If we haven't actually got all objects loaded in memory, we
+    # really just want to do a quick count from the database.
+
     if ($self->{'must_redo_search'}) {
-	return ($self->_DoSearch);
+	# If we haven't already asked the database for the row count, do that
+	$self->_DoCount unless ($self->{'raw_rows'});
+	
+	#Report back the raw # of rows in the database 
+	return ($self->{'raw_rows'});
     }
+
+    # If we have loaded everything from the DB we have an 
+    # accurate count already.
     else {
 	return($self->{'rows'});
     }
@@ -925,6 +1002,7 @@ sub IsLast {
 # }}}
 
 # {{{ sub DEBUG 
+
 sub DEBUG {
     my $self = shift;
     if (@_) {

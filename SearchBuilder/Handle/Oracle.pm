@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle/Oracle.pm,v 1.10 2001/03/14 07:09:06 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle/Oracle.pm,v 1.11 2001/03/31 07:25:35 jesse Exp $
 
 package DBIx::SearchBuilder::Handle::Oracle;
 use DBIx::SearchBuilder::Handle;
@@ -39,7 +39,7 @@ sub Connect  {
   
   my $dsn = "dbi:$args{'Driver'}:$args{'Database'}";   
 
-  my $DBIHandle = DBI->connect_cached($dsn, $args{'User'}, $args{'Password'}) || die "Connect Failed $DBI::errstr\n" ;
+  my $DBIHandle = DBI->connect($dsn, $args{'User'}, $args{'Password'}) || die "Connect Failed $DBI::errstr\n" ;
 
   #Set the handle 
   $self->dbh($DBIHandle);

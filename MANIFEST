@@ -5,6 +5,7 @@ MANIFEST.SKIP
 SearchBuilder.pm
 SearchBuilder/Handle.pm
 SearchBuilder/Record.pm
+SearchBuilder/Record/Cachable.pm
 SearchBuilder/Handle/mysql.pm
 SearchBuilder/Handle/Oracle.pm
 SearchBuilder/Handle/Pg.pm

@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle.pm,v 1.14 2001/03/11 07:57:20 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle.pm,v 1.15 2001/03/31 07:25:35 jesse Exp $
 package DBIx::SearchBuilder::Handle;
 use Carp;
 use DBI;
@@ -115,7 +115,7 @@ sub Connect  {
   $dsn = "dbi:$args{'Driver'}:dbname=$args{'Database'};host=$args{'Host'}";
   $dsn .= ";port=$args{'Port'}" if defined($args{'Port'});
 
-  my $handle = DBI->connect_cached($dsn, $args{'User'}, $args{'Password'}) || croak "Connect Failed $DBI::errstr\n" ;
+  my $handle = DBI->connect($dsn, $args{'User'}, $args{'Password'}) || croak "Connect Failed $DBI::errstr\n" ;
 
   #Set the handle 
   $self->dbh($handle);
