@@ -1,4 +1,4 @@
-#$Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Record.pm,v 1.17 2001/02/07 03:40:55 jesse Exp $
+#$Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Record.pm,v 1.20 2001/02/22 03:33:01 jesse Exp $
 package DBIx::SearchBuilder::Record;
 
 use strict;
@@ -94,7 +94,228 @@ DBIx::SearchBuilder::Record - Perl extension for subclassing, so you can deal wi
  }
 
 =head1 DESCRIPTION
+
 DBIx::SearchBuilder::Record is designed to work with DBIx::SearchBuilder.
+
+
+=head2 What is it trying to do. 
+
+DBIx::SB::Record abstracts the agony of writing the common and generally 
+simple SQL statements needed to serialize and De-serialize an object to the
+database.  In a traditional system, you would define various methods on 
+your object 'create', 'find', 'modify', and 'delete' being the most common. 
+In each method you would have a SQL statement like: 
+
+  select * from table where value='blah';
+
+If you wanted to control what data a user could modify, you would have to 
+do some special magic to make accessors do the right thing. Etc.  The 
+problem with this approach is that in a majority of the cases, the SQL is 
+incredibly simple and the code from one method/object to the next was 
+basically the same.  
+
+<trumpets>
+
+Enter, DBIx::SearchBuilder::Record. 
+
+With::Record, you can in the simple case, remove all of that code and 
+replace it by defining two methods and inheriting some code.  Its pretty 
+simple, and incredibly powerful.  For more complex cases, you can, gasp, 
+do more complicated things by overriding certain methods.  Lets stick with
+the simple case for now. 
+
+The two methods in question are '_Init' and '_ClassAccessible', all they 
+really do are define some values and send you on your way.  As you might 
+have guessed the '_' suggests that these are private methods, they are. 
+They will get called by your record objects constructor.  
+
+  o. '_Init' 
+     Defines what table we are talking about, and set a variable to store 
+     the database handle. 
+
+  o. '_ClassAccessible
+     Defines what operations may be performed on various data selected 
+     from the database.  For example you can define fields to be mutable,
+     or immutable, there are a few other options but I don't understand 
+     what they do at this time. 
+
+And really, thats it.  So lets have some sample code, but first the example
+code makes the following assumptions: 
+
+  The database is 'postgres',
+  The host is 'reason',
+  The login name is 'mhat',
+  The database is called 'example', 
+  The table is called 'simple', 
+  The table looks like so: 
+
+      id     integer     not NULL,   primary_key(id),
+      foo    varchar(10),
+      bar    varchar(10)
+
+
+[file:///example/Simple.pm]
+
+000: package Simple; 
+001: use DBIx::SearchBuilder::Record;
+002: @ISA = (DBIx::SearchBuilder::Record);
+
+This should be pretty obvious, name the package, import ::Record and then 
+define ourself as a subclass of ::Record. 
+
+
+003: 
+004: sub _Init {
+005:   my $this   = shift; 
+006:   my $handle = shift;
+007: 
+008:   $this->_Handle($handle); 
+009:   $this->Table("Simple"); 
+010:   
+011:   return ($this);
+012: }
+
+Here we set our handle and table name, while its not obvious so far, we'll 
+see later that $handle (line: 006) gets passed via ::Record::new when a 
+new instance is created.  Thats actually an important concept, the DB handle 
+is not bound to a single object but rather, its shared across objects. 
+
+
+013: 
+014: sub _ClassAccessible {
+015:   {  
+016:     Foo => { 'read'  => 1 },
+017:     Bar => { 'read'  => 1, 'write' => 1  },
+018:     Id  => { 'read'  => 1 }
+019:   };
+020: }
+
+What's happening might be obvious, but just in case this method is going to 
+return a reference to a hash. That hash is where our columns are defined, 
+as well as what type of operations are acceptable.  
+
+
+021: 
+022: 1;             
+
+Its perl, duh. 
+
+
+
+Now, on to the code that will actually *do* something with this object. 
+
+[file://examples/ex.pl]
+000: use DBIx::SearchBuilder::Handle;
+001: use Simple;
+
+Use two packages, the first is where I get the DB handle from, the latter 
+is the object I just created. 
+
+002: 
+003: my $handle = DBIx::SearchBuilder::Handle->new();
+004:    $handle->Connect( 'Driver'   => 'Pg',
+005: 		          'Database' => 'test', 
+006: 		          'Host'     => 'reason',
+007: 		          'User'     => 'mhat',
+008: 		          'Password' => '');
+
+Creates a new DBIx::SB::Handle, and then connects to the database using 
+that handle.  Pretty straight forward, the password '' is what I use 
+when there is no password.  I could probably leave it blank, but I find 
+it to be more clear to define it.
+
+009: 
+010: my $s = new Simple($handle);
+011: 
+012: $s->LoadById(1); 
+
+LoadById is one of four 'LoadBy' methods,  as the name suggests it searches
+for an row in the database that has id='0'.  ::SearchBuilder has, what I 
+think is a bug, in that it current requires there to be an id field. More 
+reasonably it also assumes that the id field is unique. LoadById($id) will 
+do undefined things if there is >1 row with the same id.  
+
+In addition to LoadById, we also have:
+
+  o. LoadByCol 
+     Takes two arguments, a column name and a value.  Again, it will do 
+     undefined things if you use non-unique things.  
+
+  o. LoadByCols
+     Takes a hash of columns=>values and returns the *first* to match. 
+     First is probably lossy across databases vendors. 
+ 
+  o. LoadFromHash
+     Populates this record with data from a DBIx::SearchBuilder.  I'm 
+     currently assuming that DBIx::SearchBuilder is what we use in 
+     cases where we expect > 1 record.  More on this later.
+
+
+Now that we have a populated object, we should do something with it! ::Record
+automagically generates accessos and mutators for us, so all we need to do 
+is call the methods.  Accessors are named <Field>(), and Mutators are named 
+Set<Field>($).  On to the example, just appending this to the code from 
+the last example.
+
+013:
+014: print "ID  : ", $s->Id(),  "\n";
+015: print "Foo : ", $s->Foo(), "\n";
+016: print "Bar : ", $s->Bar(), "\n";
+
+Thats all you have to to get the data, now to change the data!
+
+
+017:
+018: $s->SetBar('NewBar');
+
+Pretty simple! Thats really all there is to it.  Set<Field>($) returns 
+a boolean and a string describing the problem.  Lets look at an example of
+what will happen if we try to set a 'Id' which we previously defined as 
+read only. 
+
+019: my ($res, $str) = $s->SetId('2');
+020: if (! $res) {
+021:   ## Print the error!
+022:   print "$str\n";
+023: } 
+
+The output will be:
+  >> Immutable field
+
+Currently Set<Field> updates the data in the database as soon as you call
+it.  In the future I hope to extend ::Record to better support transactional
+operations, such that updates will only happen when "you" say so.
+
+
+Finally, adding a removing records from the database.  ::Record provides a 
+Create method which simply takes a hash of key=>value pairs.  The keys 
+exactly	map to database fields. 
+
+
+023: ## Get a new record object.
+024: $s1 = new Simple($handle);
+025: $s1->Create('Id'  => 4,
+026: 	         'Foo' => 'Foooooo', 
+027: 	         'Bar' => 'Barrrrr');
+
+Poof! A new row in the database has been created!  Now lets delete the 
+object! 
+
+028:
+029: $s1 = undef;
+030: $s1 = new Simple($handle);
+031: $s1->LoadById(4);
+032: $s1->Delete();
+
+And its gone. 
+
+
+
+For simple use, thats more or less all there is to it.  The next part of 
+this HowTo will discuss using container classes,  overloading, and what 
+ever else I think of.
+
+
 
 =head1 METHODS
 
@@ -162,14 +383,29 @@ sub AUTOLOAD  {
   }
     
   elsif ( ($AUTOLOAD =~ /.*::Set(\w+)/ or
-           $AUTOLOAD =~ /.*::set_(\w+)/ ) &&
-          $self->_Accessible($1,'write')) {
-    my $Attrib = $1;
+           $AUTOLOAD =~ /.*::set_(\w+)/ ) ) {
 
-    *{$AUTOLOAD} = sub {  return ($_[0]->_Set(Field => $Attrib, Value => $_[1]))};
-    my $Value = shift @_;
-    return($self->_Set(Field => $Attrib, Value => $Value));
+    if ($self->_Accessible($1,'write')) {
+      my $Attrib = $1;
+
+      *{$AUTOLOAD} = sub {  
+        return ($_[0]->_Set(Field => $Attrib, Value => $_[1]))
+      };
+
+      my $Value = shift @_;
+      return($self->_Set(Field => $Attrib, Value => $Value));
+    } 
+
+    elsif ($self->_Accessible($1, 'read')) {
+      *{$AUTOLOAD} = sub {
+        return (0, 'Immutable field');
+      };
+      return(0, 'Immutable field');
+    } 
+    else { 
+      return(0, 'Nonexistant field?');
     }
+  }
 
   #Previously, I checked for writability here. but I'm not sure that's the
   #right idea. it breaks the ability to do ValidateQueue for a ticket
@@ -508,7 +744,7 @@ sub _LoadFromSQL  {
 
     $self->_DowncaseValuesHash();
 
-    unless ($self->{'values'}{'id'}) {
+    unless (defined $self->{'values'}{'id'}) {
 	warn "No id found for this row";
     }
 
@@ -635,7 +871,10 @@ __END__
 =head1 AUTHOR
 
 Jesse Vincent, <jesse@fsck.com> 
-Ivan Kohler, <ivan-rt@420.am>
+
+Enhancements by Ivan Kohler, <ivan-rt@420.am>
+
+Docs by Matt Knopp <mknopp@jump.net>
 
 =head1 SEE ALSO
 

@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder.pm,v 1.12 2001/01/24 23:08:17 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder.pm,v 1.14 2001/02/28 02:07:05 jesse Exp $
 
 # {{{ Version, package, new, etc
 
@@ -7,7 +7,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "0.21";
+$VERSION = "0.22";
 
 =head1 NAME
 
@@ -37,6 +37,7 @@ sub new  {
     $self->_Init(@_);
     return ($self)
 }
+
 # }}}
 
 # {{{ sub _Init 
@@ -67,7 +68,7 @@ a search
 
 sub CleanSlate {
     my $self = shift;
-    $self->{'must_redo_search'}=1;
+    $self->RedoSearch();
     $self->{'itemscount'}=0;
     $self->{'tables'} = "";
     $self->{'auxillary_tables'} = "";
@@ -105,10 +106,10 @@ sub _DoSearch  {
     $QueryString .= $self->_WhereClause . " ".  $self->{'table_links'}. " " 
       if ($self->_isLimited > 0);
     
-    $QueryString .=  $self->_Order . $self->_OrderBy . $self->_Limit;
+    $QueryString .=  $self->_OrderClause . $self->_LimitClause;
     
-    print STDERR "DBIx::SearchBuilder->DoSearch Query:  $QueryString\n" 
-      if ($self->DEBUG);
+    print STDERR "DBIx::SearchBuilder->DoSearch Query:  $QueryString\n" ;
+     # if ($self->DEBUG);
     
     
     # {{{ get $self->{'records'} out of the database
@@ -176,27 +177,27 @@ sub _DoSearch  {
 
 # }}}
 
+# {{{ sub _LimitClause
 
-# {{{ sub _Limit
+# LIMIT clauses are used for restricting ourselves to subsets of the search.
 
-sub _Limit {
-  my $self = shift;
-  
-  my $limit_clause;
-  
-  # LIMIT clauses are used for restricting ourselves to subsets of the search.
-  if ( $self->Rows) {
-    $limit_clause = " LIMIT ";
-    if ($self->FirstRow != 0) {
-      $limit_clause .= $self->FirstRow . ", ";
+sub _LimitClause {
+    my $self = shift;
+    my $limit_clause;
+    
+    if ($self->RowsPerPage) {
+	$limit_clause = " LIMIT ";
+	if ($self->FirstRow != 0) {
+	    $limit_clause .= $self->FirstRow . ", ";
+	}
+	$limit_clause .= $self->RowsPerPage;
     }
-    $limit_clause .= $self->Rows;
-  }
-  else {
-    $limit_clause = "";
-  }
-  return $limit_clause;
+    else {
+	$limit_clause = "";
+    }
+    return $limit_clause;
 }
+
 # }}}
 
 # {{{ sub _isLimited 
@@ -215,7 +216,7 @@ sub _isLimited  {
 
 # }}}
 
-# {{{ Methods dealing with Record objects (navigation)
+# {{{ Methods dealing traversing rows within the found set
 
 # {{{ sub Next 
 
@@ -321,6 +322,9 @@ sub ItemsArrayRef {
 }
 
 # }}}
+
+# }}}
+
 # {{{ sub NewItem 
 
 =head2 NewItem
@@ -337,9 +341,23 @@ sub NewItem  {
 }
 # }}}
 
+# {{{ sub RedoSearch
+
+=head2 RedoSearch
+
+Takes no arguments.  Tells DBIx::SearchBuilder that the next time it's asked
+for a record, it should requery the database
+
+=cut
+
+sub RedoSearch {
+    my $self = shift;
+   $self->{'must_redo_search'} = 1;
+}
+
 # }}}
 
-# {{{ Routines dealing with Restrictions (where subclauses) and ordering
+# {{{ Routines dealing with Restrictions (where subclauses) 
 
 # {{{ sub UnLimit 
 
@@ -365,12 +383,14 @@ Limit takes a paramhash.
 
 # TABLE can be set to something different than this table if a join is
 # wanted (that means we can't do recursive joins as for now).  Unless
+
 # ALIAS is set, the join criterias will be taken from EXT_LINKFIELD
 # and INT_LINKFIELD and added to the criterias.  If ALIAS is set, new
 # criterias about the foreign table will be added.
 
-# VALUE should always be set and will always be quoted.  Maybe TYPE
-# should imply that the value shouldn't be quoted?  IMO (TobiX) we
+# VALUE should always be set and will always be quoted. 
+
+# IMO (TobiX) we
 # shouldn't use quoted values, we should rather use placeholders and
 # pass the arguments when executing the statement.  This will also
 # allow us to alter limits and reexecute the search with a low cost by
@@ -382,76 +402,44 @@ clauses in SQL
 # OPERATOR is whatever should be putted in between the FIELD and the
 # VALUE.
 
-# ORDERBY is the SQL ORDERBY
-
-# ORDER can be ASCending or DESCending.
-
 =cut 
 
 sub Limit  {
-  my $self = shift;
-  my %args = (
-	      TABLE => $self->{'table'},
-	      FIELD => undef,
-	      VALUE => undef,
-	      ALIAS => undef,
-	      TYPE => undef,  #TODO: figure out why this is here
-	      ENTRYAGGREGATOR => 'or',
-	      OPERATOR => '=',
-	      ORDERBY => undef,
-	      ORDER => undef,
-	 
-	      @_ # get the real argumentlist
-	     );
+    my $self = shift;
+    my %args = (
+		TABLE => $self->{'table'},
+		FIELD => undef,
+		VALUE => undef,
+		ALIAS => undef,
+		ENTRYAGGREGATOR => 'or',
+		OPERATOR => '=',
+		@_ # get the real argumentlist
+	       );
   
-  my ($Alias);
-
-  if ($args{'FIELD'}) {
-    #If it's a like, we supply the %s around the search term
-    if ($args{'OPERATOR'} =~ /LIKE/) {
-      $args{'VALUE'} = "%".$args{'VALUE'} ."%";
+    my ($Alias);
+    
+    if ($args{'FIELD'}) {
+	#If it's a like, we supply the %s around the search term
+	if ($args{'OPERATOR'} =~ /LIKE/) {
+	$args{'VALUE'} = "%".$args{'VALUE'} ."%";
     }
-    $args{'VALUE'} = $self->_Handle->dbh->quote($args{'VALUE'});
-  }
-  
-  $Alias = $self->_GenericRestriction(%args);
-  warn "No table alias set!"
+	$args{'VALUE'} = $self->_Handle->dbh->quote($args{'VALUE'});
+    }
+    
+    $Alias = $self->_GenericRestriction(%args);
+    warn "No table alias set!"
       unless $Alias;
+    
+    # We're now limited. people can do searches.
+    
+    $self->_isLimited(1);
   
-  # {{{ Set $self->{order} - can be "ASC"ending or "DESC"ending.
-  if ($args{'ORDER'}) {
-    $self->{'order'} = $args{'ORDER'};
-  }
-  # }}}
-
-  # {{{ If we're setting an OrderBy, set $self->{'orderby'} here
-  if ($args{'ORDERBY'}) {
-    # 1. if an alias was passed in, use that. 
-    if ($args{'ALIAS'}) {
-      $self->{'orderby'} = $args{'ALIAS'}.".".$args{'ORDERBY'};
+    if (defined ($Alias)) {
+	return($Alias);
     }
-    # 2. if an alias was generated, use that.
-    elsif ($Alias) {
-       $self->{'orderby'} = "$Alias.".$args{'ORDERBY'};
-     }
-    # 3. use the primary
     else {
-      $self->{'orderby'} = "main.".$args{'ORDERBY'};
+	return(1);
     }
-  }
-
-  # }}}
-
-  # We're now limited. people can do searches.
-
-  $self->_isLimited(1);
-  
-  if (defined ($Alias)) {
-    return($Alias);
-  }
-  else {
-    return(0);
-  }
 }
 
 # }}}
@@ -489,8 +477,8 @@ Deprecated
 
 #import a restrictions clause
 sub ImportRestrictions  {
-  my $self = shift;
-  $self->{'where_clause'} = shift;
+    my $self = shift;
+    $self->{'where_clause'} = shift;
 }
 # }}}
 
@@ -506,16 +494,15 @@ sub _GenericRestriction  {
 		ALIAS => undef,	     
 		ENTRYAGGREGATOR => undef,
 		OPERATOR => '=',
-		RESTRICTION_TYPE => 'generic', 
 		@_);
     my ($QualifiedField);
-
+    
     #since we're changing the search criteria, we need to redo the search
-    $self->{'must_redo_search'}=1;
-
+    $self->RedoSearch();
+    
 
     # {{{ if there's no alias set, we need to set it
-
+    
     if (!$args{'ALIAS'}) {
 	
 	#if the table we're looking at is the same as the main table
@@ -524,20 +511,20 @@ sub _GenericRestriction  {
 	    # main is the alias of the "primary table.
 	    # TODO this code assumes no self joins on that table. 
 	    # if someone can name a case where we'd want to do that, I'll change it.
-
+	    
 	    $args{'ALIAS'} = 'main';
 	}
 	
 	# {{{ if we're joining, we need to work out the table alias
-
+	
 	else {
 	    $args{'ALIAS'}=$self->NewAlias($args{'TABLE'})
 	      or warn;
 	}
-
+	
 	# }}}
     }
-
+    
     # }}}
     
     
@@ -547,8 +534,7 @@ sub _GenericRestriction  {
       if ($self->DEBUG);
     
     #If we're overwriting this sort of restriction, 
-    # TODO: Something seems wrong here ... I kept getting warnings until I putted in all this crap.
-    # Shouldn't we have a default setting somewhere? -- TobiX
+    
     if (((exists $args{'ENTRYAGGREGATOR'}) and ($args{'ENTRYAGGREGATOR'}||"") eq 'none') or 
 	(!$self->{'restrictions'}{"$QualifiedField"})) {
 	$self->{'restrictions'}{"$QualifiedField"} = 
@@ -558,7 +544,6 @@ sub _GenericRestriction  {
     else {
 	$self->{'restrictions'}{"$QualifiedField"} .= 
 	  " $args{'ENTRYAGGREGATOR'} ($QualifiedField $args{'OPERATOR'} $args{'VALUE'})";
-	
     }
     
     return ($args{'ALIAS'});
@@ -572,7 +557,7 @@ sub _AddSubClause {
     my $self = shift;
     my $clauseid = shift;
     my $subclause = shift;
-
+    
     $self->{'subclauses'}{"$clauseid"} = $subclause;
     
 }
@@ -590,13 +575,12 @@ sub _TableAliases {
     
     # Go through all the other aliases we set up and build the compiled
     # aliases string
-    
     for my $count (0..($self->{'alias_count'}-1)) {
 	$compiled_aliases .= ", ".
 	  $self->{'aliases'}[$count]{'table'}. " ".
 	    $self->{'aliases'}[$count]{'alias'};
     }
-
+    
     return ($compiled_aliases);
 }
 
@@ -605,29 +589,29 @@ sub _TableAliases {
 # {{{ sub _WhereClause
 
 sub _WhereClause {
- my $self = shift;
- my ($subclause, $where_clause);
-  
- #Go through all the generic restrictions and build up the "generic_restrictions" subclause
- # That's the only one that SearchBuilder builds itself.
- # Arguably, the abstraction should be better, but I don't really see where to put it.
- $self->_CompileGenericRestrictions();
-
- #Go through all restriction types. Build the where clause from the 
- #Various subclauses.
- foreach $subclause (keys %{ $self->{'subclauses'}}) {
-     # Now, build up the where clause
-   if (defined ($where_clause)) {
-     $where_clause .= " AND ";
-   }
-
-   warn "$self $subclause doesn't exist"
-     if (!defined $self->{'subclauses'}{"$subclause"});
-   $where_clause .= $self->{'subclauses'}{"$subclause"};
- }
+    my $self = shift;
+    my ($subclause, $where_clause);
+    
+    #Go through all the generic restrictions and build up the "generic_restrictions" subclause
+    # That's the only one that SearchBuilder builds itself.
+    # Arguably, the abstraction should be better, but I don't really see where to put it.
+    $self->_CompileGenericRestrictions();
+    
+    #Go through all restriction types. Build the where clause from the 
+    #Various subclauses.
+    foreach $subclause (keys %{ $self->{'subclauses'}}) {
+	# Now, build up the where clause
+	if (defined ($where_clause)) {
+	    $where_clause .= " AND ";
+	}
+	
+	warn "$self $subclause doesn't exist"
+	  if (!defined $self->{'subclauses'}{"$subclause"});
+	$where_clause .= $self->{'subclauses'}{"$subclause"};
+    }
  
- $where_clause = " WHERE " . $where_clause if ($where_clause ne '');
- return ($where_clause);
+    $where_clause = " WHERE " . $where_clause if ($where_clause ne '');
+    return ($where_clause);
 }
 
 # }}}
@@ -654,40 +638,68 @@ sub _CompileGenericRestrictions  {
 
 # }}}
 
-# {{{ sub _Order 
-
-# This routine returns what the result set should be ordered by
-# Build the ORDER BY clause
-sub _Order {
-
-  my $self = shift;
-  my $OrderClause;
-  
-  if ($self->{'orderby'}) {
-    $OrderClause = " ORDER BY ". $self->{'orderby'};
-  }
-  else {
-    $OrderClause = " ORDER BY main.".$self->{'primary_key'}." ";
-  }
-  return ($OrderClause);
-}
-
 # }}}
 
-# {{{ sub _OrderBy 
+# {{{ Routines dealing with ordering
 
-# This routine returns whether the result set should be sorted Ascending or Descending
+# {{{ sub OrderBy
 
-sub _OrderBy {
-  my $self = shift;
-  my $order_by;
-  if ($self->{'order'} =~ /^des/i) {
-    $order_by = " DESC";
-  }
-  else {
-    $order_by = " ASC";
-  }
-  return($order_by);
+=head2 Orderby PARAMHASH
+
+Orders the returned results by ALIAS.FIELD ORDER. (by default 'main.id ASC')
+
+Takes a paramhash of ALIAS, FIELD and ORDER.  
+ALIAS defaults to main
+FIELD defaults to the primary key of the main table.
+ORDER defaults to ASC(ending).  DESC(ending) is also a valid value for OrderBy
+
+
+=cut
+
+
+sub OrderBy {
+    my $self = shift;
+    my %args = ( ALIAS => 'main',
+		 FIELD => $self->{'primary_key'},
+		 ORDER => 'ASC',
+		 @_
+	       );
+    $self->{'order_by_alias'} = $args{'ALIAS'};
+    $self->{'order_by_field'} = $args{'FIELD'};
+    if ($args{'ORDER'} =~ /^des/i) {
+	$self->{'order_by_order'} = "DESC";
+    }
+    else {
+	$self->{'order_by_order'} = "ASC";
+    }
+    
+    $self->RedoSearch();
+    
+}
+
+# }}} 
+
+# {{{ sub _OrderClause
+
+=head2 _OrderClause
+
+returns the ORDER BY clause for the search.
+
+=cut
+sub _OrderClause {
+    my $self = shift;
+    
+    #If we don't have an order defined, set the defaults
+    unless ((defined $self->{'order_by_alias'}) and 
+	    (defined $self->{'order_by_field'}) and
+	    (defined $self->{'order_by_order'})) {
+	$self->OrderBy();
+    }
+	    
+    return (" ORDER BY " . $self->{'order_by_alias'} . 
+	    "." . $self->{'order_by_field'} . 
+	    " " . $self->{'order_by_order'});
+    
 }
 
 # }}}
@@ -732,9 +744,6 @@ It takes a param hash with keys ALIAS1, FIELD1, ALIAS2 and FIELD2.
 ALIAS1 and ALIAS2 are column aliases obtained from $self->NewAlias or a $self->Limit
 FIELD1 and FIELD2 are the fields in ALIAS1 and ALIAS2 that should be linked, respectively.
 
-
-
-
 =cut
 
 sub Join {
@@ -753,19 +762,65 @@ sub Join {
 
 # }}}
 
-
-
-
 # things we'll want to add:
 # get aliases
 # add restirction clause
-# 
 
 # }}}
 
-# {{{ sub Rows
+# {{{ Deal with 'pages' of results'
 
-=head2 Rows
+# {{{ sub NextPage
+
+sub NextPage {
+  my $self = shift;
+  $self->FirstRow( $self->FirstRow + $self->RowsPerPage );
+}
+
+# }}}
+
+# {{{ sub FirstPage
+sub FirstPage {
+  my $self = shift;
+  $self->FirstRow(1);
+}
+# }}}
+
+# {{{ sub LastPage 
+
+# }}}
+
+# {{{ sub PrevPage
+
+sub PrevPage {
+    my $self = shift;
+    if (($self->FirstRow - $self->RowsPerPage) > 1) {
+	$self->FirstRow( $self->FirstRow - $self->RowsPerPage );
+    }
+    else {
+	$self->FirstRow(1);
+    }
+}
+
+# }}}
+
+
+# {{{ sub GotoPage
+
+sub GotoPage {
+    my $self = shift;
+    my $page = shift;
+    
+    unless ($self->RowsPerPage) {
+	$self->FirstRow(1);
+    }	
+    $self->FirstRow(1+ ($self->RowsPerPage * $page));
+}
+# }}}
+
+# {{{ sub RowsPerPage
+
+=head2 RowsPerPage
 
 Limits the number of rows returned by the database.
 Optionally, takes an integer which restricts the # of rows returned in a result
@@ -773,14 +828,13 @@ Returns the number of rows the database should display.
 
 =cut
 
-sub Rows {
-  my $self = shift;
-  if (@_) {
-    $self->{'show_rows'} = shift;
-  }
-  return ($self->{'show_rows'});
-
+sub RowsPerPage {
+    my $self = shift;
+    $self->{'show_rows'} = shift if (@_);
+    
+    return ($self->{'show_rows'});
 }
+
 # }}}
 
 # {{{ sub FirstRow
@@ -796,30 +850,33 @@ first row that the database should return.
 
 # returns the first row
 sub FirstRow {
-  my $self = shift;
-  if (@_) {
-    $self->{'first_row'} = shift;
+    my $self = shift;
+    if (@_) {
+	$self->{'first_row'} = shift;
+	
+	#SQL starts counting at 0
+	$self->{'first_row'}--;
+	#gotta redo the search if changing pages
+	$self->RedoSearch();
+    }
+    return ($self->{'first_row'});
+    }
 
-    #SQL starts counting at 0
-    $self->{'first_row'}--;
-  }
-  return ($self->{'first_row'});
-
-}
+# }}}
 
 # }}}
 
 # {{{ Public utility methods
 
-# {{{ sub Counter
+# {{{ sub _ItemsCounter
 
-=head2 Counter
+=head2 _ItemsCounter
 
 Returns the current position in the record set.
 
 =cut
 
-sub Counter {
+sub _ItemsCounter {
     my $self = shift;
     return $self->{'itemscount'};
 }
@@ -857,13 +914,14 @@ Returns true if the current row is the last record in the set.
 sub IsLast {
     my $self = shift;
     
-    if ($self->Counter == $self->Count) {
+    if ($self->_ItemsCounter == $self->Count) {
 	return (1);
     }	
     else {
 	return (undef);
     }
 }
+
 # }}}
 
 # {{{ sub DEBUG 
