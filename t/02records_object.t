@@ -5,21 +5,19 @@ use strict;
 use warnings;
 use File::Spec;
 
+BEGIN { require "t/utils.pl" }
+
 use Test::More;
 eval "use DBD::SQLite";
 if ($@) { 
 plan skip_all => "DBD::SQLite required for testing database interaction" 
 } else{
-plan tests => 13;
+plan tests => 9;
 }
-use_ok('DBIx::SearchBuilder::Handle::SQLite');
-my $handle = DBIx::SearchBuilder::Handle::SQLite->new();
-
-isa_ok($handle, 'DBIx::SearchBuilder::Handle');
-isa_ok($handle, 'DBIx::SearchBuilder::Handle::SQLite');
+my $handle = get_handle('SQLite');
 $handle->Connect( Driver => 'SQLite', Database => File::Spec->catfile(File::Spec->tmpdir(), "sb-test.$$"));
-can_ok($handle, 'dbh');
 isa_ok($handle->dbh, 'DBI::db');
+
 foreach( @{ TestApp->schema } ) {
 	my $ret = $handle->SimpleQuery($_);
 	isa_ok($ret,'DBI::st', "Inserted the schema. got a statement handle back");

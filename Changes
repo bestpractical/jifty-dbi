@@ -1,5 +1,10 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+
+1.23
+    - Now use DBI->quote_identifier to quote column and table names (Ruslan)
+    - Test suite updates (Ruslan)
+
 1.22 Mon Jan 24 07:42:46 EST 2005
     - Require encode since we require encode.
 
