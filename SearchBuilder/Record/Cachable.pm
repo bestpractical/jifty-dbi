@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Record/Cachable.pm,v 1.5 2001/05/28 20:29:34 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Record/Cachable.pm,v 1.6 2001/06/19 04:22:32 jesse Exp $
 # by Matt Knopp <mhat@netlag.com>
 
 package DBIx::SearchBuilder::Record::Cachable; 
@@ -96,7 +96,7 @@ sub _Set () {
   my $cache_key = $this->{'_CacheConfig'}{'cache_key'};
 
   if (exists $this->_RecordCache->{$cache_key}) {
-    $this->_expire();
+    $this->_expire($cache_key);
   }
  
   return $this->SUPER::_Set(%attr);
@@ -133,7 +133,7 @@ sub _gc_expired () {
 
 sub _expire (\$) {
   my ($this, $cache_key) = @_; 
-  delete $this->_RecordCache->{$cache_key};
+  delete $this->_RecordCache->{$cache_key} if (exists $this->_RecordCache->{$cache_key});
   return (1);
 }
 

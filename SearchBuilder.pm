@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder.pm,v 1.24 2001/06/01 18:34:14 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder.pm,v 1.25 2001/06/19 04:22:32 jesse Exp $
 
 # {{{ Version, package, new, etc
 
@@ -7,7 +7,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "0.38";
+$VERSION = "0.39";
 
 =head1 NAME
 
@@ -78,9 +78,10 @@ sub CleanSlate {
     $self->{'order'} = "";
     $self->{'alias_count'} = 0;
     $self->{'first_row'} = 0;
-    @{$self->{'left_joins'}} = ();
     @{$self->{'aliases'}} = ();
+
     delete $self->{'items'} if (defined $self->{'items'});
+    delete $self->{'left_joins'} if (defined $self->{'left_joins'});
     delete $self->{'raw_rows'} if (defined $self->{'raw_rows'});
     delete $self->{'subclauses'} if (defined $self->{'subclauses'});
     delete $self->{'restrictions'} if (defined $self->{'restrictions'});
@@ -484,10 +485,16 @@ sub Limit  {
 		QUOTEVALUE => 1,
 		ENTRYAGGREGATOR => 'or',
 		OPERATOR => '=',
+		LEFTJOIN => undef,
 		@_ # get the real argumentlist
 	       );
-  
+    
     my ($Alias);
+    
+    
+    #since we're changing the search criteria, we need to redo the search
+    $self->RedoSearch();
+
     
     if ($args{'FIELD'}) {
 	#If it's a like, we supply the %s around the search term
@@ -502,14 +509,17 @@ sub Limit  {
 	}
     }
     
+    
+    
     $Alias = $self->_GenericRestriction(%args);
+
     warn "No table alias set!"
       unless $Alias;
     
     # We're now limited. people can do searches.
     
     $self->_isLimited(1);
-  
+    
     if (defined ($Alias)) {
 	return($Alias);
     }
@@ -565,28 +575,30 @@ sub _GenericRestriction  {
     my %args = (
 		TABLE => $self->{'table'},
 		FIELD => undef,
-		VALUE => undef,	#TODO: $Value should take an array of values and generate 
-		                #the proper where clause.
+		VALUE => undef,	
 		ALIAS => undef,	     
+		LEFTJOIN => undef,
 		ENTRYAGGREGATOR => undef,
 		OPERATOR => '=',
 		@_);
-    my ($QualifiedField);
     
-    #since we're changing the search criteria, we need to redo the search
-    $self->RedoSearch();
+    #TODO: $args{'VALUE'} should take an array of values and generate 
+    # the proper where clause.
     
-
+    #If we're performing a left join, we really want the alias to be the 
+    #left join criterion.
+    
+    $args{'ALIAS'} = $args{'LEFTJOIN'} if ( defined $args{'LEFTJOIN'});
+    
     # {{{ if there's no alias set, we need to set it
     
-    if (!$args{'ALIAS'}) {
+    unless ($args{'ALIAS'}) {
 	
 	#if the table we're looking at is the same as the main table
 	if ($args{'TABLE'} eq $self->{'table'}) {
-	    
-	    # main is the alias of the "primary table.
 	    # TODO this code assumes no self joins on that table. 
-	    # if someone can name a case where we'd want to do that, I'll change it.
+	    # if someone can name a case where we'd want to do that, 
+	    # I'll change it.
 	    
 	    $args{'ALIAS'} = 'main';
 	}
@@ -594,32 +606,44 @@ sub _GenericRestriction  {
 	# {{{ if we're joining, we need to work out the table alias
 	
 	else {
-	    $args{'ALIAS'}=$self->NewAlias($args{'TABLE'})
-	      or warn;
+	    $args{'ALIAS'}=$self->NewAlias($args{'TABLE'});
 	}
 	
 	# }}}
     }
     
-    # }}}
-    
+    # }}}    
     
     #Set this to the name of the field and the alias.
-    $QualifiedField = $args{'ALIAS'}.".".$args{'FIELD'};
-    print STDERR "DBIx::SearchBuilder->_GenericRestriction  QualifiedField is $QualifiedField\n" 
+    my $QualifiedField = $args{'ALIAS'}.".".$args{'FIELD'};
+    
+    print STDERR "$self->_GenericRestriction QualifiedField=$QualifiedField\n" 
       if ($self->DEBUG);
+
+    my ($restriction);
+
+    # If we're trying to get a leftjoin restriction, lets set
+    # $restriction to point htere. otherwise, lets construct normally
+
+    if ($args{'LEFTJOIN'})  {
+	$restriction = \$self->{'left_joins'}{$args{'ALIAS'}}{'criteria'}{"$QualifiedField"};
+    }
+    else {
+	$restriction = \$self->{'restrictions'}{"$QualifiedField"};
+    }
+    # If it's a new value or we're overwriting this sort of restriction, 
     
-    #If we're overwriting this sort of restriction, 
-    
-    if (((exists $args{'ENTRYAGGREGATOR'}) and ($args{'ENTRYAGGREGATOR'}||"") eq 'none') or 
-	(!$self->{'restrictions'}{"$QualifiedField"})) {
-	$self->{'restrictions'}{"$QualifiedField"} = 
-	  "($QualifiedField $args{'OPERATOR'} $args{'VALUE'})";  
+    if (((exists $args{'ENTRYAGGREGATOR'}) and 
+	 ($args{'ENTRYAGGREGATOR'} || "" ) eq 'none') or 
+	(!$$restriction) ) {
+
+	$$restriction = "($QualifiedField $args{'OPERATOR'} $args{'VALUE'})";  
 	
     }
     else {
-	$self->{'restrictions'}{"$QualifiedField"} .= 
-	  " $args{'ENTRYAGGREGATOR'} ($QualifiedField $args{'OPERATOR'} $args{'VALUE'})";
+	$$restriction .= 
+	  $args{'ENTRYAGGREGATOR'} .
+	    " ($QualifiedField $args{'OPERATOR'} $args{'VALUE'})";
     }
     
     return ($args{'ALIAS'});
@@ -816,7 +840,6 @@ sub NewAlias {
     my $self = shift;
     my $table = shift || die "Missing parameter";
     
-    
     my $alias = $self->_GetAlias($table);
     
     my $subclause = "$table $alias";
@@ -854,8 +877,13 @@ sub _GetAlias {
 
 sub _LeftJoins {
     my $self = shift;
-    my $joins = join(' ', @{$self->{'left_joins'}});
-    return ($joins);
+    my $join_clause;
+    foreach my $join (keys %{ $self->{'left_joins'}}) {
+	$join_clause .=  $self->{'left_joins'}{$join}{'alias_string'}." ON ";
+	$join_clause .= join(' AND ', values %{$self->{'left_joins'}{$join}{'criteria'}});
+    }
+    
+    return ($join_clause);
 }
 
 
@@ -892,10 +920,14 @@ sub Join {
 
     if ($args{'TYPE'} =~ /LEFT/i) {
 	my $alias = $self->_GetAlias($args{'TABLE2'});
-	push (@{$self->{'left_joins'}} ,
-	   "LEFT JOIN $args{'TABLE2'} as $alias ".
-	   "ON  $args{'ALIAS1'}.$args{'FIELD1'} = $alias.$args{'FIELD2'}");
+	
+	$self->{'left_joins'}{"$alias"}{'alias_string'} =   
+	  "LEFT JOIN $args{'TABLE2'} as $alias ";
 
+
+	$self->{'left_joins'}{"$alias"}{'criteria'}{'base_criterion'} = 
+	  "$args{'ALIAS1'}.$args{'FIELD1'} = $alias.$args{'FIELD2'}";
+	
 	return($alias);
     }
     
@@ -1114,3 +1146,6 @@ DBIx::SearchBuilder::Handle, DBIx::SearchBuilder::Record, perl(1).
 =cut
 
 # }}}
+
+
+
