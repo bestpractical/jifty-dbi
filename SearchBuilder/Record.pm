@@ -631,6 +631,7 @@ sub __Set {
     unless ( defined( $args{'Column'} ) && $args{'Column'} ) {
         $ret->as_array( 0, 'No column specified' );
         $ret->as_error( errno   => 5,
+                        do_backtrace => 0,
                             message => "No column specified" );
         return ($ret->return_value);
     }
@@ -639,12 +640,14 @@ sub __Set {
          and ( $args{'Value'} eq $self->__Value($column) ) ) {
         $ret->as_array( 0, "That is already the current value" );
         $ret->as_error( errno   => 1,
+                        do_backtrace => 0,
                             message => "That is already the current value" );
         return ($ret->return_value);
     }
     elsif ( !defined( $args{'Value'} ) ) {
         $ret->as_array( 0, "No value passed to _Set" );
         $ret->as_error( errno   => 2,
+                        do_backtrace => 0,
                             message => "No value passed to _Set" );
         return ($ret->return_value);
     }
@@ -654,6 +657,7 @@ sub __Set {
         unless ( $self->$method( $args{'Value'} ) ) {
             $ret->as_array( 0, 'Illegal value for ' . $args{'Column'} );
             $ret->as_error(errno   => 3,
+                        do_backtrace => 0,
                                message => "Illegal value for " . $args{'Column'}
             );
             return ($ret->return_value);
@@ -669,6 +673,7 @@ sub __Set {
                                   . " could not be set to "
                                   . $args{'Value'} . "." );
             $ret->as_error( errno   => 4,
+                        do_backtrace => 0,
                                 message => $args{'Column'}
                                   . " could not be set to "
                                   . $args{'Value'} . "." );

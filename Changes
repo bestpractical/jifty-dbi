@@ -1,5 +1,8 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+0.90    Aug 8, 2003
+        - Disable Class::ReturnValue's stack trace feature as it interacted poorly with a stack containing lots of data 
+
 0.89_02 July 19, 2003
 	- Patch from Grant DeGraw to allow ordering by multiple columns.
 
