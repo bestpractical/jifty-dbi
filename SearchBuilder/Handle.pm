@@ -438,51 +438,54 @@ Execute the SQL string specified in QUERY_STRING
 
 =cut
 
-sub SimpleQuery  {
-    my $self = shift;
+sub SimpleQuery {
+    my $self        = shift;
     my $QueryString = shift;
     my @bind_values;
-   @bind_values = (@_) if (@_);;
-
-    
+    @bind_values = (@_) if (@_);
 
     my $sth = $self->dbh->prepare($QueryString);
     unless ($sth) {
-	if ($DEBUG) {
-	    die "$self couldn't prepare the query '$QueryString'" . 
-	      $self->dbh->errstr . "\n";
-	}
-	else {
-	    warn "$self couldn't prepare the query '$QueryString'" . 
-	      $self->dbh->errstr . "\n";
-        my $ret = Class::ReturnValue->new();
-        $ret->as_error( errno => '-1',
-                            message => "Couldn't prepare the query '$QueryString'.". $self->dbh->errstr,
-                            do_backtrace => undef);
-	    return ($ret->return_value);
-	}
+        if ($DEBUG) {
+            die "$self couldn't prepare the query '$QueryString'"
+              . $self->dbh->errstr . "\n";
+        }
+        else {
+            warn "$self couldn't prepare the query '$QueryString'"
+              . $self->dbh->errstr . "\n";
+            my $ret = Class::ReturnValue->new();
+            $ret->as_error(
+                errno   => '-1',
+                message => "Couldn't prepare the query '$QueryString'."
+                  . $self->dbh->errstr,
+                do_backtrace => undef
+            );
+            return ( $ret->return_value );
+        }
     }
 
-    # Check @bind_values for HASH refs 
-    for (my $bind_idx = 0; $bind_idx < scalar @bind_values; $bind_idx++) {
-        if (ref($bind_values[$bind_idx]) eq "HASH") {
+    # Check @bind_values for HASH refs
+    for ( my $bind_idx = 0 ; $bind_idx < scalar @bind_values ; $bind_idx++ ) {
+        if ( ref( $bind_values[$bind_idx] ) eq "HASH" ) {
             my $bhash = $bind_values[$bind_idx];
             $bind_values[$bind_idx] = $bhash->{'value'};
             delete $bhash->{'value'};
-            $sth->bind_param($bind_idx+1, undef, $bhash );
+            $sth->bind_param( $bind_idx + 1, undef, $bhash );
         }
     }
 
     my $basetime;
-    if ($self->LogSQLStatements) {
-        $basetime = Time::HiRes::time(); 
+    if ( $self->LogSQLStatements ) {
+        $basetime = Time::HiRes::time();
     }
     my $executed;
-    eval {     $executed =$sth->execute(@bind_values) };
+    {
+        no warnings 'uninitialized' ; # undef in bind_values makes DBI sad
+        eval { $executed = $sth->execute(@bind_values) };
+    }
+    if ( $self->LogSQLStatements ) {
+        $self->_LogSQLStatement( $QueryString, tv_interval($basetime) );
 
-    if ($self->LogSQLStatements) {
-            $self->_LogSQLStatement($QueryString ,tv_interval ( $basetime ));
- 
     }
 
     if ( $@ or !$executed ) {
@@ -494,20 +497,20 @@ sub SimpleQuery  {
         else {
             warn "$self couldn't execute the query '$QueryString'";
 
-              my $ret = Class::ReturnValue->new();
+            my $ret = Class::ReturnValue->new();
             $ret->as_error(
-                         errno   => '-1',
-                         message => "Couldn't execute the query '$QueryString'"
-                           . $self->dbh->errstr,
-                         do_backtrace => undef );
-            return ($ret->return_value);
+                errno   => '-1',
+                message => "Couldn't execute the query '$QueryString'"
+                  . $self->dbh->errstr,
+                do_backtrace => undef
+            );
+            return ( $ret->return_value );
         }
 
     }
     return ($sth);
-    
-    
-  }
+
+}
 
 # }}}
 

@@ -1,5 +1,5 @@
 name: DBIx-SearchBuilder
-version: 1.12_01
+version: 1.12
 license: perl
 distribution_type: module
 build_requires:
