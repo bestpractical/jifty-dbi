@@ -123,6 +123,8 @@ sub Connect  {
 }
 # }}}
 
+# {{{ BuildDSN
+
 =item  BuildDSN PARAMHASH
 
 Takes a bunch of parameters:  
@@ -154,6 +156,9 @@ sub BuildDSN {
   $self->{'dsn'}= $dsn;
 }
 
+# }}}
+
+# {{{ DSN
 
 =item DSN
 
@@ -165,6 +170,7 @@ sub DSN {
     return($self->{'dsn'});
 }
 
+# }}}
 
 # {{{ RaiseError
 
@@ -430,9 +436,56 @@ sub CaseSensitive {
 
 
 # }}} 
-# Autoload methods go after =cut, and are processed by the autosplit program.
- 
- 1;
+
+# {{{ BeginTransaction
+
+=head2 BeginTransaction
+
+Tells DBIx::SearchBuilder to begin a new SQL transaction. This will
+temporarily suspend Autocommit mode.
+
+=cut
+
+sub BeginTransaction {
+    my $self = shift;
+    return($self->SimpleQuery('BEGIN'));
+}
+
+# }}}
+
+# {{{ Commit
+
+=head2 Commit
+
+Tells DBIx::SearchBuilder to commit the current SQL transaction. 
+This will turn Autocommit mode back on.
+
+=cut
+
+sub Commit {
+    my $self = shift;
+    return($self->SimpleQuery('COMMIT'));
+}
+
+# }}}
+
+# {{{ Rollback
+
+=head2 Rollback
+
+Tells DBIx::SearchBuilder to abort the current SQL transaction. 
+This will turn Autocommit mode back on.
+
+=cut
+
+sub Rollback {
+    my $self = shift;
+    return($self->SimpleQuery('ROLLBACK'));
+}
+
+# }}}
+
+1;
 __END__
 
 # {{{ POD
