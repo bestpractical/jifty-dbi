@@ -4,7 +4,7 @@ use warnings;
 
 # WARNING --- This is still development code.  It is experimental.
 
-our $VERSION = '$Version$';
+our $VERSION = '0';
 
 # This could inherit from DBIx::SearchBuilder, but there are _a lot_
 # of things in DBIx::SearchBuilder that we don't want, like Limit and
@@ -14,7 +14,7 @@ our $VERSION = '$Version$';
 
 =head1 NAME
 
-DBIx::Searchbuilder::Union - Deal with multiple SearchBuilder result sets as one
+DBIx::SearchBuilder::Union - Deal with multiple SearchBuilder result sets as one
 
 =head1 SYNOPSIS
 
