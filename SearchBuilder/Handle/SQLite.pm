@@ -40,15 +40,18 @@ a Class::ReturnValue object with the error reploaded.
 
 sub Insert  {
     my $self = shift;
-    my %args = (id => undef,
-                @_);
-    my $sth = $self->SUPER::Insert(@_);
+    my $table = shift;
+    my %args = ( id => undef, @_);
+    # We really don't want an empty id
+    
+    my $sth = $self->SUPER::Insert($table, %args);
     if (!$sth) {
 	    return ($sth);
      }
 
-    $self->{'id'}=$self->dbh->func('last_insert_rowid');
- 
+    # If we have set an id, then we want to use that, otherwise, we want to lookup the last _new_ rowid
+    $self->{'id'}= $args{'id'} || $self->dbh->func('last_insert_rowid');
+
     warn "$self no row id returned on row creation" unless ($self->{'id'});
     return( $self->{'id'}); #Add Succeded. return the id
   }
@@ -64,10 +67,13 @@ Returns undef, since mysql's searches are not case sensitive by default
 
 sub CaseSensitive {
     my $self = shift;
-    return(undef);
+    return(1);
 }
 
+sub BinarySafeBLOBs { 
+    return undef;
+}
 
 # }}}
 
-
+1;
