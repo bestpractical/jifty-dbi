@@ -1,5 +1,10 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+0.93 
+        - Added ODBC database driver from Autrijus Tang
+        - Added the ability to sort on functions of columns from Autrijus Tang
+        - Improved case-insensitve searching behavior for PostgreSQL
+
 0.92    Sept 4, 2003
         - Fixed a bug that caused certain types of pre-canned table aliases to fail to work on join
 

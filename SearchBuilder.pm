@@ -924,7 +924,7 @@ Orders the returned results by ALIAS.FIELD ORDER. (by default 'main.id ASC')
 
 Takes a paramhash of ALIAS, FIELD and ORDER.  
 ALIAS defaults to main
-FIELD defaults to the primary key of the main table.
+FIELD defaults to the primary key of the main table.  Also accepts C<FUNCTION(FIELD)> format
 ORDER defaults to ASC(ending).  DESC(ending) is also a valid value for OrderBy
 
 
@@ -967,6 +967,12 @@ sub OrderByCols {
         if ( ($rowhash{'ALIAS'}) and
 	     ($rowhash{'FIELD'}) and
              ($rowhash{'ORDER'}) ) {
+
+	    if ($rowhash{'FIELD'} =~ /^(\w+\()(.*\))$/) {
+		# handle 'FUNCTION(FIELD)' formatted fields
+		$rowhash{'ALIAS'} = $1 . $rowhash{'ALIAS'};
+		$rowhash{'FIELD'} = $2;
+	    }
 
             $clause .= ($clause ? ", " : " ");
             $clause .= $rowhash{'ALIAS'} . ".";
