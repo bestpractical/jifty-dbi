@@ -12,84 +12,81 @@ use Class::ReturnValue;
 
 =head1 NAME
 
-DBIx::SearchBuilder::Record - Perl extension for subclassing, so you can deal with a Record
+DBIx::SearchBuilder::Record - Superclass for records loaded by SearchBuilder
 
 =head1 SYNOPSIS
 
-module MyRecord;
-use base qw/DBIx::SearchBuilder::Record/;
+  package MyRecord;
+  use base qw/DBIx::SearchBuilder::Record/;
+  
+  sub _Init {
+      my $self       = shift;
+      my $DBIxHandle =
+	shift;    # A DBIx::SearchBuilder::Handle::foo object for your database
+  
+      $self->_Handle($DBIxHandle);
+      $self->Table("Users");
+  }
+  
+  # Tell Record what the primary keys are
+  sub _PrimaryKeys {
+      return ['id'];
+  }
+  
+  # Preferred and most efficient way to specify fields attributes in a derived
+  # class, used by the autoloader to construct Attrib and SetAttrib methods.
 
-sub _Init {
-    my $self       = shift;
-    my $DBIxHandle =
-      shift;    # A DBIx::SearchBuilder::Handle::foo object for your database
-
-    $self->_Handle($DBIxHandle);
-    $self->Table("Users");
-}
-
-# Tell Record what the primary keys are
-sub _PrimaryKeys {
-    my $self = shift;
-    return ['id'];
-}
-
-#Preferred and most efficient way to specify fields attributes in a derived
-#class, used by the autoloader to construct Attrib and SetAttrib methods.
-
-# read: calling $Object->Foo will return the value of this record's Foo column  # write: calling $Object->SetFoo with a single value will set Foo's value in
-#        both the loaded object and the database
-
-sub _ClassAccessible {
-    {
-        Tofu => { 'read' => 1, 'write' => 1 },
-        Maz  => { 'auto' => 1, },
-        Roo => { 'read' => 1, 'auto' => 1, 'public' => 1, },
-    };
-}
-
-# A subroutine to check a user's password without ever returning the current password
-#For security purposes, we didn't expose the Password method above
-
-sub IsPassword {
-    my $self = shift;
-    my $try  = shift;
-
-    # note two __s in __Value.  Subclasses may muck with _Value, but they should
-    # never touch __Value
-
-    if ( $try eq $self->__Value('Password') ) {
-        return (1);
-    }
-    else {
-        return (undef);
-    }
-
-}
-
-# Override DBIx::SearchBuilder::Create to do some checking on create
-sub Create {
-    my $self   = shift;
-    my %fields = (
-        UserId   => undef,
-        Password => 'default',    #Set a default password
-        @_
-    );
-
-    #Make sure a userid is specified
-    unless ( $fields{'UserId'} ) {
-        die "No userid specified.";
-    }
-
-    #Get DBIx::SearchBuilder::Record->Create to do the real work
-    return (
-        $self->SUPER::Create(
-            UserId   => $fields{'UserId'},
-            Password => $fields{'Password'},
-            Created  => time
-        )
-    );
-}
+  # read: calling $Object->Foo will return the value of this record's Foo column  
+  # write: calling $Object->SetFoo with a single value will set Foo's value in
+  #        both the loaded object and the database  
+  sub _ClassAccessible {
+      {
+	  Tofu => { 'read' => 1, 'write' => 1 },
+	  Maz  => { 'auto' => 1, },
+	  Roo => { 'read' => 1, 'auto' => 1, 'public' => 1, },
+      };
+  }
+  
+  # A subroutine to check a user's password without returning the current value
+  # For security purposes, we didn't expose the Password method above
+  sub IsPassword {
+      my $self = shift;
+      my $try  = shift;
+  
+      # note two __s in __Value.  Subclasses may muck with _Value, but
+      # they should never touch __Value
+  
+      if ( $try eq $self->__Value('Password') ) {
+	  return (1);
+      }
+      else {
+	  return (undef);
+      }
+  }
+  
+  # Override DBIx::SearchBuilder::Create to do some checking on create
+  sub Create {
+      my $self   = shift;
+      my %fields = (
+	  UserId   => undef,
+	  Password => 'default',    #Set a default password
+	  @_
+      );
+  
+      # Make sure a userid is specified
+      unless ( $fields{'UserId'} ) {
+	  die "No userid specified.";
+      }
+  
+      # Get DBIx::SearchBuilder::Record->Create to do the real work
+      return (
+	  $self->SUPER::Create(
+	      UserId   => $fields{'UserId'},
+	      Password => $fields{'Password'},
+	      Created  => time
+	  )
+      );
+  }
 
 =head1 DESCRIPTION
 
@@ -98,7 +95,7 @@ DBIx::SearchBuilder::Record is designed to work with DBIx::SearchBuilder.
 
 =head2 What is it trying to do. 
 
-DBIx::SB::Record abstracts the agony of writing the common and generally 
+DBIx::SearchBuilder::Record abstracts the agony of writing the common and generally 
 simple SQL statements needed to serialize and De-serialize an object to the
 database.  In a traditional system, you would define various methods on 
 your object 'create', 'find', 'modify', and 'delete' being the most common. 
@@ -127,105 +124,129 @@ really do are define some values and send you on your way.  As you might
 have guessed the '_' suggests that these are private methods, they are. 
 They will get called by your record objects constructor.  
 
-  o. '_Init' 
-     Defines what table we are talking about, and set a variable to store 
-     the database handle. 
+=over 4
 
-  o. '_ClassAccessible
-     Defines what operations may be performed on various data selected 
-     from the database.  For example you can define fields to be mutable,
-     or immutable, there are a few other options but I don't understand 
-     what they do at this time. 
+=item '_Init' 
 
-And really, thats it.  So lets have some sample code, but first the example
-code makes the following assumptions: 
+Defines what table we are talking about, and set a variable to store 
+the database handle. 
 
-  The database is 'postgres',
-  The host is 'reason',
-  The login name is 'mhat',
-  The database is called 'example', 
-  The table is called 'simple', 
-  The table looks like so: 
+=item '_ClassAccessible
+
+Defines what operations may be performed on various data selected 
+from the database.  For example you can define fields to be mutable,
+or immutable, there are a few other options but I don't understand 
+what they do at this time. 
+
+=back
+
+And really, thats it.  So lets have some sample code.
+
+=head2 An Annotated Example
+
+The example code below makes the following assumptions: 
+
+=over 4
+
+=item *
+
+The database is 'postgres',
+
+=item *
+
+The host is 'reason',
+
+=item *
+
+The login name is 'mhat',
+
+=item *
+
+The database is called 'example', 
+
+=item *
+
+The table is called 'simple', 
+
+=item *
+
+The table looks like so: 
 
       id     integer     not NULL,   primary_key(id),
       foo    varchar(10),
       bar    varchar(10)
 
+=back
 
-[file:///example/Simple.pm]
+First, let's define our record class in a new module named "Simple.pm".
 
-000: package Simple; 
-001: use DBIx::SearchBuilder::Record;
-002: @ISA = (DBIx::SearchBuilder::Record);
+  000: package Simple; 
+  001: use DBIx::SearchBuilder::Record;
+  002: @ISA = (DBIx::SearchBuilder::Record);
 
 This should be pretty obvious, name the package, import ::Record and then 
 define ourself as a subclass of ::Record. 
 
-
-003: 
-004: sub _Init {
-005:   my $this   = shift; 
-006:   my $handle = shift;
-007: 
-008:   $this->_Handle($handle); 
-009:   $this->Table("Simple"); 
-010:   
-011:   return ($this);
-012: }
+  003: 
+  004: sub _Init {
+  005:   my $this   = shift; 
+  006:   my $handle = shift;
+  007: 
+  008:   $this->_Handle($handle); 
+  009:   $this->Table("Simple"); 
+  010:   
+  011:   return ($this);
+  012: }
 
 Here we set our handle and table name, while its not obvious so far, we'll 
 see later that $handle (line: 006) gets passed via ::Record::new when a 
 new instance is created.  Thats actually an important concept, the DB handle 
 is not bound to a single object but rather, its shared across objects. 
 
-
-013: 
-014: sub _ClassAccessible {
-015:   {  
-016:     Foo => { 'read'  => 1 },
-017:     Bar => { 'read'  => 1, 'write' => 1  },
-018:     Id  => { 'read'  => 1 }
-019:   };
-020: }
+  013: 
+  014: sub _ClassAccessible {
+  015:   {  
+  016:     Foo => { 'read'  => 1 },
+  017:     Bar => { 'read'  => 1, 'write' => 1  },
+  018:     Id  => { 'read'  => 1 }
+  019:   };
+  020: }
 
 What's happening might be obvious, but just in case this method is going to 
 return a reference to a hash. That hash is where our columns are defined, 
 as well as what type of operations are acceptable.  
 
+  021: 
+  022: 1;             
 
-021: 
-022: 1;             
-
-Its perl, duh. 
-
-
+Like all perl modules, this needs to end with a true value. 
 
 Now, on to the code that will actually *do* something with this object. 
+This code would be placed in your Perl script.
 
-[file://examples/ex.pl]
-000: use DBIx::SearchBuilder::Handle;
-001: use Simple;
+  000: use DBIx::SearchBuilder::Handle;
+  001: use Simple;
 
 Use two packages, the first is where I get the DB handle from, the latter 
 is the object I just created. 
 
-002: 
-003: my $handle = DBIx::SearchBuilder::Handle->new();
-004:    $handle->Connect( 'Driver'   => 'Pg',
-005: 		          'Database' => 'test', 
-006: 		          'Host'     => 'reason',
-007: 		          'User'     => 'mhat',
-008: 		          'Password' => '');
+  002: 
+  003: my $handle = DBIx::SearchBuilder::Handle->new();
+  004:    $handle->Connect( 'Driver'   => 'Pg',
+  005: 		          'Database' => 'test', 
+  006: 		          'Host'     => 'reason',
+  007: 		          'User'     => 'mhat',
+  008: 		          'Password' => '');
 
-Creates a new DBIx::SB::Handle, and then connects to the database using 
+Creates a new DBIx::SearchBuilder::Handle, and then connects to the database using 
 that handle.  Pretty straight forward, the password '' is what I use 
 when there is no password.  I could probably leave it blank, but I find 
 it to be more clear to define it.
 
-009: 
-010: my $s = new Simple($handle);
-011: 
-012: $s->LoadById(1); 
+  009: 
+  010: my $s = Simple->new($handle);
+  011: 
+  012: $s->LoadById(1); 
 
 LoadById is one of four 'LoadBy' methods,  as the name suggests it searches
 for an row in the database that has id='0'.  ::SearchBuilder has, what I 
@@ -235,19 +256,25 @@ do undefined things if there is >1 row with the same id.
 
 In addition to LoadById, we also have:
 
-  o. LoadByCol 
-     Takes two arguments, a column name and a value.  Again, it will do 
-     undefined things if you use non-unique things.  
+=over 4
 
-  o. LoadByCols
-     Takes a hash of columns=>values and returns the *first* to match. 
-     First is probably lossy across databases vendors. 
- 
-  o. LoadFromHash
-     Populates this record with data from a DBIx::SearchBuilder.  I'm 
-     currently assuming that DBIx::SearchBuilder is what we use in 
-     cases where we expect > 1 record.  More on this later.
+=item LoadByCol 
 
+Takes two arguments, a column name and a value.  Again, it will do 
+undefined things if you use non-unique things.  
+
+=item LoadByCols
+
+Takes a hash of columns=>values and returns the *first* to match. 
+First is probably lossy across databases vendors. 
+
+=item LoadFromHash
+
+Populates this record with data from a DBIx::SearchBuilder.  I'm 
+currently assuming that DBIx::SearchBuilder is what we use in 
+cases where we expect > 1 record.  More on this later.
+
+=back
 
 Now that we have a populated object, we should do something with it! ::Record
 automagically generates accessos and mutators for us, so all we need to do 
@@ -255,62 +282,58 @@ is call the methods.  Accessors are named <Field>(), and Mutators are named
 Set<Field>($).  On to the example, just appending this to the code from 
 the last example.
 
-013:
-014: print "ID  : ", $s->Id(),  "\n";
-015: print "Foo : ", $s->Foo(), "\n";
-016: print "Bar : ", $s->Bar(), "\n";
+  013:
+  014: print "ID  : ", $s->Id(),  "\n";
+  015: print "Foo : ", $s->Foo(), "\n";
+  016: print "Bar : ", $s->Bar(), "\n";
 
 Thats all you have to to get the data, now to change the data!
 
-
-017:
-018: $s->SetBar('NewBar');
+  017:
+  018: $s->SetBar('NewBar');
 
 Pretty simple! Thats really all there is to it.  Set<Field>($) returns 
 a boolean and a string describing the problem.  Lets look at an example of
 what will happen if we try to set a 'Id' which we previously defined as 
 read only. 
 
-019: my ($res, $str) = $s->SetId('2');
-020: if (! $res) {
-021:   ## Print the error!
-022:   print "$str\n";
-023: } 
+  019: my ($res, $str) = $s->SetId('2');
+  020: if (! $res) {
+  021:   ## Print the error!
+  022:   print "$str\n";
+  023: } 
 
 The output will be:
+
   >> Immutable field
 
 Currently Set<Field> updates the data in the database as soon as you call
 it.  In the future I hope to extend ::Record to better support transactional
 operations, such that updates will only happen when "you" say so.
 
-
 Finally, adding a removing records from the database.  ::Record provides a 
 Create method which simply takes a hash of key=>value pairs.  The keys 
 exactly	map to database fields. 
 
-
-023: ## Get a new record object.
-024: $s1 = new Simple($handle);
-025: $s1->Create('Id'  => 4,
-026: 	         'Foo' => 'Foooooo', 
-027: 	         'Bar' => 'Barrrrr');
+  023: ## Get a new record object.
+  024: $s1 = Simple->new($handle);
+  025: $s1->Create('Id'  => 4,
+  026: 	           'Foo' => 'Foooooo', 
+  027: 	           'Bar' => 'Barrrrr');
 
 Poof! A new row in the database has been created!  Now lets delete the 
 object! 
 
-028:
-029: $s1 = undef;
-030: $s1 = new Simple($handle);
-031: $s1->LoadById(4);
-032: $s1->Delete();
+  028:
+  029: $s1 = undef;
+  030: $s1 = Simple->new($handle);
+  031: $s1->LoadById(4);
+  032: $s1->Delete();
 
 And its gone. 
 
-
-
-For simple use, thats more or less all there is to it.  The next part of 
-this HowTo will discuss using container classes,  overloading, and what 
+For simple use, thats more or less all there is to it.  In the future, I hope to exapand 
+this HowTo to discuss using container classes,  overloading, and what 
 ever else I think of.
 
 
@@ -322,7 +345,7 @@ ever else I think of.
 # }}}
 
 
-=head2  sub new 
+=head2  new 
 
 Instantiate a new record object.
 
@@ -355,12 +378,14 @@ Returns this row's primary key.
 *Id = \&id;
 
 sub id  {
-    $_[0]->{'values'}->{'id'};
+    my $pkey = $_[0]->_PrimaryKey();
+    $_[0]->{'values'}->{$pkey};
 }
 
 # }}}
 
 =head2 primary_keys
+
 =head2 PrimaryKeys
 
 Return a hash of the values of our primary keys for this function.
@@ -488,8 +513,7 @@ sub _Accessible {
 
 =head2 _PrimaryKeys
 
-Return our primary keys. (Subclasses should override this, but our default is "We have one primary key. It's called 'id');
-
+Return our primary keys. (Subclasses should override this, but our default is that we have one primary key, named 'id'.)
 
 =cut
 
@@ -498,12 +522,23 @@ sub _PrimaryKeys {
     return ['id'];
 }
 
+
+sub _PrimaryKey {
+    my $self = shift;
+    my $pkeys = $self->_PrimaryKeys();
+    die "No primary key" unless ( ref($pkeys) eq 'ARRAY' and $pkeys->[0] );
+    die "Too many primary keys" unless ( scalar(@$pkeys) == 1 );
+    return $pkeys->[0];
+}
+
 # {{{ sub _ClassAccessible
 
 =head2 _ClassAccessible 
 
 Preferred and most efficient way to specify fields attributes in a derived
-class.
+class. 
+
+Here's an example declaration:
 
   sub _ClassAccessible {
     { 
@@ -525,7 +560,7 @@ sub _ClassAccessible {
     $accessible{$col}->{lc($_)} = 1
       foreach split(/[\/,]/, shift);
   }
-	return(\%accessible);
+  return(\%accessible);
 }
 
 # }}}
@@ -571,7 +606,7 @@ sub WritableAttributes {
 =head2 __Value
 
 Takes a field name and returns that field's value. Subclasses should never 
-overrid __Value.
+override __Value.
 
 =cut
 
@@ -580,8 +615,9 @@ sub __Value {
   my $self = shift;
   my $field = lc(shift);
 
-  if (!$self->{'fetched'}{$field} and my $id = $self->{'values'}{'id'}) {
-    my $QueryString = "SELECT $field FROM " . $self->Table . " WHERE id = ?";
+  if (!$self->{'fetched'}{$field} and my $id = $self->id() ) {
+    my $pkey = $self->_PrimaryKey();
+    my $QueryString = "SELECT $field FROM " . $self->Table . " WHERE $pkey = ?";
     my $sth = $self->_Handle->SimpleQuery( $QueryString, $id );
     my ($value) = eval { $sth->fetchrow_array() };
     warn $@ if $@;
@@ -759,7 +795,7 @@ sub _Validate  {
 Truncate a value that's about to be set so that it will fit inside the database'
 s idea of how big the column is. 
 
-(Actually, it looks at searchbuilder's concept of the database, not directly into the db).
+(Actually, it looks at SearchBuilder's concept of the database, not directly into the db).
 
 =cut
 
@@ -864,7 +900,7 @@ sub __Object {
 
 =head2 Load
 
-Takes a single argument, $id. Calls LoadByRow to retrieve the row whose primary key
+Takes a single argument, $id. Calls LoadById to retrieve the row whose primary key
 is $id
 
 =cut
@@ -873,9 +909,9 @@ is $id
 *load = \&Load;
 sub Load  {
     my $self = shift;
-    my ($package, $filename, $line) = caller;
+    # my ($package, $filename, $line) = caller;
     return $self->LoadById(@_);
-  }
+}
 
 # }}}
 # {{{ sub LoadByCol 
@@ -896,8 +932,7 @@ sub LoadByCol  {
     my $val = shift;
     
     return($self->LoadByCols($col => $val));
-    
-  }
+}
 
 # }}}
 
@@ -911,10 +946,7 @@ keys.
 The hash's keys are the columns to look at.
 
 The hash's values are either: scalar values to look for
-                        OR has references which contain 'operator' and 'value'
-
-
-
+OR has references which contain 'operator' and 'value'
 
 =cut
 
@@ -957,8 +989,7 @@ sub LoadByCols  {
 
 =head2 LoadById
 
-Loads a record by its primary key.
-TODO: BUG: Column name is currently hard coded to 'id'
+Loads a record by its primary key. Your record class must define a single primary key column.
 
 =cut
 
@@ -968,7 +999,8 @@ sub LoadById  {
     my $id = shift;
 
     $id = 0 if (!defined($id));
-    return ($self->LoadByCols(id => $id));
+    my $pkey = $self->_PrimaryKey();
+    return ($self->LoadByCols($pkey => $id));
 }
 
 # }}}  
@@ -978,10 +1010,11 @@ sub LoadById  {
 
 =head2 LoadByPrimaryKeys 
 
+Like LoadById with basic support for compound primary keys.
+
 =cut
 
 *load_by_primary_keys = \&LoadByPrimaryKeys;
-
 
 sub LoadByPrimaryKeys {
     my ($self, $data) = @_;
@@ -1005,7 +1038,7 @@ sub LoadByPrimaryKeys {
 
 =head2 LoadFromHash
 
-  Takes a hashref, such as created by DBIx::SearchBuilder and populates this record's
+Takes a hashref, such as created by DBIx::SearchBuilder and populates this record's
 loaded values hash.
 
 =cut
@@ -1021,7 +1054,7 @@ sub LoadFromHash {
   }
 
   $self->{'values'} = $hashref;
-  return ($self->{'values'}{'id'});
+  return $self->id();
 }
 
 # }}}
@@ -1045,7 +1078,6 @@ sub _LoadFromSQL {
     my $sth = $self->_Handle->SimpleQuery( $QueryString, @bind_values );
 
     #TODO this only gets the first row. we should check if there are more.
-
 
     unless ($sth) {
         return($sth);
@@ -1130,7 +1162,7 @@ sub Create {
 
 =head2 Delete
 
-  Delete this record from the database. On failure return a Class::ReturnValue with the error. On success, return 1;
+Delete this record from the database. On failure return a Class::ReturnValue with the error. On success, return 1;
 
 =cut
 
@@ -1164,7 +1196,6 @@ sub __Delete {
     } else {
         return(1); 
     } 
-
 }
 
 # }}}
@@ -1229,7 +1260,7 @@ Docs by Matt Knopp <mhat@netlag.com>
 
 =head1 SEE ALSO
 
-perl(1).
+L<DBIx::SearchBuilder>
 
 =cut
 

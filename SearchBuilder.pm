@@ -15,11 +15,23 @@ DBIx::SearchBuilder - Encapsulate SQL queries and rows in simple perl objects
 
   use DBIx::SearchBuilder;
 
-   ...
+  use DBIx::SearchBuilder::Handle;
+  my $handle = DBIx::SearchBuilder::Handle->new();
+  $handle->Connect( Driver => 'SQLite', Database => "my_test_db" );
+
+  my $sb = DBIx::SearchBuilder->new( Handle => $handle, Table => "my_table" );
+
+  $sb->Limit( FIELD => "column_1", VALUE => "matchstring" );
+
+  while ( my $record = $sb->Next ) {
+    print $record->my_column_name();
+  }
 
 =head1 DESCRIPTION
 
+This module provides an object-oriented mechanism for retrieving and updating data in a DBI-accesible database. 
 
+=head1 METHODS
 
 =cut
 
@@ -95,7 +107,7 @@ sub CleanSlate {
 
 =head2 _Handle  [DBH]
 
-Get or set this object's DBI database handle.
+Get or set this object's DBIx::SearchBuilder::Handle object.
 
 =cut
 
@@ -138,7 +150,7 @@ sub _DoSearch {
 
 =head2 AddRecord RECORD
 
-    Adds a record object to this collection
+Adds a record object to this collection
 
 =cut
 
@@ -283,6 +295,13 @@ sub _LimitClause {
 # }}}
 
 # {{{ sub _isLimited
+
+=head2 _isLimited
+
+If we've limited down this search, return true. Otherwise, return false.
+
+=cut
+
 sub _isLimited {
     my $self = shift;
     if (@_) {
@@ -301,8 +320,7 @@ sub _isLimited {
 
 =head2 BuildSelectQuery
 
-Builds a query string for a "SELECT rows from Tables" statement for this SB
-object
+Builds a query string for a "SELECT rows from Tables" statement for this SearchBuilder object
 
 =cut
 
@@ -336,7 +354,7 @@ sub BuildSelectQuery {
 
 =head2 BuildSelectCountQuery
 
-Builds a SELECT statement to find the number of rows this SB object would find.
+Builds a SELECT statement to find the number of rows this SearchBuilder object would find.
 
 =cut
 
@@ -403,7 +421,7 @@ sub Next {
 
 =head2 GotoFirstItem
 
-Starts the recordset counter over from the first item. the next time you call Next,
+Starts the recordset counter over from the first item. The next time you call Next,
 you'll get the first item returned by the database, as if you'd just started iterating
 through the result set.
 
@@ -498,7 +516,7 @@ sub ItemsArrayRef {
 
 =head2 NewItem
 
-  NewItem must be subclassed. It is used by DBIx::SearchBuilder to create record 
+NewItem must be subclassed. It is used by DBIx::SearchBuilder to create record 
 objects for each row returned from the database.
 
 =cut
@@ -550,31 +568,65 @@ sub UnLimit {
 
 =head2 Limit
 
-Limit takes a paramhash.
+Limit takes a hash of parameters with the following keys:
 
-# TABLE can be set to something different than this table if a join is
-# wanted (that means we can't do recursive joins as for now).  Unless
+=over 4
 
-# ALIAS is set, the join criterias will be taken from EXT_LINKFIELD
-# and INT_LINKFIELD and added to the criterias.  If ALIAS is set, new
-# criterias about the foreign table will be added.
+=item TABLE 
 
-# VALUE should always be set and will always be quoted. 
+Can be set to something different than this table if a join is
+wanted (that means we can't do recursive joins as for now).  
 
-# ENTRYAGGREGATOR can be AND or OR (or anything else valid to aggregate two
-clauses in SQL
+=item ALIAS
 
-OPERATOR is the SQL operator to use for this phrase.  =, !=, LIKE. NOT LIKE
-In the case of LIKE, the string ins surrounded in % signs.  Yes. this is a bug.
+Unless ALIAS is set, the join criterias will be taken from EXT_LINKFIELD
+and INT_LINKFIELD and added to the criterias.  If ALIAS is set, new
+criterias about the foreign table will be added.
+
+=item FIELD
+
+Column to be checked against.
+
+=item VALUE
+
+Should always be set and will always be quoted. 
+
+=item OPERATOR
+
+OPERATOR is the SQL operator to use for this phrase.  Possible choices include:
+
+=over 4
+
+=item "="
+
+=item "!="
+
+=item "LIKE"
+
+In the case of LIKE, the string is surrounded in % signs.  Yes. this is a bug.
+
+=item "NOT LIKE"
+
+=item "STARTSWITH"
 
 STARTSWITH is like LIKE, except it only appends a % at the end of the string
 
+=item "ENDSWITH"
+
 ENDSWITH is like LIKE, except it prepends a % to the beginning of the string
 
+=back
 
+=item ENTRYAGGREGATOR 
+
+Can be AND or OR (or anything else valid to aggregate two clauses in SQL)
+
+=item CASESENSITIVE
 
 on some databases, such as postgres, setting CASESENSITIVE to 1 will make
 this search case sensitive
+
+=back
 
 =cut 
 
@@ -1002,14 +1054,12 @@ sub _OrderClause {
 
 =head2 GroupBy
 
-OBSOLUTE. You want GroupByCols
+Alias for the GroupByCols method.
 
 =cut
 
-sub GroupBy {
-    my $self = shift;
-    $self->GroupByCols( @_);
-}
+sub GroupBy { (shift)->GroupByCols( @_) }
+
 # }}}
 
 # {{{ GroupByCols
@@ -1056,7 +1106,6 @@ sub GroupByCols {
 =head2 _GroupClause
 
 Private function to return the "GROUP BY" clause for this query.
-
 
 =cut
 
@@ -1125,7 +1174,6 @@ sub _GetAlias {
 =head2 Join
 
 Join instructs DBIx::SearchBuilder to join two tables.  
-
 
 The standard form takes a param hash with keys ALIAS1, FIELD1, ALIAS2 and 
 FIELD2. ALIAS1 and ALIAS2 are column aliases obtained from $self->NewAlias or
@@ -1346,7 +1394,6 @@ LimitClause.
 # 22:32 [msg(Robrt)] since I'm not convinced it's been doing that correctly
 
 
-
 sub CountAll {
     my $self = shift;
 
@@ -1560,7 +1607,6 @@ __END__
 
 
 
-
 =head1 AUTHOR
 
 Copyright (c) 2001-2004 Jesse Vincent, jesse@fsck.com.
@@ -1573,7 +1619,7 @@ and/or modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-DBIx::SearchBuilder::Handle, DBIx::SearchBuilder::Record, perl(1).
+DBIx::SearchBuilder::Handle, DBIx::SearchBuilder::Record.
 
 =cut
 

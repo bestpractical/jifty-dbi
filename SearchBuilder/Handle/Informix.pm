@@ -9,20 +9,17 @@ use strict;
 
 =head1 NAME
 
-  DBIx::SearchBuilder::Handle::Informix -- an Informix specific Handle object
+  DBIx::SearchBuilder::Handle::Informix - An Informix specific Handle object
 
 =head1 SYNOPSIS
 
 
 =head1 DESCRIPTION
 
-=head1 AUTHOR
+This module provides a subclass of DBIx::SearchBuilder::Handle that 
+compensates for some of the idiosyncrasies of Informix.
 
-Oliver Tappe, oliver@akso.de
-
-=head1 SEE ALSO
-
-perl(1), DBIx::SearchBuilder
+=head1 METHODS
 
 =cut
 
@@ -30,12 +27,10 @@ perl(1), DBIx::SearchBuilder
 
 =head2 Insert
 
-Takes a table name as the first argument and assumes that the rest of the arguments
-are an array of key-value pairs to be inserted.
-
+Takes a table name as the first argument and assumes that the rest of the arguments are an array of key-value pairs to be inserted.
 
 If the insert succeeds, returns the id of the insert, otherwise, returns
-a Class::ReturnValue object with the error reploaded.
+a Class::ReturnValue object with the error reported.
 
 =cut
 
@@ -56,7 +51,6 @@ sub Insert  {
 
 # }}}
 
-
 =head2 CaseSensitive 
 
 Returns 1, since Informix's searches are case sensitive by default 
@@ -68,9 +62,13 @@ sub CaseSensitive {
     return(1);
 }
 
-
 # }}}
 
+=head2 BuildDSN
+
+Builder for Informix DSNs.
+
+=cut
 
 sub BuildDSN {
     my $self = shift;
@@ -145,3 +143,16 @@ sub DistinctQuery {
 
 # }}}
 
+1;
+
+__END__
+
+=head1 AUTHOR
+
+Oliver Tappe, oliver@akso.de
+
+=head1 SEE ALSO
+
+perl(1), DBIx::SearchBuilder
+
+=cut

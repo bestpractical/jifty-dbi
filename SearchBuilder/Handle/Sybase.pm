@@ -16,13 +16,10 @@ use strict;
 
 =head1 DESCRIPTION
 
-=head1 AUTHOR
+This module provides a subclass of DBIx::SearchBuilder::Handle that 
+compensates for some of the idiosyncrasies of Sybase.
 
-Jesse Vincent, jesse@fsck.com
-
-=head1 SEE ALSO
-
-perl(1), DBIx::SearchBuilder
+=head1 METHODS
 
 =cut
 
@@ -33,9 +30,8 @@ perl(1), DBIx::SearchBuilder
 Takes a table name as the first argument and assumes that the rest of the arguments
 are an array of key-value pairs to be inserted.
 
-
 If the insert succeeds, returns the id of the insert, otherwise, returns
-a Class::ReturnValue object with the error reploaded.
+a Class::ReturnValue object with the error reported.
 
 =cut
 
@@ -140,3 +136,16 @@ sub BinarySafeBLOBs {
 
 # }}}
 
+1;
+
+__END__
+
+=head1 AUTHOR
+
+Jesse Vincent, jesse@fsck.com
+
+=head1 SEE ALSO
+
+DBIx::SearchBuilder, DBIx::SearchBuilder::Handle
+
+=cut

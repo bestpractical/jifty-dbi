@@ -10,7 +10,24 @@ use Want qw(want);
 
 use strict;
 
+=head1 NAME
+
+  DBIx::SearchBuilder::Handle::Pg - A Postgres specific Handle object
+
+=head1 SYNOPSIS
+
+
+=head1 DESCRIPTION
+
+This module provides a subclass of DBIx::SearchBuilder::Handle that 
+compensates for some of the idiosyncrasies of Postgres.
+
+=head1 METHODS
+
+=cut
+
 # {{{ sub Connect
+
 =head2 Connect
 
 Connect takes a hashref and passes it off to SUPER::Connect;
@@ -156,3 +173,12 @@ sub _MakeClauseCaseInsensitive {
 
 # }}}
 1;
+
+__END__
+
+=head1 SEE ALSO
+
+DBIx::SearchBuilder, DBIx::SearchBuilder::Handle
+
+=cut
+

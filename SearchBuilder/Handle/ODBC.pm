@@ -7,10 +7,36 @@ use DBIx::SearchBuilder::Handle;
 use vars qw($VERSION @ISA $DBIHandle $DEBUG);
 use strict;
 
+=head1 NAME
+
+  DBIx::SearchBuilder::Handle::ODBC - An ODBC specific Handle object
+
+=head1 SYNOPSIS
+
+
+=head1 DESCRIPTION
+
+This module provides a subclass of DBIx::SearchBuilder::Handle that 
+compensates for some of the idiosyncrasies of ODBC.
+
+=head1 METHODS
+
+=cut
+
+=head2 CaseSensitive
+
+Returns a false value.
+
+=cut
+
 sub CaseSensitive {
     my $self = shift;
     return (undef);
 }
+
+=head2 BuildDSN
+
+=cut
 
 sub BuildDSN {
     my $self = shift;
@@ -29,6 +55,10 @@ sub BuildDSN {
     $self->{'dsn'} = $dsn;
 }
 
+=head2 ApplyLimits
+
+=cut
+
 sub ApplyLimits {
     my $self         = shift;
     my $statementref = shift;
@@ -40,6 +70,10 @@ sub ApplyLimits {
     $$statementref =~ s/SELECT\b/SELECT $limit_clause/;
 }
 
+=head2 DistinctQuery
+
+=cut
+
 sub DistinctQuery {
     my $self         = shift;
     my $statementref = shift;
@@ -50,3 +84,16 @@ sub DistinctQuery {
 sub Encoding {
 }
 
+1;
+
+__END__
+
+=head1 AUTHOR
+
+Autrijus Tang
+
+=head1 SEE ALSO
+
+DBIx::SearchBuilder, DBIx::SearchBuilder::Handle
+
+=cut

@@ -10,39 +10,25 @@ use strict;
 
 =head1 NAME
 
-  DBIx::SearchBuilder::Handle::Oracle -- an oracle specific Handle object
+  DBIx::SearchBuilder::Handle::Oracle - An oracle specific Handle object
 
 =head1 SYNOPSIS
 
 
 =head1 DESCRIPTION
 
-=head1 AUTHOR
+This module provides a subclass of DBIx::SearchBuilder::Handle that 
+compensates for some of the idiosyncrasies of Oracle.
 
-Jesse Vincent, jesse@fsck.com
-
-=head1 SEE ALSO
-
-perl(1), DBIx::SearchBuilder
+=head1 METHODS
 
 =cut
-
-
-sub new  {
-      my $proto = shift;
-      my $class = ref($proto) || $proto;
-      my $self  = {};
-      bless ($self, $class);
-      return ($self);
-}
-
 
 # {{{ sub Connect 
 
 =head2 Connect PARAMHASH: Driver, Database, Host, User, Password
 
 Takes a paramhash and connects to your DBI datasource. 
-
 
 =cut
 
@@ -53,12 +39,11 @@ sub Connect  {
 	       Database => undef,
 	       User => undef,
 	       Password => undef, 
-           SID => undef,
-           Host => undef,
+	       SID => undef,
+	       Host => undef,
 	       @_);
   
     $self->SUPER::Connect(%args);
-   
     
     $self->dbh->{LongTruncOk}=1;
     $self->dbh->{LongReadLen}=8000;
@@ -299,3 +284,15 @@ sub BinarySafeBLOBs {
 # }}}
 
 1;
+
+__END__
+
+=head1 AUTHOR
+
+Jesse Vincent, jesse@fsck.com
+
+=head1 SEE ALSO
+
+perl(1), DBIx::SearchBuilder
+
+=cut

@@ -8,20 +8,17 @@ use strict;
 
 =head1 NAME
 
-  DBIx::SearchBuilder::Handle::SQLite -- a mysql specific Handle object
+  DBIx::SearchBuilder::Handle::SQLite -- A SQLite specific Handle object
 
 =head1 SYNOPSIS
 
 
 =head1 DESCRIPTION
 
-=head1 AUTHOR
+This module provides a subclass of DBIx::SearchBuilder::Handle that 
+compensates for some of the idiosyncrasies of SQLite.
 
-Jesse Vincent, jesse@fsck.com
-
-=head1 SEE ALSO
-
-perl(1), DBIx::SearchBuilder
+=head1 METHODS
 
 =cut
 
@@ -32,9 +29,8 @@ perl(1), DBIx::SearchBuilder
 Takes a table name as the first argument and assumes that the rest of the arguments
 are an array of key-value pairs to be inserted.
 
-
 If the insert succeeds, returns the id of the insert, otherwise, returns
-a Class::ReturnValue object with the error reploaded.
+a Class::ReturnValue object with the error reported.
 
 =cut
 
@@ -61,7 +57,7 @@ sub Insert  {
 
 =head2 CaseSensitive 
 
-Returns undef, since mysql's searches are not case sensitive by default 
+Returns undef, since SQLite's searches are not case sensitive by default 
 
 =cut
 
@@ -96,14 +92,17 @@ sub DistinctCount {
 # }}}
 
 
+=head2 _BuildJoins
+
+Adjusts syntax of join queries for SQLite.
+
+=cut
 
 #SQLite can't handle 
 # SELECT DISTINCT main.*     FROM (Groups main          LEFT JOIN Principals Principals_2  ON ( main.id = Principals_2.id)) ,     GroupMembers GroupMembers_1      WHERE ((GroupMembers_1.MemberId = '70'))     AND ((Principals_2.Disabled = '0'))     AND ((main.Domain = 'UserDefined'))     AND ((main.id = GroupMembers_1.GroupId)) 
 #     ORDER BY main.Name ASC
 #     It needs
-#SELECT DISTINCT main.*     FROM Groups main           LEFT JOIN Principals Principals_2  ON ( main.id = Principals_2.id) ,      GroupMembers GroupMembers_1      WHERE ((GroupMembers_1.MemberId = '70'))     AND ((Principals_2.Disabled = '0'))     AND ((main.Domain = 'UserDefined'))     AND ((main.id = GroupMembers_1.GroupId)) ORDER BY main.Name ASC
-
-
+# SELECT DISTINCT main.*     FROM Groups main           LEFT JOIN Principals Principals_2  ON ( main.id = Principals_2.id) ,      GroupMembers GroupMembers_1      WHERE ((GroupMembers_1.MemberId = '70'))     AND ((Principals_2.Disabled = '0'))     AND ((main.Domain = 'UserDefined'))     AND ((main.id = GroupMembers_1.GroupId)) ORDER BY main.Name ASC
 
 sub _BuildJoins {
     my $self = shift;
@@ -147,5 +146,16 @@ sub _BuildJoins {
     
 }
 
-
 1;
+
+__END__
+
+=head1 AUTHOR
+
+Jesse Vincent, jesse@fsck.com
+
+=head1 SEE ALSO
+
+perl(1), DBIx::SearchBuilder
+
+=cut

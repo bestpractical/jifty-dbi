@@ -11,6 +11,29 @@ use Cache::Simple::TimedExpiry;
 
 use strict;
 
+# {{{ Doc
+
+=head1 NAME
+
+DBIx::SearchBuilder::Record::Cachable - Records with caching behavior
+
+=head1 SYNOPSIS
+
+  package MyRecord;
+  use base qw/DBIx::SearchBuilder::Record::Cachable/;
+
+=head1 DESCRIPTION
+
+This module subclasses the main DBIx::SearchBuilder::Record package to add a caching layer. 
+
+The public interface remains the same, except that records which have been loaded in the last few seconds may be reused by subsequent fetch or load methods without retrieving them from the database.
+
+=head1 METHODS
+
+=cut
+
+# }}}
+
 my %_CACHES = ();
 
 # Function: new
@@ -31,7 +54,6 @@ sub _SetupCache {
     $_CACHES{$cache} = Cache::Simple::TimedExpiry->new();
     $_CACHES{$cache}->expire_after( $self->_CacheConfig->{'cache_for_sec'} );
 }
-
 
 =head2 FlushCache 
 
@@ -285,10 +307,40 @@ sub _lookup_primary_RecordCache_key {
 
 }
 
+=head2 _CacheConfig 
+
+You can override this method to change the duration of the caching from the default of 5 seconds. 
+
+For example, to cache records for up to 30 seconds, add the following method to your class:
+
+  sub _CacheConfig {
+      { 'cache_for_sec' => 30 }
+  }
+
+=cut
+
 sub _CacheConfig {
     {
         'cache_p'       => 1,
         'cache_for_sec' => 5,
     };
 }
+
 1;
+
+__END__
+
+# {{{ POD
+
+=head1 AUTHOR
+
+Matt Knopp <mhat@netlag.com>
+
+=head1 SEE ALSO
+
+L<DBIx::SearchBuilder>, L<DBIx::SearchBuilder::Record>
+
+=cut
+
+# }}}
+

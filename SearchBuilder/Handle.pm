@@ -6,7 +6,6 @@ use strict;
 use Class::ReturnValue;
 use vars qw($VERSION @ISA %DBIHandle $PrevHandle $DEBUG $TRANSDEPTH);
 
-
 $TRANSDEPTH = 0;
 
 $VERSION = '$Version$';
@@ -22,24 +21,16 @@ DBIx::SearchBuilder::Handle - Perl extension which is a generic DBI handle
 
   use DBIx::SearchBuilder::Handle;
 
- my $Handle = DBIx::SearchBuilder::Handle->new();
- $Handle->Connect( Driver => 'mysql',
-		   Database => 'dbname',
-		   Host => 'hostname',
-		   User => 'dbuser',
-		   Password => 'dbpassword');
+  my $handle = DBIx::SearchBuilder::Handle->new();
+  $handle->Connect( Driver => 'mysql',
+                    Database => 'dbname',
+                    Host => 'hostname',
+                    User => 'dbuser',
+                    Password => 'dbpassword');
  
- 
-
 =head1 DESCRIPTION
 
-Jesse's a slacker.
-
-Blah blah blah.
-
-=head1 AUTHOR
-
-Jesse Vincent, jesse@fsck.com
+This class provides a wrapper for DBI handles that can also perform a number of additional functions.
  
 =cut
 
@@ -63,35 +54,6 @@ sub new  {
     return $self;
 }
 
-# }}}
-
-# {{{ sub Insert
-=head2 Insert $TABLE_NAME @KEY_VALUE_PAIRS
-
-Takes a table name and a set of key-value pairs in an array. splits the key value pairs, constructs an INSERT statement and performs the insert. Returns the row_id of this row.
-
-=cut
-
-sub Insert {
-  my($self, $table, @pairs) = @_;
-  my(@cols, @vals, @bind);
-
-#  my %seen; #only the *first* value is used - allows drivers to specify default
-  while ( my $key = shift @pairs ) {
-    my $value = shift @pairs;
-    #    next if $seen{$key}++;
-    push @cols, $key;
-    push @vals, '?';
-    push @bind, $value;  
-  }
-
-  my $QueryString =
-    "INSERT INTO $table (". join(", ", @cols). ") VALUES ".
-    "(". join(", ", @vals). ")";
-
-    my $sth =  $self->SimpleQuery($QueryString, @bind);
-    return ($sth);
-  }
 # }}}
 
 # {{{ sub Connect 
@@ -356,6 +318,35 @@ sub dbh {
   return($DBIHandle{$self} ||= $PrevHandle);
 }
 
+# }}}
+
+# {{{ sub Insert
+=head2 Insert $TABLE_NAME @KEY_VALUE_PAIRS
+
+Takes a table name and a set of key-value pairs in an array. splits the key value pairs, constructs an INSERT statement and performs the insert. Returns the row_id of this row.
+
+=cut
+
+sub Insert {
+  my($self, $table, @pairs) = @_;
+  my(@cols, @vals, @bind);
+
+  #my %seen; #only the *first* value is used - allows drivers to specify default
+  while ( my $key = shift @pairs ) {
+    my $value = shift @pairs;
+    # next if $seen{$key}++;
+    push @cols, $key;
+    push @vals, '?';
+    push @bind, $value;  
+  }
+
+  my $QueryString =
+    "INSERT INTO $table (". join(", ", @cols). ") VALUES ".
+    "(". join(", ", @vals). ")";
+
+    my $sth =  $self->SimpleQuery($QueryString, @bind);
+    return ($sth);
+  }
 # }}}
 
 # {{{ sub UpdateRecordValue 
@@ -1060,6 +1051,10 @@ sub DESTROY {
 __END__
 
 # {{{ POD
+
+=head1 AUTHOR
+
+Jesse Vincent, jesse@fsck.com
 
 =head1 SEE ALSO
 

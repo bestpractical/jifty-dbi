@@ -9,20 +9,17 @@ use strict;
 
 =head1 NAME
 
-  DBIx::SearchBuilder::Handle::mysql -- a mysql specific Handle object
+  DBIx::SearchBuilder::Handle::mysql - A mysql specific Handle object
 
 =head1 SYNOPSIS
 
 
 =head1 DESCRIPTION
 
-=head1 AUTHOR
+This module provides a subclass of DBIx::SearchBuilder::Handle that 
+compensates for some of the idiosyncrasies of MySQL.
 
-Jesse Vincent, jesse@fsck.com
-
-=head1 SEE ALSO
-
-perl(1), DBIx::SearchBuilder
+=head1 METHODS
 
 =cut
 
@@ -30,12 +27,10 @@ perl(1), DBIx::SearchBuilder
 
 =head2 Insert
 
-Takes a table name as the first argument and assumes that the rest of the arguments
-are an array of key-value pairs to be inserted.
-
+Takes a table name as the first argument and assumes that the rest of the arguments are an array of key-value pairs to be inserted.
 
 If the insert succeeds, returns the id of the insert, otherwise, returns
-a Class::ReturnValue object with the error reploaded.
+a Class::ReturnValue object with the error reported.
 
 =cut
 
@@ -48,12 +43,13 @@ sub Insert  {
      }
 
     $self->{'id'}=$self->dbh->{'mysql_insertid'};
-    # Yay. we get to work around mysql_insertid being null some of the time :/
  
+    # Yay. we get to work around mysql_insertid being null some of the time :/
     unless ($self->{'id'}) {
 	$self->{'id'} =  $self->FetchResult('SELECT LAST_INSERT_ID()');
     }
     warn "$self no row id returned on row creation" unless ($self->{'id'});
+    
     return( $self->{'id'}); #Add Succeded. return the id
   }
 
@@ -62,7 +58,7 @@ sub Insert  {
 
 =head2 DatabaseVersion
 
-return the mysql version, trimming off any -foo identifier
+Returns the mysql version, trimming off any -foo identifier
 
 =cut
 
@@ -70,9 +66,8 @@ sub DatabaseVersion {
     my $self = shift;
     my $v = $self->SUPER::DatabaseVersion();
 
-   $v =~ s/\-(.*)$//;
+   $v =~ s/\-.*$//;
    return ($v);
-
 }
 
 =head2 CaseSensitive 
@@ -86,7 +81,19 @@ sub CaseSensitive {
     return(undef);
 }
 
-
 # }}}
 
+1;
+
+__END__
+
+=head1 AUTHOR
+
+Jesse Vincent, jesse@fsck.com
+
+=head1 SEE ALSO
+
+DBIx::SearchBuilder, DBIx::SearchBuilder::Handle
+
+=cut
 
