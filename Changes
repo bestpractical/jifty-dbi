@@ -1,5 +1,8 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+0.86 June 7 2003
+        - Doing conditional connections was failing on postgres, because the handle was defined, but not connected
+
 0.85 June 7 2003
         - Stan's destroy fix was actually badly breaking RT
         - It's now an optional parameter.

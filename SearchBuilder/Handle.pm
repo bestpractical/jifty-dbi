@@ -128,7 +128,7 @@ sub Connect  {
   $self->BuildDSN(%args);
 
     # Only connect if we're not connected to this source already
-   if ((! $self->dbh ) || ($self->DSN ne $dsn) ) { 
+   if ((! $self->dbh ) || (!$self->dbh->ping) || ($self->DSN ne $dsn) ) { 
      my $handle = DBI->connect($self->DSN, $args{'User'}, $args{'Password'}) || croak "Connect Failed $DBI::errstr\n" ;
  
   #databases do case conversion on the name of columns returned. 
