@@ -1,5 +1,9 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+1.02_03 Thu Jul 22 13:29:17 EDT 2004
+        - Additional bullet proofing for joins. 
+          Now we default to ALIAS1 being "main"  (cubic@acronis.ru)
+
 1.02_02 Tue Jul 20 13:06:06 EDT 2004
         - Fixed a join bug that mostly manifests as a 'Dependency chain'
           error on RT2.

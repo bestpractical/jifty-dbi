@@ -726,7 +726,7 @@ sub Join {
     my %args = (
         SearchBuilder => undef,
         TYPE          => 'normal',
-        FIELD1        => undef,
+        FIELD1        => 'main',
         ALIAS1        => undef,
         TABLE2        => undef,
         FIELD2        => undef,

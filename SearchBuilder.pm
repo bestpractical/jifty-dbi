@@ -5,7 +5,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "1.02_02";
+$VERSION = "1.02_03";
 
 =head1 NAME
 
@@ -1090,7 +1090,7 @@ sub Join {
     my %args = (
         TYPE   => 'normal',
         FIELD1 => undef,
-        ALIAS1 => undef,
+        ALIAS1 => 'main',
         TABLE2 => undef,
         FIELD2 => undef,
         ALIAS2 => undef,
