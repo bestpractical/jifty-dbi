@@ -355,9 +355,8 @@ Returns this row's primary key.
 *Id = \&id;
 
 sub id  {
-    my $self = shift;
-    return ($self->{'values'}->{'id'});
-  }
+    $_[0]->{'values'}->{'id'};
+}
 
 # }}}
 
