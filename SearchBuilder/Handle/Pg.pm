@@ -1,4 +1,4 @@
-#$Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle/Pg.pm,v 1.7 2001/03/11 22:12:39 jesse Exp $
+#$Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle/Pg.pm,v 1.8 2001/07/27 05:23:29 jesse Exp $
 # Copyright 1999-2001 Jesse Vincent <jesse@fsck.com>
 
 package DBIx::SearchBuilder::Handle::Pg;
@@ -24,6 +24,7 @@ sub Connect {
     
     $self->SUPER::Connect(@_);
     $self->SimpleQuery("SET TIME ZONE 'GMT'");
+    $self->SimpleQuery("SET DATESTYLE TO 'ISO'");
     return ($DBIHandle); 
 }
 # }}}

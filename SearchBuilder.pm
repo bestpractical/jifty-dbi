@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder.pm,v 1.27 2001/07/11 00:09:36 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder.pm,v 1.28 2001/07/15 15:09:27 jesse Exp $
 
 # {{{ Version, package, new, etc
 
@@ -7,7 +7,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "0.40";
+$VERSION = "0.41";
 
 =head1 NAME
 
@@ -893,7 +893,7 @@ sub _GetAlias {
 
 sub _LeftJoins {
     my $self = shift;
-    my $join_clause;
+    my $join_clause = '';
     foreach my $join (keys %{ $self->{'left_joins'}}) {
 	$join_clause .=  $self->{'left_joins'}{$join}{'alias_string'}." ON ";
 	$join_clause .= join(' AND ', values %{$self->{'left_joins'}{$join}{'criteria'}});
