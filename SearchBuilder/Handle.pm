@@ -4,9 +4,9 @@ use Carp;
 use DBI;
 use strict;
 use Class::ReturnValue;
-use vars qw($VERSION @ISA $DBIHandle $DEBUG $TRANSCOUNT);
+use vars qw($VERSION @ISA $DBIHandle $DEBUG $TRANSDEPTH);
 
-$TRANSCOUNT = 0;
+$TRANSDEPTH = 0;
 
 $VERSION = '$Version$';
 
@@ -487,6 +487,8 @@ sub BLOBParams {
 
 # }}}
 
+# {{{ DatabaseVersion
+
 =head2 DatabaseVersion
 
 Returns the database's version. The base implementation uses a "SELECT VERSION"
@@ -503,7 +505,7 @@ sub DatabaseVersion {
         $self->{'database_version'}= $vals[0];
     }
 }
-
+# }}}
 
 # {{{ CaseSensitive
 
@@ -537,9 +539,9 @@ Emulates nested transactions, by keeping a transaction stack depth.
 
 sub BeginTransaction {
     my $self = shift;
-    $TRANSCOUNT++;
-    if ($TRANSCOUNT > 1 ) {
-        return ($TRANSCOUNT);
+    $TRANSDEPTH++;
+    if ($TRANSDEPTH > 1 ) {
+        return ($TRANSDEPTH);
     } else {
        return($self->dbh->begin_work);
     }
@@ -558,13 +560,13 @@ This will turn Autocommit mode back on.
 
 sub Commit {
     my $self = shift;
-    unless ($TRANSCOUNT) {Carp::confess("Attempted to commit a transaction with none in progress")};
-    $TRANSCOUNT--;
+    unless ($TRANSDEPTH) {Carp::confess("Attempted to commit a transaction with none in progress")};
+    $TRANSDEPTH--;
 
-    if ($TRANSCOUNT == 0 ) {
+    if ($TRANSDEPTH == 0 ) {
         return($self->dbh->commit);
     } else { #we're inside a transaction
-        return($TRANSCOUNT);
+        return($TRANSDEPTH);
     }
 }
 
@@ -572,26 +574,60 @@ sub Commit {
 
 # {{{ Rollback
 
-=head2 Rollback
+=head2 Rollback [FORCE]
 
 Tells DBIx::SearchBuilder to abort the current SQL transaction. 
 This will turn Autocommit mode back on.
+
+If this method is passed a true argument, stack depth is blown away and the outermost transaction is rolled back
 
 =cut
 
 sub Rollback {
     my $self = shift;
-    #unless ($TRANSCOUNT) {Carp::confess("Attempted to rollback a transaction with none in progress")};
-    $TRANSCOUNT--;
+    my $force = shift || undef;
+    #unless ($TRANSDEPTH) {Carp::confess("Attempted to rollback a transaction with none in progress")};
+    $TRANSDEPTH--;
 
-    if ($TRANSCOUNT == 0 ) {
+    if ($force) {
+        $TRANSDEPTH = 0;
+       return($self->dbh->rollback);
+    }
+
+    if ($TRANSDEPTH == 0 ) {
        return($self->dbh->rollback);
     } else { #we're inside a transaction
-        return($TRANSCOUNT);
+        return($TRANSDEPTH);
     }
 }
 
 # }}}
+
+=head2 ForceRollback
+
+Force the handle to rollback. Whether or not we're deep in nested transactions
+
+=cut
+
+sub ForceRollback {
+    my $self = shift;
+    $self->Rollback(1);
+}
+
+
+=head2 TransactionDepth
+
+Return the current depth of the faked nested transaction stack.
+
+=cut
+
+sub TransactionDepth {
+    my $self = shift;
+    return ($TRANSDEPTH); 
+}
+
+
+# {{{ ApplyLimits
 
 =head2 ApplyLimits STATEMENTREF ROWS_PER_PAGE FIRST_ROW
 
@@ -619,6 +655,12 @@ sub ApplyLimits {
    $$statementref .= $limit_clause; 
 
 }
+
+
+# }}}
+
+
+# {{{ Join
 
 =head2 Join { Paramhash }
 
@@ -663,7 +705,7 @@ sub Join {
 
 }
 
-
+# }}}
 
 # {{{ DistinctQuery
 
