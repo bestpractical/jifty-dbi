@@ -1,9 +1,9 @@
-#line 1 "inc/Module/Install.pm - /opt/perl-5.8.0/lib/site_perl/Module/Install.pm"
+#line 1 "inc/Module/Install.pm - /usr/local/share/perl/5.8.2/Module/Install.pm"
 # $File: //depot/cpan/Module-Install/lib/Module/Install.pm $ $Author: autrijus $
-# $Revision: #58 $ $Change: 1709 $ $DateTime: 2003/09/01 03:13:10 $ vim: expandtab shiftwidth=4
+# $Revision: #61 $ $Change: 1782 $ $DateTime: 2003/10/27 19:48:59 $ vim: expandtab shiftwidth=4
 
 package Module::Install;
-$VERSION = '0.24';
+$VERSION = '0.27';
 
 die <<END unless defined $INC{'inc/Module/Install.pm'};
 Please invoke Module::Install with:
@@ -17,20 +17,20 @@ not:
 END
 
 use strict 'vars';
-use File::Find;
-use File::Path;
+use File::Find ();
+use File::Path ();
 
 @inc::Module::Install::ISA = 'Module::Install';
 
 #line 127
 
 sub import {
-    my $class = $_[0];
-    my $self = $class->new(@_[1..$#_]);
+    my $class = shift;
+    my $self = $class->new(@_);
 
     if (not -f $self->{file}) {
         require "$self->{path}/$self->{dispatch}.pm";
-        mkpath "$self->{prefix}/$self->{author}";
+        File::Path::mkpath("$self->{prefix}/$self->{author}");
         $self->{admin} = 
           "$self->{name}::$self->{dispatch}"->new(_top => $self);
         $self->{admin}->init;
@@ -68,8 +68,9 @@ sub new {
     $class =~ s/^\Q$args{prefix}\E:://;
     $args{name}     ||= $class;
     $args{version}  ||= $class->VERSION;
+
     unless ($args{path}) {
-        $args{path}   = $args{name};
+        $args{path}  = $args{name};
         $args{path}  =~ s!::!/!g;
     }
     $args{file}     ||= "$args{prefix}/$args{path}.pm";
@@ -77,7 +78,7 @@ sub new {
     bless(\%args, $class);
 }
 
-#line 195
+#line 196
 
 sub call {
     my $self   = shift;
@@ -88,7 +89,7 @@ sub call {
     goto &{$obj->can($method)};
 }
 
-#line 210
+#line 211
 
 sub load {
     my ($self, $method) = @_;
@@ -112,7 +113,7 @@ END
     $obj;
 }
 
-#line 240
+#line 241
 
 sub load_extensions {
     my ($self, $path, $top_obj) = @_;
@@ -131,13 +132,13 @@ sub load_extensions {
     }
 }
 
-#line 264
+#line 265
 
 sub find_extensions {
     my ($self, $path) = @_;
     my @found;
 
-    find(sub {
+    File::Find::find(sub {
         my $file = $File::Find::name;
         return unless $file =~ m!^\Q$path\E/(.+)\.pm\Z!is;
         return if $1 eq $self->{dispatch};
@@ -154,4 +155,4 @@ sub find_extensions {
 
 __END__
 
-#line 556
+#line 557

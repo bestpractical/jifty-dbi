@@ -1,5 +1,8 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+0.95_03 - Allow case-insensitive loading by columns in SearchBuilder::Record
+        - Record::LoadByCols now lets you specify operator and values 
+
 0.95_01 
         - Removed historical escaping for non-ascii searche queries
 

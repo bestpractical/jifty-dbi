@@ -15,11 +15,8 @@ SearchBuilder/Handle/Pg.pm
 SearchBuilder/Handle/ODBC.pm
 test.pl
 inc/Module/Install/Base.pm
-inc/Module/Install/Can.pm
-inc/Module/Install/Fetch.pm
 inc/Module/Install/Makefile.pm
 inc/Module/Install/Metadata.pm
-inc/Module/Install/Win32.pm
 inc/Module/Install.pm
 META.yml
 SIGNATURE

@@ -102,7 +102,7 @@ sub ApplyLimits {
     if ( $per_page) {
         $limit_clause = " LIMIT ";
         $limit_clause .= $per_page;
-        if ( $first != 0 ) {
+        if ( $first && $first != 0 ) {
             $limit_clause .= " OFFSET $first";
         }
     }
@@ -271,7 +271,7 @@ sub _MakeClauseCaseInsensitive {
     if  ($operator =~ /LIKE/i ) {
         $operator =~ s/LIKE/ILIKE/ig; 
         return ($field, $operator, $value);
-    } elsif ($operator eq '=') {
+    } elsif ($operator =~ /\s*=\s*/) {
         return ($field,'ILIKE',$value);
     } else {
         $self->SUPER::_MakeClauseCaseInsensitive($field, $operator,$value);

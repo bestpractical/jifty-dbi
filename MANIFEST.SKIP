@@ -1,12 +1,12 @@
- \bRCS\b
- \bCVS\b
- ,v$
- \B\.svn\b
- ^MANIFEST\.
- ^Makefile$
- ^blib/
- ^MakeMaker-\d
- ~$
- \.old$
- ^#.*#$
- ^\.#
+\bRCS\b
+\bCVS\b
+,v$
+\B\.svn\b
+^MANIFEST\.
+^Makefile$
+^blib/
+^MakeMaker-\d
+~$
+\.old$
+^#.*#$
+^\.#

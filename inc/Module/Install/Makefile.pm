@@ -1,6 +1,6 @@
-#line 1 "inc/Module/Install/Makefile.pm - /opt/perl-5.8.0/lib/site_perl/Module/Install/Makefile.pm"
+#line 1 "inc/Module/Install/Makefile.pm - /usr/local/share/perl/5.8.2/Module/Install/Makefile.pm"
 # $File: //depot/cpan/Module-Install/lib/Module/Install/Makefile.pm $ $Author: autrijus $
-# $Revision: #45 $ $Change: 1645 $ $DateTime: 2003/07/16 01:05:06 $ vim: expandtab shiftwidth=4
+# $Revision: #49 $ $Change: 1782 $ $DateTime: 2003/10/27 19:48:59 $ vim: expandtab shiftwidth=4
 
 package Module::Install::Makefile;
 use Module::Install::Base; @ISA = qw(Module::Install::Base);
@@ -31,6 +31,17 @@ sub clean_files {
     $self->makemaker_args( clean => { FILES => "@_ " } );
 }
 
+sub libs {
+    my $self = shift;
+    my $libs = ref $_[0] ? shift : [shift];
+    $self->makemaker_args( LIBS => $libs );
+}
+
+sub inc {
+    my $self = shift;
+    $self->makemaker_args( INC => shift );
+}
+
 sub write {
     my $self = shift;
     die "&Makefile->write() takes no arguments\n" if @_;
@@ -46,10 +57,13 @@ sub write {
 	$args->{ABSTRACT} = $self->abstract;
 	$args->{AUTHOR} = $self->author;
     }
-    if ( eval($ExtUtils::MakeMaker::VERSION) >= 6.10 )
-    {
+    if ( eval($ExtUtils::MakeMaker::VERSION) >= 6.10 ) {
         $args->{NO_META} = 1;
     }
+    if ( eval($ExtUtils::MakeMaker::VERSION) > 6.17 ) {
+	$args->{SIGN} = 1 if $self->sign;
+    }
+    delete $args->{SIGN} unless $self->is_admin;
 
     # merge both kinds of requires into prereq_pm
     my $prereq = ($args->{PREREQ_PM} ||= {});
@@ -87,6 +101,12 @@ sub fix_up_makefile {
     my $makefile = do { local $/; <MAKEFILE> };
     close MAKEFILE;
 
+    $makefile =~ s/\b(test_harness\(\$\(TEST_VERBOSE\), )/$1'inc', /;
+    $makefile =~ s/(\$\(TESTDB_SW\) "-I)/$1inc" "-I/;
+
+    $makefile =~ s/^(FULLPERL = .*)/$1 -Iinc/m;
+    $makefile =~ s/^(PERL = .*)/$1 -Iinc/m;
+
     open MAKEFILE, '> Makefile' or die $!;
     print MAKEFILE "$preamble$makefile$postamble";
     close MAKEFILE;
@@ -110,4 +130,4 @@ sub postamble {
 
 __END__
 
-#line 242
+#line 262

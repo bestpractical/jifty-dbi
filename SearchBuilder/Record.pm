@@ -773,6 +773,14 @@ sub LoadByCol  {
 Takes a hash of columns and values. Loads the first record that matches all
 keys.
 
+The hash's keys are the columns to look at.
+
+The hash's values are either: scalar values to look for
+                        OR has references which contain 'operator' and 'value'
+
+
+
+
 =cut
 
 *load_by_cols = \&LoadByCols;
@@ -782,8 +790,18 @@ sub LoadByCols  {
     my (@bind, @phrases);
     foreach my $key (keys %hash) {  
 	if (defined $hash{$key} &&  $hash{$key} ne '') {
-		push @phrases, "$key = ?"; 
-		push @bind, $hash{$key}; 
+        my $op;
+        my $value;
+        if (ref $hash{$key}) {
+            $op = $hash{$key}->{operator};
+            $value = $hash{$key}->{value};
+        } else {
+            $op = '=';
+            $value = $hash{$key};
+        }
+
+		push @phrases, "$key $op ?"; 
+		push @bind, $value;
 	}
 	else {
 		push @phrases, "($key IS NULL OR $key = '')";
