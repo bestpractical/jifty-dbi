@@ -1,16 +1,13 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
-/-/-/-/-/-/-/-/-/-/ BEGIN CONFLICT  [O3 A3 B3] /-/-/-/-/-/-/-/-/-/-/
-0.83_01 May 27 2003
-        - Stan's DESTROY fix
+0.83_02 May 27 2003
+        - Better oracle support for unique ids on indexes from Brook
 
-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/
 0.83_01 May 27 2003
         - Stan's DESTROY fix
         -  Mathieu Arnold's patch to make function naming for 
            autoloaded functions a bit more flexible
 
-/-/-/-/-/-/-/-/-/-/-/-/-/  END CONFLICT   /-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/
 0.82	May 19 2003
 	- Query builder changes to improve some join performance
 	- Fixes to a tight loop for cache expiry

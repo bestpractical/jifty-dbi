@@ -86,8 +86,16 @@ sub Insert  {
 
 
   # Oracle Hack to replace non-supported mysql_rowid call
+
+    my %attribs = @_;
+    my ($unique_id, $QueryString);
+
+    if ($attribs{'Id'} || $attribs{'id'}) {
+        $unique_id = ($attribs{'Id'} ? $attribs{'Id'} : $attribs{'id'} );
+    }
+    else {
  
-    my $QueryString = "SELECT ".$table."_seq.nextval FROM DUAL";
+    $QueryString = "SELECT ".$table."_seq.nextval FROM DUAL";
  
     $sth = $self->SimpleQuery($QueryString);
     if (!$sth) {
@@ -102,12 +110,13 @@ sub Insert  {
      #needs error checking
     my @row = $sth->fetchrow_array;
 
-    my $unique_id = $row[0];
+    $unique_id = $row[0];
+
+    }
 
     #TODO: don't hardcode this to id pull it from somewhere else
     #call super::Insert with the new column id.
 
-    my %attribs = @_;
     $attribs{'id'} = $unique_id;
     delete $attribs{'Id'};
     $sth =  $self->SUPER::Insert( $table, %attribs);
