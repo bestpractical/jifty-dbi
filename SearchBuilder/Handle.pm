@@ -4,7 +4,7 @@ use Carp;
 use DBI;
 use strict;
 use Class::ReturnValue;
-use vars qw($VERSION @ISA $DBIHandle $DEBUG $TRANSDEPTH);
+use vars qw($VERSION @ISA %DBIHandle $DEBUG $TRANSDEPTH);
 
 $TRANSDEPTH = 0;
 
@@ -288,9 +288,9 @@ sub dbh {
   my $self=shift;
   
   #If we are setting the database handle, set it.
-  $DBIHandle = shift if (@_);
+  $DBIHandle{$self} = shift if (@_);
 
-  return($DBIHandle);
+  return($DBIHandle{$self});
 }
 
 # }}}
@@ -785,6 +785,7 @@ When we get rid of the Searchbuilder::Handle, we need to disconnect from the dat
 sub DESTROY {
   my $self = shift;
   $self->Disconnect if $self->{'DisconnectHandleOnDestroy'};
+  delete $DBIHandle{$self};
 }
 
 

@@ -14,13 +14,13 @@ not run its Makefile.PL or Build.PL.
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA1
 
-SHA1 72c7ae88863ce26da1490731fb658a1452f3553a Changes
+SHA1 93033993017078bdaaf9db8d5eb6b30052a495ad Changes
 SHA1 004223151ca4e6ddebdd1314d8815834eec1d05d MANIFEST
 SHA1 ff5270f1d83d26e8bcf23b283a0b52359ecc611b MANIFEST.SKIP
 SHA1 93c3ffd5e03ad4f0bdfe842a7b556dbc1499d42d META.yml
 SHA1 7d39dfda212a6558dae2123aa958e033c8f310bd Makefile.PL
-SHA1 065d8391c423ddb5d5fa05bd79d7a49569e75703 SearchBuilder.pm
-SHA1 56ee5a358698485742e77b8132af60fb9a6c817e SearchBuilder/Handle.pm
+SHA1 8036d081004b016a841bf3f47ea0f958b299ad87 SearchBuilder.pm
+SHA1 e45a572eb0906d74425cf4ce8c6cf280eb066cba SearchBuilder/Handle.pm
 SHA1 b7fd5ef2fcb2f18ff19a6561bfec4122995daa57 SearchBuilder/Handle/Oracle.pm
 SHA1 b20492f890fa9c34ca3ca38847bcac0b090b1d4a SearchBuilder/Handle/Pg.pm
 SHA1 4dfd673981bb75c8f630405c419ece75338dec33 SearchBuilder/Handle/SQLite.pm
@@ -35,11 +35,11 @@ SHA1 fc88b7b683e3f0527b05ee500ee41eb379df1432 inc/Module/Install/Fetch.pm
 SHA1 107ac73515efc2b423994623342b4f7faf898000 inc/Module/Install/Makefile.pm
 SHA1 02a89263781b0a3364d09c3c8f2bafb83f1f4549 inc/Module/Install/Metadata.pm
 SHA1 eb3a15cf26737881d10b02c51d5074cc9fe10443 inc/Module/Install/Win32.pm
-SHA1 c7bbe46dbc59851071d5acd7edf4e08af901775d test.pl
+SHA1 71ce3b59b3feeca937fccd3f18c146d8ccbbf6a5 test.pl
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.2.3 (Darwin)
 
-iD8DBQE/jy/mQaM/s3DrrJARAj0RAJ9Vjqr4p51oomez20PLdUMyIOsaWACgqxP6
-yrK78AaGd05P4pbsDUPRSeo=
-=vHpy
+iD8DBQE/k0ouQaM/s3DrrJARAlvgAKDWe996QTHXe02I8RWqR3FOaHaIvACg3yvZ
+5in6iFZ1toLYxdrBrvwH2z0=
+=MGzs
 -----END PGP SIGNATURE-----
