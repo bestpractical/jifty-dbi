@@ -783,6 +783,25 @@ sub DistinctQuery {
 # }}}
 
 
+# {{{ DistinctCount
+
+=head2 DistinctCount STATEMENTREF 
+
+takes an incomplete SQL SELECT statement and massages it to return a DISTINCT result set.
+
+
+=cut
+
+sub DistinctCount {
+    my $self = shift;
+    my $statementref = shift;
+
+    # Prepend select query for DBs which allow DISTINCT on all column types.
+    $$statementref = "SELECT COUNT(DISTINCT main.id) FROM $$statementref";
+
+}
+
+# }}}
 
 =head2 Log MESSAGE
 

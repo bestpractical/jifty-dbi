@@ -76,4 +76,25 @@ sub BinarySafeBLOBs {
 
 # }}}
 
+=head2 DistinctCount STATEMENTREF
+
+takes an incomplete SQL SELECT statement and massages it to return a DISTINCT result count
+
+
+=cut
+
+sub DistinctCount {
+    my $self = shift;
+    my $statementref = shift;
+
+    # Wrapper select query in a subselect as Oracle doesn't allow
+    # DISTINCT against CLOB/BLOB column types.
+    $$statementref = "SELECT count(*) FROM (SELECT DISTINCT main.id FROM $$statementref )";
+
+}
+
+# }}}
+
+
+
 1;

@@ -195,19 +195,19 @@ sub _DoCount {
 
     #TODO refactor DoSearch and DoCount such that we only have
     # one place where we build most of the querystring
-
-    # DISTINCT query only required for multi-table selects
-    if ($self->_isJoined) {
-        $QueryString = "SELECT count(DISTINCT main.id) FROM ";
-    } else {
-        $QueryString = "SELECT count(main.id) FROM ";
-    }
-
     $QueryString .= $self->_BuildJoins . " ";
 
     $QueryString .= $self->_WhereClause . " "
       if ( $self->_isLimited > 0 );
 
+
+
+    # DISTINCT query only required for multi-table selects
+    if ($self->_isJoined) {
+        $QueryString = $self->_Handle->DistinctCount(\$QueryString);
+    } else {
+        $QueryString = "SELECT count(main.id) FROM " . $QueryString;
+    }
 
     print STDERR "DBIx::SearchBuilder->DoSearch Query:  $QueryString\n"
       if ( $self->DEBUG );
