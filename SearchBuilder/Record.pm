@@ -1051,8 +1051,11 @@ sub Create  {
 
 *delete =  \&Delete;
 
+sub Delete {
+    $_[0]->__Delete;
+}
 
-sub Delete  {
+sub __Delete {
     my $self = shift;
     
     #TODO Check to make sure the key's not already listed.
@@ -1070,7 +1073,7 @@ sub Delete  {
     $where =~ s/AND\s$//;
     my $QueryString = "DELETE FROM ". $self->Table . ' ' . $where;
     return($self->_Handle->SimpleQuery($QueryString, @bind));
-  }
+}
 
 # }}}
 

@@ -129,12 +129,12 @@ sub __Set () {
 # Args    : nil
 # Lvalue  : ?
 
-sub Delete () {
+sub __Delete () {
     my ($self) = @_;
 
     $self->_expire();
 
-    return $self->SUPER::Delete();
+    return $self->SUPER::__Delete();
 
 }
 
