@@ -1,0 +1,147 @@
+# $Header:  $
+
+package DBIx::SearchBuilder::Handle::Informix;
+use DBIx::SearchBuilder::Handle;
+@ISA = qw(DBIx::SearchBuilder::Handle);
+
+use vars qw($VERSION @ISA $DBIHandle $DEBUG);
+use strict;
+
+=head1 NAME
+
+  DBIx::SearchBuilder::Handle::Informix -- an Informix specific Handle object
+
+=head1 SYNOPSIS
+
+
+=head1 DESCRIPTION
+
+=head1 AUTHOR
+
+Oliver Tappe, oliver@akso.de
+
+=head1 SEE ALSO
+
+perl(1), DBIx::SearchBuilder
+
+=cut
+
+# {{{ sub Insert
+
+=head2 Insert
+
+Takes a table name as the first argument and assumes that the rest of the arguments
+are an array of key-value pairs to be inserted.
+
+
+If the insert succeeds, returns the id of the insert, otherwise, returns
+a Class::ReturnValue object with the error reploaded.
+
+=cut
+
+sub Insert  {
+    my $self = shift;
+
+    my $sth = $self->SUPER::Insert(@_);
+    if (!$sth) {
+            print "no sth! (".$self->dbh->{ix_sqlerrd}[1].")\n";
+	    return ($sth);
+     }
+
+
+    $self->{id}=$self->dbh->{ix_sqlerrd}[1];
+    warn "$self no row id returned on row creation" unless ($self->{'id'});
+    return( $self->{'id'}); #Add Succeded. return the id
+  }
+
+# }}}
+
+
+=head2 CaseSensitive 
+
+Returns 1, since Informix's searches are case sensitive by default 
+
+=cut
+
+sub CaseSensitive {
+    my $self = shift;
+    return(1);
+}
+
+
+# }}}
+
+
+sub BuildDSN {
+    my $self = shift;
+  my %args = ( Driver => undef,
+               Database => undef,
+               Host => undef,
+               Port => undef,
+           SID => undef,
+               RequireSSL => undef,
+               @_);
+
+  my $dsn = "dbi:$args{'Driver'}:";
+
+  $dsn .= "$args{'Database'}" if (defined $args{'Database'} && $args{'Database'});
+
+  $self->{'dsn'}= $dsn;
+}
+
+# {{{ ApplyLimits
+
+=head2 ApplyLimits STATEMENTREF ROWS_PER_PAGE FIRST_ROW
+
+takes an SQL SELECT statement and massages it to return ROWS_PER_PAGE starting with FIRST_ROW;
+
+
+=cut
+
+sub ApplyLimits {
+    my $self = shift;
+    my $statementref = shift;
+    my $per_page = shift;
+    my $first = shift;
+
+    # XXX TODO THIS only works on the FIRST page of results. that's a bug
+    if ($per_page) {
+	$$statementref =~ s[^\s*SELECT][SELECT FIRST $per_page]i;
+    }
+}
+
+# }}}
+
+sub Disconnect  {
+  my $self = shift;
+  if ($self->dbh) {
+      my $status = $self->dbh->disconnect();
+      $self->dbh( undef);
+      return $status;
+  } else {
+      return;
+  }
+}
+
+# {{{ DistinctQuery
+
+=head2 DistinctQuery STATEMENTREF
+
+takes an incomplete SQL SELECT statement and massages it to return a DISTINCT result set.
+
+
+=cut
+
+sub DistinctQuery {
+    my $self = shift;
+    my $statementref = shift;
+    my $table = shift;
+
+    # Wrapper select query in a subselect as Informix doesn't allow
+    # DISTINCT against CLOB/BLOB column types.
+    $$statementref = "SELECT * FROM $table main WHERE id IN ( SELECT DISTINCT main.id FROM $$statementref )";
+
+}
+
+# }}}
+

@@ -5,6 +5,7 @@ Revision history for Perl extension DBIx::SearchBuilder.
         - Added the ability to sort on functions of columns from Autrijus Tang
         - Improved case-insensitve searching behavior for PostgreSQL
         - Added support for multiple handles in one app from Autrijus Tang (#4167)
+        - Added initial Informix database driver from Oliver Tappe
 
 0.92    Sept 4, 2003
         - Fixed a bug that caused certain types of pre-canned table aliases to fail to work on join
