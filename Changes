@@ -1,5 +1,7 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+1.10_02 Thu Aug 26 13:31:13 EDT 2004
+
 1.10_01 Thu Aug 26 00:08:31 EDT 2004
         - Reimplemented DBIx::SearchBuilder:::Record::Cachable
           to use Cache::Simple::TimedExpiry. This should make it faster and more

@@ -32,26 +32,30 @@ sub new () {
         $self->{'_CacheConfig'} = __CachableDefaults::_CacheConfig();
     }
 
-    $self->_SetupCache();
 
     return ($self);
 }
 
 sub _SetupCache {
-    my $self = shift;
-    $_CACHES{ $self->_Handle->DSN . "-KEYS" } = Cache::Simple::TimedExpiry->new();
-    $_CACHES{ $self->_Handle->DSN   } = Cache::Simple::TimedExpiry->new();
+    my $self  = shift;
+    my $cache = shift;
+    $_CACHES{$cache} = Cache::Simple::TimedExpiry->new();
+    $_CACHES{$cache}->expire_after( $self->{'_CacheConfig'}{'cache_for_sec'} );
 }
 
 sub _KeyCache {
     my $self = shift;
-    return ( $_CACHES{ $self->_Handle->DSN . "-KEYS" } );
+    my $cache =     $self->_Handle->DSN . "-KEYS--" . $self->{'_Class'};
+    $self->_SetupCache($cache)  unless exists ($_CACHES{$cache});
+    return ( $_CACHES{ $cache});
 
 }
 
-sub _Cache {
+sub _RecordCache {
     my $self = shift;
-    return ( $_CACHES{ $self->_Handle->DSN } );
+    my $cache =     $self->_Handle->DSN . "--" . $self->{'_Class'};
+    $self->_SetupCache($cache)  unless exists ($_CACHES{$cache});
+    return ( $_CACHES{ $cache});
 
 }
 
@@ -64,11 +68,11 @@ sub LoadFromHash {
     my $self = shift;
 
     # Blow away the primary cache key since we're loading.
-    $self->{'_SB_Record_Primary_Cache_key'} = undef;
+    $self->{'_SB_Record_Primary_RecordCache_key'} = undef;
     my ( $rvalue, $msg ) = $self->SUPER::LoadFromHash(@_);
 
     $self->{'_id'} = $self->SUPER::id;
-    my $cache_key = $self->_primary_cache_key();
+    my $cache_key = $self->_primary_RecordCache_key();
 
     ## Check the return value, if its good, cache it!
     if ($rvalue) {
@@ -87,10 +91,10 @@ sub LoadByCols {
     my ( $self, %attr ) = @_;
 
     # Blow away the primary cache key since we're loading.
-    $self->{'_SB_Record_Primary_Cache_key'} = undef;
+    $self->{'_SB_Record_Primary_RecordCache_key'} = undef;
     ## Generate the cache key
-    my $alt_key = $self->_gen_alternate_cache_key(%attr);
-    if ( $self->_fetch( $self->_lookup_primary_cache_key($alt_key) ) ) {
+    my $alt_key = $self->_gen_alternate_RecordCache_key(%attr);
+    if ( $self->_fetch( $self->_lookup_primary_RecordCache_key($alt_key) ) ) {
         return ( 1, "Fetched from cache" );
     }
 
@@ -100,7 +104,7 @@ sub LoadByCols {
     if ($rvalue) {
         ## Only cache the object if its okay to do so.
         $self->_store();
-        $self->_KeyCache->set( $alt_key, $self->_primary_cache_key,$self->{'_CacheConfig'}{'cache_for_sec'} + time  );
+        $self->_KeyCache->set( $alt_key, $self->_primary_RecordCache_key);
 
         $self->{'_id'} = $self->SUPER::id();
 
@@ -117,7 +121,7 @@ sub LoadByCols {
 sub __Set () {
     my ( $self, %attr ) = @_;
 
-    $self->_expire( $self->_primary_cache_key() );
+    $self->_expire( $self->_primary_RecordCache_key() );
     return $self->SUPER::__Set(%attr);
 
 }
@@ -130,7 +134,7 @@ sub __Set () {
 sub Delete () {
     my ($self) = @_;
 
-    $self->_expire( $self->_primary_cache_key() );
+    $self->_expire( $self->_primary_RecordCache_key() );
 
     return $self->SUPER::Delete();
 
@@ -144,7 +148,7 @@ sub Delete () {
 
 sub _expire (\$) {
     my $self = shift;
-    $self->_Cache->set( $self->_primary_cache_key , undef, time-1);
+    $self->_RecordCache->set( $self->_primary_RecordCache_key , undef, time-1);
 }
 
 # Function: _fetch
@@ -155,7 +159,7 @@ sub _expire (\$) {
 
 sub _fetch () {
     my ( $self, $cache_key ) = @_;
-    my $data = $self->_Cache->fetch($cache_key);
+    my $data = $self->_RecordCache->fetch($cache_key);
     $self->_deserialize($data);
 
 }
@@ -187,7 +191,7 @@ sub __Value {
 
 sub _store (\$) {
     my $self = shift;
-    $self->_Cache->set( $self->_primary_cache_key, $self->_serialize , $self->{'_CacheConfig'}{'cache_for_sec'} + time );
+    $self->_RecordCache->set( $self->_primary_RecordCache_key, $self->_serialize);
     return (1);
 }
 
@@ -202,13 +206,13 @@ sub _serialize {
     );
 }
 
-# Function: _gen_alternate_cache_key
+# Function: _gen_alternate_RecordCache_key
 # Type    : private instance
 # Args    : hash (attr)
 # Lvalue  : 1
 # Desc    : Takes a perl hash and generates a key from it.
 
-sub _gen_alternate_cache_key {
+sub _gen_alternate_RecordCache_key {
     my ( $self, %attr ) = @_;
     my $cache_key = $self->Table() . ':';
     while ( my ( $key, $value ) = each %attr ) {
@@ -227,59 +231,61 @@ sub _gen_alternate_cache_key {
     return ($cache_key);
 }
 
-# Function: _fetch_cache_key
+# Function: _fetch_RecordCache_key
 # Type    : private instance
 # Args    : nil
 # Lvalue  : 1
 
-sub _fetch_cache_key {
+sub _fetch_RecordCache_key {
     my ($self) = @_;
     my $cache_key = $self->{'_CacheConfig'}{'cache_key'};
     return ($cache_key);
 }
 
-# Function: _primary_cache_key
+# Function: _primary_RecordCache_key
 # Type    : private instance
 # Args    : none
 # Lvalue: : 1
 # Desc    : generate a primary-key based variant of this object's cache key
 #           primary keys is in the cache
 
-sub _primary_cache_key {
+sub _primary_RecordCache_key {
     my ($self) = @_;
 
     return undef unless ( $self->Id );
 
-    unless ( $self->{'_SB_Record_Primary_Cache_key'} ) {
+    unless ( $self->{'_SB_Record_Primary_RecordCache_key'} ) {
 
-        my $primary_cache_key = $self->Table() . ':';
+        my $primary_RecordCache_key = $self->Table() . ':';
         my @attributes;
         foreach my $key ( @{ $self->_PrimaryKeys } ) {
             push @attributes, $key . '=' . $self->SUPER::__Value($key);
         }
 
-        $primary_cache_key .= join( ',', @attributes );
+        $primary_RecordCache_key .= join( ',', @attributes );
 
-        $self->{'_SB_Record_Primary_Cache_key'} = $primary_cache_key;
+        $self->{'_SB_Record_Primary_RecordCache_key'} = $primary_RecordCache_key;
     }
-    return ( $self->{'_SB_Record_Primary_Cache_key'} );
+    return ( $self->{'_SB_Record_Primary_RecordCache_key'} );
 
 }
 
-# Function: lookup_primary_cache_key
+# Function: lookup_primary_RecordCache_key
 # Type    : private class
 # Args    : string(alternate cache id)
 # Lvalue  : string(cache id)
-sub _lookup_primary_cache_key {
+sub _lookup_primary_RecordCache_key {
     my $self          = shift;
     my $alternate_key = shift;
+    return undef unless ($alternate_key);
+
     my $primary_key   = $self->_KeyCache->fetch($alternate_key);
     if ($primary_key) {
         return ($primary_key);
     }
 
     # If the alternate key is really the primary one
-    elsif ( $self->_Cache->fetch($alternate_key) ) {
+    elsif ( $self->_RecordCache->fetch($alternate_key) ) {
         return ($alternate_key);
     }
     else {    # empty!
