@@ -1,5 +1,10 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+0.99	- Bundled changes from 0.98* and released production version
+
+0.98_04 - New mysql/oracle "Join" code that allows more complex bundling of 
+	  joins from Linda and Robert
+
 0.98_03 - New test infrastructure from Andy Lester
 
 0.98_02 - Better handling of != clauses on Postgres

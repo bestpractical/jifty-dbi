@@ -86,7 +86,7 @@ sub Insert {
     "INSERT INTO $table (". join(", ", @cols). ") VALUES ".
     "(". join(", ", @vals). ")";
     warn $QueryString if $DEBUG;
-    
+
     my $sth =  $self->SimpleQuery($QueryString, @bind);
     return ($sth);
   }
@@ -381,7 +381,6 @@ sub SimpleQuery  {
     my $QueryString = shift;
     my @bind_values = (@_);
 
- 
     my $sth = $self->dbh->prepare($QueryString);
     unless ($sth) {
 	if ($DEBUG) {
@@ -398,6 +397,7 @@ sub SimpleQuery  {
 	    return ($ret->return_value);
 	}
     }
+
     # Check @bind_values for HASH refs 
     for (my $bind_idx = 0; $bind_idx < scalar @bind_values; $bind_idx++) {
         if (ref($bind_values[$bind_idx]) eq "HASH") {
@@ -709,7 +709,10 @@ sub ApplyLimits {
 
 =head2 Join { Paramhash }
 
-Takes a paramhash of everything Searchbuildler::Record does + a parameter called 'SearchBuilder that contains a ref to a SearchBuilder object'.
+Takes a paramhash of everything Searchbuildler::Record does 
+plus a parameter called 'SearchBuilder' that contains a ref 
+to a SearchBuilder object'.
+
 This performs the join.
 
 
@@ -720,34 +723,40 @@ sub Join {
 
     my $self = shift;
     my %args = (
-                SearchBuilder => undef,
-                 TYPE   => 'normal',
-                 FIELD1 => undef, ALIAS1 => undef,
-                 TABLE2 => undef, FIELD2 => undef, ALIAS2 => undef,
-                 @_ );
+        SearchBuilder => undef,
+        TYPE          => 'normal',
+        FIELD1        => undef,
+        ALIAS1        => undef,
+        TABLE2        => undef,
+        FIELD2        => undef,
+        ALIAS2        => undef,
+        @_
+    );
 
+    my $sb = $args{'SearchBuilder'};
 
 
     if ( $args{'TYPE'} =~ /LEFT/i ) {
-        my $alias = $args{'SearchBuilder'}->_GetAlias( $args{'TABLE2'} );
+        my $alias = $sb->_GetAlias( $args{'TABLE2'} );
 
-        $args{'SearchBuilder'}->{'left_joins'}{"$alias"}{'alias_string'} =
+        $sb->{'left_joins'}{"$alias"}{'alias_string'} =
           " LEFT JOIN $args{'TABLE2'} as $alias ";
 
-        $args{'SearchBuilder'}->{'left_joins'}{"$alias"}{'criteria'}{'base_criterion'} =
+        $sb->{'left_joins'}{"$alias"}{'criteria'}{'base_criterion'} =
           " $args{'ALIAS1'}.$args{'FIELD1'} = $alias.$args{'FIELD2'}";
 
         return ($alias);
     }
-
-    # we need to build the table of links.
-    my $clause =
-      $args{'ALIAS1'} . "."
-      . $args{'FIELD1'} . " = "
-      . $args{'ALIAS2'} . "."
-      . $args{'FIELD2'};
-    $args{'SearchBuilder'}->{'table_links'} .= " AND $clause ";
-
+    else {
+    $sb->DBIx::SearchBuilder::Limit(
+          ENTRYAGGREGATOR => 'AND',
+          QUOTEVALUE      => 0,
+          ALIAS           => $args{'ALIAS1'},
+          FIELD           => $args{'FIELD1'},
+          VALUE           => $args{'ALIAS2'} . "." . $args{'FIELD2'},
+          @_
+    ); 
+    }
 }
 
 # }}}

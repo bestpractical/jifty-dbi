@@ -166,13 +166,10 @@ sub _gc_expired () {
   my ($this) = @_; 
 
 
-  my $time = time(); 
-  foreach my $cache_key (keys %{$this->_KeyCache}) {
-    my $cache_time = $this->_RecordCache->{$cache_key}{'time'} || 0;  
-    $this->_expire($cache_key) 
-      if (($time - $cache_time) > $this->{'_CacheConfig'}{'cache_for_sec'});
-  }
-  foreach my $cache_key (keys %{$this->_RecordCache}) {
+  my $time = time();  
+
+  # XXX TODO: do we want to sort the keys beforehand, so we can get out of the loop earlier?
+  foreach my $cache_key (keys %{$this->_KeyCache}, keys %{$this->_RecordCache}) {
     my $cache_time = $this->_RecordCache->{$cache_key}{'time'} || 0 ;  
     $this->_expire($cache_key) 
       if (($time - $cache_time) > $this->{'_CacheConfig'}{'cache_for_sec'});
@@ -206,10 +203,8 @@ sub _expire (\$) {
 sub _fetch () { 
   my ($this, $cache_key) = @_;
 
-  $this->{'values'}  = 
-    $this->_RecordCache->{$cache_key}{'values'};
-  $this->{'fetched'}  = 
-    $this->_RecordCache->{$cache_key}{'fetched'};
+  $this->{'values'}  = $this->_RecordCache->{$cache_key}{'values'};
+  $this->{'fetched'}  = $this->_RecordCache->{$cache_key}{'fetched'};
   return(1); 
 }
 
