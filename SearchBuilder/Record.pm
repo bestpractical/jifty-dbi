@@ -1,4 +1,4 @@
-#$Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Record.pm,v 1.8 2000/11/21 07:49:56 jesse Exp $
+#$Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Record.pm,v 1.12 2000/12/24 04:29:15 jesse Exp $
 package DBIx::SearchBuilder::Record;
 
 use strict;
@@ -6,6 +6,92 @@ use vars qw($VERSION @ISA $AUTOLOAD);
 
 
 $VERSION = '0.10';
+
+
+=head1 NAME
+
+DBIx::SearchBuilder::Record - Perl extension for subclassing, so you can deal with a Record
+
+=head1 SYNOPSIS
+
+  module MyRecord;
+  use DBIx::SearchBuilder::Record;
+  @ISA = (DBIx::SearchBuilder::Record);
+   
+
+  sub _Init {
+      my $self = shift;
+      my $DBIxHandle = shift; # A DBIx::SearchBuilder::Handle::foo object for your database
+
+      $self->_Handle($DBIxHandle);
+      $self->Table("Users");
+      return($self->SUPER::_Init(@_));
+  }
+  
+  # The subroutine _Accessible is used by the autoloader 
+  # to construct Attrib and SetAttrib methods.
+
+  # If a hash key, Foo in %Cols has a value matching /read/, then
+  # calling $Object->Foo will return the value of this record's Foo column
+
+  # If a hash key, Foo in %Cols has a value matching /write/, then
+  # calling $Object->SetFoo with a single value will set Foo's value in both
+  # the loaded object and the database.
+ 
+  
+  sub _Accessible  {
+      my $self = shift;
+      my %Cols = (
+		  id => 'read', # id is an immutable primary key
+		  Username => 'read/write', #read/write.
+		  Password => 'write', # password. write only. see sub IsPassword
+		  Created => 'read'  # A created date. read-only
+		 );
+      return $self->SUPER::_Accessible(@_, %Cols);
+  }
+  
+  # A subroutine to check a user's password without ever returning the current password
+  #For security purposes, we didn't expose the Password method above
+  
+  sub IsPassword {
+      my $self = shift;
+      my $try = shift;
+      
+      # note two __s in __Value.  Subclasses may muck with _Value, but they should
+      # never touch __Value
+
+      if ($try eq $self->__Value('Password') {
+	  return (1);
+      }
+      else { 
+	  return (undef); 
+     }
+}
+
+
+ # Override DBIx::SearchBuilder::Create to do some checking on create
+ sub Create {
+     my $self = shift;
+     my %fields = ( UserId => undef,
+		    Password => 'default', #Set a default password
+		    @_);
+     
+     #Make sure a userid is specified
+     unless ($fields{'UserId'}) {
+	 die "No userid specified.";
+     }
+     
+     #Get DBIx::SearchBuilder::Record->Create to do the real work
+     return ($self->SUPER::Create( UserId => $fields{'UserId'},
+				   Password => $fields{'Password'},
+				   Created => time ));
+ }
+
+=head1 DESCRIPTION
+DBIx::SearchBuilder::Record is designed to work with DBIx::SearchBuilder.
+
+=head1 METHODS
+=cut
 
 # Preloaded methods go here.
 
@@ -18,20 +104,26 @@ sub new  {
     my $class = ref($proto) || $proto;
     my $self  = {};
     bless ($self, $class);
+    $self->_Init(@_);
     return $self;
   }
 
 # }}}
 
 # {{{ sub Id and id
-sub Id  {
-    my $self = shift;
-    return ($self->{'values'}->{'id'});
-  }
+
+=head2 id
+
+Returns this row's primary key.
+
+=cut
+
+
+*Id = \&id;
 
 sub id  {
     my $self = shift;
-    return ($self->Id);
+    return ($self->{'values'}->{'id'});
   }
 
 # }}}
@@ -100,34 +192,74 @@ sub AUTOLOAD  {
 
 sub _Accessible  {
   my $self = shift;
-  my $attrib = shift;
+  my $attr = shift;
   my $mode = shift;
   my %cols = @_;
-  
+
   #return 0 if it's not a valid attribute;
-  return undef unless ($cols{"$attrib"});
+  return undef unless ($cols{"$attr"});
   
   #  return true if we can $mode $Attrib;
-  $cols{$attrib} =~ /$mode/;
+  $cols{$attr} =~ /$mode/i;
 }
 
 # }}}
 
+
+# {{{ sub __Value {
+
+=head2 __Value
+
+Takes a field name and returns that field's value. Subclasses should never 
+overrid __Value.
+
+=cut
+
+sub __Value {
+ my $self = shift;
+ my $field = shift;
+
+  $field = lc $field;
+
+  return($self->{'values'}->{"$field"});
+
+
+}
+# }}}
 # {{{ sub _Value 
+
+=head2 _Value
+
+_Value takes a single column name and returns that column's value for this row.
+Subclasses can override _Value to insert custom access control.
+
+=cut
+
 sub _Value  {
   my $self = shift;
-  my $field = shift;
-  
-  $field = lc $field;
-  
-  return($self->{'values'}->{"$field"});
+  return ($self->__Value(@_));
 }
 
 # }}}
 
 # {{{ sub _Set 
 
-sub _Set  {
+=head2 _Set
+
+_Set takes a single column name and a single unquoted value.
+It updates both the in-memory value of this column and the in-database copy.
+Subclasses can override _Set to insert custom access control.
+
+=cut
+
+sub _Set {
+    my $self = shift;
+    return ($self->__Set(@_));
+}
+
+
+
+sub __Set  {
   my $self = shift;
 
   my %args = ( Field => undef,
@@ -138,8 +270,8 @@ sub _Set  {
   
   if (defined $args{'Field'}) {
       my $field = lc $args{'Field'};
-      if ((defined $self->_Value($field))  and
-	  ($args{'Value'} eq $self->_Value($field))) {
+      if ((defined $self->__Value($field))  and
+	  ($args{'Value'} eq $self->__Value($field))) {
 	  return (0, "That is already the current value");
       } 
       elsif (!defined ($args{'Value'})) {
@@ -190,6 +322,13 @@ sub _Validate  {
 # The latter is primarily important when we've got a whole set of record that we're
 # reading in with a recordset class and want to instantiate objefcts for each record.
 
+=head2 Load
+
+Takes a single argument, $id. Calls LoadByRow to retrieve the row whose primary key
+is $id
+
+=cut
+
 
 sub Load  {
     my $self = shift;
@@ -221,9 +360,10 @@ sub LoadByCol  {
 
 # {{{ sub LoadByCols
 
-=head2 LoadByCol
+=head2 LoadByCols
 
-Takes a hash of columns and values.The column can be any table column.  
+Takes a hash of columns and values. Loads the first record that matches all
+keys.
 
 =cut
 
@@ -267,6 +407,14 @@ sub LoadById  {
 # }}}  
 
 # {{{ sub LoadFromHash
+
+=head2 LoadFromHash
+
+  Takes a hashref, such as created by DBIx::SearchBuilder and populates this record's
+loaded values hash.
+
+=cut
+
 sub LoadFromHash {
   my $self = shift;
   my $hashref = shift;
@@ -349,7 +497,6 @@ sub Delete  {
     return($self->_Handle->SimpleQuery($QueryString));
   }
 
-
 # }}}
 
 # }}}
@@ -396,7 +543,7 @@ sub _Handle  {
 
 # {{{ sub _DowncaseValuesHash
 
-=head2 _DownCaseValuesHash
+=head2 Private: _DownCaseValuesHash
 
 Takes no parameters and returns no arguments.
 This private routine iterates through $self->{'values'} and makes
@@ -423,21 +570,6 @@ __END__
 
 # {{{ POD
 
-=head1 NAME
-
-DBIx::SearchBuilder::Record - Perl extension for subclassing, so you can deal with a Record
-
-=head1 SYNOPSIS
-
-  use DBIx::SearchBuilder::Record;
-
-
-=head1 DESCRIPTION
-DBIx::SearchBuilder::Record is designed to work with DBIx::SearchBuilder.
-
-Docs are forthcoming. If you pester jesse@fsck.com he'll put them together.
-
-Check out Request Tracker at http://www.fsck.com/projects/rt/ for examples of usage.
 
 =head1 AUTHOR
 

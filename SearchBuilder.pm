@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder.pm,v 1.6 2000/10/26 00:47:11 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder.pm,v 1.8 2000/12/18 05:58:07 jesse Exp $
 
 # {{{ Version, package, new, etc
 
@@ -7,7 +7,23 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "0.13";
+$VERSION = "0.15";
+
+=head1 NAME
+
+DBIx::SearchBuilder - Perl extension for easy SQL SELECT Statement generation
+
+=head1 SYNOPSIS
+
+  use DBIx::SearchBuilder;
+
+   ...
+
+=head1 DESCRIPTION
+
+
+
+=cut
 
 # {{{ sub new 
 
@@ -22,494 +38,6 @@ sub new  {
   return ($self)
 }
 # }}}
-
-# }}}
-# {{{ Methods dealing with Record objects (navigation)
-
-# {{{ sub Next 
-
-=head2 Next
-
-Returns the next row from the set as an object of the apropriate type.
-Returns undef when you're done. Starts over after that
-
-=cut
-
-sub Next  {
-  my $self = shift;
-  my @row;
-  
-  if (!$self->_isLimited) {
-    return(0);
-  }
-  if ($self->{'must_redo_search'} != 0) {
-    $self->_DoSearch();
-  }
-  
-  if ($self->{'itemscount'} < $self->{'rows'}) {
-    #increment the itemcounter.
-    $self->{'itemscount'}++;
-    #serve out that item
-    return ($self->{'items'}[$self->{'itemscount'}]);
-  }
-  else {
-    #we've gone through the whole list.
-    #reset the count.
-    $self->{'itemscount'} = 0;
-    return(undef);
-  }
-}
-
-# }}}
-
-# {{{ sub GotoFirstItem
-
-=head2 GotoFirstItem
-
-Starts the counter over from 0. the next time you call Next,
-you'll get the first item
-
-=cut
-
-sub GotoFirstItem {
-  my $self = shift;
-  $self->GotoItem(0);
-}
-# }}}
-
-# {{{ sub GotoItem
-
-=head2 GotoItem
-
-Takes an integer, n.
-Sets the counter to n. the next time you call Next,
-you'll get the n'th item.
-
-=cut
-sub GotoItem {
-  my $self = shift;
-  my $item = shift;
-  $self->{'itemscount'} = $item;
-}
-
-# }}}
-
-# {{{ sub First 
-
-=head2 First
-
-Returns the first item
-
-=cut
-
-sub First  {
-  my $self = shift;
-  #Reset the itemcount
-  $self->GotoFirstItem();
-  return ($self->Next);
-}
-
-# }}}
-
-# {{{ sub NewItem 
-sub NewItem  {
-  my $self = shift;
-
-  die "DBIx::SearchBuilder needs to be subclassed. you can't use it directly.\n";
-}
-# }}}
-
-# }}}
-
-# {{{ Routines dealing with Restrictions (where subclauses) and ordering
-
-# {{{ sub UnLimit 
-sub UnLimit {
-  my $self=shift;
-  $self->_isLimited(-1);
-}
-
-# }}} 
-
-# {{{ sub Limit 
-
-=head2 Limit
-
-Limit takes a paramhash.
-
-# TABLE can be set to something different than this table if a join is
-# wanted (that means we can't do recursive joins as for now).  Unless
-# ALIAS is set, the join criterias will be taken from EXT_LINKFIELD
-# and INT_LINKFIELD and added to the criterias.  If ALIAS is set, new
-# criterias about the foreign table will be added.
-
-# VALUE should always be set and will always be quoted.  Maybe TYPE
-# should imply that the value shouldn't be quoted?  IMO (TobiX) we
-# shouldn't use quoted values, we should rather use placeholders and
-# pass the arguments when executing the statement.  This will also
-# allow us to alter limits and reexecute the search with a low cost by
-# keeping the statement handler.
-
-# ENTRYAGGREGATOR can be AND or OR (or anything else valid to aggregate two
-clauses in SQL
-
-# OPERATOR is whatever should be putted in between the FIELD and the
-# VALUE.
-
-# ORDERBY is the SQL ORDERBY
-
-# ORDER can be ASCending or DESCending.
-
-=cut 
-
-sub Limit  {
-  my $self = shift;
-  my %args = (
-	      TABLE => $self->{'table'},
-	      FIELD => undef,
-	      VALUE => undef,
-	      ALIAS => undef,
-	      TYPE => undef,  #TODO: figure out why this is here
-	      ENTRYAGGREGATOR => 'or',
-	      OPERATOR => '=',
-	      ORDERBY => undef,
-	      ORDER => undef,
-	 
-	      @_ # get the real argumentlist
-	     );
-  
-  my ($Alias);
-
-  if ($args{'FIELD'}) {
-    #If it's a like, we supply the %s around the search term
-    if ($args{'OPERATOR'} =~ /LIKE/) {
-      $args{'VALUE'} = "%".$args{'VALUE'} ."%";
-    }
-    $args{'VALUE'} = $self->_Handle->dbh->quote($args{'VALUE'});
-  }
-  
-  $Alias = $self->_GenericRestriction(%args);
-  warn "No table alias set!"
-      unless $Alias;
-  
-  # {{{ Set $self->{order} - can be "ASC"ending or "DESC"ending.
-  if ($args{'ORDER'}) {
-    $self->{'order'} = $args{'ORDER'};
-  }
-  # }}}
-
-  # {{{ If we're setting an OrderBy, set $self->{'orderby'} here
-  if ($args{'ORDERBY'}) {
-    # 1. if an alias was passed in, use that. 
-    if ($args{'ALIAS'}) {
-      $self->{'orderby'} = $args{'ALIAS'}.".".$args{'ORDERBY'};
-    }
-    # 2. if an alias was generated, use that.
-    elsif ($Alias) {
-       $self->{'orderby'} = "$Alias.".$args{'ORDERBY'};
-     }
-    # 3. use the primary
-    else {
-      $self->{'orderby'} = "main.".$args{'ORDERBY'};
-    }
-  }
-
-  # }}}
-
-  # We're now limited. people can do searches.
-
-  $self->_isLimited(1);
-  
-  if (defined ($Alias)) {
-    return($Alias);
-  }
-  else {
-    return(0);
-  }
-}
-
-# }}}
-
-# {{{ sub ShowRestrictions 
-
-#Show Restrictions
-sub ShowRestrictions  {
-   my $self = shift;
-  $self->_CompileGenericRestrictions();
-   $self->_CompileSubClauses();
-  return($self->{'where_clause'});
-  
-}
-
-# }}}
-
-# {{{ sub ImportRestrictions 
-
-#import a restrictions clause
-sub ImportRestrictions  {
-  my $self = shift;
-  $self->{'where_clause'} = shift;
-}
-# }}}
-
-# {{{ sub _GenericRestriction 
-
-sub _GenericRestriction  {
-    my $self = shift;
-    my %args = (
-		TABLE => $self->{'table'},
-		FIELD => undef,
-		VALUE => undef,	#TODO: $Value should take an array of values and generate 
-		                #the proper where clause.
-		ALIAS => undef,	     
-		ENTRYAGGREGATOR => undef,
-		OPERATOR => '=',
-		RESTRICTION_TYPE => 'generic', 
-		@_);
-    my ($QualifiedField);
-
-    #since we're changing the search criteria, we need to redo the search
-    $self->{'must_redo_search'}=1;
-
-
-    # {{{ if there's no alias set, we need to set it
-
-    if (!$args{'ALIAS'}) {
-	
-	#if the table we're looking at is the same as the main table
-	if ($args{'TABLE'} eq $self->{'table'}) {
-	    
-	    # main is the alias of the "primary table.
-	    # TODO this code assumes no self joins on that table. 
-	    # if someone can name a case where we'd want to do that, I'll change it.
-
-	    $args{'ALIAS'} = 'main';
-	}
-	
-	# {{{ if we're joining, we need to work out the table alias
-
-	else {
-	    $args{'ALIAS'}=$self->NewAlias($args{'TABLE'})
-	      or warn;
-	}
-
-	# }}}
-    }
-
-    # }}}
-    
-    
-    #Set this to the name of the field and the alias.
-    $QualifiedField = $args{'ALIAS'}.".".$args{'FIELD'};
-    print STDERR "DBIx::SearchBuilder->_GenericRestriction  QualifiedField is $QualifiedField\n" 
-      if ($self->DEBUG);
-    
-    #If we're overwriting this sort of restriction, 
-    # TODO: Something seems wrong here ... I kept getting warnings until I putted in all this crap.
-    # Shouldn't we have a default setting somewhere? -- TobiX
-    if (((exists $args{'ENTRYAGGREGATOR'}) and ($args{'ENTRYAGGREGATOR'}||"") eq 'none') or 
-	(!$self->{'restrictions'}{"$QualifiedField"})) {
-	$self->{'restrictions'}{"$QualifiedField"} = 
-	  "($QualifiedField $args{'OPERATOR'} $args{'VALUE'})";  
-	
-    }
-    else {
-	$self->{'restrictions'}{"$QualifiedField"} .= 
-	  " $args{'ENTRYAGGREGATOR'} ($QualifiedField $args{'OPERATOR'} $args{'VALUE'})";
-	
-    }
-    
-    return ($args{'ALIAS'});
-    
-}
-
-# }}}
-
-# {{{ sub _AddRestriction
-sub _AddSubClause {
-    my $self = shift;
-    my $clauseid = shift;
-    my $subclause = shift;
-
-    $self->{'subclauses'}{"$clauseid"} = $subclause;
-    
-}
-# }}}
-
-# {{{ sub _WhereClause
-
-sub _WhereClause {
- my $self = shift;
- my ($subclause, $where_clause);
-  
- #Go through all the generic restrictions and build up the "generic_restrictions" subclause
- # That's the only one that SearchBuilder builds itself.
- # Arguably, the abstraction should be better, but I don't really see where to put it.
- $self->_CompileGenericRestrictions();
-
- #Go through all restriction types. Build the where clause from the 
- #Various subclauses.
- foreach $subclause (keys %{ $self->{'subclauses'}}) {
-     # Now, build up the where clause
-   if (defined ($where_clause)) {
-     $where_clause .= " AND ";
-   }
-
-   warn "$self $subclause doesn't exist"
-     if (!defined $self->{'subclauses'}{"$subclause"});
-   $where_clause .= $self->{'subclauses'}{"$subclause"};
- }
- 
- $where_clause = " WHERE " . $where_clause if ($where_clause ne '');
- return ($where_clause);
-}
-
-# }}}
-
-# {{{ sub _CompileGenericRestrictions 
-
-#Compile the restrictions to a WHERE Clause
-
-sub _CompileGenericRestrictions  {
-    my $self = shift;
-    my ($restriction);
-    $self->{'subclauses'}{'generic_restrictions'} = undef;
-    
-    #Go through all the restrictions of this type. Buld up the generic subclause
-    foreach $restriction (keys %{ $self->{'restrictions'}}) {
-	if (defined $self->{'subclauses'}{'generic_restrictions'}) {
-	    $self->{'subclauses'}{'generic_restrictions'} .= " AND ";
-	}
-	$self->{'subclauses'}{'generic_restrictions'} .= 
-	  "(" . $self->{'restrictions'}{"$restriction"} . ")";
-    }
-}
-
-# }}}
-
-# {{{ sub _Order 
-
-# This routine returns what the result set should be ordered by
-sub _Order {
-
-  my $self = shift;
-  my $OrderClause;
-  
-  if ($self->{'orderby'}) {
-    $OrderClause = " ORDER BY ". $self->{'orderby'};
-  }
-  else {
-    $OrderClause = " ORDER BY main.".$self->{'primary_key'}." ";
-  }
-  return ($OrderClause);
-}
-
-# }}}
-
-# {{{ sub _OrderBy 
-
-# This routine returns whether the result set should be sorted Ascending or Descending
-
-sub _OrderBy {
-  my $self = shift;
-  my $order_by;
-  if ($self->{'order'} =~ /^des/i) {
-    $order_by = " DESC";
-  }
-  else {
-    $order_by = " ASC";
-  }
-  return($order_by);
-}
-
-# }}}
-
-# }}}
-
-# {{{ routines dealing with table aliases and linking tables
-
-# {{{ sub NewAlias
-
-=head2 NewAlias
-
-Takes the name of a table.
-Returns the string of a new Alias for that table
-
-=cut
-
-sub NewAlias {
-    my $self = shift;
-    my $table = shift || die "Missing parameter";
-    
-    
-    my $alias=$table."_".$self->{'alias_count'};
-    
-    $self->{'aliases'}[$self->{'alias_count'}]{'alias'} = $alias;
-    $self->{'aliases'}[$self->{'alias_count'}]{'table'} = $table;
-    
-    $self->{'alias_count'}++;
-    
-    return $alias;
-}
-# }}}
-
-# {{{ sub Join
-
-=head2 Join
-
-Join takes a param hash with ALIAS1, FIELD1, ALIAS2 and FIELD2
-
-ALIAS1 and ALIAS2 are column aliases obtained from $self->NewAlias or a $self->Limit
-FIELD1 and FIELD2 are the fields in ALIAS1 and ALIAS2 that should be linked, respectively
-
-
-=cut
-sub Join {
-    my $self = shift;
-    my %args = (FIELD1 => undef,
-		ALIAS1 => undef,
-		FIELD2 => undef,
-		ALIAS2 => undef,
-		@_);
-    # we need to build the table of links.
-    my $clause = $args{'ALIAS1'}. ".". $args{'FIELD1'}. " = " . 
-		 $args{'ALIAS2'}. ".". $args{'FIELD2'};
-    $self->{'table_links'} .= "AND $clause ";
-    
-}
-
-# }}}
-# {{{ sub _TableAliases
-
-sub _TableAliases {
-    my $self = shift;
-    
-    # Set up the first alias. for the _main_ table
-    my $compiled_aliases = $self->{'table'}." main";
-    
-    # Go through all the other aliases we set up and build the compiled
-    # aliases string
-    
-    for my $count (0..($self->{'alias_count'}-1)) {
-	$compiled_aliases .= ", ".
-	  $self->{'aliases'}[$count]{'table'}. " ".
-	    $self->{'aliases'}[$count]{'alias'};
-    }
-
-    return ($compiled_aliases);
-}
-
-# }}}
-
-
-# things we'll want to add:
-# get aliases
-# add restirction clause
-# 
-
-# }}}
-
-# {{{ private utility methods
 
 # {{{ sub _Init 
 
@@ -531,7 +59,7 @@ sub _Init  {
 
 =head2 CleanSlate
 
-This erases all the data in the SearchBuilder object. It's
+This completely erases all the data in the SearchBuilder object. It's
 useful if a subclass is doing funky stuff to keep track of 
 a search
 
@@ -674,13 +202,545 @@ sub _isLimited  {
 
 # }}}
 
+# {{{ Methods dealing with Record objects (navigation)
+
+# {{{ sub Next 
+
+=head2 Next
+
+Returns the next row from the set as an object of the type defined by sub NewItem.
+When the complete set has been iterated through, returns undef and resets the search
+such that the following call to Next will start over with the first item retrieved from the database.
+
+=cut
+
+sub Next  {
+  my $self = shift;
+  my @row;
+  
+  if (!$self->_isLimited) {
+    return(0);
+  }
+  if ($self->{'must_redo_search'} != 0) {
+    $self->_DoSearch();
+  }
+  
+  if ($self->{'itemscount'} < $self->{'rows'}) {
+    #increment the itemcounter.
+    $self->{'itemscount'}++;
+    #serve out that item
+    return ($self->{'items'}[$self->{'itemscount'}]);
+  }
+  else {
+    #we've gone through the whole list.
+    #reset the count.
+    $self->GotoFirstItem();
+    return(undef);
+  }
+}
+
+# }}}
+
+# {{{ sub GotoFirstItem
+
+=head2 GotoFirstItem
+
+Starts the recordset counter over from the first item. the next time you call Next,
+you'll get the first item returned by the database, as if you'd just started iterating
+through the result set.
+
+=cut
+
+sub GotoFirstItem {
+  my $self = shift;
+  $self->GotoItem(0);
+}
+# }}}
+
+# {{{ sub GotoItem
+
+=head2 GotoItem
+
+Takes an integer, n.
+Sets the record counter to n. the next time you call Next,
+you'll get the nth item.
+
+=cut
+
+sub GotoItem {
+    my $self = shift;
+    my $item = shift;
+    $self->{'itemscount'} = $item;
+}
+
+# }}}
+
+# {{{ sub First 
+
+=head2 First
+
+Returns the first item
+
+=cut
+
+sub First  {
+    my $self = shift;
+    #Reset the itemcount
+    $self->GotoFirstItem();
+    return ($self->Next);
+}
+
+# }}}
+
+# {{{ sub NewItem 
+
+=head2 NewItem
+
+  NewItem must be subclassed. It is used by DBIx::SearchBuilder to create record 
+objects for each row returned from the database.
+
+=cut
+
+sub NewItem  {
+    my $self = shift;
+    
+    die "DBIx::SearchBuilder needs to be subclassed. you can't use it directly.\n";
+}
+# }}}
+
+# }}}
+
+# {{{ Routines dealing with Restrictions (where subclauses) and ordering
+
+# {{{ sub UnLimit 
+
+=head2 UnLimit
+
+UnLimit clears all restrictions and causes this object to return all
+rows in the primary table.
+
+=cut
+
+sub UnLimit {
+  my $self=shift;
+  $self->_isLimited(-1);
+}
+
+# }}} 
+
+# {{{ sub Limit 
+
+=head2 Limit
+
+Limit takes a paramhash.
+
+# TABLE can be set to something different than this table if a join is
+# wanted (that means we can't do recursive joins as for now).  Unless
+# ALIAS is set, the join criterias will be taken from EXT_LINKFIELD
+# and INT_LINKFIELD and added to the criterias.  If ALIAS is set, new
+# criterias about the foreign table will be added.
+
+# VALUE should always be set and will always be quoted.  Maybe TYPE
+# should imply that the value shouldn't be quoted?  IMO (TobiX) we
+# shouldn't use quoted values, we should rather use placeholders and
+# pass the arguments when executing the statement.  This will also
+# allow us to alter limits and reexecute the search with a low cost by
+# keeping the statement handler.
+
+# ENTRYAGGREGATOR can be AND or OR (or anything else valid to aggregate two
+clauses in SQL
+
+# OPERATOR is whatever should be putted in between the FIELD and the
+# VALUE.
+
+# ORDERBY is the SQL ORDERBY
+
+# ORDER can be ASCending or DESCending.
+
+=cut 
+
+sub Limit  {
+  my $self = shift;
+  my %args = (
+	      TABLE => $self->{'table'},
+	      FIELD => undef,
+	      VALUE => undef,
+	      ALIAS => undef,
+	      TYPE => undef,  #TODO: figure out why this is here
+	      ENTRYAGGREGATOR => 'or',
+	      OPERATOR => '=',
+	      ORDERBY => undef,
+	      ORDER => undef,
+	 
+	      @_ # get the real argumentlist
+	     );
+  
+  my ($Alias);
+
+  if ($args{'FIELD'}) {
+    #If it's a like, we supply the %s around the search term
+    if ($args{'OPERATOR'} =~ /LIKE/) {
+      $args{'VALUE'} = "%".$args{'VALUE'} ."%";
+    }
+    $args{'VALUE'} = $self->_Handle->dbh->quote($args{'VALUE'});
+  }
+  
+  $Alias = $self->_GenericRestriction(%args);
+  warn "No table alias set!"
+      unless $Alias;
+  
+  # {{{ Set $self->{order} - can be "ASC"ending or "DESC"ending.
+  if ($args{'ORDER'}) {
+    $self->{'order'} = $args{'ORDER'};
+  }
+  # }}}
+
+  # {{{ If we're setting an OrderBy, set $self->{'orderby'} here
+  if ($args{'ORDERBY'}) {
+    # 1. if an alias was passed in, use that. 
+    if ($args{'ALIAS'}) {
+      $self->{'orderby'} = $args{'ALIAS'}.".".$args{'ORDERBY'};
+    }
+    # 2. if an alias was generated, use that.
+    elsif ($Alias) {
+       $self->{'orderby'} = "$Alias.".$args{'ORDERBY'};
+     }
+    # 3. use the primary
+    else {
+      $self->{'orderby'} = "main.".$args{'ORDERBY'};
+    }
+  }
+
+  # }}}
+
+  # We're now limited. people can do searches.
+
+  $self->_isLimited(1);
+  
+  if (defined ($Alias)) {
+    return($Alias);
+  }
+  else {
+    return(0);
+  }
+}
+
+# }}}
+
+# {{{ sub ShowRestrictions 
+
+=head2 ShowRestrictions
+
+Returns the current object's proposed WHERE clause. 
+
+Deprecated.
+
+=cut
+
+
+sub ShowRestrictions  {
+   my $self = shift;
+  $self->_CompileGenericRestrictions();
+   $self->_CompileSubClauses();
+  return($self->{'where_clause'});
+  
+}
+
+# }}}
+
+# {{{ sub ImportRestrictions 
+
+=head2 ImportRestrictions
+
+Replaces the current object's WHERE clause with the string passed as its argument.
+
+Deprecated
+
+=cut
+
+#import a restrictions clause
+sub ImportRestrictions  {
+  my $self = shift;
+  $self->{'where_clause'} = shift;
+}
+# }}}
+
+# {{{ sub _GenericRestriction 
+
+sub _GenericRestriction  {
+    my $self = shift;
+    my %args = (
+		TABLE => $self->{'table'},
+		FIELD => undef,
+		VALUE => undef,	#TODO: $Value should take an array of values and generate 
+		                #the proper where clause.
+		ALIAS => undef,	     
+		ENTRYAGGREGATOR => undef,
+		OPERATOR => '=',
+		RESTRICTION_TYPE => 'generic', 
+		@_);
+    my ($QualifiedField);
+
+    #since we're changing the search criteria, we need to redo the search
+    $self->{'must_redo_search'}=1;
+
+
+    # {{{ if there's no alias set, we need to set it
+
+    if (!$args{'ALIAS'}) {
+	
+	#if the table we're looking at is the same as the main table
+	if ($args{'TABLE'} eq $self->{'table'}) {
+	    
+	    # main is the alias of the "primary table.
+	    # TODO this code assumes no self joins on that table. 
+	    # if someone can name a case where we'd want to do that, I'll change it.
+
+	    $args{'ALIAS'} = 'main';
+	}
+	
+	# {{{ if we're joining, we need to work out the table alias
+
+	else {
+	    $args{'ALIAS'}=$self->NewAlias($args{'TABLE'})
+	      or warn;
+	}
+
+	# }}}
+    }
+
+    # }}}
+    
+    
+    #Set this to the name of the field and the alias.
+    $QualifiedField = $args{'ALIAS'}.".".$args{'FIELD'};
+    print STDERR "DBIx::SearchBuilder->_GenericRestriction  QualifiedField is $QualifiedField\n" 
+      if ($self->DEBUG);
+    
+    #If we're overwriting this sort of restriction, 
+    # TODO: Something seems wrong here ... I kept getting warnings until I putted in all this crap.
+    # Shouldn't we have a default setting somewhere? -- TobiX
+    if (((exists $args{'ENTRYAGGREGATOR'}) and ($args{'ENTRYAGGREGATOR'}||"") eq 'none') or 
+	(!$self->{'restrictions'}{"$QualifiedField"})) {
+	$self->{'restrictions'}{"$QualifiedField"} = 
+	  "($QualifiedField $args{'OPERATOR'} $args{'VALUE'})";  
+	
+    }
+    else {
+	$self->{'restrictions'}{"$QualifiedField"} .= 
+	  " $args{'ENTRYAGGREGATOR'} ($QualifiedField $args{'OPERATOR'} $args{'VALUE'})";
+	
+    }
+    
+    return ($args{'ALIAS'});
+    
+}
+
+# }}}
+
+# {{{ sub _AddRestriction
+sub _AddSubClause {
+    my $self = shift;
+    my $clauseid = shift;
+    my $subclause = shift;
+
+    $self->{'subclauses'}{"$clauseid"} = $subclause;
+    
+}
+# }}}
+
+# {{{ sub _TableAliases
+
+
+#Construct a list of tables and aliases suitable for building our SELECT statement
+sub _TableAliases {
+    my $self = shift;
+    
+    # Set up the first alias. for the _main_ table
+    my $compiled_aliases = $self->{'table'}." main";
+    
+    # Go through all the other aliases we set up and build the compiled
+    # aliases string
+    
+    for my $count (0..($self->{'alias_count'}-1)) {
+	$compiled_aliases .= ", ".
+	  $self->{'aliases'}[$count]{'table'}. " ".
+	    $self->{'aliases'}[$count]{'alias'};
+    }
+
+    return ($compiled_aliases);
+}
+
+# }}}
+
+# {{{ sub _WhereClause
+
+sub _WhereClause {
+ my $self = shift;
+ my ($subclause, $where_clause);
+  
+ #Go through all the generic restrictions and build up the "generic_restrictions" subclause
+ # That's the only one that SearchBuilder builds itself.
+ # Arguably, the abstraction should be better, but I don't really see where to put it.
+ $self->_CompileGenericRestrictions();
+
+ #Go through all restriction types. Build the where clause from the 
+ #Various subclauses.
+ foreach $subclause (keys %{ $self->{'subclauses'}}) {
+     # Now, build up the where clause
+   if (defined ($where_clause)) {
+     $where_clause .= " AND ";
+   }
+
+   warn "$self $subclause doesn't exist"
+     if (!defined $self->{'subclauses'}{"$subclause"});
+   $where_clause .= $self->{'subclauses'}{"$subclause"};
+ }
+ 
+ $where_clause = " WHERE " . $where_clause if ($where_clause ne '');
+ return ($where_clause);
+}
+
+# }}}
+
+
+# {{{ sub _CompileGenericRestrictions 
+
+#Compile the restrictions to a WHERE Clause
+
+sub _CompileGenericRestrictions  {
+    my $self = shift;
+    my ($restriction);
+    $self->{'subclauses'}{'generic_restrictions'} = undef;
+    
+    #Go through all the restrictions of this type. Buld up the generic subclause
+    foreach $restriction (keys %{ $self->{'restrictions'}}) {
+	if (defined $self->{'subclauses'}{'generic_restrictions'}) {
+	    $self->{'subclauses'}{'generic_restrictions'} .= " AND ";
+	}
+	$self->{'subclauses'}{'generic_restrictions'} .= 
+	  "(" . $self->{'restrictions'}{"$restriction"} . ")";
+    }
+}
+
+# }}}
+
+# {{{ sub _Order 
+
+# This routine returns what the result set should be ordered by
+# Build the ORDER BY clause
+sub _Order {
+
+  my $self = shift;
+  my $OrderClause;
+  
+  if ($self->{'orderby'}) {
+    $OrderClause = " ORDER BY ". $self->{'orderby'};
+  }
+  else {
+    $OrderClause = " ORDER BY main.".$self->{'primary_key'}." ";
+  }
+  return ($OrderClause);
+}
+
+# }}}
+
+# {{{ sub _OrderBy 
+
+# This routine returns whether the result set should be sorted Ascending or Descending
+
+sub _OrderBy {
+  my $self = shift;
+  my $order_by;
+  if ($self->{'order'} =~ /^des/i) {
+    $order_by = " DESC";
+  }
+  else {
+    $order_by = " ASC";
+  }
+  return($order_by);
+}
+
+# }}}
+
+# }}}
+
+# {{{ routines dealing with table aliases and linking tables
+
+# {{{ sub NewAlias
+
+=head2 NewAlias
+
+Takes the name of a table.
+Returns the string of a new Alias for that table, which can be used to Join tables
+or to Limit what gets found by a search.
+
+=cut
+
+sub NewAlias {
+    my $self = shift;
+    my $table = shift || die "Missing parameter";
+    
+    
+    my $alias=$table."_".$self->{'alias_count'};
+    
+    $self->{'aliases'}[$self->{'alias_count'}]{'alias'} = $alias;
+    $self->{'aliases'}[$self->{'alias_count'}]{'table'} = $table;
+    
+    $self->{'alias_count'}++;
+    
+    return $alias;
+}
+# }}}
+
+# {{{ sub Join
+
+=head2 Join
+
+Join instructs DBIx::SearchBuilder to join two tables. 
+It takes a param hash with keys ALIAS1, FIELD1, ALIAS2 and FIELD2.
+
+ALIAS1 and ALIAS2 are column aliases obtained from $self->NewAlias or a $self->Limit
+FIELD1 and FIELD2 are the fields in ALIAS1 and ALIAS2 that should be linked, respectively.
+
+
+
+
+=cut
+
+sub Join {
+    my $self = shift;
+    my %args = (FIELD1 => undef,
+		ALIAS1 => undef,
+		FIELD2 => undef,
+		ALIAS2 => undef,
+		@_);
+    # we need to build the table of links.
+    my $clause = $args{'ALIAS1'}. ".". $args{'FIELD1'}. " = " . 
+		 $args{'ALIAS2'}. ".". $args{'FIELD2'};
+    $self->{'table_links'} .= "AND $clause ";
+    
+}
+
+# }}}
+
+
+
+
+# things we'll want to add:
+# get aliases
+# add restirction clause
+# 
+
+# }}}
+
 # {{{ sub Rows
 
 =head2 Rows
 
-
+Limits the number of rows returned by the database.
 Optionally, takes an integer which restricts the # of rows returned in a result
-Returns an integer which is the number of rows the database should display.
+Returns the number of rows the database should display.
 
 =cut
 
@@ -698,7 +758,10 @@ sub Rows {
 
 =head2 FirstRow
 
-Set or get what the first row the database should return is.
+Get or set the first row of the result set the database should return.
+Takes an optional single integer argrument. Returns the currently set integer
+first row that the database should return.
+
 
 =cut
 
@@ -719,23 +782,26 @@ sub FirstRow {
 
 # {{{ Public utility methods
 
-# {{{ Counter, Count and IsLast
+# {{{ sub Counter
 
 =head2 Counter
 
-Returns the current record in the set
+Returns the current position in the record set.
 
 =cut
 
 sub Counter {
-    return $_[0]->{'itemscount'};
+    my $self = shift;
+    return $self->{'itemscount'};
 }
+
+# }}}
 
 # {{{ sub Count 
 
 =head2 Count
 
-Returns the number of records in the set
+Returns the number of records in the set.
 
 =cut
 
@@ -749,16 +815,24 @@ sub Count  {
 	return($self->{'rows'});
     }
 }
+# }}}
 
+# {{{ sub IsLast
 =head2 IsLast
 
-returns true if the current Counter
-is the last row
+Returns true if the current row is the last record in the set.
 
 =cut
 
 sub IsLast {
-    return ($_[0]->{'itemscount'}==$_[0]->{'rows'});
+    my $self = shift;
+    
+    if ($self->Counter == $self->Count) {
+	return (1);
+    }	
+    else {
+	return (undef);
+    }
 }
 # }}}
 
@@ -784,19 +858,8 @@ __END__
 
 # {{{ POD
 
-=head1 NAME
 
-DBIx::SearchBuilder - Perl extension for easy SQL SELECT Statement generation
 
-=head1 SYNOPSIS
-
-  use DBIx::SearchBuilder;
-
-  then read the code. (yes, i'm being lame)
-
-=head1 DESCRIPTION
-
-Jesse is lame and hasn't written docs yet
 
 =head1 AUTHOR
 
@@ -804,7 +867,7 @@ Jesse Vincent, jesse@fsck.com
 
 =head1 SEE ALSO
 
-DBIx::Handle, DBIx::Record, perl(1).
+DBIx::SearchBuilder::Handle, DBIx::SearchBuilder::Record, perl(1).
 
 =cut
 

@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle.pm,v 1.6 2000/10/17 06:59:17 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle.pm,v 1.7 2001/01/03 19:41:20 jesse Exp $
 package DBIx::SearchBuilder::Handle;
 use Carp;
 use DBI;
@@ -6,13 +6,49 @@ use strict;
 use vars qw($VERSION @ISA $DBIHandle);
 
 
-$VERSION = '0.06';
+$VERSION = '$Version$';
 
 
-#instantiate a new object.
+# {{{ Top POD
 
+=head1 NAME
+
+DBIx::SearchBuilder::Handle - Perl extension which is a generic DBI handle
+
+=head1 SYNOPSIS
+
+  use DBIx::SearchBuilder::Handle;
+
+ my $Handle = DBIx::SearchBuilder::Handle->new();
+ $Handle->Connect( Driver => 'mysql',
+		   Database => 'dbname',
+		   Host => 'hostname',
+		   User => 'dbuser',
+		   Password => 'dbpassword');
+ 
+ 
+
+=head1 DESCRIPTION
+
+Jesse's a slacker.
+
+Blah blah blah.
+
+=head1 AUTHOR
+
+Jesse Vincent, jesse@fsck.com
+ 
+=cut
+
+# }}}
 
 # {{{ sub new 
+
+=head2 new
+
+Generic constructor
+
+=cut
 
 sub new  {
     my $proto = shift;
@@ -23,6 +59,13 @@ sub new  {
   }
 
 # }}}
+
+# {{{ sub Insert
+=head2 Insert $TABLE_NAME @KEY_VALUE_PAIRS
+
+Takes a table name and a set of key-value pairs in an array. splits the key value pairs, constructs an INSERT statement and performs the insert. Returns the row_id of this row.
+
+=cut
 
 sub Insert {
   my($self, $table, @pairs) = @_;
@@ -50,9 +93,17 @@ sub Insert {
 
   $self->SimpleQuery($QueryString);
 }
-
+# }}}
 
 # {{{ sub Connect 
+
+=head2 Connect PARAMHASH: Driver, Database, Host, User, Password
+
+Takes a paramhash and connects to your DBI datasource. 
+
+
+=cut
+
 sub Connect  {
   my $self = shift;
   
@@ -78,21 +129,46 @@ sub Connect  {
 
 # {{{ sub Disconnect 
 
+=head2 Disconnect
+
+Disconnect from your DBI datasource
+
+=cut
+
 sub Disconnect  {
   my $self = shift;
   return ($self->dbh->disconnect());
 }
 
+# }}}
+
 # {{{ sub Handle / dbh 
+
+=head2 dbh
+
+Return the current DBI handle
+
+=cut
+
+# allow use of Handle as a synonym for DBH
+*Handle=\&dbh;
+
 sub dbh {
   my $self=shift;
   return($DBIHandle);
 }
 
-*Handle=\&dbh;
+
 # }}}
 
 # {{{ sub UpdateTableValue 
+
+=head2 UpdateTableValue TABLE COLUMN NEW_VALUE RECORD_ID IS_SQL
+
+Update column COLUMN of table TABLE where the record id = RECORD_ID.  if IS_SQL is set,
+don\'t quote the NEW_VALUE
+
+=cut
 
 sub UpdateTableValue  {
   my $self = shift;
@@ -136,9 +212,13 @@ sub UpdateTableValue  {
 
 # }}}
 
-
-
 # {{{ sub SimpleQuery
+
+=head2 SimpleQuery QUERY_STRING
+
+Execute the SQL string specified in QUERY_STRING
+
+=cut
 
 sub SimpleQuery  {
   my $self = shift;
@@ -188,6 +268,12 @@ sub FetchResult {
 
 # {{{ sub safe_quote 
 
+=head2 safe_quote IN_VAL
+
+If IN_VAL is null, turn it into an empty quoted string. otherwise, use the DBI quote function. Returns the new string.
+
+=cut
+
 sub safe_quote  {
    my $self = shift;
    my $in_val = shift;
@@ -215,32 +301,7 @@ __END__
 
 # {{{ POD
 
-=head1 NAME
 
-DBIx::SearchBuilder::Handle - Perl extension which is a generic DBI handle
-
-=head1 SYNOPSIS
-
-  use DBIx::SearchBuilder::Handle;
-
- my $Handle = DBIx::SearchBuilder::Handle->new();
- $Handle->Connect( Driver => 'mysql',
-		   Database => 'dbname',
-		   Host => 'hostname',
-		   User => 'dbuser',
-		   Password => 'dbpassword');
- 
- 
-
-=head1 DESCRIPTION
-
-Jesse's a slacker.
-
-Blah blah blah.
-
-=head1 AUTHOR
-
-Jesse Vincent, jesse@fsck.com
 
 =head1 SEE ALSO
 
