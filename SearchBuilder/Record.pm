@@ -473,45 +473,19 @@ sub _Accessible {
     my $attr = shift;
     my $mode = lc(shift);
 
-    
     # @_ is the Accessible data from our subclass. Time to populate
     # the accessible columns datastructure (but only if we're using
     # something with the ancient API that predates ClassAccessible
-    $self->_AccessibleLoad( @_) if ( !$self->can('_ClassAccessible') && @_);
 
     #  return true if we can $mode $Attrib;
     local ($^W) = 0;
-    my $attribute = $self->_ClassAccessible->{$attr};
-    return 0 unless (defined $attr && $attr->{'mode'});
+    my $attribute = $self->_ClassAccessible(@_)->{$attr};
+    return 0 unless (defined $attribute && $attribute->{$mode});
     return 1;
 }
 
 # }}}
 
-# {{{ sub _AccessibleLoad
-
-=head2 _AccessibleLoad COLUMN => OPERATIONS, ...
-
-WILDLY DEPRECATED. YOU SHOULD NEVER NEED THIS
-
-=cut
-
-
-*_accessible_load = \&AccessibleLoad;
-sub _AccessibleLoad {
-  my $self = shift;
-  my $accessible;
-
-  while ( my $col = shift ) {
-    $accessible->{$col}->{lc($_)} = 1
-      foreach split(/[\/,]/, shift);
-  }
-
-  *{_ClassAccessible} =  sub { return $accessible };
-
-}
-
-# }}}
 
 =head2 _PrimaryKeys
 
@@ -524,6 +498,7 @@ sub _PrimaryKeys {
     my $self = shift;
     return ['id'];
 }
+
 # {{{ sub _ClassAccessible
 
 =head2 _ClassAccessible 
@@ -540,6 +515,19 @@ class.
   }
 
 =cut
+
+# XXX This is stub code to deal with the old way we used to do _Accessible
+# It should never be called by modern code
+
+sub _ClassAccessible {
+  my $self = shift;
+  my %accessible;
+  while ( my $col = shift ) {
+    $accessible{$col}->{lc($_)} = 1
+      foreach split(/[\/,]/, shift);
+  }
+	return(\%accessible);
+}
 
 # }}}
 
