@@ -31,7 +31,7 @@ DBIx::SearchBuilder::Record - Perl extension for subclassing, so you can deal wi
   # Tell Record what the primary keys are
   sub _PrimaryKeys {
 	my $self = shift;
-	return('id');
+	return['id'];
   }
 
  
