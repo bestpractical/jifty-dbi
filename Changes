@@ -1,5 +1,10 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+1.19 Sat Jan  8 18:22:59 EST 2005
+
+    - Performing a search multiple times could result in multiple copies of 
+      records in a collection. Uncovered thanks to Kevin Chen and Alex Vandiver.
+
 1.18
     - Release the changes from 1.17
 

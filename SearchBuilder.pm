@@ -5,7 +5,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "1.18";
+$VERSION = "1.19";
 
 =head1 NAME
 
@@ -128,8 +128,11 @@ sub _DoSearch {
 
     my $QueryString = $self->BuildSelectQuery();
 
-    eval {
+    # If we're about to redo the search, we need an empty set of items
+    delete $self->{'items'};
 
+    eval {
+        
         # TODO: finer-grained eval and cheking.
        my  $records = $self->_Handle->SimpleQuery($QueryString);
         my $counter;
