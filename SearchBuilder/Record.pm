@@ -505,7 +505,7 @@ sub _Accessible {
     local ($^W) = 0;
     my $attribute = $self->_ClassAccessible(@_)->{$attr};
     return 0 unless (defined $attribute && $attribute->{$mode});
-    return 1;
+    return $attribute->{$mode};
 }
 
 # }}}
