@@ -9,6 +9,7 @@ Revision history for Perl extension DBIx::SearchBuilder.
     - Minor refactoring of 'id' method for a stupid, tiny perf improvement
     - Refactoring of DBIx::SearchBuilder::Record::Cachable for performance
       improvement
+    - Added a FlushCache method to DBIx::SearchBuilder::Record::Cachable.
 
 1.12
     - Better error handling for some query build failure cases

@@ -35,6 +35,19 @@ sub _SetupCache {
     $_CACHES{$cache}->expire_after( $self->_CacheConfig->{'cache_for_sec'} );
 }
 
+
+=head2 FlushCache 
+
+This class method flushes the _global_ DBIx::SearchBuilder::Record::Cachable 
+cache.  All caches are immediately expired.
+
+=cut
+
+sub FlushCache {
+    %_CACHES = ();
+}
+
+
 sub _KeyCache {
     my $self = shift;
     my $cache =     $self->_Handle->DSN . "-KEYS--" . $self->{'_Class'};
