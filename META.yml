@@ -1,0 +1,10 @@
+name: DBIx::SearchBuilder
+version: 0.92
+distribution_type: module
+requires:
+  DBI: 0
+  Class::ReturnValue: 0.4
+private:
+  directory:
+    - inc
+generated_by: Module::Install version 0.24
