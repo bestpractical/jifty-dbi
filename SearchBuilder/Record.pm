@@ -1,4 +1,4 @@
-#$Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Record.pm,v 1.16 2001/01/30 05:01:09 jesse Exp $
+#$Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Record.pm,v 1.17 2001/02/07 03:40:55 jesse Exp $
 package DBIx::SearchBuilder::Record;
 
 use strict;
@@ -330,7 +330,11 @@ sub __Set  {
 	  return (0,"No value sent to _Set!\n");
       } 
       else {
-	  #TODO $self->_Validate($field, $args{'Value'});
+
+	my $method = "Validate".$args{'Field'};
+	unless ($self->$method($args{'Value'})) {
+		return(0, 'Illegal value for '.$args{'Field'});
+	  }
 	  $error_condition = $self->_Handle->UpdateTableValue($self->Table, $field,$args{'Value'},$self->id, $args{'IsSQL'});
 	  # TODO: Deal with error handling?
 	  $self->{'values'}->{"$field"} = $args{'Value'};
@@ -528,16 +532,14 @@ as columns for this recordtype
 
 sub Create  {
     my $self = shift;
-
     my %attribs = @_;
 
     my ($key);
     foreach $key (keys %attribs) {	
-	my $validate = 
-	"unless (\$self->Validate$key(\$attribs{\$key})) {
-		delete	\$attribs{\$key};
-	}";
-	eval ($validate); #TODO check error conditions	
+	my $method = "Validate$key";
+	unless ($self->$method($attribs{$key})) {
+		delete	$attribs{$key};
+	};
     }
     return ($self->_Handle->Insert($self->Table, %attribs));
   }
