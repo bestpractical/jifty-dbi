@@ -14,31 +14,32 @@ not run its Makefile.PL or Build.PL.
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA1
 
-SHA1 a7ace2d26e74f520f8c1fc2d362d06cf7def3fd0 Changes
+SHA1 f056b3f270ef68efd6ea0fdaed6c9ef4e54c72dc Changes
 SHA1 e2d0a63f89e91ffcfcb21c8500de4eaef4832517 MANIFEST
 SHA1 8541c8988476422ee38fbc8714c1dd45b212f7fb MANIFEST.SKIP
-SHA1 2937f1bcc6264fb4b58b1323afb32465d185f340 META.yml
+SHA1 d6f9e1804e0e810851a30e827e3b33fac120488a META.yml
 SHA1 42a7d726a314465af0b0b2249ffee0eba4841274 Makefile.PL
-SHA1 5fea9ceee0fd07a0883f8172aa848e9ec9c13aee SearchBuilder.pm
+SHA1 5c3b1f4db57a31f8437535ca83728237c8bd1cc2 SearchBuilder.pm
 SHA1 5512f4e1c5e19c39113bae9c347d5e70224e6a2c SearchBuilder/Handle.pm
 SHA1 68a6d7d744e5d123e3c8b59041d12253fcee5d04 SearchBuilder/Handle/Informix.pm
 SHA1 35f764ab7e3c675ffc568f5bcb1ebf921813d801 SearchBuilder/Handle/ODBC.pm
-SHA1 b7fd5ef2fcb2f18ff19a6561bfec4122995daa57 SearchBuilder/Handle/Oracle.pm
+SHA1 6f9abc7ece4b28988fa53f45ccafb7bc31454588 SearchBuilder/Handle/Oracle.pm
 SHA1 a4059aa0efde53772ebd209391f5566543c22328 SearchBuilder/Handle/Pg.pm
 SHA1 4dfd673981bb75c8f630405c419ece75338dec33 SearchBuilder/Handle/SQLite.pm
 SHA1 cf4420e25ae28aa09fbf5e12643ff43f6a2d9241 SearchBuilder/Handle/mysql.pm
 SHA1 e9716814b99c423b8e3f46c68a86363047b408fd SearchBuilder/Handle/mysqlPP.pm
-SHA1 131ce04e03dc39186310a921cc0be920d86b58d0 SearchBuilder/Record.pm
-SHA1 1e4491311caf198a099c27fe22cba6eebaf401be SearchBuilder/Record/Cachable.pm
-SHA1 28d41b2604c8edab59a587e026b6bb164b2d6acb inc/Module/Install.pm
-SHA1 adfe7bd31491c5499b508340aa6d1af75b39160e inc/Module/Install/Base.pm
-SHA1 46d2f5a7392496c91d316bc13971e80a99d71cac inc/Module/Install/Makefile.pm
-SHA1 4825dc250457a0446950ecef1c2683eb0a561704 inc/Module/Install/Metadata.pm
+SHA1 16d59b02fbe381b0328b2d4403c2cb457d6ecf60 SearchBuilder/Record.pm
+SHA1 86f57530c34c917f921532b8d436edcdfef65295 SearchBuilder/Record/Cachable.pm
+SHA1 98c3ada349cd0f2bdec1f4db090745abbed2db71 inc/Module/Install.pm
+SHA1 7eabc5bd2ae92791a6053f1fdf52bf5ef2a565b0 inc/Module/Install/Base.pm
+SHA1 c35c64a7408e717f5aa8b9bc9d5ff4cc253e83d2 inc/Module/Install/Makefile.pm
+SHA1 3f6d682e0e55fd264ec9836e88c7ff2644ed6006 inc/Module/Install/Metadata.pm
 SHA1 c52c9e523059826dba81d4050294e9b70e3410ee test.pl
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.3 (Darwin)
+Version: GnuPG v1.0.6 (GNU/Linux)
+Comment: For info see http://www.gnupg.org
 
-iD8DBQE/9eaBQaM/s3DrrJARAkZiAKDVzjfGYf11Q+wQNuze4dPBDDRE2wCgmhia
-zLfQ+THW6RA53t5zQ5aHcFw=
-=6QZe
+iEYEARECAAYFAkAhQY8ACgkQQaM/s3DrrJAzOwCfQ6WWpvJXKcfBar74pLWsR8Xo
+tlIAoKXYHRuIlB6Y+8CgaliV+lDo445Q
+=iulw
 -----END PGP SIGNATURE-----
