@@ -1,5 +1,10 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+0.62  Jul 5 2002
+        - Support for Class::ReturnValue to channel errors up when expected
+        - Dependency on Class::ReturnValue
+        - Minor cleanups and refactorings to allow percolation of errors on create
+
 0.34  May 23 2001
 	- SearchBuilder.pm - refactored to allow LEFT joins.
 

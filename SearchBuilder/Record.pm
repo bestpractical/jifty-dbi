@@ -781,40 +781,43 @@ sub LoadFromHash {
 
 # {{{ sub _LoadFromSQL 
 
-sub _LoadFromSQL  {
-    my $self = shift;
+sub _LoadFromSQL {
+    my $self        = shift;
     my $QueryString = shift;
     my @bind_values = (@_);
-    
-    my $sth = $self->_Handle->SimpleQuery($QueryString, @bind_values);
-        
+
+    my $sth = $self->_Handle->SimpleQuery( $QueryString, @bind_values );
+
     #TODO this only gets the first row. we should check if there are more.
 
-    eval {
-	$self->{'values'} = $sth->fetchrow_hashref;
-    };
-    if ($@){ 
-	warn $@;
+
+    unless ($sth) {
+        return($sth);
     }
-    
-    unless ($self->{'values'}) {
-	#warn "something might be wrong here; row not found. SQL: $QueryString";
-	return (0, "Couldn't find row");
+
+    eval { $self->{'values'} = $sth->fetchrow_hashref; };
+    if ($@) {
+        warn $@;
     }
-    
+
+    unless ( $self->{'values'} ) {
+
+        #warn "something might be wrong here; row not found. SQL: $QueryString";
+        return ( 0, "Couldn't find row" );
+    }
+
     $self->_DowncaseValuesHash();
-    
-     ## I guess to be consistant with the old code, make sure the primary  
+
+    ## I guess to be consistant with the old code, make sure the primary  
     ## keys exist.
-    
-    eval { 
-	$self->PrimaryKeys();
-    }; if ($@) { 
-	return (0, "Missing a primary key?: $@");
+
+    eval { $self->PrimaryKeys(); };
+    if ($@) {
+        return ( 0, "Missing a primary key?: $@" );
     }
-    return (1, "Found Object");
-    
-  }
+    return ( 1, "Found Object" );
+
+}
 
 # }}}
 

@@ -4,4 +4,5 @@ use ExtUtils::MakeMaker;
 WriteMakefile(
     'NAME'	=> 'DBIx::SearchBuilder',
     'VERSION_FROM' => 'SearchBuilder.pm', # finds $VERSION
+    'PREREQ_PM' => { 'Class::ReturnValue' => '0.20'},
 );

@@ -33,6 +33,10 @@ perl(1), DBIx::SearchBuilder
 Takes a table name as the first argument and assumes that the rest of the arguments
 are an array of key-value pairs to be inserted.
 
+
+If the insert succeeds, returns the id of the insert, otherwise, returns
+a Class::ReturnValue object with the error reploaded.
+
 =cut
 
 sub Insert  {
@@ -40,12 +44,7 @@ sub Insert  {
 
     my $sth = $self->SUPER::Insert(@_);
     if (!$sth) {
-       if ($main::debug) {
-       	die "Error with Insert: ". $self->dbh->errstr;
-      }
-       else {
-	    return (undef);
-       }
+	    return ($sth);
      }
 
     $self->{'id'}=$self->dbh->{'mysql_insertid'};

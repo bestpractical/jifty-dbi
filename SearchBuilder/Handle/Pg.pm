@@ -36,6 +36,9 @@ sub Connect {
 Takes a table name as the first argument and assumes that the rest of the arguments
 are an array of key-value pairs to be inserted.
 
+In case of isnert failure, returns a Class::ReturnValue object preloaded
+with error info
+
 =cut
 
 
@@ -46,21 +49,17 @@ sub Insert {
     my $sth = $self->SUPER::Insert($table, @_ );
     
     unless ($sth) {
-	if ($DEBUG) {
-	    die "Error with insert: ". $self->dbh->errstr;
-	}
-	else {
-	    return (undef);
-	}
+	    return ($sth);
     }
 
     #Lets get the id of that row we just inserted    
     my $oid = $sth->{'pg_oid_status'};
     my $sql = "SELECT id FROM $table WHERE oid = ?";
     my @row = $self->FetchResult($sql, $oid);
+    # TODO: Propagate Class::ReturnValue up here.
     unless ($row[0]) {
-	warn "Can't find $table.id  for OID $oid";
-	return(undef);
+	    warn "Can't find $table.id  for OID $oid";
+	    return(undef);
     }	
     $self->{'id'} = $row[0];
     

@@ -3,6 +3,7 @@ package DBIx::SearchBuilder::Handle;
 use Carp;
 use DBI;
 use strict;
+use Class::ReturnValue;
 use vars qw($VERSION @ISA $DBIHandle $DEBUG);
 
 
@@ -359,21 +360,31 @@ sub SimpleQuery  {
 	else {
 	    warn "$self couldn't prepare the query '$QueryString'" . 
 	      $self->dbh->errstr . "\n";
-	    return (undef);
+        my $ret = Class::ReturnValue->new();
+        $ret->return_error( errno => '-1',
+                            message => "Couldn't prepare the query '$QueryString'.". $self->dbh->errstr,
+                            do_backtrace => undef);
+	    return ($ret);
 	}
     }
-    unless ($sth->execute(@bind_values)) {
-	if ($DEBUG) {
-	    die "$self couldn't execute the query '$QueryString'" . 
-	      $self->dbh->errstr . "\n";
-	    
-	}
-	else {
-	    warn "$self couldn't execute the query '$QueryString'" . 
-	      $self->dbh->errstr . "\n";
-	    return(undef);
-	}
-	
+    unless ( $sth->execute(@bind_values) ) {
+        if ($DEBUG) {
+            die "$self couldn't execute the query '$QueryString'"
+              . $self->dbh->errstr . "\n";
+
+        }
+        else {
+            warn "$self couldn't execute the query '$QueryString'";
+
+              my $ret = Class::ReturnValue->new();
+            $ret->return_error(
+                         errno   => '-1',
+                         message => "Couldn't execute the query '$QueryString'"
+                           . $self->dbh->errstr,
+                         do_backtrace => undef );
+            return ($ret);
+        }
+
     }
     return ($sth);
     
@@ -387,7 +398,9 @@ sub SimpleQuery  {
 =head2 FetchResult QUERY, [ BIND_VALUE, ... ]
 
 Takes a SELECT query as a string, along with an array of BIND_VALUEs
-Returns the first row as an array
+If the select succeeds, returns the first row as an array.
+Otherwise, returns a Class::ResturnValue object with the failure loaded
+up.
 
 =cut 
 
@@ -396,8 +409,12 @@ sub FetchResult {
   my $query = shift;
   my @bind_values = @_;
   my $sth = $self->SimpleQuery($query, @bind_values);
-  
-  return ($sth->fetchrow);
+  if ($sth) {
+    return ($sth->fetchrow);
+  }
+  else {
+   return($sth);
+  }
 }
 # }}}
 
