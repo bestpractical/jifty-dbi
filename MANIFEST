@@ -2,7 +2,6 @@ Changes
 Makefile.PL
 MANIFEST
 MANIFEST.SKIP
-Cache/Simple/TimedExpiry.pm
 SearchBuilder.pm
 SearchBuilder/Handle.pm
 SearchBuilder/Union.pm
@@ -10,7 +9,6 @@ SearchBuilder/Record.pm
 SearchBuilder/Handle/mysql.pm
 SearchBuilder/Handle/mysqlPP.pm
 SearchBuilder/Record/Cachable.pm
-SearchBuilder/Record/CacheCache.pm
 SearchBuilder/Handle/Oracle.pm
 SearchBuilder/Handle/Informix.pm
 SearchBuilder/Handle/SQLite.pm

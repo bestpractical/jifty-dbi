@@ -1,5 +1,5 @@
 name: DBIx-SearchBuilder
-version: 1.10_01
+version: 1.10_03
 license: perl
 distribution_type: module
 build_requires:
@@ -12,4 +12,4 @@ requires:
 no_index:
   directory:
     - inc
-generated_by: Module::Install version 0.33
+generated_by: Module::Install version 0.35

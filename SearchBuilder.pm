@@ -5,7 +5,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "1.10_02";
+$VERSION = "1.10_03";
 
 =head1 NAME
 
@@ -301,7 +301,6 @@ sub _DistinctQuery {
 
     # XXX - Postgres gets unhappy with distinct and OrderBy aliases
     if ($self->{order_clause} =~ /(?<!main)\./) {
-	$self->DEBUG(1);
         $$statementref = "SELECT main.* FROM $$statementref";
     }
     else {

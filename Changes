@@ -1,5 +1,8 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+1.10_03 Mon Aug 30 14:31:10 EDT 2004
+        - Cache Sanity fixes from Autrijus Tang <autrijus@autrijus.org>
+
 1.10_02 Thu Aug 26 13:31:13 EDT 2004
 
 1.10_01 Thu Aug 26 00:08:31 EDT 2004

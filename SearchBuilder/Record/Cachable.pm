@@ -90,13 +90,15 @@ sub LoadFromHash {
 sub LoadByCols {
     my ( $self, %attr ) = @_;
 
-    # Blow away the primary cache key since we're loading.
-    $self->{'_SB_Record_Primary_RecordCache_key'} = undef;
     ## Generate the cache key
     my $alt_key = $self->_gen_alternate_RecordCache_key(%attr);
     if ( $self->_fetch( $self->_lookup_primary_RecordCache_key($alt_key) ) ) {
+        $self->{'_id'} = $self->SUPER::id();
         return ( 1, "Fetched from cache" );
     }
+
+    # Blow away the primary cache key since we're loading.
+    $self->{'_SB_Record_Primary_RecordCache_key'} = undef;
 
     ## Fetch from the DB!
     my ( $rvalue, $msg ) = $self->SUPER::LoadByCols(%attr);
@@ -106,9 +108,8 @@ sub LoadByCols {
         $self->_store();
         $self->_KeyCache->set( $alt_key, $self->_primary_RecordCache_key);
 
-        $self->{'_id'} = $self->SUPER::id();
-
     }
+    $self->{'_id'} = $self->SUPER::id();
     return ( $rvalue, $msg );
 
 }
@@ -159,17 +160,10 @@ sub _expire (\$) {
 
 sub _fetch () {
     my ( $self, $cache_key ) = @_;
-    my $data = $self->_RecordCache->fetch($cache_key);
-    $self->_deserialize($data);
+    my $data = $self->_RecordCache->fetch($cache_key) or return;
+    @{$self}{keys %$data} = values %$data; # deserialize
+    return 1;
 
-}
-
-sub _deserialize {
-    my $self = shift;
-    my $data = shift;
-    foreach my $key ( keys %$data ) {
-        $self->{$key} = $data->{$key};
-    }
 }
 
 sub id {
