@@ -1019,30 +1019,32 @@ as columns for this recordtype
 
 *create = \&Create;
 
-sub Create  {
-    my $self = shift;
+sub Create {
+    my $self    = shift;
     my %attribs = @_;
 
     my ($key);
-    foreach $key (keys %attribs) {	
-	my $method = "Validate$key";
-	unless ($self->$method($attribs{$key})) {
-		delete	$attribs{$key};
-	};
+    foreach $key ( keys %attribs ) {
+        my $method = "Validate$key";
+        unless ( $self->$method( $attribs{$key} ) ) {
+            delete $attribs{$key};
+        }
     }
-    unless ($self->_Handle->KnowsBLOBs) {
+    unless ( $self->_Handle->KnowsBLOBs ) {
+
         # Support for databases which don't deal with LOBs automatically
         my $ca = $self->_ClassAccessible();
-        foreach $key (keys %attribs) {
-            if ($ca->{$key}->{'type'} =~ /^(text|longtext|clob|blob|lob)$/i) {
-                my $bhash = $self->_Handle->BLOBParams($key, $ca->{$key}->{'type'});
+        foreach $key ( keys %attribs ) {
+            if ( $ca->{$key}->{'type'} =~ /^(text|longtext|clob|blob|lob)$/i ) {
+                my $bhash =
+                  $self->_Handle->BLOBParams( $key, $ca->{$key}->{'type'} );
                 $bhash->{'value'} = $attribs{$key};
                 $attribs{$key} = $bhash;
             }
         }
     }
-    return ($self->_Handle->Insert($self->Table, %attribs));
-  }
+    return ( $self->_Handle->Insert( $self->Table, %attribs ) );
+}
 
 # }}}
 
