@@ -22,4 +22,3 @@ SearchBuilder/Union.pm
 t/00.load.t
 t/01records.t
 t/pod.t
-test.patch
