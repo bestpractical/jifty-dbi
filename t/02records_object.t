@@ -9,7 +9,7 @@ eval "use DBD::SQLite";
 if ($@) { 
 plan skip_all => "DBD::SQLite required for testing database interaction" 
 } else{
-plan tests => 12;
+plan tests => 13;
 }
 use_ok('DBIx::SearchBuilder::Handle::SQLite');
 my $handle = DBIx::SearchBuilder::Handle::SQLite->new();
@@ -27,12 +27,13 @@ foreach( @{ TestApp->schema } ) {
 
 my $emp = TestApp::Employee->new($handle);
 my $e_id = $emp->Create( Name => 'RUZ' );
-ok($e_id);
+ok($e_id, "Got an ide for the new emplyee");
 my $phone = TestApp::Phone->new($handle);
+isa_ok( $phone, 'TestApp::Phone', "it's atestapp::phone");
 my $p_id = $phone->Create( Employee => $e_id, Phone => '+7(903)264-03-51');
 # XXX: test fails if next string is commented
+is($p_id, 1, "Loaded record $p_id");
 $phone->Load( $p_id );
-ok($p_id);
 
 my $obj = $phone->EmployeeObj($handle);
 ok($obj, "Employee #$e_id has phone #$p_id");
