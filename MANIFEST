@@ -19,6 +19,7 @@ SearchBuilder/Handle/Sybase.pm
 SearchBuilder/Record.pm
 SearchBuilder/Record/Cachable.pm
 SearchBuilder/Union.pm
+SearchBuilder/Unique.pm
 t/00.load.t
 t/01records.t
 t/02records_object.t
