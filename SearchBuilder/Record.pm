@@ -632,10 +632,12 @@ sub _Set {
 sub __Set {
     my $self = shift;
 
-    my %args = ( 'Field' => undef,
-                 'Value' => undef,
-                 'IsSQL' => undef,
-                 @_ );
+    my %args = (
+        'Field' => undef,
+        'Value' => undef,
+        'IsSQL' => undef,
+        @_
+    );
 
     $args{'Column'}        = $args{'Field'};
     $args{'IsSQLFunction'} = $args{'IsSQL'};
@@ -648,64 +650,86 @@ sub __Set {
 
     unless ( defined( $args{'Column'} ) && $args{'Column'} ) {
         $ret->as_array( 0, 'No column specified' );
-        $ret->as_error( errno   => 5,
-                        do_backtrace => 0,
-                            message => "No column specified" );
-        return ($ret->return_value);
+        $ret->as_error(
+            errno        => 5,
+            do_backtrace => 0,
+            message      => "No column specified"
+        );
+        return ( $ret->return_value );
     }
     my $column = lc $args{'Column'};
-    if (     ( defined $self->__Value($column) )
-         and ( $args{'Value'} eq $self->__Value($column) ) ) {
+    if (    ( defined $self->__Value($column) )
+        and ( $args{'Value'} eq $self->__Value($column) ) )
+    {
         $ret->as_array( 0, "That is already the current value" );
-        $ret->as_error( errno   => 1,
-                        do_backtrace => 0,
-                            message => "That is already the current value" );
-        return ($ret->return_value);
+        $ret->as_error(
+            errno        => 1,
+            do_backtrace => 0,
+            message      => "That is already the current value"
+        );
+        return ( $ret->return_value );
     }
     elsif ( !defined( $args{'Value'} ) ) {
         $ret->as_array( 0, "No value passed to _Set" );
-        $ret->as_error( errno   => 2,
-                        do_backtrace => 0,
-                            message => "No value passed to _Set" );
-        return ($ret->return_value);
+        $ret->as_error(
+            errno        => 2,
+            do_backtrace => 0,
+            message      => "No value passed to _Set"
+        );
+        return ( $ret->return_value );
+    }
+
+
+
+    # First, we truncate the value, if we need to.
+    #
+    
+
+    my $value = $self->TruncateValue ( $args{'Column'}, $args{'Value'});
+    unless ($value eq $args{'Value'}) {
+        $args{'OriginalValue'} = $args{'Value'};
+        $args{'Value'} = $value;
+    }
+
+
+
+    my $method = "Validate" . $args{'Column'};
+    unless ( $self->$method( $args{'Value'} ) ) {
+        $ret->as_array( 0, 'Illegal value for ' . $args{'Column'} );
+        $ret->as_error(
+            errno        => 3,
+            do_backtrace => 0,
+            message      => "Illegal value for " . $args{'Column'}
+        );
+        return ( $ret->return_value );
+    }
+
+    $args{'Table'}       = $self->Table();
+    $args{'PrimaryKeys'} = { $self->PrimaryKeys() };
+
+    my $val = $self->_Handle->UpdateRecordValue(%args);
+    unless ($val) {
+        my $message = 
+            $args{'Column'} . " could not be set to " . $args{'Value'} . "." ;
+        $ret->as_array( 0, $message);
+        $ret->as_error(
+            errno        => 4,
+            do_backtrace => 0,
+            message      => $message
+        );
+        return ( $ret->return_value );
+    }
+    # If we've performed some sort of "functional update"
+    # then we need to reload the object from the DB to know what's
+    # really going on. (ex SET Cost = Cost+5)
+    if ( $args{'IsSQLFunction'} ) {
+        $self->Load( $self->Id );
     }
     else {
-
-        my $method = "Validate" . $args{'Column'};
-        unless ( $self->$method( $args{'Value'} ) ) {
-            $ret->as_array( 0, 'Illegal value for ' . $args{'Column'} );
-            $ret->as_error(errno   => 3,
-                        do_backtrace => 0,
-                               message => "Illegal value for " . $args{'Column'}
-            );
-            return ($ret->return_value);
-        }
-
-        $args{'Table'}       = $self->Table();
-        $args{'PrimaryKeys'} = { $self->PrimaryKeys() };
-
-        my $val = $self->_Handle->UpdateRecordValue(%args);
-        unless ($val) {
-            $ret->as_array( 0,
-                                $args{'Column'}
-                                  . " could not be set to "
-                                  . $args{'Value'} . "." );
-            $ret->as_error( errno   => 4,
-                        do_backtrace => 0,
-                                message => $args{'Column'}
-                                  . " could not be set to "
-                                  . $args{'Value'} . "." );
-            return ($ret->return_value);
-        }
-        if ( $args{'IsSQLFunction'} ) {
-            $self->Load( $self->Id );
-        }
-        else {
-            $self->{'values'}->{"$column"} = $args{'Value'};
-        }
+        $self->{'values'}->{"$column"} = $args{'Value'};
     }
     $ret->as_array( 1, "The new value has been set." );
-    return ($ret->return_value);
+    return ( $ret->return_value );
 }
 
 # }}}
@@ -732,6 +756,58 @@ sub _Validate  {
   }	
 
 # }}}	
+
+# {{{ sub TruncateValue 
+
+=head2 TruncateValue  KEY VALUE
+
+Truncate a value that's about to be set so that it will fit inside the database'
+s idea of how big the column is. 
+
+(Actually, it looks at searchbuilder's concept of the database, not directly into the db).
+
+=cut
+
+sub TruncateValue {
+    my $self  = shift;
+    my $key   = shift;
+    my $value = shift;
+
+    my $metadata = $self->_ClassAccessible->{$key};
+
+    my $truncate_to;
+    if ( $metadata->{'length'} && !$metadata->{'is_numeric'} ) {
+        $truncate_to = $metadata->{'length'};
+    }
+    elsif ( $metadata->{'type'} =~ /char\((\d+)\)/ ) {
+        $truncate_to = $1;
+    }
+
+    return ($value) unless ($truncate_to);    # don't need to truncate
+
+    # Perl 5.6 didn't speak unicode
+    return substr( $value, 0, $truncate_to ) unless ( $] >= 5.007 );
+
+    require Encode;
+
+    if ( Encode::is_utf8($value) ) {
+        return Encode::decode(
+            utf8 => substr( Encode::encode( utf8 => $value ), 0, $truncate_to ),
+            Encode::FB_QUIET(),
+        );
+    }
+    else {
+        return Encode::encode(
+            utf8 => Encode::decode(
+                utf8 => substr( $value, 0, $truncate_to ),
+                Encode::FB_QUIET(),
+            )
+        );
+
+    }
+
+}
+# }}}
 
 # {{{ sub _Object 
 
@@ -1026,6 +1102,11 @@ sub Create {
     my ($key);
     foreach $key ( keys %attribs ) {
         my $method = "Validate$key";
+
+            #Truncate things that are too long for their datatypes
+        my $value = $self->TruncateValue ($key => $attribs{$key});
+        $attribs{$key} = $value unless ($value eq $attribs{$key});
+
         unless ( $self->$method( $attribs{$key} ) ) {
             delete $attribs{$key};
         }

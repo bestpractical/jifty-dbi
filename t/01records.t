@@ -44,6 +44,47 @@ ok($val, $msg) ;
 
 is($rec->Name, 'Obra', "We did actually change the name");
 
+# Validate truncation on update
+
+($val,$msg) = $rec->SetName('1234567890123456789012345678901234567890');
+
+ok($val, $msg) ;
+
+is($rec->Name, '12345678901234', "Truncated on update");
+
+
+
+# Test unicode truncation:
+my $univalue = "這是個測試";
+
+($val,$msg) = $rec->SetName($univalue.$univalue);
+
+ok($val, $msg) ;
+
+is($rec->Name, '這是個測');
+
+
+
+# make sure we do _not_ truncate things which should not be truncated
+($val,$msg) = $rec->SetEmployeeId('1234567890');
+
+ok($val, $msg) ;
+
+is($rec->EmployeeId, '1234567890', "Did not truncate id on create");
+
+# make sure we do truncation on create
+my $newrec = TestApp::Address->new($handle);
+my $newid = $newrec->Create( Name => '1234567890123456789012345678901234567890',
+                             EmployeeId => '1234567890' );
+
+$newrec->Load($newid);
+
+ok ($newid, "Created a new record");
+is($newrec->Name, '12345678901234', "Truncated on create");
+is($newrec->EmployeeId, '1234567890', "Did not truncate id on create");
+
+
+
 package TestApp::Address;
 
 use base qw/DBIx::SearchBuilder::Record/;
@@ -62,7 +103,7 @@ sub _ClassAccessible {
         id =>
         {read => 1, type => 'int(11)', default => ''}, 
         Name => 
-        {read => 1, write => 1, type => 'varchar(36)', default => ''},
+        {read => 1, write => 1, type => 'varchar(14)', default => ''},
         Phone => 
         {read => 1, write => 1, type => 'varchar(18)', default => ''},
         EmployeeId => 

@@ -10,8 +10,11 @@ Revision history for Perl extension DBIx::SearchBuilder.
     - Refactoring of DBIx::SearchBuilder::Record::Cachable for performance
       improvement
     - Added a FlushCache method to DBIx::SearchBuilder::Record::Cachable.
-
     - Started to flesh out a...test suite
+    - SearchBuilder now truncates strings before inserting them into character
+      types in the database as mysql generally does. Additionally, it truncates
+      things at utf8 character boundaries...as mysql does not.
+    
 
 
 1.12
