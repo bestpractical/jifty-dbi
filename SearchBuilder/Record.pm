@@ -1079,7 +1079,7 @@ sub __Delete {
     my $QueryString = "DELETE FROM ". $self->Table . ' ' . $where;
    my $return = $self->_Handle->SimpleQuery($QueryString, @bind);
 
-    if (UNIVERSAL::isa('Class::ReturnValue')) {
+    if (UNIVERSAL::isa('Class::ReturnValue', $return)) {
         return ($return);
     } else {
         return(1); 

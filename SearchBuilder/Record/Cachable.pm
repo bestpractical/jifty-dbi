@@ -150,9 +150,8 @@ sub _expire (\$) {
 sub _fetch () {
     my ( $self, $cache_key ) = @_;
     my $data = $self->_RecordCache->fetch($cache_key) or return;
-    %$self = %$data; #deserialize it
 
-    #@{$self}{keys %$data} = values %$data; # deserialize
+    @{$self}{keys %$data} = values %$data; # deserialize
     return 1;
 
 }
