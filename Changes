@@ -1,5 +1,8 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+1.15 Sat Nov 27 13:09:56 EST 2004
+    - Fix a testsuite bug when DBD::SQLite isn't there
+
 
 1.14
     - Silenced warnings about uninitialized warnings when inserting null cols

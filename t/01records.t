@@ -4,10 +4,13 @@
 use strict;
 use warnings;
 
-use Test::More qw/no_plan/;
+use Test::More;
 eval "use DBD::SQLite";
-plan skip_all => "DBD::SQLite required for testing database interaction" if $@;
-
+if ($@) { 
+plan skip_all => "DBD::SQLite required for testing database interaction" 
+} else{
+plan tests => 23;
+}
     my $handle;
 use_ok('DBIx::SearchBuilder::Handle::SQLite');
 
