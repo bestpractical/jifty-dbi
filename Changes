@@ -1,5 +1,9 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+0.77 Jan 15 2002
+
+        - No longer attempt to cache (and fail) objects that haven't been database-loaded
+
 0.76 Dec 30 2002
         - Extra checking for cache misses in DBIx::SearchBuilder::Record::Cachable
         - The start of support for checking database version, so that we can do 

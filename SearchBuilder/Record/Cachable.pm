@@ -281,6 +281,9 @@ sub _fetch_cache_key {
 sub _gen_primary_cache_key {
     my ($this) = @_;
 
+
+    return undef unless ($this->Id);
+
     my $primary_cache_key = $this->Table() . ':';
     foreach my $key (@{$this->_PrimaryKeys}) {
         $primary_cache_key .= $key.'='.
