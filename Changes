@@ -1,5 +1,10 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+1.10
+
+    - Identical to 1.10_05
+
+
 1.10_05
 
     -   Reworked the _Accessible mechanism in DBIx::SearchBuilder::Record to 
