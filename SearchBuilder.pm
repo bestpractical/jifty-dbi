@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder.pm,v 1.28 2001/07/15 15:09:27 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder.pm,v 1.32 2001/09/26 20:21:40 jesse Exp $
 
 # {{{ Version, package, new, etc
 
@@ -7,7 +7,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "0.41";
+$VERSION = "0.43";
 
 =head1 NAME
 
@@ -473,6 +473,9 @@ clauses in SQL
 # OPERATOR is whatever should be putted in between the FIELD and the
 # VALUE.
 
+on some databases, such as postgres, setting CASESENSITIVE to 1 will make
+this search case sensitive
+
 =cut 
 
 sub Limit  {
@@ -484,6 +487,7 @@ sub Limit  {
 		ALIAS => undef,
 		QUOTEVALUE => 1,
 		ENTRYAGGREGATOR => 'or',
+		CASESENSITIVE => undef,
 		OPERATOR => '=',
 		SUBCLAUSE => undef,
 		LEFTJOIN => undef,
@@ -503,9 +507,11 @@ sub Limit  {
 	    $args{'VALUE'} = "%".$args{'VALUE'} ."%";
 	}
 	
-	#if we're explicitly told to to quote the value or
+	#if we're explicitly told not to to quote the value or
 	# we're doing an IS or IS NOT (null), don't quote the operator. 
-	if ($args{'QUOTEVALUE'} or $args{'OPERATOR'} !~ /IS/i) {
+
+	
+	if ($args{'QUOTEVALUE'} && $args{'OPERATOR'} !~ /IS/) {
 	    $args{'VALUE'} = $self->_Handle->dbh->quote($args{'VALUE'});
 	}
     }
@@ -580,6 +586,7 @@ sub _GenericRestriction  {
 		ENTRYAGGREGATOR => undef,
 		OPERATOR => '=',
 		SUBCLAUSE => undef,
+		CASESENSITIVE => undef,
 		@_);
     
     my ($Clause, $QualifiedField);
@@ -648,18 +655,23 @@ sub _GenericRestriction  {
 	$restriction = \$self->{'restrictions'}{"$Clause"};
     }
     # If it's a new value or we're overwriting this sort of restriction, 
-    
+   
+    unless ($args{'CASESENSITIVE'}) {
+	$QualifiedField = "lower($QualifiedField)";
+	$args{'VALUE'} = lc($args{'VALUE'});
+    }
+
+    my $clause = "($QualifiedField $args{'OPERATOR'} $args{'VALUE'})";  
+ 
     if (((exists $args{'ENTRYAGGREGATOR'}) and 
 	 ($args{'ENTRYAGGREGATOR'} || "" ) eq 'none') or 
 	(!$$restriction) ) {
 	
-	$$restriction = "($QualifiedField $args{'OPERATOR'} $args{'VALUE'})";  
+	$$restriction = $clause;
 	
     }
     else {
-	$$restriction .= 
-	  $args{'ENTRYAGGREGATOR'} .
-	    " ($QualifiedField $args{'OPERATOR'} $args{'VALUE'})";
+	$$restriction .= $args{'ENTRYAGGREGATOR'} . $clause; 
     }
     
     return ($args{'ALIAS'});
@@ -938,11 +950,11 @@ sub Join {
 	my $alias = $self->_GetAlias($args{'TABLE2'});
 	
 	$self->{'left_joins'}{"$alias"}{'alias_string'} =   
-	  "LEFT JOIN $args{'TABLE2'} as $alias ";
+	  " LEFT JOIN $args{'TABLE2'} as $alias ";
 
 
 	$self->{'left_joins'}{"$alias"}{'criteria'}{'base_criterion'} = 
-	  "$args{'ALIAS1'}.$args{'FIELD1'} = $alias.$args{'FIELD2'}";
+	  " $args{'ALIAS1'}.$args{'FIELD1'} = $alias.$args{'FIELD2'}";
 	
 	return($alias);
     }
@@ -950,7 +962,7 @@ sub Join {
     # we need to build the table of links.
     my $clause = $args{'ALIAS1'}. ".". $args{'FIELD1'}. " = " . 
                  $args{'ALIAS2'}. ".". $args{'FIELD2'};
-    $self->{'table_links'} .= "AND $clause ";
+    $self->{'table_links'} .= " AND $clause ";
     
 }
 
@@ -1153,7 +1165,13 @@ __END__
 
 =head1 AUTHOR
 
-Jesse Vincent, jesse@fsck.com
+Copyright (c) 2001 Jesse Vincent, jesse@fsck.com.
+
+All rights reserved.
+
+This library is free software; you can redistribute it
+and/or modify it under the same terms as Perl itself.
+
 
 =head1 SEE ALSO
 

@@ -586,7 +586,6 @@ sub __Set  {
   delete $args{'Field'};
   delete $args{'IsSQL'};
 
-  my ($error_condition);
   
   if (defined $args{'Column'}) {
       my $column = lc $args{'Column'};
@@ -608,9 +607,12 @@ sub __Set  {
           $args{'PrimaryKeys'} = {$self->PrimaryKeys()};
                        
 
-          $error_condition = $self->_Handle->UpdateRecordValue(%args);
+          my $val = $self->_Handle->UpdateRecordValue(%args);
+	  unless ($val) {
+		return(0, $args{'Column'}." could not be set to ".
+		        $args{'Value'}. ".");
+	  }
 
-          # TODO: Deal with error handling?
 	  $self->{'values'}->{"$column"} = $args{'Value'};
       }
       return (1, "The new value has been set.");
