@@ -1149,10 +1149,11 @@ sub GotoPage {
     my $self = shift;
     my $page = shift;
 
-    unless ( $self->RowsPerPage ) {
+    if ( $self->RowsPerPage ) {
+    	$self->FirstRow( 1 + ( $self->RowsPerPage * $page ) );
+    } else {
         $self->FirstRow(1);
     }
-    $self->FirstRow( 1 + ( $self->RowsPerPage * $page ) );
 }
 
 # }}}

@@ -1,5 +1,7 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+1.00_02	- Slightly cleaner code in SearchBuilder->GotoPage
+
 1.00_01 - Better handling of case insensitive comparisons on Postgres
 	- Proper support for query paging on SQLite
 		
