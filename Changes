@@ -1,5 +1,7 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+0.97_01 - Oracle doesn't support binary-safe clobs in a reasonable manner.
+
 0.96    - Releasing 0.96_01 as usable
 
 0.96_01 - Fix a couple of spurious warnings in Record::Cachable

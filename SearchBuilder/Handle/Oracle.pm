@@ -281,3 +281,21 @@ sub DistinctQuery {
 
 # }}}
 
+
+# {{{ BinarySafeBLOBs
+
+=head2 BinarySafeBLOBs
+
+Return undef, as Oracle doesn't support binary-safe CLOBS
+
+
+=cut
+
+sub BinarySafeBLOBs {
+    my $self = shift;
+    return(undef);
+}
+
+# }}}
+
+1;
