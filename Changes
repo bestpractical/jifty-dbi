@@ -1,5 +1,8 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+0.74 Oct 11 2002
+        - Adding support for mysqlPP
+
 0.73 Sep 10 2002
         - More class-returnvalue ification
         - Fixed a caching bug that caused multiple copies of an object in memory to not 
