@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle.pm,v 1.17 2001/10/06 07:09:42 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle.pm,v 1.18 2001/10/12 05:27:05 jesse Exp $
 package DBIx::SearchBuilder::Handle;
 use Carp;
 use DBI;
@@ -369,7 +369,26 @@ sub BinarySafeBLOBs {
 }
 
 # }}}
- 
+
+
+# {{{ CaseSensitive
+
+
+
+=head2 CaseSensitive
+
+Returns 1 if the current database's searches are case sensitive by default
+Returns undef otherwise
+
+=cut
+
+sub CaseSensitive {
+    my $self = shift;
+    return(1);
+}
+
+
+# }}} 
 # Autoload methods go after =cut, and are processed by the autosplit program.
  
  1;

@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder.pm,v 1.33 2001/10/02 23:54:42 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder.pm,v 1.35 2001/10/17 22:13:59 jesse Exp $
 
 # {{{ Version, package, new, etc
 
@@ -7,7 +7,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "0.45";
+$VERSION = "0.46";
 
 =head1 NAME
 
@@ -153,7 +153,6 @@ sub _DoSearch  {
     my $counter = 0;
     
     # {{{ Iterate through all the rows returned and get child objects
-    # TODO: this could be made much more efficient
     
     while (my $row = $self->{'records'}->fetchrow_hashref()) {
 		
@@ -203,8 +202,8 @@ sub _DoCount  {
     $QueryString .= $self->_WhereClause . " ".  $self->{'table_links'}. " " 
       if ($self->_isLimited > 0);
 
- 
-    $QueryString .=  $self->_OrderClause . $self->_LimitClause;
+
+    $QueryString .=  $self->_LimitClause;
     
     print STDERR "DBIx::SearchBuilder->DoSearch Query:  $QueryString\n" 
       if ($self->DEBUG);
@@ -655,10 +654,14 @@ sub _GenericRestriction  {
 	$restriction = \$self->{'restrictions'}{"$Clause"};
     }
     # If it's a new value or we're overwriting this sort of restriction, 
-   
-    unless ($args{'CASESENSITIVE'}) {
-	$QualifiedField = "lower($QualifiedField)";
-	$args{'VALUE'} = lc($args{'VALUE'});
+  
+    if ($self->_Handle->CaseSensitive) {
+ 
+    	unless ($args{'CASESENSITIVE'}) {
+		$QualifiedField = "lower($QualifiedField)";
+		$args{'VALUE'} = lc($args{'VALUE'});
+    	}
+
     }
 
     my $clause = "($QualifiedField $args{'OPERATOR'} $args{'VALUE'})";  

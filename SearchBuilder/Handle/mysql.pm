@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle/mysql.pm,v 1.7 2001/05/23 05:10:14 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle/mysql.pm,v 1.8 2001/10/12 05:27:05 jesse Exp $
 
 package DBIx::SearchBuilder::Handle::mysql;
 use DBIx::SearchBuilder::Handle;
@@ -60,5 +60,19 @@ sub Insert  {
 
 # }}}
 
+
+=head2 CaseSensitive 
+
+Returns undef, since mysql's searches are not case sensitive by default 
+
+=cut
+
+sub CaseSensitive {
+    my $self = shift;
+    return(undef);
+}
+
+
+# }}}
 
 
