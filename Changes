@@ -1,5 +1,10 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+0.89_01 July 18 2003
+	- Patch from Brook for:
+	-	better oracle support
+	-   	remove "SELECT DISTINCT" when it's not necessary
+
 0.88 June 23 2003
         - More correct generation of "Distinct" keyword on counts for queries with left joins
 

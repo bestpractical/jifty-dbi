@@ -776,12 +776,12 @@ sub LoadByCols  {
     my %hash  = (@_);
     my (@bind, @phrases);
     foreach my $key (keys %hash) {  
-	if (defined $hash{$key}) {
+	if (defined $hash{$key} && $hash{$key} ne '') {
 		push @phrases, "$key = ?"; 
 		push @bind, $hash{$key}; 
 	}
 	else {
-		push @phrases, "$key is null";
+		push @phrases, "($key IS NULL OR $key = '')";
 	}
     }
     

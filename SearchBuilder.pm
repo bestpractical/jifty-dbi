@@ -5,7 +5,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "0.88";
+$VERSION = "0.89_01";
 
 =head1 NAME
 
@@ -108,6 +108,8 @@ sub _DoSearch {
     # The initial SELECT or SELECT DISTINCT is decided later
 
     $QueryString = $self->_BuildJoins . " ";
+    $QueryString .= $self->_WhereClause . " " . $self->{'table_links'} . " "
+      if ( $self->_isLimited > 0 );
 
     # DISTINCT query only required for multi-table selects
     if ($self->_isJoined) {
@@ -115,8 +117,6 @@ sub _DoSearch {
     } else {
         $QueryString = "SELECT main.* FROM $QueryString";
     }
-    $QueryString .= $self->_WhereClause . " " . $self->{'table_links'} . " "
-      if ( $self->_isLimited > 0 );
 
     # TODO: GroupBy won't work with postgres.
     # $QueryString .= $self->_GroupByClause. " ";
@@ -341,13 +341,11 @@ Returns true if this Searchbuilder requires joins between tables
 
 sub _isJoined {
     my $self = shift;
-    if ($self->{'left_joins'} || $self->{'aliases'}) {
+    if (keys(%{$self->{'left_joins'}})) {
         return(1);
     } else {
-        return undef;
-
-     }
-    
+        return(@{$self->{'aliases'}});
+    }
 
 }
 
@@ -788,7 +786,7 @@ sub _GenericRestriction {
 
     # If it's a new value or we're overwriting this sort of restriction,
 
-    if ( $self->_Handle->CaseSensitive ) {
+    if ( $self->_Handle->CaseSensitive && defined $args{'VALUE'} && $args{'VALUE'} ne '' ) {
 
         unless ( $args{'CASESENSITIVE'} ) {
             $QualifiedField = "lower($QualifiedField)";
