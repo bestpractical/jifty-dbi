@@ -685,12 +685,7 @@ sub __Set {
     #
     
 
-    my $value = $self->TruncateValue ( $args{'Column'}, $args{'Value'});
-    unless ($value eq $args{'Value'}) {
-        $args{'OriginalValue'} = $args{'Value'};
-        $args{'Value'} = $value;
-    }
-
+    $args{'Value'} = $self->TruncateValue ( $args{'Column'}, $args{'Value'});
 
 
     my $method = "Validate" . $args{'Column'};
@@ -782,7 +777,7 @@ sub TruncateValue {
     if ( $metadata->{'length'} && !$metadata->{'is_numeric'} ) {
         $truncate_to = $metadata->{'length'};
     }
-    elsif ( $metadata->{'type'} =~ /char\((\d+)\)/ ) {
+    elsif ($metadata->{'type'} &&  $metadata->{'type'} =~ /char\((\d+)\)/ ) {
         $truncate_to = $1;
     }
 
@@ -1107,8 +1102,7 @@ sub Create {
         my $method = "Validate$key";
 
             #Truncate things that are too long for their datatypes
-        my $value = $self->TruncateValue ($key => $attribs{$key});
-        $attribs{$key} = $value unless ($value eq $attribs{$key});
+        $attribs{$key} = $self->TruncateValue ($key => $attribs{$key});
 
         unless ( $self->$method( $attribs{$key} ) ) {
             delete $attribs{$key};
