@@ -92,9 +92,11 @@ sub LoadByCols {
   my $cache_key = $this->_lookup_primary_cache_key($alternate_key);
 
   if ($cache_key && exists $this->_RecordCache->{$cache_key}) { 
-    $cache_time = $this->_RecordCache->{$cache_key}{'time'};
+    # We should never be caching a record without storing the time
+    $cache_time =( $this->_RecordCache->{$cache_key}{'time'} || 0);
 
     ## Decide if the cache object is too old
+
     if ((time() - $cache_time) <= $this->{'_CacheConfig'}{'cache_for_sec'}) {
 	    $this->_fetch($cache_key); 
 	    return (1, "Fetched from cache");
@@ -334,7 +336,6 @@ package __CachableDefaults;
 sub _CacheConfig { 
   { 
      'cache_p'        => 1,
-     'fast_update_p'  => 1,
      'cache_for_sec'  => 5,
   }
 }

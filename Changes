@@ -1,5 +1,9 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+0.96_01 - Fix a couple of spurious warnings in Record::Cachable
+          Records loaded from multiple-record searches were never cached 
+          correctly
+
 0.95_03 - Allow case-insensitive loading by columns in SearchBuilder::Record
         - Record::LoadByCols now lets you specify operator and values 
 

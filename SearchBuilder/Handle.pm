@@ -691,7 +691,7 @@ sub ApplyLimits {
 
     if ( $per_page) {
         $limit_clause = " LIMIT ";
-        if ( $first != 0 ) {
+        if ( $first ) {
             $limit_clause .= $first . ", ";
         }
         $limit_clause .= $per_page;
