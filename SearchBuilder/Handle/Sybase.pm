@@ -1,4 +1,4 @@
-# $Header: /home/jesse/DBIx-SearchBuilder/history/SearchBuilder/Handle/mysql.pm,v 1.8 2001/10/12 05:27:05 jesse Exp $
+# $Header: /home/jesse/DBIx-SearchBuilder/history/SearchBuilder/Handle/Sybase.pm,v 1.8 2001/10/12 05:27:05 jesse Exp $
 
 package DBIx::SearchBuilder::Handle::Sybase;
 use DBIx::SearchBuilder::Handle;
@@ -9,7 +9,7 @@ use strict;
 
 =head1 NAME
 
-  DBIx::SearchBuilder::Handle::mysql -- a mysql specific Handle object
+  DBIx::SearchBuilder::Handle::Sybase -- a Sybase specific Handle object
 
 =head1 SYNOPSIS
 
@@ -39,22 +39,27 @@ a Class::ReturnValue object with the error reploaded.
 
 =cut
 
-sub Insert  {
-    my $self = shift;
+sub Insert {
+    my $self  = shift;
 
-    my $sth = $self->SUPER::Insert(@_);
-    if (!$sth) {
-	    return ($sth);
-     }
-    my $sql = 'SELECT @@identity';
-    my @row = $self->FetchResult($sql);
-    # TODO: Propagate Class::ReturnValue up here.
-    unless ($row[0]) {
-            return(undef);
-    }   
-    $self->{'id'} = $row[0];
+    my $table = shift;
+    my %pairs = @_;
+    my $sth   = $self->SUPER::Insert( $table, %pairs );
+    if ( !$sth ) {
+        return ($sth);
+    }
     
-    return ($self->{'id'});
+    # Can't select identity column if we're inserting the id by hand.
+    unless ($pairs{'id'}) {
+        my @row = $self->FetchResult('SELECT @@identity');
+
+        # TODO: Propagate Class::ReturnValue up here.
+        unless ( $row[0] ) {
+            return (undef);
+        }
+        $self->{'id'} = $row[0];
+    }
+    return ( $self->{'id'} );
 }
 
 
@@ -64,7 +69,7 @@ sub Insert  {
 
 =head2 DatabaseVersion
 
-return the mysql version, trimming off any -foo identifier
+return the database version, trimming off any -foo identifier
 
 =cut
 
@@ -79,16 +84,59 @@ sub DatabaseVersion {
 
 =head2 CaseSensitive 
 
-Returns undef, since mysql's searches are not case sensitive by default 
+Returns undef, since Sybase's searches are not case sensitive by default 
 
 =cut
 
 sub CaseSensitive {
     my $self = shift;
-    return(undef);
+    return(1);
 }
 
 
 # }}}
 
+
+sub ApplyLimits {
+    my $self = shift;
+    my $statementref = shift;
+    my $per_page = shift;
+    my $first = shift;
+
+}
+
+
+=head2 DistinctQuery STATEMENTREFtakes an incomplete SQL SELECT statement and massages it to return a DISTINCT result set.
+
+
+=cut
+
+sub DistinctQuery {
+    my $self = shift;
+    my $statementref = shift;
+    my $table = shift;
+
+    # Wrapper select query in a subselect as Oracle doesn't allow
+    # DISTINCT against CLOB/BLOB column types.
+    $$statementref = "SELECT main.* FROM ( SELECT DISTINCT main.id FROM $$statementref ) distinctquery, $table main WHERE (main.id = distinctquery.id) ";
+
+}
+
+# {{{ BinarySafeBLOBs
+
+=head2 BinarySafeBLOBs
+
+Return undef, as Oracle doesn't support binary-safe CLOBS
+
+
+=cut
+
+sub BinarySafeBLOBs {
+    my $self = shift;
+    return(undef);
+}
+
+# }}}
+
+# }}}
 
