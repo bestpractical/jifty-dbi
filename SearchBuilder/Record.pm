@@ -581,55 +581,59 @@ sub _Set {
 
 
 *__set = \&__Set;
-sub __Set  {
-  my $self = shift;
+sub __Set {
+    my $self = shift;
 
-  my %args = ( 'Field' => undef,
-	       'Value' => undef,
-	       'IsSQL' => undef,
-	       @_ );
+    my %args = ( 'Field' => undef,
+                 'Value' => undef,
+                 'IsSQL' => undef,
+                 @_ );
 
-  $args{'Column'} = $args{'Field'}; 
-  $args{'IsSqlFunction'} = $args{'IsSQL'}; 
- 
-  ## Cleanup the hash.
-  delete $args{'Field'};
-  delete $args{'IsSQL'};
+    $args{'Column'}        = $args{'Field'};
+    $args{'IsSQLFunction'} = $args{'IsSQL'};
 
-  
-  if (defined $args{'Column'}) {
-      my $column = lc $args{'Column'};
-      if ((defined $self->__Value($column))  and
-	  ($args{'Value'} eq $self->__Value($column))) {
-	  return (0, "That is already the current value");
-      } 
-      elsif (!defined ($args{'Value'})) {
-	  return (0,"No value sent to _Set!\n");
-      } 
-      else {
+    ## Cleanup the hash.
+    delete $args{'Field'};
+    delete $args{'IsSQL'};
 
-	  my $method = "Validate".$args{'Column'};
-	  unless ($self->$method($args{'Value'})) {
-	      return(0, 'Illegal value for '.$args{'Column'});
-	  }
+    if ( defined $args{'Column'} ) {
+        my $column = lc $args{'Column'};
+        if (     ( defined $self->__Value($column) )
+             and ( $args{'Value'} eq $self->__Value($column) ) ) {
+            return ( 0, "That is already the current value" );
+        }
+        elsif ( !defined( $args{'Value'} ) ) {
+            return ( 0, "No value sent to _Set!\n" );
+        }
+        else {
 
-          $args{'Table'}        = $self->Table();
-          $args{'PrimaryKeys'} = {$self->PrimaryKeys()};
-                       
+            my $method = "Validate" . $args{'Column'};
+            unless ( $self->$method( $args{'Value'} ) ) {
+                return ( 0, 'Illegal value for ' . $args{'Column'} );
+            }
 
-          my $val = $self->_Handle->UpdateRecordValue(%args);
-	  unless ($val) {
-		return(0, $args{'Column'}." could not be set to ".
-		        $args{'Value'}. ".");
-	  }
+            $args{'Table'}       = $self->Table();
+            $args{'PrimaryKeys'} = { $self->PrimaryKeys() };
 
-	  $self->{'values'}->{"$column"} = $args{'Value'};
-      }
-      return (1, "The new value has been set.");
-  }
-  else {
-      return(0, 'No column specified');
-  }
+            my $val = $self->_Handle->UpdateRecordValue(%args);
+            unless ($val) {
+                return ( 0,
+                         $args{'Column'}
+                           . " could not be set to "
+                           . $args{'Value'} . "." );
+            }
+            if ($args{'IsSQLFunction'}) {
+                $self->Load($self->Id);
+                }
+                else {
+            $self->{'values'}->{"$column"} = $args{'Value'};
+            }
+        }
+        return ( 1, "The new value has been set." );
+    }
+    else {
+        return ( 0, 'No column specified' );
+    }
 }
 
 # }}}

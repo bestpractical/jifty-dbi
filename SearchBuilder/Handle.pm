@@ -271,26 +271,31 @@ sub dbh {
 
 # }}}
 
-# {{{ sub UpdateTableValue 
+# {{{ sub UpdateRecordValue 
 
 =head2 UpdateRecordValue 
 
 Takes a hash with fields: Table, Column, Value PrimaryKeys, and 
-IsSqlFunction.  Table, and Column should be obvious, Value is where you 
+IsSQLFunction.  Table, and Column should be obvious, Value is where you 
 set the new value you want the column to have. The primary_keys field should 
 be the lvalue of DBIx::SearchBuilder::Record::PrimaryKeys().  Finally 
-sql_function_p is set when the Value is a SQL function.  For example, you 
-might have ('Value'=>'PASSWORD(string)'), by setting sql_function_p that 
+IsSQLFunction is set when the Value is a SQL function.  For example, you 
+might have ('Value'=>'PASSWORD(string)'), by setting IsSQLFunction that 
 string will be inserted into the query directly rather then as a binding. 
 
 =cut
 
+## Please see file perltidy.ERR
 sub UpdateRecordValue {
-  my $self = shift;
-  my %args = @_;
+    my $self = shift;
+    my %args = ( Table         => undef,
+                 Column        => undef,
+                 IsSQLFunction => undef,
+                 PrimaryKeys   => undef,
+                 @_ );
 
-  my @bind   = ();
-  my $query  = 'UPDATE ' . $args{'Table'}  . ' ';
+    my @bind  = ();
+    my $query = 'UPDATE ' . $args{'Table'} . ' ';
      $query .= 'SET '    . $args{'Column'} . '=';
 
   ## Look and see if the field is being updated via a SQL function. 

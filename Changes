@@ -1,5 +1,8 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+0.72  Aug 28 2002
+        - Fixed bug in setting a column to the value of an SQL statement.
+
 0.70  Aug 27 2002
         - Better support for Postgres 7.2 and transactions.
 
