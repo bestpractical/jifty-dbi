@@ -1,5 +1,8 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+1.00_03 - Remove "AS" from table name aliases on joins, since Oracle
+          doesn't like em.
+
 1.00_02	- Slightly cleaner code in SearchBuilder->GotoPage
 
 1.00_01 - Better handling of case insensitive comparisons on Postgres

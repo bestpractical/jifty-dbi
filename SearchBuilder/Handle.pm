@@ -740,7 +740,7 @@ sub Join {
         my $alias = $sb->_GetAlias( $args{'TABLE2'} );
 
         $sb->{'left_joins'}{"$alias"}{'alias_string'} =
-          " LEFT JOIN $args{'TABLE2'} as $alias ";
+          " LEFT JOIN $args{'TABLE2'} $alias ";
 
         $sb->{'left_joins'}{"$alias"}{'criteria'}{'base_criterion'} =
           " $args{'ALIAS1'}.$args{'FIELD1'} = $alias.$args{'FIELD2'}";

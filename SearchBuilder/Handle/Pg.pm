@@ -198,12 +198,12 @@ sub Join {
 
     if ( $args{'TYPE'} =~ /LEFT/i ) {
 
-        $string = " LEFT JOIN " . $args{'TABLE2'} . " as $alias ";
+        $string = " LEFT JOIN " . $args{'TABLE2'} . " $alias ";
 
     }
     else {
 
-        $string = " JOIN " . $args{'TABLE2'} . " as $alias ";
+        $string = " JOIN " . $args{'TABLE2'} . " $alias ";
 
     }
     $args{'SearchBuilder'}->{'left_joins'}{"$alias"}{'alias_string'} = $string;
