@@ -1,5 +1,5 @@
 name: DBIx::SearchBuilder
-version: 0.92
+version: 0.95_01
 distribution_type: module
 requires:
   DBI: 0

@@ -5,7 +5,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "0.94";
+$VERSION = "0.95_01";
 
 =head1 NAME
 
@@ -795,10 +795,6 @@ sub _GenericRestriction {
         }
 
     }
-
-    # If the data contains high-bit characters, convert it to hex notation
-    $args{'VALUE'} = '0x' . unpack( 'H*', substr( $args{'VALUE'}, 1, -1 ) )
-      if $args{'VALUE'} =~ /[^\x00-\x7f]/;
 
     my $clause = "($QualifiedField $args{'OPERATOR'} $args{'VALUE'})";
 

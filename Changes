@@ -1,5 +1,8 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+0.95_01 
+        - Removed historical escaping for non-ascii searche queries
+
 0.94-   - Fix for multiple handles in one app from Autrijus Tang
 
 0.93 
