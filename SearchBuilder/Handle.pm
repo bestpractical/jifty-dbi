@@ -149,9 +149,9 @@ sub BuildDSN {
   
   
   my $dsn = "dbi:$args{'Driver'}:dbname=$args{'Database'}";
-  $dsn .= ";sid=$args{'SID'}" if ( defined $args{'SID'});
-  $dsn .= ";host=$args{'Host'}" if (defined$args{'Host'});
-  $dsn .= ";port=$args{'Port'}" if (defined $args{'Port'});
+  $dsn .= ";sid=$args{'SID'}" if ( defined $args{'SID'} && $args{'SID'});
+  $dsn .= ";host=$args{'Host'}" if (defined$args{'Host'} && $args{'Host'});
+  $dsn .= ";port=$args{'Port'}" if (defined $args{'Port'} && $args{'Port'});
   $dsn .= ";requiressl=1" if (defined $args{'RequireSSL'});
 
   $self->{'dsn'}= $dsn;
