@@ -873,7 +873,7 @@ sub _BuildJoins {
     my %seen;
 
     while ( my $join = shift @keys ) {
-        if ( $seen_aliases{ $sb->{'left_joins'}{$join}{'depends_on'} } ) {
+        if ( ! $sb->{'left_joins'}{$join}{'depends_on'} || $seen_aliases{ $sb->{'left_joins'}{$join}{'depends_on'} } ) {
             $join_clause = "(" . $join_clause;
             $join_clause .=
               $sb->{'left_joins'}{$join}{'alias_string'} . " ON (";

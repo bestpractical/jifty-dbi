@@ -1,5 +1,9 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+1.02_02 Tue Jul 20 13:06:06 EDT 2004
+        - Fixed a join bug that mostly manifests as a 'Dependency chain'
+          error on RT2.
+
 1.02_01 Wed Jul  7 12:28:08 EDT 2004
         - magic _Object instantiation from cubic@acronis.ru
         - make SB::_Handle settable directly  (cubic@acronis.ru)
