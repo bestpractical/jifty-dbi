@@ -257,13 +257,22 @@ sub _store (\$) {
 # Desc    : Takes a perl hash and generates a key from it. 
 
 sub _gen_alternate_cache_key {
-  my ($this, %attr) = @_;
-  my $cache_key=$this->Table() . ':';
-  while (my ($key, $value) = each %attr) {
-    $cache_key .= ($key ||'__undef'). '=' . ($value||'__undef') . ',';
-  }
-  chop ($cache_key);
-  return ($cache_key);
+    my ( $this, %attr ) = @_;
+    my $cache_key = $this->Table() . ':';
+    while ( my ( $key, $value ) = each %attr ) {
+        $key ||= '__undef';
+        $value ||= '__undef';
+
+        if ( ref($value) eq "HASH" ) { 
+            $value = $value->{operator}.$value->{value}; 
+        } else {
+            $value = "=".$value;
+        }    
+        $cache_key .= $key.$value.',';
+    }
+    chop($cache_key);
+    warn $cache_key;
+    return ($cache_key);
 }
 
 
