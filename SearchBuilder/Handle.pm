@@ -546,6 +546,34 @@ sub Rollback {
 
 # }}}
 
+=head2 ApplyLimits STATEMENTREF ROWS_PER_PAGE FIRST_ROW
+
+takes an SQL SELECT statement and massages it to return ROWS_PER_PAGE starting with FIRST_ROW;
+
+
+=cut
+
+sub ApplyLimits {
+    my $self = shift;
+    my $statementref = shift;
+    my $per_page = shift;
+    my $first = shift;
+
+    my $limit_clause = '';
+
+    if ( $per_page) {
+        $limit_clause = " LIMIT ";
+        if ( $first != 0 ) {
+            $limit_clause .= $first . ", ";
+        }
+        $limit_clause .= $per_page;
+    }
+
+   $$statementref .= $limit_clause; 
+
+}
+
+
 1;
 __END__
 

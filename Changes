@@ -1,5 +1,10 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+0.80 Mar 08 2003
+        - Count method enhanced to ignore "LIMIT"s
+        - LIMIT behaviour changed to be handle specific
+
+
 0.79 Jan 19 2003
         - ReadableAttributes and WritableAttributes added as methods to Record.pm
 

@@ -5,7 +5,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "0.79";
+$VERSION = "0.80";
 
 =head1 NAME
 
@@ -80,6 +80,7 @@ sub CleanSlate {
     delete $self->{'items'}        if ( defined $self->{'items'} );
     delete $self->{'left_joins'}   if ( defined $self->{'left_joins'} );
     delete $self->{'raw_rows'}     if ( defined $self->{'raw_rows'} );
+    delete $self->{'count_all'}    if ( defined $self->{'count_all'} );
     delete $self->{'subclauses'}   if ( defined $self->{'subclauses'} );
     delete $self->{'restrictions'} if ( defined $self->{'restrictions'} );
 
@@ -114,7 +115,11 @@ sub _DoSearch {
     # TODO: GroupBy won't work with postgres.
     # $QueryString .= $self->_GroupByClause. " ";
 
-    $QueryString .= $self->_OrderClause . $self->_LimitClause;
+    $QueryString .= $self->_OrderClause;
+
+
+    $self->_ApplyLimits(\$QueryString);
+
 
     print STDERR "DBIx::SearchBuilder->DoSearch Query:  $QueryString\n"
       if ( $self->DEBUG );
@@ -184,6 +189,7 @@ sub _DoSearch {
 
 sub _DoCount {
     my $self = shift;
+    my $all  = shift || 0;
     my ( $QueryString, $Order );
 
     #TODO refactor DoSearch and DoCount such that we only have
@@ -197,7 +203,9 @@ sub _DoCount {
     $QueryString .= $self->_WhereClause . " " . $self->{'table_links'} . " "
       if ( $self->_isLimited > 0 );
 
-    $QueryString .= $self->_LimitClause;
+
+    $self->_ApplyLimits(\$QueryString) unless ($all); 
+
 
     print STDERR "DBIx::SearchBuilder->DoSearch Query:  $QueryString\n"
       if ( $self->DEBUG );
@@ -229,19 +237,40 @@ sub _DoCount {
     # }}}
 
     my @row = $self->{'records'}->fetchrow_array();
-    $self->{'raw_rows'} = $row[0];
+    $self->{$all?'count_all':'raw_rows'} = $row[0];
 
     $self->{records}->finish;
     delete $self->{records};
 
-    return ( $self->{'raw_rows'} );
+    return ( $row[0] )
 }
 
 # }}}
 
+
+=head2 _ApplyLimits STATEMENTREF
+
+This routine takes a reference to a scalar containing an SQL statement. 
+It massages the statement to limit the returned rows to $self->RowsPerPage
+starting with $self->FirstRow
+
+
+=cut
+
+
+sub _ApplyLimits {
+    my $self = shift;
+    my $statementref = shift;
+    $self->_Handle->ApplyLimits($statementref, $self->RowsPerPage, $self->FirstRow);
+    
+}
+
+
 # {{{ sub _LimitClause
 
 # LIMIT clauses are used for restricting ourselves to subsets of the search.
+
+
 
 sub _LimitClause {
     my $self = shift;
@@ -1180,6 +1209,41 @@ sub Count {
 }
 
 # }}}
+
+# {{{ sub CountAll
+
+=head2 CountAll
+
+Returns the total number of potential records in the set, ignoring any
+LimitClause.
+
+=cut
+
+sub CountAll {
+    my $self = shift;
+
+    # An unlimited search returns no tickets    
+    return 0 unless ($self->_isLimited);
+
+    # If we haven't actually got all objects loaded in memory, we
+    # really just want to do a quick count from the database.
+    if ( $self->{'must_redo_search'} || !$self->{'count_all'}) {
+        # If we haven't already asked the database for the row count, do that
+        $self->_DoCount(1) unless ( $self->{'count_all'} );
+
+        #Report back the raw # of rows in the database
+        return ( $self->{'count_all'} );
+    }
+
+    # If we have loaded everything from the DB we have an
+    # accurate count already.
+    else {
+        return ( $self->{'rows'} );
+    }
+}
+
+# }}}
+
 
 # {{{ sub IsLast
 
