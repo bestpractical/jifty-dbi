@@ -740,6 +740,18 @@ sub __Set {
     $args{'Table'}       = $self->Table();
     $args{'PrimaryKeys'} = { $self->PrimaryKeys() };
 
+    unless ( $self->_Handle->KnowsBLOBs ) {
+        # Support for databases which don't deal with LOBs automatically
+        my $ca = $self->_ClassAccessible();
+        my $key = $args{'Column'};
+            if ( $ca->{$key}->{'type'} =~ /^(text|longtext|clob|blob|lob)$/i ) {
+                my $bhash = $self->_Handle->BLOBParams( $key, $ca->{$key}->{'type'} );
+                $bhash->{'value'} = $args{'Value'};
+                $args{'Value'} = $bhash;
+            }
+        }
+
+
     my $val = $self->_Handle->UpdateRecordValue(%args);
     unless ($val) {
         my $message = 
@@ -1143,7 +1155,6 @@ sub Create {
         }
     }
     unless ( $self->_Handle->KnowsBLOBs ) {
-
         # Support for databases which don't deal with LOBs automatically
         my $ca = $self->_ClassAccessible();
         foreach $key ( keys %attribs ) {

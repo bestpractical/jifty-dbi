@@ -191,7 +191,8 @@ sub BLOBParams {
     my $field = shift;
     #my $type = shift;
     # Don't assign to key 'value' as it is defined later.
-    return ( { ora_field => $field, ora_type => ORA_CLOB });    
+    return ( { ora_field => $field, ora_type => ORA_CLOB,
+});    
 }
 
 # }}}
