@@ -1,5 +1,13 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+1.10_05
+
+    -   Reworked the _Accessible mechanism in DBIx::SearchBuilder::Record to 
+        remove a horribly crufty old caching mechanism that created a copy
+        of the accessible hash for each and every object instantiated,
+        sometimes quite slowly.
+
+
 1.10_04 Mon Aug 30 17:33:18 EDT 2004
 
 

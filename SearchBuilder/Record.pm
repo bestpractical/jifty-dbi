@@ -2,12 +2,13 @@
 package DBIx::SearchBuilder::Record;
 
 use strict;
-use vars qw($VERSION @ISA $AUTOLOAD);
+use warnings;
+
+use vars qw($AUTOLOAD);
 use Class::ReturnValue;
 
 
-$VERSION = '$VERSION$';
-
+# {{{ Doc
 
 =head1 NAME
 
@@ -15,91 +16,80 @@ DBIx::SearchBuilder::Record - Perl extension for subclassing, so you can deal wi
 
 =head1 SYNOPSIS
 
-  module MyRecord;
-  use DBIx::SearchBuilder::Record;
-  @ISA = (DBIx::SearchBuilder::Record);
-   
+module MyRecord;
+use base qw/DBIx::SearchBuilder::Record/;
 
-  sub _Init {
-      my $self = shift;
-      my $DBIxHandle = shift; # A DBIx::SearchBuilder::Handle::foo object for your database
+sub _Init {
+    my $self       = shift;
+    my $DBIxHandle =
+      shift;    # A DBIx::SearchBuilder::Handle::foo object for your database
 
-      $self->_Handle($DBIxHandle);
-      $self->Table("Users");
-  }
- 
+    $self->_Handle($DBIxHandle);
+    $self->Table("Users");
+}
 
-  # Tell Record what the primary keys are
-  sub _PrimaryKeys {
-	my $self = shift;
-	return['id'];
-  }
+# Tell Record what the primary keys are
+sub _PrimaryKeys {
+    my $self = shift;
+    return ['id'];
+}
 
- 
-  #Preferred and most efficient way to specify fields attributes in a derived
-  #class, used by the autoloader to construct Attrib and SetAttrib methods.
+#Preferred and most efficient way to specify fields attributes in a derived
+#class, used by the autoloader to construct Attrib and SetAttrib methods.
 
-  # read: calling $Object->Foo will return the value of this record's Foo column  # write: calling $Object->SetFoo with a single value will set Foo's value in
-  #        both the loaded object and the database
+# read: calling $Object->Foo will return the value of this record's Foo column  # write: calling $Object->SetFoo with a single value will set Foo's value in
+#        both the loaded object and the database
 
-  sub _ClassAccessible {
-    { 
-	 Tofu  => { 'read'=>1, 'write'=>1 },
-         Maz   => { 'auto'=>1, },
-         Roo   => { 'read'=>1, 'auto'=>1, 'public'=>1, },
+sub _ClassAccessible {
+    {
+        Tofu => { 'read' => 1, 'write' => 1 },
+        Maz  => { 'auto' => 1, },
+        Roo => { 'read' => 1, 'auto' => 1, 'public' => 1, },
     };
-  }
+}
 
-  # specifying an _Accessible subroutine in a derived class is depriciated.
-  # only '/' and ',' delimiters work, not full regexes
-  
-  sub _Accessible  {
-      my $self = shift;
-      my %Cols = (
-		  id => 'read', # id is an immutable primary key
-		  Username => 'read/write', #read/write.
-		  Password => 'write', # password. write only. see sub IsPassword
-		  Created => 'read'  # A created date. read-only
-		 );
-      return $self->SUPER::_Accessible(@_, %Cols);
-  }
-  
-  # A subroutine to check a user's password without ever returning the current password
-  #For security purposes, we didn't expose the Password method above
-  
-  sub IsPassword {
-      my $self = shift;
-      my $try = shift;
-      
-      # note two __s in __Value.  Subclasses may muck with _Value, but they should
-      # never touch __Value
+# A subroutine to check a user's password without ever returning the current password
+#For security purposes, we didn't expose the Password method above
 
-      if ($try eq $self->__Value('Password')) {
-	  return (1);
-      }
-      else { 
-	  return (undef); 
-      }
-      
-  }
+sub IsPassword {
+    my $self = shift;
+    my $try  = shift;
 
- # Override DBIx::SearchBuilder::Create to do some checking on create
- sub Create {
-     my $self = shift;
-     my %fields = ( UserId => undef,
-		    Password => 'default', #Set a default password
-		    @_);
-     
-     #Make sure a userid is specified
-     unless ($fields{'UserId'}) {
-	 die "No userid specified.";
-     }
-     
-     #Get DBIx::SearchBuilder::Record->Create to do the real work
-     return ($self->SUPER::Create( UserId => $fields{'UserId'},
-				   Password => $fields{'Password'},
-				   Created => time ));
- }
+    # note two __s in __Value.  Subclasses may muck with _Value, but they should
+    # never touch __Value
+
+    if ( $try eq $self->__Value('Password') ) {
+        return (1);
+    }
+    else {
+        return (undef);
+    }
+
+}
+
+# Override DBIx::SearchBuilder::Create to do some checking on create
+sub Create {
+    my $self   = shift;
+    my %fields = (
+        UserId   => undef,
+        Password => 'default',    #Set a default password
+        @_
+    );
+
+    #Make sure a userid is specified
+    unless ( $fields{'UserId'} ) {
+        die "No userid specified.";
+    }
+
+    #Get DBIx::SearchBuilder::Record->Create to do the real work
+    return (
+        $self->SUPER::Create(
+            UserId   => $fields{'UserId'},
+            Password => $fields{'Password'},
+            Created  => time
+        )
+    );
+}
 
 =head1 DESCRIPTION
 
@@ -329,11 +319,16 @@ ever else I think of.
 
 =cut
 
-# Preloaded methods go here.
+# }}}
 
-# {{{ sub new 
 
-#instantiate a new record object.
+=head2  sub new 
+
+Instantiate a new record object.
+
+=cut
+
+
 
 sub new  {
     my $proto = shift;
@@ -342,11 +337,7 @@ sub new  {
     my $self  = {};
     bless ($self, $class);
     $self->_Init(@_);
-    $self->{'_AccessibleCache'} = $self->_ClassAccessible()
-      if $self->can('_ClassAccessible');
 
-    $self->{'_PrimaryKeys'} = $self->_PrimaryKeys() 
-      if $self->can('_PrimaryKeys');
     return $self;
   }
 
@@ -373,7 +364,7 @@ sub id  {
 =head2 primary_keys
 =head2 PrimaryKeys
 
-Matt Knopp owes docs for this function.
+Return a hash of the values of our primary keys for this function.
 
 =cut
 
@@ -382,7 +373,7 @@ Matt Knopp owes docs for this function.
 *primary_keys = \&PrimaryKeys;
 sub PrimaryKeys { 
     my $self = shift; 
-    my %hash = map { $_ => $self->{'values'}->{$_} } @{$self->{'_PrimaryKeys'}};
+    my %hash = map { $_ => $self->{'values'}->{$_} } @{$self->_PrimaryKeys};
     return (%hash);
 }
 
@@ -477,25 +468,22 @@ sub AUTOLOAD  {
 # {{{ sub _Accessible 
 
 *_accessible = \&Accessible;
-sub _Accessible  {
-  my $self = shift;
-  my $attr = shift;
-  my $mode = lc(shift);
-  if ( !defined($self->{'_AccessibleCache'}) && @_ ) {
-    my %cols = @_;
-    $self->_AccessibleLoad( map { $_ => $cols{$_} }
-#      grep !defined($self->{'_AccessibleCache'}->{$_}),
-       keys %cols
-    );
+sub _Accessible {
+    my $self = shift;
+    my $attr = shift;
+    my $mode = lc(shift);
 
-  }
+    
+    # @_ is the Accessible data from our subclass. Time to populate
+    # the accessible columns datastructure (but only if we're using
+    # something with the ancient API that predates ClassAccessible
+    $self->_AccessibleLoad( @_) if ( !$self->can('_ClassAccessible') && @_);
 
-  #return 0 if it's not a valid attribute;
-  return 0 unless defined($self->{'_AccessibleCache'}->{$attr});
-  
-  #  return true if we can $mode $Attrib;
-  local($^W)=0;
-  $self->{'_AccessibleCache'}->{$attr}->{$mode} || 0;
+    #  return true if we can $mode $Attrib;
+    local ($^W) = 0;
+    my $attribute = $self->_ClassAccessible->{$attr};
+    return 0 unless (defined $attr && $attr->{'mode'});
+    return 1;
 }
 
 # }}}
@@ -504,23 +492,41 @@ sub _Accessible  {
 
 =head2 _AccessibleLoad COLUMN => OPERATIONS, ...
 
+WILDLY DEPRECATED. YOU SHOULD NEVER NEED THIS
+
 =cut
 
 
 *_accessible_load = \&AccessibleLoad;
 sub _AccessibleLoad {
   my $self = shift;
+  my $accessible;
+
   while ( my $col = shift ) {
-    $self->{'_AccessibleCache'}->{$col}->{lc($_)} = 1
+    $accessible->{$col}->{lc($_)} = 1
       foreach split(/[\/,]/, shift);
   }
+
+  *{_ClassAccessible} =  sub { return $accessible };
+
 }
 
 # }}}
 
+=head2 _PrimaryKeys
+
+Return our primary keys. (Subclasses should override this, but our default is "We have one primary key. It's called 'id');
+
+
+=cut
+
+sub _PrimaryKeys {
+    my $self = shift;
+    return ['id'];
+}
 # {{{ sub _ClassAccessible
 
-=head2 _ClassAccessible HASHREF
+=head2 _ClassAccessible 
 
 Preferred and most efficient way to specify fields attributes in a derived
 class.
@@ -537,6 +543,8 @@ class.
 
 # }}}
 
+# sub {{{ ReadableAttributes
+
 =head2 ReadableAttributes
 
 Returns an array of the attributes of this class defined as "read" => 1 in this class' _ClassAccessible datastructure
@@ -550,6 +558,9 @@ sub ReadableAttributes {
     return (@readable);
 }
 
+# }}}
+
+# {{{  sub WritableAttributes 
 
 =head2 WritableAttributes
 
@@ -565,6 +576,7 @@ sub WritableAttributes {
 
 }
 
+# }}}
 
 
 # {{{ sub __Value {
@@ -733,6 +745,7 @@ sub _Validate  {
   }	
 
 # }}}	
+
 # {{{ sub _Object 
 
 =head2 _Object
@@ -747,35 +760,33 @@ define default contructor arguments.
 
 =cut
 
-sub _Object
-{
-  my $self = shift;
-  return $self->__Object(@_);
+sub _Object {
+    my $self = shift;
+    return $self->__Object(@_);
 }
 
-sub __Object
-{
-  my $self = shift;
-  my %args = ( Field => '', Args => [], @_ );
+sub __Object {
+    my $self = shift;
+    my %args = ( Field => '', Args => [], @_ );
 
-  my $field = $args{'Field'};
-  my $class = $self->_Accessible( $field, 'object' );
+    my $field = $args{'Field'};
+    my $class = $self->_Accessible( $field, 'object' );
 
-# Globs magic to be sure that we call 'eval "require $class"' only once
-# because eval is quite slow -- cubic@acronis.ru
-  no strict qw( refs );
-  my $vglob = ${ $class . '::' }{'VERSION'};
-  unless ( $vglob && *$vglob{'SCALAR'} ) {
-    eval "require $class";
-    die "Couldn't use $class: $@" if ( $@ );
+    # Globs magic to be sure that we call 'eval "require $class"' only once
+    # because eval is quite slow -- cubic@acronis.ru
+    no strict qw( refs );
+    my $vglob = ${ $class . '::' }{'VERSION'};
     unless ( $vglob && *$vglob{'SCALAR'} ) {
-      *{$class."::VERSION"} = '-1, By DBIx::SerchBuilder';
+        eval "require $class";
+        die "Couldn't use $class: $@" if ($@);
+        unless ( $vglob && *$vglob{'SCALAR'} ) {
+            *{ $class . "::VERSION" } = '-1, By DBIx::SerchBuilder';
+        }
     }
-  }
 
-  my $object = $class->new( @{ $args{'Args'} } );
-  $object->LoadById( $self->__Value( $field ) );
-  return $object;
+    my $object = $class->new( @{ $args{'Args'} } );
+    $object->LoadById( $self->__Value($field) );
+    return $object;
 }
 
 # }}}
@@ -901,13 +912,22 @@ sub LoadById  {
 
 # }}}  
 
+
+# {{{ LoadByPrimaryKeys 
+
+=head2 LoadByPrimaryKeys 
+
+=cut
+
 *load_by_primary_keys = \&LoadByPrimaryKeys;
+
+
 sub LoadByPrimaryKeys {
     my ($self, $data) = @_;
 
     if (ref($data) eq 'HASH') {
        my %cols=();
-       foreach (@{$self->{'_PrimaryKeys'}}) {
+       foreach (@{$self->_PrimaryKeys}) {
          $cols{$_}=$data->{$_} if (exists($data->{$_}));
        }
        return ($self->LoadByCols(%cols));
@@ -917,6 +937,7 @@ sub LoadByPrimaryKeys {
     }
 }
 
+# }}}
 
 
 # {{{ sub LoadFromHash
@@ -939,13 +960,18 @@ sub LoadFromHash {
   }
 
   $self->{'values'} = $hashref;
-  #$self->_DowncaseValuesHash();
   return ($self->{'values'}{'id'});
 }
 
 # }}}
 
 # {{{ sub _LoadFromSQL 
+
+=head2 _LoadFromSQL QUERYSTRING @BIND_VALUES
+
+Load a record as the result of an SQL statement
+
+=cut
 
 *load_from_sql = \&LoadFromSQL;
 
@@ -970,8 +996,6 @@ sub _LoadFromSQL {
     }
 
     unless ( $self->{'values'} ) {
-
-        #warn "something might be wrong here; row not found. SQL: $QueryString";
         return ( 0, "Couldn't find row" );
     }
 
@@ -1083,8 +1107,7 @@ sub Table {
     return ($self->{'table'});
 }
 
-# {{{ Routines dealing with database handles
-
+# }}}
 
 # {{{ sub _Handle 
 
@@ -1105,34 +1128,6 @@ sub _Handle  {
 
 # }}}
 
-
-# }}}
-
-# {{{ sub _DowncaseValuesHash
-
-=head2 Private: _DownCaseValuesHash
-
-Takes no parameters and returns no arguments.
-This private routine iterates through $self->{'values'} and makes
-sure that all keys are lowercase.
-
-=cut
-
-*_downcase_values_hash = \&DowncaseValuesHash;
-
-sub _DowncaseValuesHash {
-    my $self = shift;
-    my ($key);
-    
-    foreach $key (keys %{$self->{'values'}}) {
-	$self->{'new_values'}->{lc $key} = $self->{'values'}->{$key};
-    }
-    
-    $self->{'values'} = $self->{'new_values'};
-    delete $self->{'new_values'};
-}
-
-# }}}
 
 1;
 
