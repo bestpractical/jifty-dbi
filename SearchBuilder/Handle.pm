@@ -367,10 +367,10 @@ sub SimpleQuery  {
 	    warn "$self couldn't prepare the query '$QueryString'" . 
 	      $self->dbh->errstr . "\n";
         my $ret = Class::ReturnValue->new();
-        $ret->return_error( errno => '-1',
+        $ret->as_error( errno => '-1',
                             message => "Couldn't prepare the query '$QueryString'.". $self->dbh->errstr,
                             do_backtrace => undef);
-	    return ($ret);
+	    return ($ret->return_value);
 	}
     }
     unless ( $sth->execute(@bind_values) ) {
@@ -383,12 +383,12 @@ sub SimpleQuery  {
             warn "$self couldn't execute the query '$QueryString'";
 
               my $ret = Class::ReturnValue->new();
-            $ret->return_error(
+            $ret->as_error(
                          errno   => '-1',
                          message => "Couldn't execute the query '$QueryString'"
                            . $self->dbh->errstr,
                          do_backtrace => undef );
-            return ($ret);
+            return ($ret->return_value);
         }
 
     }

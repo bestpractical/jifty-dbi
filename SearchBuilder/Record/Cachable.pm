@@ -85,7 +85,7 @@ sub LoadByCols {
   my ($this, %attr) = @_; 
 
   ## Generate the cache key
-  my $alternate_key=$this->_gen_cache_key(%attr);
+  my $alternate_key=$this->_gen_alternate_cache_key(%attr);
   my $cache_key = $this->_lookup_primary_cache_key($alternate_key);
 
 
@@ -104,7 +104,6 @@ sub LoadByCols {
 
   ## Fetch from the DB!
   my ($rvalue, $msg) = $this->SUPER::LoadByCols(%attr);
- 
   ## Check the return value, if its good, cache it! 
   if ($rvalue) {
     ## Only cache the object if its okay to do so. 
@@ -113,8 +112,7 @@ sub LoadByCols {
     my $new_cache_key = $this->_gen_primary_cache_key();
     $this->_KeyCache->{$alternate_key} = $new_cache_key;
     $this->_KeyCache->{$alternate_key}{'time'} = time();
-  }
-
+  } 
   return ($rvalue, $msg);
 
 }
@@ -127,11 +125,8 @@ sub LoadByCols {
 
 sub _Set () { 
   my ($this, %attr) = @_; 
-  my $cache_key = $this->_gen_primary_cache_key();
 
-  if (exists $this->_RecordCache->{$cache_key}) {
-    $this->_expire($cache_key);
-  }
+  $this->_expire( $this->_gen_primary_cache_key());
  
   return $this->SUPER::_Set(%attr);
 
@@ -166,12 +161,12 @@ sub Delete () {
 sub _gc_expired () { 
   my ($this) = @_; 
   
-  foreach $cache_key (keys %{$this->_KeyCache}) {
+  foreach my $cache_key (keys %{$this->_KeyCache}) {
     my $cache_time = $this->_RecordCache->{$cache_key}{'time'};  
     $this->_expire($cache_key) 
       if ((time() - $cache_time) > $this->{'_CacheConfig'}{'cache_for_sec'});
   }
-  foreach $cache_key (keys %{$this->_RecordCache}) {
+  foreach my $cache_key (keys %{$this->_RecordCache}) {
     my $cache_time = $this->_RecordCache->{$cache_key}{'time'};  
     $this->_expire($cache_key) 
       if ((time() - $cache_time) > $this->{'_CacheConfig'}{'cache_for_sec'});
@@ -206,10 +201,24 @@ sub _fetch () {
   my ($this, $cache_key) = @_;
 
   $this->{'values'}  = 
-    $this->_RecordCache->{$cache_key}{'obj'}{'values'};
+    $this->_RecordCache->{$cache_key}{'values'};
   return(1); 
 }
 
+sub __Value {
+ my $self = shift;
+  my $field = shift;
+
+    $field = lc $field;
+    my $cache_key = $self->_gen_primary_cache_key();
+    unless ( $cache_key
+           && exists $self->_RecordCache->{$cache_key}{'values'}->{"$field"} ) {
+           return($self->SUPER::__Value($field));
+    }
+   return($self->_RecordCache->{$cache_key}{'values'}->{"$field"});
+
+
+}
 
 
 
@@ -223,7 +232,7 @@ sub _store (\$) {
   my ($this) = @_; 
   my $cache_key = $this->_gen_primary_cache_key();
   $this->{'_CacheConfig'}{'cache_key'} = $cache_key;
-  $this->_RecordCache->{$cache_key}{'obj'}=$this;
+  $this->_RecordCache->{$cache_key}{'values'}=$this->{'values'};
   $this->_RecordCache->{$cache_key}{'time'}=time();
   
   return(1);
@@ -232,13 +241,13 @@ sub _store (\$) {
 
 
 
-# Function: _gen_cache_key
+# Function: _gen_alternate_cache_key
 # Type    : private instance
 # Args    : hash (attr)
 # Lvalue  : 1
 # Desc    : Takes a perl hash and generates a key from it. 
 
-sub _gen_cache_key {
+sub _gen_alternate_cache_key {
   my ($this, %attr) = @_;
   my $cache_key=$this->Table() . ':';
   while (my ($key, $value) = each %attr) {
@@ -274,9 +283,10 @@ sub _gen_primary_cache_key {
 
     my $primary_cache_key = $this->Table() . ':';
     foreach my $key (@{$this->_PrimaryKeys}) {
-        $primary_cache_key .= $key.'='.$this->__Value($key).',';
+        $primary_cache_key .= $key.'='.
+      $this->SUPER::__Value($key).  ',';
     }
-    chop ($primary_cache_key);
+    chomp ($primary_cache_key);
     return($primary_cache_key);
 
 }

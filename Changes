@@ -1,5 +1,10 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+0.73 Sep 10 2002
+        - More class-returnvalue ification
+        - Fixed a caching bug that caused multiple copies of an object in memory to not 
+          be kept in sync
+
 0.72  Aug 28 2002
         - Fixed bug in setting a column to the value of an SQL statement.
 

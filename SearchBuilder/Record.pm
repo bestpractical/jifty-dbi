@@ -3,6 +3,7 @@ package DBIx::SearchBuilder::Record;
 
 use strict;
 use vars qw($VERSION @ISA $AUTOLOAD);
+use Class::ReturnValue;
 
 
 $VERSION = '$VERSION$';
@@ -592,48 +593,67 @@ sub __Set {
     $args{'Column'}        = $args{'Field'};
     $args{'IsSQLFunction'} = $args{'IsSQL'};
 
+    my $ret = Class::ReturnValue->new();
+
     ## Cleanup the hash.
     delete $args{'Field'};
     delete $args{'IsSQL'};
 
-    if ( defined $args{'Column'} ) {
-        my $column = lc $args{'Column'};
-        if (     ( defined $self->__Value($column) )
-             and ( $args{'Value'} eq $self->__Value($column) ) ) {
-            return ( 0, "That is already the current value" );
-        }
-        elsif ( !defined( $args{'Value'} ) ) {
-            return ( 0, "No value sent to _Set!\n" );
-        }
-        else {
-
-            my $method = "Validate" . $args{'Column'};
-            unless ( $self->$method( $args{'Value'} ) ) {
-                return ( 0, 'Illegal value for ' . $args{'Column'} );
-            }
-
-            $args{'Table'}       = $self->Table();
-            $args{'PrimaryKeys'} = { $self->PrimaryKeys() };
-
-            my $val = $self->_Handle->UpdateRecordValue(%args);
-            unless ($val) {
-                return ( 0,
-                         $args{'Column'}
-                           . " could not be set to "
-                           . $args{'Value'} . "." );
-            }
-            if ($args{'IsSQLFunction'}) {
-                $self->Load($self->Id);
-                }
-                else {
-            $self->{'values'}->{"$column"} = $args{'Value'};
-            }
-        }
-        return ( 1, "The new value has been set." );
+    unless ( defined( $args{'Column'} ) && $args{'Column'} ) {
+        $ret->as_array( 0, 'No column specified' );
+        $ret->as_error( errno   => 5,
+                            message => "No column specified" );
+        return ($ret->return_value);
+    }
+    my $column = lc $args{'Column'};
+    if (     ( defined $self->__Value($column) )
+         and ( $args{'Value'} eq $self->__Value($column) ) ) {
+        $ret->as_array( 0, "That is already the current value" );
+        $ret->as_error( errno   => 1,
+                            message => "That is already the current value" );
+        return ($ret->return_value);
+    }
+    elsif ( !defined( $args{'Value'} ) ) {
+        $ret->as_array( 0, "No value passed to _Set" );
+        $ret->as_error( errno   => 2,
+                            message => "No value passed to _Set" );
+        return ($ret->return_value);
     }
     else {
-        return ( 0, 'No column specified' );
+
+        my $method = "Validate" . $args{'Column'};
+        unless ( $self->$method( $args{'Value'} ) ) {
+            $ret->as_array( 0, 'Illegal value for ' . $args{'Column'} );
+            $ret->as_error(errno   => 3,
+                               message => "Illegal value for " . $args{'Column'}
+            );
+            return ($ret->return_value);
+        }
+
+        $args{'Table'}       = $self->Table();
+        $args{'PrimaryKeys'} = { $self->PrimaryKeys() };
+
+        my $val = $self->_Handle->UpdateRecordValue(%args);
+        unless ($val) {
+            $ret->as_array( 0,
+                                $args{'Column'}
+                                  . " could not be set to "
+                                  . $args{'Value'} . "." );
+            $ret->as_error( errno   => 4,
+                                message => $args{'Column'}
+                                  . " could not be set to "
+                                  . $args{'Value'} . "." );
+            return ($ret->return_value);
+        }
+        if ( $args{'IsSQLFunction'} ) {
+            $self->Load( $self->Id );
+        }
+        else {
+            $self->{'values'}->{"$column"} = $args{'Value'};
+        }
     }
+    $ret->as_array( 1, "The new value has been set." );
+    return ($ret->return_value);
 }
 
 # }}}
@@ -808,6 +828,7 @@ sub LoadFromHash {
 
 *load_from_sql = \&LoadFromSQL;
 
+
 sub _LoadFromSQL {
     my $self        = shift;
     my $QueryString = shift;
@@ -843,6 +864,48 @@ sub _LoadFromSQL {
         return ( 0, "Missing a primary key?: $@" );
     }
     return ( 1, "Found Object" );
+
+}
+
+sub _LoadFromSQLold {
+    my $self        = shift;
+    my $QueryString = shift;
+    my @bind_values = (@_);
+
+    my $sth = $self->_Handle->SimpleQuery( $QueryString, @bind_values );
+
+    #TODO this only gets the first row. we should check if there are more.
+
+
+    return($sth) unless ($sth) ;
+
+    my $fetched;
+    eval { $fetched = $sth->fetchrow_hashref() };
+    if ($@) {
+        warn $@;
+    }
+
+    unless ( $fetched ) {
+
+        #warn "something might be wrong here; row not found. SQL: $QueryString";
+        return ( 0, "Couldn't find row" );
+    }
+    
+    $self->{'values'} = $fetched;
+
+    ## I guess to be consistant with the old code, make sure the primary  
+    ## keys exist.
+      $self->_DowncaseValuesHash();
+    
+        ## I guess to be consistant with the old code, make sure the primary  
+        ## keys exist.
+    
+      eval { $self->PrimaryKeys(); };
+      if ($@) {
+          return ( 0, "Missing a primary key?: $@" );
+      }
+      return ( 1, "Found Object" );
+
 
 }
 
@@ -973,6 +1036,7 @@ sub _DowncaseValuesHash {
     }
     
     $self->{'values'} = $self->{'new_values'};
+    delete $self->{'new_values'};
 }
 
 # }}}
