@@ -403,15 +403,14 @@ sub AUTOLOAD  {
   
   no strict 'refs';
 
-  if ($AUTOLOAD =~ /.*::(\w+)/ &&  $self->_Accessible($1,'read') )  {
+  if ($AUTOLOAD =~ /.*::(\w+)/o &&  $self->_Accessible($1,'read') )  {
     my $Attrib = $1;
 
     *{$AUTOLOAD} = sub { return ($_[0]->_Value($Attrib))};
     return($self->_Value($Attrib));
   }
     
-  elsif ( ($AUTOLOAD =~ /.*::Set(\w+)/ or
-           $AUTOLOAD =~ /.*::set_(\w+)/ ) ) {
+  elsif ($AUTOLOAD =~ /.*::[sS]et_?(\w+)/o) {
 
     if ($self->_Accessible($1,'write')) {
       my $Attrib = $1;
@@ -439,7 +438,7 @@ sub AUTOLOAD  {
   #right idea. it breaks the ability to do ValidateQueue for a ticket
   #on creation.
 
-  elsif ($AUTOLOAD =~ /.*::Validate(\w+)/ ) {
+  elsif ($AUTOLOAD =~ /.*::[vV]alidate_?(\w+)/o ) {
     my $Attrib = $1;
 
     *{$AUTOLOAD} = sub {  return ($_[0]->_Validate($Attrib, $_[1]))};
