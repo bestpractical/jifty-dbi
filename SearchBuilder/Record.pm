@@ -1,4 +1,4 @@
-#$Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Record.pm,v 1.22 2001/03/05 04:52:01 jesse Exp $
+#$Header/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Record.pm,v 1.21 2001/02/28 21:36:27 jesse Exp $
 package DBIx::SearchBuilder::Record;
 
 use strict;
@@ -27,7 +27,15 @@ DBIx::SearchBuilder::Record - Perl extension for subclassing, so you can deal wi
       $self->Table("Users");
       return($self->SUPER::_Init(@_));
   }
-  
+ 
+
+  # Tell Record what the primary keys are
+  sub _PrimaryKeys {
+	my $self = shift;
+	return('id');
+  }
+
+ 
   #Preferred and most efficient way to specify fields attributes in a derived
   #class, used by the autoloader to construct Attrib and SetAttrib methods.
 
@@ -583,7 +591,7 @@ sub __Set  {
   if (defined $args{'Column'}) {
       my $column = lc $args{'Column'};
       if ((defined $self->__Value($column))  and
-	  ($args{'value'} eq $self->__Value($column))) {
+	  ($args{'Value'} eq $self->__Value($column))) {
 	  return (0, "That is already the current value");
       } 
       elsif (!defined ($args{'Value'})) {

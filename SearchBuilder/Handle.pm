@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle.pm,v 1.13 2001/03/05 04:52:01 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle.pm,v 1.14 2001/03/11 07:57:20 jesse Exp $
 package DBIx::SearchBuilder::Handle;
 use Carp;
 use DBI;
@@ -333,6 +333,21 @@ sub FetchResult {
 }
 # }}}
 
+# {{{ BinarySafeBLOBs
+
+=head2 BinarySafeBLOBs
+
+Returns 1 if the current database supports BLOBs with embedded nulls.
+Returns undef if the current database doesn't support BLOBs with embedded nulls
+
+=cut
+
+sub BinarySafeBLOBs {
+    my $self = shift;
+    return(1);
+}
+
+# }}}
  
 # Autoload methods go after =cut, and are processed by the autosplit program.
  

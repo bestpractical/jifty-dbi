@@ -1,4 +1,4 @@
-#$Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle/Pg.pm,v 1.5 2001/03/05 04:52:02 jesse Exp $
+#$Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle/Pg.pm,v 1.7 2001/03/11 22:12:39 jesse Exp $
 # Copyright 1999-2001 Jesse Vincent <jesse@fsck.com>
 
 package DBIx::SearchBuilder::Handle::Pg;
@@ -57,13 +57,28 @@ sub Insert {
     my $oid = $sth->{'pg_oid_status'};
     my $sql = "SELECT id FROM $table WHERE oid = ?";
     my @row = $self->FetchResult($sql, $oid);
-    unless (@row[0]) {
+    unless ($row[0]) {
 	warn "Can't find $table.id  for OID $oid";
 	return(undef);
     }	
     $self->{'id'} = $row[0];
     
     return ($self->{'id'});
+}
+
+# }}}
+
+# {{{ BinarySafeBLOBs
+
+=head2 BinarySafeBLOBs
+
+Return undef, as no current version of postgres supports binary-safe blobs
+
+=cut
+
+sub BinarySafeBLOBs {
+    my $self = shift;
+    return(undef);
 }
 
 # }}}

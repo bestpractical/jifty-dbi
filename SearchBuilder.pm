@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder.pm,v 1.14 2001/02/28 02:07:05 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder.pm,v 1.16 2001/03/11 07:33:10 jesse Exp $
 
 # {{{ Version, package, new, etc
 
@@ -7,7 +7,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "0.24";
+$VERSION = "0.25";
 
 =head1 NAME
 
@@ -108,8 +108,8 @@ sub _DoSearch  {
     
     $QueryString .=  $self->_OrderClause . $self->_LimitClause;
     
-    print STDERR "DBIx::SearchBuilder->DoSearch Query:  $QueryString\n" ;
-     # if ($self->DEBUG);
+    print STDERR "DBIx::SearchBuilder->DoSearch Query:  $QueryString\n" 
+      if ($self->DEBUG);
     
     
     # {{{ get $self->{'records'} out of the database
