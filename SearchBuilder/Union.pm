@@ -12,7 +12,6 @@ our $VERSION = '$Version$';
 # DBIx::SearchBuilder::Collection to contain all the iterator logic.
 # This could inherit from that.
 
-
 =head1 NAME
 
 DBIx::Searchbuilder::Union - Deal with multiple SearchBuilder result sets as one
@@ -24,18 +23,21 @@ DBIx::Searchbuilder::Union - Deal with multiple SearchBuilder result sets as one
   $U->add( $tickets1 );
   $U->add( $tickets2 );
 
+  $U->GotoFirstItem;
+  while (my $z = $U->Next) {
+    printf "%5d %30.30s\n", $z->Id, $z->Subject;
+  }
+
+=head1 WARNING
+
+This module is still experimental.
+
 =head1 DESCRIPTION
 
 Implements a subset of the DBIx::SearchBuilder collection methods, but
 enough to do iteration over a bunch of results.  Useful for displaying
 the results of two unrelated searches (for the same kind of objects)
 in a single list.
-
-=head1 AUTHOR
-
-  Robert Spier
-
-=cut
 
 =head1 METHODS
 
@@ -52,11 +54,6 @@ sub new {
 		 item => 0,				# number of indiv items from First
 		 count => undef,
 		}, shift;
-}
-
-# private
-sub curp {
-   shift->{curp}
 }
 
 =head2 add $sb
@@ -108,14 +105,14 @@ Return the next element in the Union.
 sub Next {
   my $self=shift;
 
-  return undef unless defined  $self->{data}[ $self->curp ];
+  return undef unless defined  $self->{data}[ $self->{curp} ];
 
-  my $cur =  $self->{data}[ $self->curp ];
+  my $cur =  $self->{data}[ $self->{curp} ];
   if ( $cur->_ItemsCounter == $cur->Count ) {
 	# move to the next element
 	$self->{curp}++;
-	return undef unless defined   $self->{data}[ $self->curp ];
-	$cur =  $self->{data}[ $self->curp ];
+	return undef unless defined   $self->{data}[ $self->{curp} ];
+	$cur =  $self->{data}[ $self->{curp} ];
 	$self->{data}[ $self->{curp} ]->GotoFirstItem;
   }
   $self->{item}++;
@@ -135,10 +132,17 @@ sub Last {
   return ( $self->Next );
 }
 
+=head2 Count
+
+Returns the total number of elements in the Union'ed Collection
+
+=cut
+
 sub Count {
   my $self = shift;
   my $sum = 0;
 
+  # cache the results
   return $self->{count} if defined $self->{count};
 
   $sum += $_->Count for (@{$self->{data}});
@@ -210,8 +214,20 @@ sub ItemsArrayRef {
 	return \@ret;
 }
 
+=head1 AUTHOR
 
+Copyright (c) 2004 Robert Spier
 
+All rights reserved.
+
+This library is free software; you can redistribute it
+and/or modify it under the same terms as Perl itself.
+
+=head1 SEE ALSO
+
+DBIx::SearchBuilder
+
+=cut
 
 1;
 
