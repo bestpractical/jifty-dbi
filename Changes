@@ -1,5 +1,7 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+0.81_04 April 14 2003
+        - Fixed a bug in "Distinct" logic introduced in 0.81_01
 
 0.81_03 April 13 2003
         - Patches for Oracle BLOB support from Brook Schofield

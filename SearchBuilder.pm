@@ -5,7 +5,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "0.81_03";
+$VERSION = "0.81_04";
 
 =head1 NAME
 
@@ -111,9 +111,9 @@ sub _DoSearch {
 
     # DISTINCT query only required for multi-table selects
     if ($QueryString) {
-        $QueryString = "SELECT main.* FROM $QueryString";
-    } else {
         $self->_DistinctQuery(\$QueryString, $self->{'table'});
+    } else {
+        $QueryString = "SELECT main.* FROM $QueryString";
     }
     $QueryString .= $self->_WhereClause . " " . $self->{'table_links'} . " "
       if ( $self->_isLimited > 0 );
