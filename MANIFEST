@@ -11,6 +11,7 @@ SearchBuilder/Record/Cachable.pm
 SearchBuilder/Handle/Oracle.pm
 SearchBuilder/Handle/SQLite.pm
 SearchBuilder/Handle/Pg.pm
+SearchBuilder/Handle/ODBC.pm
 test.pl
 inc/Module/Install/Base.pm
 inc/Module/Install/Can.pm

@@ -15,12 +15,13 @@ not run its Makefile.PL or Build.PL.
 Hash: SHA1
 
 SHA1 93033993017078bdaaf9db8d5eb6b30052a495ad Changes
-SHA1 004223151ca4e6ddebdd1314d8815834eec1d05d MANIFEST
+SHA1 18140f7c18568ff61e968e3bb5fe62a70fff433a MANIFEST
 SHA1 ff5270f1d83d26e8bcf23b283a0b52359ecc611b MANIFEST.SKIP
 SHA1 93c3ffd5e03ad4f0bdfe842a7b556dbc1499d42d META.yml
 SHA1 7d39dfda212a6558dae2123aa958e033c8f310bd Makefile.PL
 SHA1 8036d081004b016a841bf3f47ea0f958b299ad87 SearchBuilder.pm
 SHA1 e45a572eb0906d74425cf4ce8c6cf280eb066cba SearchBuilder/Handle.pm
+SHA1 35f764ab7e3c675ffc568f5bcb1ebf921813d801 SearchBuilder/Handle/ODBC.pm
 SHA1 b7fd5ef2fcb2f18ff19a6561bfec4122995daa57 SearchBuilder/Handle/Oracle.pm
 SHA1 b20492f890fa9c34ca3ca38847bcac0b090b1d4a SearchBuilder/Handle/Pg.pm
 SHA1 4dfd673981bb75c8f630405c419ece75338dec33 SearchBuilder/Handle/SQLite.pm
@@ -39,7 +40,7 @@ SHA1 71ce3b59b3feeca937fccd3f18c146d8ccbbf6a5 test.pl
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.2.3 (Darwin)
 
-iD8DBQE/k0ouQaM/s3DrrJARAlvgAKDWe996QTHXe02I8RWqR3FOaHaIvACg3yvZ
-5in6iFZ1toLYxdrBrvwH2z0=
-=MGzs
+iD8DBQE/lAKfQaM/s3DrrJARAuqyAJ91S6S7jBqNSViS+zMIgEOoA4Tq4gCfRYAK
+5iPmGwcDj3KdRzX3QDEuRHY=
+=CdZz
 -----END PGP SIGNATURE-----
