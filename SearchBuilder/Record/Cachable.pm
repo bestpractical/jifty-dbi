@@ -22,9 +22,6 @@ sub new () {
     my ( $class, @args ) = @_;
     my $self = $class->SUPER::new(@args);
 
-    # Cache it since we're gonna look at it a _lot_
-    $self->{'_Class'} = ref($self);
-
     return ($self);
 }
 
@@ -50,17 +47,17 @@ sub FlushCache {
 
 sub _KeyCache {
     my $self = shift;
-    my $cache =     $self->_Handle->DSN . "-KEYS--" . $self->{'_Class'};
-    $self->_SetupCache($cache)  unless exists ($_CACHES{$cache});
-    return ( $_CACHES{ $cache});
+    my $cache = $self->_Handle->DSN . "-KEYS--" . ($self->{'_Class'} ||= ref($self));
+    $self->_SetupCache($cache) unless exists ($_CACHES{$cache});
+    return ($_CACHES{$cache});
 
 }
 
 sub _RecordCache {
     my $self = shift;
-    my $cache =     $self->_Handle->DSN . "--" . $self->{'_Class'};
-    $self->_SetupCache($cache)  unless exists ($_CACHES{$cache});
-    return ( $_CACHES{ $cache});
+    my $cache = $self->_Handle->DSN . "--" . ($self->{'_Class'} ||= ref($self));
+    $self->_SetupCache($cache) unless exists ($_CACHES{$cache});
+    return ($_CACHES{$cache});
 
 }
 
