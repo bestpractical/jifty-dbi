@@ -5,7 +5,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "0.97_01";
+$VERSION = "0.97_02";
 
 =head1 NAME
 
@@ -117,10 +117,6 @@ sub _DoSearch {
     } else {
         $QueryString = "SELECT main.* FROM $QueryString";
     }
-
-    # TODO: GroupBy won't work with postgres.
-    # $QueryString .= $self->_GroupByClause. " ";
-
 
     $QueryString .= $self->_OrderClause;
 
@@ -271,6 +267,11 @@ sub _ApplyLimits {
     my $self = shift;
     my $statementref = shift;
     $self->_Handle->ApplyLimits($statementref, $self->RowsPerPage, $self->FirstRow);
+    $$statementref =~ s/main\.\*/join(', ', @{$self->{columns}})/eg
+	if $self->{columns} and @{$self->{columns}};
+    if (my $groupby = $self->_GroupClause) {
+	$$statementref =~ s/(LIMIT \d+)?$/$groupby $1/;
+    }
     
 }
 
@@ -288,7 +289,15 @@ sub _DistinctQuery {
     my $self = shift;
     my $statementref = shift;
     my $table = shift;
-    $self->_Handle->DistinctQuery($statementref, $table);
+
+    # XXX - Postgres gets unhappy with distinct and OrderBy aliases
+    if ($self->{order_clause} =~ /(?<!main)\./) {
+	$self->DEBUG(1);
+        $$statementref = "SELECT main.* FROM $$statementref";
+    }
+    else {
+	$self->_Handle->DistinctQuery($statementref, $table)
+    }
 }
 
 # }}}
@@ -1009,19 +1018,6 @@ sub _OrderClause {
 
 # }}}
 
-# {{{ sub _GroupByClause
-
-# Group by main.id.  This will get SB to only return one copy of each row. which is just what we need
-# for yanking object collections out of the database.
-# and it's less painful than a distinct, since we only need to compare based on main.id.
-
-sub _GroupByClause {
-    my $self = shift;
-    return ('GROUP BY main.id ');
-}
-
-# }}}
-
 # {{{ routines dealing with table aliases and linking tables
 
 # {{{ sub NewAlias
@@ -1337,6 +1333,112 @@ sub DEBUG {
 
 
 # }}}
+
+sub Column {
+    my ($self, %args) = @_;
+    my $table = $args{TABLE} || do {
+	if ( my $alias = $args{ALIAS} ) {
+	    $alias =~ s/_\d+$//;
+	    $alias;
+	}
+	else {
+	    $self->{table};
+	}
+    };
+
+    my $name = ($args{ALIAS} || 'main') . '.' . $args{FIELD};
+    if (my $func = $args{FUNCTION}) {
+	if ($func =~ /^DISTINCT\s*COUNT$/i) {
+	    $name = "COUNT(DISTINCT $name)";
+	}
+	else {
+	    $name = "\U$func\E($name)";
+	}
+    }
+
+    my $column = "col" .  @{$self->{columns}||=[]};
+    $column = $args{FIELD} if $table eq $self->{table} and !$args{ALIAS};
+    push @{$self->{columns}}, "$name AS \L$column";
+    return $column;
+}
+
+sub Columns {
+    my $self = shift;
+    $self->Column( FIELD => $_ ) for @_;
+}
+
+sub Fields {
+    my ($self, $table) = @_;
+    my $dbh = $self->_Handle->dbh;
+
+    return map lc($_->[0]), @{
+	eval { $dbh->column_info('', '', $table, '')->fetchall_arrayref([3]) }
+	|| $dbh->selectall_arrayref("DESCRIBE $table;")
+	|| $dbh->selectall_arrayref("DESCRIBE \u$table;")
+	|| []
+    };
+}
+
+sub HasField {
+    my ($self, %args) = @_;
+    my $table = $args{TABLE} or die;
+    my $field = $args{FIELD} or die;
+    return grep { $_ eq $field } $self->Fields($table);
+}
+
+sub SetTable {
+    my $self = shift;
+    $self->{table} = shift;
+    return $self->{table};
+}
+
+sub Table { $_[0]->{table} }
+
+sub GroupBy {
+    my $self = shift;
+    my %args = ( @_ );
+    $self->GroupByCols( \%args );
+}
+
+sub GroupByCols {
+    my $self = shift;
+    my @args = @_;
+    my $row;
+    my $clause;
+
+    foreach $row ( @args ) {
+        my %rowhash = ( ALIAS => 'main',
+			FIELD => undef,
+			%$row
+		      );
+
+        if ( ($rowhash{'ALIAS'}) and
+             ($rowhash{'FIELD'}) ) {
+
+            $clause .= ($clause ? ", " : " ");
+            $clause .= $rowhash{'ALIAS'} . ".";
+            $clause .= $rowhash{'FIELD'};
+        }
+    }
+
+    if ($clause) {
+	$self->{'group_clause'} = "GROUP BY" . $clause;
+    }
+    else {
+	$self->{'group_clause'} = "";
+    }
+    $self->RedoSearch();
+}
+
+sub _GroupClause {
+    my $self = shift;
+
+    unless ( defined $self->{'group_clause'} ) {
+	return "";
+    }
+    return ($self->{'group_clause'});
+}
+
 
 1;
 __END__

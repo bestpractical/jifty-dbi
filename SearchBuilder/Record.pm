@@ -565,14 +565,20 @@ overrid __Value.
 
 *__value = \&__Value;
 sub __Value {
- my $self = shift;
- my $field = shift;
+  my $self = shift;
+  my $field = lc(shift);
 
-  $field = lc $field;
+  if (!$self->{'fetched'}{$field} and my $id = $self->{'values'}{'id'}) {
+    my $QueryString = "SELECT $field FROM " . $self->Table . " WHERE id = ?";
+    my $sth = $self->_Handle->SimpleQuery( $QueryString, $id );
+    my ($value) = eval { $sth->fetchrow_array() };
+    warn $@ if $@;
 
-  return($self->{'values'}->{"$field"});
+    $self->{'values'}{$field} = $value;
+    $self->{'fetched'}{$field} = 1;
+  }
 
-
+  return($self->{'values'}{$field});
 }
 # }}}
 # {{{ sub _Value 
@@ -868,7 +874,11 @@ loaded values hash.
 sub LoadFromHash {
   my $self = shift;
   my $hashref = shift;
-  
+
+  foreach my $f ( keys %$hashref ) {
+      $self->{'fetched'}{lc $f} = 1;
+  }
+
   $self->{'values'} = $hashref;
   #$self->_DowncaseValuesHash();
   return ($self->{'values'}{'id'});
@@ -906,6 +916,11 @@ sub _LoadFromSQL {
         return ( 0, "Couldn't find row" );
     }
 
+    
+    foreach my $f ( keys %{$self->{'values'}||{}} ) {
+        $self->{'fetched'}{lc $f} = 1;
+    }
+
     #$self->_DowncaseValuesHash();
 
     ## I guess to be consistant with the old code, make sure the primary  
@@ -941,6 +956,10 @@ sub _LoadFromSQLold {
 
         #warn "something might be wrong here; row not found. SQL: $QueryString";
         return ( 0, "Couldn't find row" );
+    }
+    
+    foreach my $f ( keys %{$fetched||{}} ) {
+        $self->{'fetched'}->{lc $f} = 1;
     }
     
     $self->{'values'} = $fetched;

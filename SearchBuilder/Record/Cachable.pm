@@ -208,6 +208,8 @@ sub _fetch () {
 
   $this->{'values'}  = 
     $this->_RecordCache->{$cache_key}{'values'};
+  $this->{'fetched'}  = 
+    $this->_RecordCache->{$cache_key}{'fetched'};
   return(1); 
 }
 
@@ -238,8 +240,9 @@ sub _store (\$) {
   my ($this) = @_; 
   my $cache_key = $this->_gen_primary_cache_key();
   $this->{'_CacheConfig'}{'cache_key'} = $cache_key;
-  $this->_RecordCache->{$cache_key}{'values'}=$this->{'values'};
-  $this->_RecordCache->{$cache_key}{'time'}=time();
+  $this->_RecordCache->{$cache_key}{'values'} = $this->{'values'};
+  $this->_RecordCache->{$cache_key}{'fetched'} = $this->{'fetched'};
+  $this->_RecordCache->{$cache_key}{'time'} = time();
   
   return(1);
 }
