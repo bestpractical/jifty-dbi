@@ -1,5 +1,5 @@
 name: DBIx-SearchBuilder
-version: 1.21
+version: 1.22
 license: perl
 distribution_type: module
 build_requires:
@@ -7,6 +7,7 @@ build_requires:
 requires:
   DBI: 0
   Want: 0
+  Encode: 0
   Class::ReturnValue: 0.4
   Cache::Simple::TimedExpiry: 0.21
 no_index:

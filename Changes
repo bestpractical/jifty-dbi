@@ -1,5 +1,8 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+1.22 Mon Jan 24 07:42:46 EST 2005
+    - Require encode since we require encode.
+
 1.21
     - Oracle LOB handling caused us to corrupt item values on update.
     - Just before inserting things into the database, turn off their utf8 flag.

@@ -5,6 +5,7 @@ license ('perl');
 version_from('SearchBuilder.pm');
 requires('DBI');
 requires('Want');
+requires('Encode');
 requires('Class::ReturnValue', 0.40);
 requires( 'Cache::Simple::TimedExpiry' => '0.21');
 build_requires('Test::More');
