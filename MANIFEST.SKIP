@@ -1,5 +1,12 @@
-^config$
-^aegis.log$
-^Makefile$
-^blib/$
-^pm_to_blib$
+ \bRCS\b
+ \bCVS\b
+ ,v$
+ \B\.svn\b
+ ^MANIFEST\.
+ ^Makefile$
+ ^blib/
+ ^MakeMaker-\d
+ ~$
+ \.old$
+ ^#.*#$
+ ^\.#
