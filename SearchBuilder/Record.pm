@@ -798,15 +798,17 @@ sub LoadByCols  {
 	if (defined $hash{$key} &&  $hash{$key} ne '') {
         my $op;
         my $value;
+	my $function = "?";
         if (ref $hash{$key} eq 'HASH') {
             $op = $hash{$key}->{operator};
             $value = $hash{$key}->{value};
+            $function = $hash{$key}->{function} || "?";
        } else {
             $op = '=';
             $value = $hash{$key};
         }
 
-		push @phrases, "$key $op ?"; 
+		push @phrases, "$key $op $function"; 
 		push @bind, $value;
 	}
 	else {

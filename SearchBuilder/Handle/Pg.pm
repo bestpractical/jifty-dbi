@@ -2,11 +2,11 @@
 # Copyright 1999-2001 Jesse Vincent <jesse@fsck.com>
 
 package DBIx::SearchBuilder::Handle::Pg;
-use DBIx::SearchBuilder::Handle;
-@ISA = qw(DBIx::SearchBuilder::Handle);
+use strict;
 
 use vars qw($VERSION @ISA $DBIHandle $DEBUG);
-
+use base qw(DBIx::SearchBuilder::Handle);
+use Want qw(want);
 
 use strict;
 
@@ -266,15 +266,22 @@ sub _MakeClauseCaseInsensitive {
     my $operator = shift;
     my $value    = shift;
 
+
     if ( $operator =~ /LIKE/i ) {
         $operator =~ s/LIKE/ILIKE/ig;
         return ( $field, $operator, $value );
     }
-    elsif ( $operator =~ /\s*!=\s*/ ) {
-        return ( $field, 'NOT ILIKE', $value );
-    }
-    elsif ( $operator =~ /\s*=\s*/ ) {
-        return ( $field, 'ILIKE', $value );
+    elsif ( $operator =~ /=/ ) {
+	if (want(4)) {
+        	return ( "LOWER($field)", $operator, $value, "LOWER(?)"); 
+	} 
+	# RT 3.0.x and earlier  don't know how to cope with a "LOWER" function 
+	# on the value. they only expect field, operator, value.
+	# 
+	else {
+		return ( "LOWER($field)", $operator, lc($value));
+
+	}
     }
     else {
         $self->SUPER::_MakeClauseCaseInsensitive( $field, $operator, $value );

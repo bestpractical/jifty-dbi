@@ -1,11 +1,12 @@
 name: DBIx-SearchBuilder
-version: 0.98_03
+version: 0.99
 license: unknown
 distribution_type: module
 build_requires:
   Test::More: 0
 requires:
   DBI: 0
+  Want: 0
   Class::ReturnValue: 0.4
 no_index:
   directory:
