@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle.pm,v 1.20 2001/12/17 20:19:16 jesse Exp $
+# $Header: /home/jesse/DBIx-SearchBuilder/history/SearchBuilder/Handle.pm,v 1.21 2002/01/28 06:11:37 jesse Exp $
 package DBIx::SearchBuilder::Handle;
 use Carp;
 use DBI;
@@ -104,21 +104,17 @@ sub Connect  {
   
   my %args = ( Driver => undef,
 	       Database => undef,
-	       Host => 'localhost',
+	       Host => undef,
+           SID => undef,
 	       Port => undef,
 	       User => undef,
 	       Password => undef,
 	       RequireSSL => undef,
 	       @_);
-  
-  my $dsn;
-  
-  $dsn = "dbi:$args{'Driver'}:dbname=$args{'Database'}";
-  $dsn .= ";host=$args{'Host'}" if ($args{'Host'});
-  $dsn .= ";port=$args{'Port'}" if ($args{'Port'});
-  $dsn .= ";requiressl=1" if ($args{'RequireSSL'});
 
-  my $handle = DBI->connect($dsn, $args{'User'}, $args{'Password'}) || croak "Connect Failed $DBI::errstr\n" ;
+  $self->BuildDSN(%args);
+
+  my $handle = DBI->connect($self->DSN, $args{'User'}, $args{'Password'}) || croak "Connect Failed $DBI::errstr\n" ;
 
   #Set the handle 
   $self->dbh($handle);
@@ -126,6 +122,49 @@ sub Connect  {
   return (1); 
 }
 # }}}
+
+=item  BuildDSN PARAMHASH
+
+Takes a bunch of parameters:  
+
+Required: Driver, Database,
+Optional: Host, Port and RequireSSL
+
+Builds a DSN suitable for a DBI connection
+
+=cut
+
+sub BuildDSN {
+    my $self = shift;
+  my %args = ( Driver => undef,
+	       Database => undef,
+	       Host => undef,
+	       Port => undef,
+           SID => undef,
+	       RequireSSL => undef,
+	       @_);
+  
+  
+  my $dsn = "dbi:$args{'Driver'}:dbname=$args{'Database'}";
+  $dsn .= ";sid=$args{'SID'}" if ( defined $args{'SID'});
+  $dsn .= ";host=$args{'Host'}" if (defined$args{'Host'});
+  $dsn .= ";port=$args{'Port'}" if (defined $args{'Port'});
+  $dsn .= ";requiressl=1" if (defined $args{'RequireSSL'});
+
+  $self->{'dsn'}= $dsn;
+}
+
+
+=item DSN
+
+    Returns the DSN for this database connection.
+
+=cut
+sub DSN {
+    my $self = shift;
+    return($self->{'dsn'});
+}
+
 
 # {{{ RaiseError
 

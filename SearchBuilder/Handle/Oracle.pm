@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle/Oracle.pm,v 1.13 2001/12/17 20:19:16 jesse Exp $
+# $Header: /home/jesse/DBIx-SearchBuilder/history/SearchBuilder/Handle/Oracle.pm,v 1.14 2002/01/28 06:11:37 jesse Exp $
 
 package DBIx::SearchBuilder::Handle::Oracle;
 use DBIx::SearchBuilder::Handle;
@@ -57,17 +57,8 @@ sub Connect  {
            Host => undef,
 	       @_);
   
-  my $dsn = "dbi:$args{'Driver'}:dbname=$args{'Database'}";
-  $dsn .= ";sid=$args{'SID'}" if defined $args{'SID'};
-  $dsn .= ";host=$args{'Host'}" if defined $args{'Host'}; 
-
-  my $DBIHandle = DBI->connect($dsn, $args{'User'}, $args{'Password'}) || die "Connect Failed $DBI::errstr\n" ;
-
-  #Set the handle 
-  $self->dbh($DBIHandle);
-
-
-    
+    $self->SUPER::Connect(%args);
+   
     
     $self->dbh->{LongTruncOk}=1;
     $self->dbh->{LongReadLen}=8000;

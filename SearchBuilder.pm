@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder.pm,v 1.39 2001/12/04 01:01:32 jesse Exp $
+# $Header: /home/jesse/DBIx-SearchBuilder/history/SearchBuilder.pm,v 1.41 2002/02/11 22:53:01 jesse Exp $
 
 # {{{ Version, package, new, etc
 
@@ -7,7 +7,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "0.48";
+$VERSION = "0.50";
 
 =head1 NAME
 
@@ -365,6 +365,22 @@ sub First  {
     my $self = shift;
     $self->GotoFirstItem();
     return ($self->Next);
+}
+
+# }}}
+
+# {{{ sub Last
+
+=head2 Last
+
+Returns the last item
+
+=cut
+
+sub Last  {
+  my $self = shift;
+  $self->GotoItem(($self->Count)-1);
+  return ($self->Next);
 }
 
 # }}}
