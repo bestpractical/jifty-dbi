@@ -271,7 +271,6 @@ sub _gen_alternate_cache_key {
         $cache_key .= $key.$value.',';
     }
     chop($cache_key);
-    warn $cache_key;
     return ($cache_key);
 }
 

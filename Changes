@@ -1,5 +1,9 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+0.98_03 - New test infrastructure from Andy Lester
+
+0.98_02 - Better handling of != clauses on Postgres
+
 0.97_02 - Support for "Group By" clauses.
           Support for delayed load of certain columns from Autrijus Tang.
 
