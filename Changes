@@ -1,5 +1,1826 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+0.34  May 23 2001
+P
+	- SearchBuilder.pm - refactored to allow LEFT joins.
+
 0.31  Say May 12 14:45:00 EDT 2001
 	- SearchBuilder::Record::Cachable now constructs cache keys in a way
 	  that doesn't lose when records in different tables have the same keys.

@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder.pm,v 1.20 2001/05/14 01:07:45 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder.pm,v 1.23 2001/06/01 00:36:46 jesse Exp $
 
 # {{{ Version, package, new, etc
 
@@ -7,7 +7,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "0.34";
+$VERSION = "0.37";
 
 =head1 NAME
 
@@ -78,6 +78,8 @@ sub CleanSlate {
     $self->{'order'} = "";
     $self->{'alias_count'} = 0;
     $self->{'first_row'} = 0;
+    @{$self->{'left_joins'}} = ();
+    @{$self->{'aliases'}} = ();
     delete $self->{'items'} if (defined $self->{'items'});
     delete $self->{'raw_rows'} if (defined $self->{'raw_rows'});
     delete $self->{'subclauses'} if (defined $self->{'subclauses'});
@@ -87,6 +89,7 @@ sub CleanSlate {
     $self->_isLimited(0);
 
 }
+# }}}
 
 # {{{ sub _Handle 
 sub _Handle  {
@@ -102,10 +105,14 @@ sub _DoSearch  {
     my ($QueryString, $Order);
     
     
-    $QueryString = "SELECT main.* FROM " . $self->_TableAliases;
+    $QueryString = "SELECT main.* FROM " . $self->_TableAliases . " " ;
     
+    $QueryString .= $self->_LeftJoins . " ";
+
     $QueryString .= $self->_WhereClause . " ".  $self->{'table_links'}. " " 
       if ($self->_isLimited > 0);
+   
+    $QueryString .= $self->_GroupByClause. " ";
     
     $QueryString .=  $self->_OrderClause . $self->_LimitClause;
     
@@ -187,11 +194,14 @@ sub _DoCount  {
     #TODO refactor DoSearch and DoCount such that we only have
     # one place where we build most of the querystring
     
-    $QueryString = "SELECT count(main.id) FROM " . $self->_TableAliases;
-    
+    $QueryString = "SELECT count(main.id) FROM " . $self->_TableAliases . " ";
+
+    $QueryString .= $self->_LeftJoins . " ";
+   
     $QueryString .= $self->_WhereClause . " ".  $self->{'table_links'}. " " 
       if ($self->_isLimited > 0);
-    
+
+ 
     $QueryString .=  $self->_OrderClause . $self->_LimitClause;
     
     print STDERR "DBIx::SearchBuilder->DoSearch Query:  $QueryString\n" 
@@ -273,7 +283,7 @@ sub _isLimited  {
 
 # }}} Private utility methods
 
-# }}}
+
 
 # {{{ Methods dealing traversing rows within the found set
 
@@ -470,6 +480,7 @@ sub Limit  {
 		FIELD => undef,
 		VALUE => undef,
 		ALIAS => undef,
+		QUOTEVALUE => 1,
 		ENTRYAGGREGATOR => 'or',
 		OPERATOR => '=',
 		@_ # get the real argumentlist
@@ -480,9 +491,14 @@ sub Limit  {
     if ($args{'FIELD'}) {
 	#If it's a like, we supply the %s around the search term
 	if ($args{'OPERATOR'} =~ /LIKE/) {
-	$args{'VALUE'} = "%".$args{'VALUE'} ."%";
-    }
-	$args{'VALUE'} = $self->_Handle->dbh->quote($args{'VALUE'});
+	    $args{'VALUE'} = "%".$args{'VALUE'} ."%";
+	}
+	
+	#if we're explicitly told to to quote the value or
+	# we're doing an IS or IS NOT (null), don't quote the operator. 
+	if ($args{'QUOTEVALUE'} or $args{'OPERATOR'} !~ /IS/i) {
+	    $args{'VALUE'} = $self->_Handle->dbh->quote($args{'VALUE'});
+	}
     }
     
     $Alias = $self->_GenericRestriction(%args);
@@ -629,17 +645,12 @@ sub _AddSubClause {
 sub _TableAliases {
     my $self = shift;
     
-    # Set up the first alias. for the _main_ table
-    my $compiled_aliases = $self->{'table'}." main";
-    
-    # Go through all the other aliases we set up and build the compiled
+    # Set up the first alias. for the _main_ table and
+    # go through all the other aliases we set up and build the compiled
     # aliases string
-    for my $count (0..($self->{'alias_count'}-1)) {
-	$compiled_aliases .= ", ".
-	  $self->{'aliases'}[$count]{'table'}. " ".
-	    $self->{'aliases'}[$count]{'alias'};
-    }
-    
+    my $compiled_aliases = join (", ", $self->{'table'} . " main", 
+				       @{$self->{'aliases'}});
+        
     return ($compiled_aliases);
 }
 
@@ -771,6 +782,21 @@ sub _OrderClause {
 
 # }}}
 
+
+# }}}
+
+# {{{ sub _GroupByClause
+
+# Group by main.id.  This will get SB to only return one copy of each row. which is just what we need
+# for yanking object collections out of the database.
+# and it's less painful than a distinct, since we only need to compare based on main.id.
+
+sub _GroupByClause {
+    my $self = shift;
+    return ('GROUP BY main.id ');
+}
+
+
 # }}}
 
 # {{{ routines dealing with table aliases and linking tables
@@ -790,39 +816,91 @@ sub NewAlias {
     my $table = shift || die "Missing parameter";
     
     
-    my $alias=$table."_".$self->{'alias_count'};
+    my $alias = $self->_GetAlias($table);
     
-    $self->{'aliases'}[$self->{'alias_count'}]{'alias'} = $alias;
-    $self->{'aliases'}[$self->{'alias_count'}]{'table'} = $table;
-    
-    $self->{'alias_count'}++;
+    my $subclause = "$table $alias";
+
+    push (@{$self->{'aliases'}}, $subclause);
     
     return $alias;
 }
 # }}}
 
+# {{{ sub _GetAlias
+
+
+# _GetAlias is a private function which takes an tablename and 
+# returns a new alias for that table without adding something
+# to self->{'aliases'}.  This function is used by NewAlias
+# and the as-yet-unnamed left join code
+
+sub _GetAlias {
+    my $self = shift;
+    my $table = shift;
+    
+    $self->{'alias_count'}++;
+    my $alias=$table."_".$self->{'alias_count'};    
+    
+    return ($alias);
+
+}
+
+# }}}
+
+# {{{ sub _LeftJoins
+
+# Return the left joins clause
+
+sub _LeftJoins {
+    my $self = shift;
+    my $joins = join(' ', @{$self->{'left_joins'}});
+    return ($joins);
+}
+
+
 # {{{ sub Join
 
 =head2 Join
 
-Join instructs DBIx::SearchBuilder to join two tables. 
-It takes a param hash with keys ALIAS1, FIELD1, ALIAS2 and FIELD2.
+Join instructs DBIx::SearchBuilder to join two tables.  
 
-ALIAS1 and ALIAS2 are column aliases obtained from $self->NewAlias or a $self->Limit
-FIELD1 and FIELD2 are the fields in ALIAS1 and ALIAS2 that should be linked, respectively.
+
+The standard form takes a param hash with keys ALIAS1, FIELD1, ALIAS2 and 
+FIELD2. ALIAS1 and ALIAS2 are column aliases obtained from $self->NewAlias or
+a $self->Limit. FIELD1 and FIELD2 are the fields in ALIAS1 and ALIAS2 that 
+should be linked, respectively.  For this type of join, this method
+has no return value.
+
+Supplying the parameter TYPE => 'left' causes Join to preform a left join.
+in this case, it takes ALIAS1, FIELD1, TABLE2 and FIELD2. Because of the way
+that left joins work, this method needs a TABLE for the second field
+rather than merely an alias.  For this type of join, it will return
+the alias generated by the join.
 
 =cut
 
 sub Join {
     my $self = shift;
-    my %args = (FIELD1 => undef,
+    my %args = (TYPE => undef,
+		FIELD1 => undef,
 		ALIAS1 => undef,
 		FIELD2 => undef,
+		TABLE2 => undef,
 		ALIAS2 => undef,
 		@_);
+
+    if ($args{'TYPE'} =~ /LEFT/i) {
+	my $alias = $self->_GetAlias($args{'TABLE2'});
+	push (@{$self->{'left_joins'}} ,
+	   "LEFT JOIN $args{'TABLE2'} as $alias ".
+	   "ON  $args{'ALIAS1'}.$args{'FIELD1'} = $alias.$args{'FIELD2'}");
+
+	return($alias);
+    }
+    
     # we need to build the table of links.
     my $clause = $args{'ALIAS1'}. ".". $args{'FIELD1'}. " = " . 
-		 $args{'ALIAS2'}. ".". $args{'FIELD2'};
+                 $args{'ALIAS2'}. ".". $args{'FIELD2'};
     $self->{'table_links'} .= "AND $clause ";
     
 }
