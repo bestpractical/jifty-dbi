@@ -60,6 +60,21 @@ sub Insert  {
 # }}}
 
 
+=head2 DatabaseVersion
+
+return the mysql version, trimming off any -foo identifier
+
+=cut
+
+sub DatabaseVersion {
+    my $self = shift;
+    my $v = $self->SUPER::DatabaseVersion();
+
+   $v =~ s/\-(.*)$//;
+   return ($v);
+
+}
+
 =head2 CaseSensitive 
 
 Returns undef, since mysql's searches are not case sensitive by default 

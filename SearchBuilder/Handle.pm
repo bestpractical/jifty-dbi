@@ -440,6 +440,23 @@ sub BinarySafeBLOBs {
 
 # }}}
 
+=head2 DatabaseVersion
+
+Returns the database's version. The base implementation uses a "SELECT VERSION"
+
+=cut
+
+sub DatabaseVersion {
+    my $self = shift;
+
+    unless ($self->{'database_version'}) {
+        my $statement  = "SELECT VERSION()";
+        my $sth = $self->SimpleQuery($statement);
+        my @vals = $sth->fetchrow();
+        $self->{'database_version'}= $vals[0];
+    }
+}
+
 
 # {{{ CaseSensitive
 
