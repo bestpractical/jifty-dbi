@@ -112,86 +112,25 @@ sub _Handle {
 
 sub _DoSearch {
     my $self = shift;
-    my ( $QueryString, $Order );
 
-    # The initial SELECT or SELECT DISTINCT is decided later
+    my $QueryString = $self->BuildSelectQuery();
 
-    $QueryString = $self->_BuildJoins . " ";
-    $QueryString .= $self->_WhereClause . " "
-      if ( $self->_isLimited > 0 );
-
-    # DISTINCT query only required for multi-table selects
-    if ($self->_isJoined) {
-        $self->_DistinctQuery(\$QueryString, $self->{'table'});
-    } else {
-        $QueryString = "SELECT main.* FROM $QueryString";
-    }
-
-    $QueryString .= $self->_OrderClause;
-
-    $self->_ApplyLimits(\$QueryString);
-
-
-    print STDERR "DBIx::SearchBuilder->DoSearch Query:  $QueryString\n"
-      if ( $self->DEBUG );
-
-    # {{{ get $self->{'records'} out of the database
-    eval { $self->{'records'} = $self->_Handle->dbh->prepare($QueryString); };
-    if ($@) {
-        warn "$self couldn't prepare '$QueryString' " . $@;
-        return (undef);
-    }
-
-    if ( !$self->{'records'} ) {
-        warn "Error:" . $self->_Handle->dbh->errstr . "\n";
-        return (undef);
-    }
     eval {
-        if ( !$self->{'records'}->execute ) {
-            warn "DBIx::SearchBuilder error:"
-              . $self->{'records'}->errstr
-              . "\n\tQuery String is $QueryString\n";
-            return (undef);
+
+        # TODO: finer-grained eval and cheking.
+       my  $records = $self->_Handle->SimpleQuery($QueryString);
+        my $counter;
+        while ( my $row = $records->fetchrow_hashref() ) {
+            $self->{'items'}[$counter] = $self->NewItem();
+            $self->{'items'}[$counter]->LoadFromHash($row);
+            $counter++;
         }
+
+        $self->{'rows'} = $counter;
+        $self->{'must_redo_search'} = 0;
     };
-    if ($@) {
-        warn "$self couldn't execute a search: " . $@;
-        return (undef);
-    }
 
-    # }}}
-
-    my $counter = 0;
-
-    # {{{ Iterate through all the rows returned and get child objects
-
-    while ( my $row = $self->{'records'}->fetchrow_hashref() ) {
-
-        $self->{'items'}[$counter] = $self->NewItem();
-        $self->{'items'}[$counter]->LoadFromHash($row);
-
-        print STDERR "ID is " . $self->{'items'}[$counter]->Id() . "\n"
-          if ( $self->DEBUG );
-
-        $counter++;
-    }
-
-    #How many rows did we get out of that?
-    $self->{'rows'} = $counter;
-
-    # TODO: It makes sense keeping and reusing the records statement
-    # handler.  Anyway, I don't see that we need it anymore with the
-    # current design, and the statement handler will not easily be
-    # stored persistantly.
-
-    $self->{records}->finish;
-    delete $self->{records};
-
-    # }}}
-
-    $self->{'must_redo_search'} = 0;
-
-    return ( $self->Count );
+    return ( $self->{'rows'});
 }
 
 # }}}
@@ -201,62 +140,17 @@ sub _DoSearch {
 sub _DoCount {
     my $self = shift;
     my $all  = shift || 0;
-    my ( $QueryString, $Order );
 
-    #TODO refactor DoSearch and DoCount such that we only have
-    # one place where we build most of the querystring
-    $QueryString .= $self->_BuildJoins . " ";
-
-    $QueryString .= $self->_WhereClause . " "
-      if ( $self->_isLimited > 0 );
-
-
-
-    # DISTINCT query only required for multi-table selects
-    if ($self->_isJoined) {
-        $QueryString = $self->_Handle->DistinctCount(\$QueryString);
-    } else {
-        $QueryString = "SELECT count(main.id) FROM " . $QueryString;
-    }
-
-    print STDERR "DBIx::SearchBuilder->DoSearch Query:  $QueryString\n"
-      if ( $self->DEBUG );
-
-
-
-    # {{{ get count out of the database
-    eval { $self->{'records'} = $self->_Handle->dbh->prepare($QueryString); };
-    if ($@) {
-        warn "$self couldn't prepare '$QueryString' " . $@;
-        return (undef);
-    }
-
-    if ( !$self->{'records'} ) {
-        warn "Error:" . $self->_Handle->dbh->errstr . "\n";
-        return (undef);
-    }
+    my $QueryString = $self->BuildSelectCountQuery();
     eval {
-        if ( !$self->{'records'}->execute ) {
-            warn "DBIx::SearchBuilder error:"
-              . $self->{'records'}->errstr
-              . "\n\tQuery String is $QueryString\n";
-            return (undef);
-        }
+        # TODO: finer-grained Eval
+        my $records     = $self->_Handle->SimpleQuery($QueryString);
+
+        my @row = $records->fetchrow_array();
+        $self->{ $all ? 'count_all' : 'raw_rows' } = $row[0];
+
+        return ( $row[0] );
     };
-    if ($@) {
-        warn "$self couldn't execute a search: " . $@;
-        return (undef);
-    }
-
-    # }}}
-
-    my @row = $self->{'records'}->fetchrow_array();
-    $self->{$all?'count_all':'raw_rows'} = $row[0];
-
-    $self->{records}->finish;
-    delete $self->{records};
-
-    return ( $row[0] )
 }
 
 # }}}
@@ -388,6 +282,73 @@ sub _isLimited {
 
 # }}} Private utility methods
 
+# {{{ BuildSelectQuery
+
+=head2 BuildSelectQuery
+
+Builds a query string for a "SELECT rows from Tables" statement for this SB
+object
+
+=cut
+
+sub BuildSelectQuery {
+    my $self = shift;
+
+    # The initial SELECT or SELECT DISTINCT is decided later
+
+    my $QueryString = $self->_BuildJoins . " ";
+    $QueryString .= $self->_WhereClause . " "
+      if ( $self->_isLimited > 0 );
+
+    # DISTINCT query only required for multi-table selects
+    if ($self->_isJoined) {
+        $self->_DistinctQuery(\$QueryString, $self->{'table'});
+    } else {
+        $QueryString = "SELECT main.* FROM $QueryString";
+    }
+
+    $QueryString .= $self->_OrderClause;
+
+    $self->_ApplyLimits(\$QueryString);
+
+    return($QueryString)
+
+}
+
+# }}}
+
+# {{{ BuildSelectCountQuery
+
+=head2 BuildSelectCountQuery
+
+Builds a SELECT statement to find the number of rows this SB object would find.
+
+=cut
+
+sub BuildSelectCountQuery {
+    my $self = shift;
+
+    #TODO refactor DoSearch and DoCount such that we only have
+    # one place where we build most of the querystring
+    my $QueryString = $self->_BuildJoins . " ";
+
+    $QueryString .= $self->_WhereClause . " "
+      if ( $self->_isLimited > 0 );
+
+
+
+    # DISTINCT query only required for multi-table selects
+    if ($self->_isJoined) {
+        $QueryString = $self->_Handle->DistinctCount(\$QueryString);
+    } else {
+        $QueryString = "SELECT count(main.id) FROM " . $QueryString;
+    }
+
+    return ($QueryString);
+}
+
+# }}}
+
 # {{{ Methods dealing traversing rows within the found set
 
 # {{{ sub Next
@@ -439,6 +400,7 @@ sub GotoFirstItem {
 # }}}
 
 # {{{ sub GotoItem
+
 
 =head2 GotoItem
 
@@ -1016,6 +978,83 @@ sub _OrderClause {
 
 # }}}
 
+# {{{ Routines dealing with grouping
+
+# {{{ GroupBy (OBSOLETE)
+
+=head2 GroupBy
+
+OBSOLUTE. You want GroupByCols
+
+=cut
+
+sub GroupBy {
+    my $self = shift;
+    $self->GroupByCols( @_);
+}
+# }}}
+
+# {{{ GroupByCols
+
+=head2 GroupByCols ARRAY_OF_HASHES
+
+Each hash contains the keys ALIAS and FIELD. ALIAS defaults to 'main' if ignored.
+
+=cut
+
+sub GroupByCols {
+    my $self = shift;
+    my @args = @_;
+    my $row;
+    my $clause;
+
+    foreach $row ( @args ) {
+        my %rowhash = ( ALIAS => 'main',
+			FIELD => undef,
+			%$row
+		      );
+
+        if ( ($rowhash{'ALIAS'}) and
+             ($rowhash{'FIELD'}) ) {
+
+            $clause .= ($clause ? ", " : " ");
+            $clause .= $rowhash{'ALIAS'} . ".";
+            $clause .= $rowhash{'FIELD'};
+        }
+    }
+
+    if ($clause) {
+	$self->{'group_clause'} = "GROUP BY" . $clause;
+    }
+    else {
+	$self->{'group_clause'} = "";
+    }
+    $self->RedoSearch();
+}
+# }}} 
+
+# {{{ _GroupClause
+
+=head2 _GroupClause
+
+Private function to return the "GROUP BY" clause for this query.
+
+
+=cut
+
+sub _GroupClause {
+    my $self = shift;
+
+    unless ( defined $self->{'group_clause'} ) {
+	    return "";
+    }
+    return ($self->{'group_clause'});
+}
+
+# }}}
+
+# }}}
+
 # {{{ routines dealing with table aliases and linking tables
 
 # {{{ sub NewAlias
@@ -1332,110 +1371,146 @@ sub DEBUG {
 
 # }}}
 
+# {{{ Column
+
+=head2 Column { FIELD => undef } 
+
+Specify that we want to load the column  FIELD. 
+
+Other parameters are TABLE ALIAS AND FUNCTION.
+
+Autrijus and Ruslan owe docs.
+
+=cut
+
 sub Column {
-    my ($self, %args) = @_;
+    my $self = shift;
+    my %args = ( TABLE => undef,
+               ALIAS => undef,
+               FIELD => undef,
+               FUNCTION => undef,
+               @_);
+
     my $table = $args{TABLE} || do {
-	if ( my $alias = $args{ALIAS} ) {
-	    $alias =~ s/_\d+$//;
-	    $alias;
-	}
-	else {
-	    $self->{table};
-	}
+        if ( my $alias = $args{ALIAS} ) {
+            $alias =~ s/_\d+$//;
+            $alias;
+        }
+        else {
+            $self->{table};
+        }
     };
 
-    my $name = ($args{ALIAS} || 'main') . '.' . $args{FIELD};
-    if (my $func = $args{FUNCTION}) {
-	if ($func =~ /^DISTINCT\s*COUNT$/i) {
-	    $name = "COUNT(DISTINCT $name)";
-	}
-	else {
-	    $name = "\U$func\E($name)";
-	}
+    my $name = ( $args{ALIAS} || 'main' ) . '.' . $args{FIELD};
+    if ( my $func = $args{FUNCTION} ) {
+        if ( $func =~ /^DISTINCT\s*COUNT$/i ) {
+            $name = "COUNT(DISTINCT $name)";
+        }
+        else {
+            $name = "\U$func\E($name)";
+        }
     }
 
-    my $column = "col" .  @{$self->{columns}||=[]};
+    my $column = "col" . @{ $self->{columns} ||= [] };
     $column = $args{FIELD} if $table eq $self->{table} and !$args{ALIAS};
-    push @{$self->{columns}}, "$name AS \L$column";
+    push @{ $self->{columns} }, "$name AS \L$column";
     return $column;
 }
+
+# }}}
+
+# {{{ Columns 
+
+
+=head2 Columns LIST
+
+Specify that we want to load only the columns in LIST
+
+=cut
 
 sub Columns {
     my $self = shift;
     $self->Column( FIELD => $_ ) for @_;
 }
 
+# }}}
+
+# {{{ Fields
+
+=head2 Fields TABLE
+ 
+Return a list of fields in TABLE, lowercased.
+
+TODO: Why are they lowercased?
+
+=cut
+
 sub Fields {
-    my ($self, $table) = @_;
+    my $self  = shift;
+    my $table = shift;
+
     my $dbh = $self->_Handle->dbh;
 
-    return map lc($_->[0]), @{
-	eval { $dbh->column_info('', '', $table, '')->fetchall_arrayref([3]) }
-	|| $dbh->selectall_arrayref("DESCRIBE $table;")
-	|| $dbh->selectall_arrayref("DESCRIBE \u$table;")
-	|| []
-    };
+    # TODO: memoize this
+
+    return map lc( $_->[0] ), @{
+        eval {
+            $dbh->column_info( '', '', $table, '' )->fetchall_arrayref( [3] );
+          }
+          || $dbh->selectall_arrayref("DESCRIBE $table;")
+          || $dbh->selectall_arrayref("DESCRIBE \u$table;")
+          || []
+      };
 }
 
+# }}}
+
+
+# {{{ HasField
+
+=head2 HasField  { TABLE => undef, FIELD => undef }
+
+Returns true if TABLE has field FIELD.
+Return false otherwise
+
+=cut
+
 sub HasField {
-    my ($self, %args) = @_;
+    my $self = shift;
+    my %args = ( FIELD => undef,
+                 TABLE => undef,
+                 @_);
+
     my $table = $args{TABLE} or die;
     my $field = $args{FIELD} or die;
     return grep { $_ eq $field } $self->Fields($table);
 }
 
+# }}}
+
+# {{{ SetTable
+
+=head2 Table [TABLE]
+
+If called with an arguemnt, sets this collection's table.
+
+Always returns this collection's table.
+
+=cut
+
 sub SetTable {
     my $self = shift;
-    $self->{table} = shift;
+    return $self->Table(@_);
+}
+
+sub Table {
+    my $self = shift;
+    $self->{table} = shift if (@_);
     return $self->{table};
 }
 
-sub Table { $_[0]->{table} }
 
-sub GroupBy {
-    my $self = shift;
-    my %args = ( @_ );
-    $self->GroupByCols( \%args );
-}
-
-sub GroupByCols {
-    my $self = shift;
-    my @args = @_;
-    my $row;
-    my $clause;
-
-    foreach $row ( @args ) {
-        my %rowhash = ( ALIAS => 'main',
-			FIELD => undef,
-			%$row
-		      );
-
-        if ( ($rowhash{'ALIAS'}) and
-             ($rowhash{'FIELD'}) ) {
-
-            $clause .= ($clause ? ", " : " ");
-            $clause .= $rowhash{'ALIAS'} . ".";
-            $clause .= $rowhash{'FIELD'};
-        }
-    }
-
-    if ($clause) {
-	$self->{'group_clause'} = "GROUP BY" . $clause;
-    }
-    else {
-	$self->{'group_clause'} = "";
-    }
-    $self->RedoSearch();
-}
-
-sub _GroupClause {
-    my $self = shift;
-
-    unless ( defined $self->{'group_clause'} ) {
-	return "";
-    }
-    return ($self->{'group_clause'});
-}
+# }}}
 
 
 1;
