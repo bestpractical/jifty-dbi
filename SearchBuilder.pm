@@ -712,6 +712,7 @@ sub _GenericRestriction {
                  OPERATOR        => '=',
                  SUBCLAUSE       => undef,
                  CASESENSITIVE   => undef,
+                 QUOTEVALUE     => undef,
                  @_ );
 
     my ( $Clause, $QualifiedField );
@@ -784,7 +785,7 @@ sub _GenericRestriction {
 
     if ( $self->_Handle->CaseSensitive && defined $args{'VALUE'} && $args{'VALUE'} ne ''  && $args{'VALUE'} ne "''" && ($args{'OPERATOR'} !~/IS/ && $args{'VALUE'} !~ /^null$/i)) {
 
-        unless ( $args{'CASESENSITIVE'} ) {
+        unless ( $args{'CASESENSITIVE'} || !$args{'QUOTEVALUE'} ) {
                ( $QualifiedField, $args{'OPERATOR'}, $args{'VALUE'} ) =
                  $self->_Handle->_MakeClauseCaseInsensitive( $QualifiedField,
                 $args{'OPERATOR'}, $args{'VALUE'} );
