@@ -562,9 +562,10 @@ sub _MakeClauseCaseInsensitive {
     my $operator = shift;
     my $value = shift;
 
-    $field = "lower($field)";
-    $value = lc($value);
-
+    if ($value !~ /^\d+$/) { # don't downcase integer values
+        $field = "lower($field)";
+        $value = lc($value);
+    }
     return ($field, $operator, $value,undef);
 }
 

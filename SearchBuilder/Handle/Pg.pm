@@ -129,6 +129,10 @@ sub _MakeClauseCaseInsensitive {
     my $value    = shift;
 
 
+    if ($value =~ /^\d+$/) { # we don't need to downcase numeric values
+        	return ( $field, $operator, $value);
+    }
+
     if ( $operator =~ /LIKE/i ) {
         $operator =~ s/LIKE/ILIKE/ig;
         return ( $field, $operator, $value );

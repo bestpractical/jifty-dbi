@@ -1,5 +1,8 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+1.00_06 - Pg/Oracle: Don't attempt to do case insensitive comparisons on
+          integer values.
+
 1.00_05 - Force utf8 flag on when doing searches for utf8 data; this
           is a workaround for DBDs that don't do it themselves.
 
