@@ -8,7 +8,7 @@ requires:
   DBI: 0
   Want: 0
   Class::ReturnValue: 0.4
-  Cache::Simple::TimedExpiry: 0.01
+  Cache::Simple::TimedExpiry: 0.21
 no_index:
   directory:
     - inc
