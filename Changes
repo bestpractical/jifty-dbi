@@ -1,5 +1,8 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+0.70  Aug 27 2002
+        - Better support for Postgres 7.2 and transactions.
+
 0.62  Jul 5 2002
         - Support for Class::ReturnValue to channel errors up when expected
         - Dependency on Class::ReturnValue

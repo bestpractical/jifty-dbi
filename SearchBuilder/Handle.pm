@@ -152,7 +152,7 @@ sub BuildDSN {
   $dsn .= ";sid=$args{'SID'}" if ( defined $args{'SID'} && $args{'SID'});
   $dsn .= ";host=$args{'Host'}" if (defined$args{'Host'} && $args{'Host'});
   $dsn .= ";port=$args{'Port'}" if (defined $args{'Port'} && $args{'Port'});
-  $dsn .= ";requiressl=1" if (defined $args{'RequireSSL'});
+  $dsn .= ";requiressl=1" if (defined $args{'RequireSSL'} && $args{'RequireSSL'});
 
   $self->{'dsn'}= $dsn;
 }
@@ -465,7 +465,8 @@ temporarily suspend Autocommit mode.
 
 sub BeginTransaction {
     my $self = shift;
-    return($self->SimpleQuery('BEGIN'));
+    #Carp::cluck();
+    return($self->dbh->begin_work);
 }
 
 # }}}
@@ -481,7 +482,7 @@ This will turn Autocommit mode back on.
 
 sub Commit {
     my $self = shift;
-    return($self->SimpleQuery('COMMIT'));
+    return($self->dbh->commit);
 }
 
 # }}}
@@ -497,7 +498,7 @@ This will turn Autocommit mode back on.
 
 sub Rollback {
     my $self = shift;
-    return($self->SimpleQuery('ROLLBACK'));
+    return($self->dbh->rollback);
 }
 
 # }}}

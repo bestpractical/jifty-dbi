@@ -7,7 +7,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "0.63";
+$VERSION = "0.70";
 
 =head1 NAME
 

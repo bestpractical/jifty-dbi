@@ -242,7 +242,7 @@ sub _gen_cache_key {
   my ($this, %attr) = @_;
   my $cache_key=$this->Table() . ':';
   while (my ($key, $value) = each %attr) {
-    $cache_key .= $key . '=' . $value . ',';
+    $cache_key .= ($key ||'__undef'). '=' . ($value||'__undef') . ',';
   }
   chop ($cache_key);
   return ($cache_key);

@@ -369,12 +369,16 @@ sub id  {
 
 # }}}
 
+=head2 primary_keys
 =head2 PrimaryKeys
 
 Matt Knopp owes docs for this function.
 
 =cut
 
+
+
+*primary_keys = \&PrimaryKeys;
 sub PrimaryKeys { 
     my $self = shift; 
     my %hash = map { $_ => $self->{'values'}->{$_} } @{$self->{'_PrimaryKeys'}};
@@ -459,6 +463,7 @@ sub AUTOLOAD  {
 
 # {{{ sub _Accessible 
 
+*_accessible = \&Accessible;
 sub _Accessible  {
   my $self = shift;
   my $attr = shift;
@@ -488,6 +493,8 @@ sub _Accessible  {
 
 =cut
 
+
+*_accessible_load = \&AccessibleLoad;
 sub _AccessibleLoad {
   my $self = shift;
   while ( my $col = shift ) {
@@ -526,6 +533,7 @@ overrid __Value.
 
 =cut
 
+*__value = \&__Value;
 sub __Value {
  my $self = shift;
  my $field = shift;
@@ -546,6 +554,7 @@ Subclasses can override _Value to insert custom access control.
 
 =cut
 
+*_value = \&_Value;
 sub _Value  {
   my $self = shift;
   return ($self->__Value(@_));
@@ -563,6 +572,7 @@ Subclasses can override _Set to insert custom access control.
 
 =cut
 
+*_set = \&_Set;
 sub _Set {
     my $self = shift;
     return ($self->__Set(@_));
@@ -570,6 +580,7 @@ sub _Set {
 
 
 
+*__set = \&__Set;
 sub __Set  {
   my $self = shift;
 
@@ -626,6 +637,8 @@ sub __Set  {
 # {{{ sub _Validate 
 
 #TODO: Implement _Validate.
+
+*_validate = \&_Validate;
 sub _Validate  {
     my $self = shift;
     my $field = shift;
@@ -664,6 +677,7 @@ is $id
 =cut
 
 
+*load = \&Load;
 sub Load  {
     my $self = shift;
     my ($package, $filename, $line) = caller;
@@ -680,6 +694,8 @@ which contains unique values.  Behavior when using a non-unique value is
 undefined
 
 =cut
+
+*load_by_col = \&LoadByCol;
 
 sub LoadByCol  {
     my $self = shift;
@@ -701,6 +717,7 @@ keys.
 
 =cut
 
+*load_by_cols = \&LoadByCols;
 sub LoadByCols  {
     my $self = shift;
     my %hash  = (@_);
@@ -732,6 +749,7 @@ TODO: BUG: Column name is currently hard coded to 'id'
 
 =cut
 
+*load_by_id = \&LoadById;
 sub LoadById  {
     my $self = shift;
     my $id = shift;
@@ -742,6 +760,7 @@ sub LoadById  {
 
 # }}}  
 
+*load_by_primary_keys = \&LoadByPrimaryKeys;
 sub LoadByPrimaryKeys {
     my ($self, $data) = @_;
 
@@ -768,6 +787,8 @@ loaded values hash.
 
 =cut
 
+*load_from_hash = \&LoadFromHash;
+
 sub LoadFromHash {
   my $self = shift;
   my $hashref = shift;
@@ -780,6 +801,8 @@ sub LoadFromHash {
 # }}}
 
 # {{{ sub _LoadFromSQL 
+
+*load_from_sql = \&LoadFromSQL;
 
 sub _LoadFromSQL {
     my $self        = shift;
@@ -834,6 +857,8 @@ as columns for this recordtype
 
 =cut 
 
+*create = \&Create;
+
 sub Create  {
     my $self = shift;
     my %attribs = @_;
@@ -851,6 +876,9 @@ sub Create  {
 # }}}
 
 # {{{ sub Delete 
+
+*delete =  \&Delete;
+
 
 sub Delete  {
     my $self = shift;
@@ -885,6 +913,8 @@ Returns or sets the name of the current Table
 
 =cut
 
+*table = \&Table;
+
 sub Table {
     my $self = shift;
     if (@_) {
@@ -903,6 +933,8 @@ sub Table {
 Returns or sets the current DBIx::SearchBuilder::Handle object
 
 =cut
+
+*_handle = \&_Handle;
 sub _Handle  {
     my $self = shift;
     if (@_) {
@@ -925,6 +957,8 @@ This private routine iterates through $self->{'values'} and makes
 sure that all keys are lowercase.
 
 =cut
+
+*_downcase_values_hash = \&DowncaseValuesHash;
 
 sub _DowncaseValuesHash {
     my $self = shift;

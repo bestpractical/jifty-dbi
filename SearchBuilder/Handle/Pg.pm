@@ -25,6 +25,7 @@ sub Connect {
     $self->SUPER::Connect(@_);
     $self->SimpleQuery("SET TIME ZONE 'GMT'");
     $self->SimpleQuery("SET DATESTYLE TO 'ISO'");
+    $self->AutoCommit(1);
     return ($DBIHandle); 
 }
 # }}}
