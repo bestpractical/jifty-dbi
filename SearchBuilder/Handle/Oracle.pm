@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle/Oracle.pm,v 1.11 2001/03/31 07:25:35 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle/Oracle.pm,v 1.12 2001/05/18 02:55:37 jesse Exp $
 
 package DBIx::SearchBuilder::Handle::Oracle;
 use DBIx::SearchBuilder::Handle;
@@ -8,6 +8,24 @@ use vars qw($VERSION @ISA $DBIHandle $DEBUG);
 
 use strict;
 
+=head1 NAME
+
+  DBIx::SearchBuilder::Handle::Oracle -- an oracle specific Handle object
+
+=head1 SYNOPSIS
+
+
+=head1 DESCRIPTION
+
+=head1 AUTHOR
+
+Jesse Vincent, jesse@fsck.com
+
+=head1 SEE ALSO
+
+perl(1), DBIx::SearchBuilder
+
+=cut
 
 
 sub new  {
@@ -111,21 +129,3 @@ sub Insert  {
 
 
 
-=head1 NAME
-
-  DBIx::SearchBuilder::Handle::Oracle -- an oracle specific Handle object
-
-=head1 SYNOPSIS
-
-
-  =head1 DESCRIPTION
-
-=head1 AUTHOR
-
-Jesse Vincent, jesse@fsck.com
-
-=head1 SEE ALSO
-
-perl(1), DBIx::SearchBuilder
-
-=cut
