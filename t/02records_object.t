@@ -3,6 +3,7 @@
 
 use strict;
 use warnings;
+use File::Spec;
 
 use Test::More;
 eval "use DBD::SQLite";
@@ -16,7 +17,7 @@ my $handle = DBIx::SearchBuilder::Handle::SQLite->new();
 
 isa_ok($handle, 'DBIx::SearchBuilder::Handle');
 isa_ok($handle, 'DBIx::SearchBuilder::Handle::SQLite');
-$handle->Connect( Driver => 'SQLite', Database => "/tmp/sb-test.$$" );
+$handle->Connect( Driver => 'SQLite', Database => File::Spec->tmpdir()."sb-test.$$" );
 can_ok($handle, 'dbh');
 isa_ok($handle->dbh, 'DBI::db');
 foreach( @{ TestApp->schema } ) {
