@@ -773,6 +773,9 @@ sub TruncateValue {
     my $key   = shift;
     my $value = shift;
 
+    # We don't need to truncate empty things.
+    return undef unless (defined ($value));
+
     my $metadata = $self->_ClassAccessible->{$key};
 
     my $truncate_to;
