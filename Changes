@@ -1,5 +1,8 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+0.88 June 23 2003
+        - More correct generation of "Distinct" keyword on counts for queries with left joins
+
 0.87 June 16 2003
         - Changed DBIx::SB::Record::Cachable to expire cached object when a "deeper" method call changes their values
 

@@ -5,7 +5,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "0.87";
+$VERSION = "0.88";
 
 =head1 NAME
 
@@ -110,7 +110,7 @@ sub _DoSearch {
     $QueryString = $self->_BuildJoins . " ";
 
     # DISTINCT query only required for multi-table selects
-    if ($QueryString) {
+    if ($self->_isJoined) {
         $self->_DistinctQuery(\$QueryString, $self->{'table'});
     } else {
         $QueryString = "SELECT main.* FROM $QueryString";
@@ -202,10 +202,10 @@ sub _DoCount {
     # one place where we build most of the querystring
 
     # DISTINCT query only required for multi-table selects
-    if ($#{$self->{'aliases'}} < 0) {
-        $QueryString = "SELECT count(main.id) FROM ";
-    } else {
+    if ($self->_isJoined) {
         $QueryString = "SELECT count(DISTINCT main.id) FROM ";
+    } else {
+        $QueryString = "SELECT count(main.id) FROM ";
     }
 
     $QueryString .= $self->_BuildJoins . " ";
@@ -306,26 +306,48 @@ sub _BuildJoins {
     my $self = shift;
 
     # if we have a handle specific query builder, let's use that
-    if ($self->_Handle->can('_BuildJoins')) {
-        return ($self->_Handle->_BuildJoins($self));
+    if ( $self->_Handle->can('_BuildJoins') ) {
+        return ( $self->_Handle->_BuildJoins($self) );
     }
 
     #Otherwise, let's do something generic
 
-
     my $join_clause = $self->{'table'} . " main";
 
-
-
     foreach my $join ( keys %{ $self->{'left_joins'} } ) {
-        $join_clause = "( " . $join_clause . $self->{'left_joins'}{$join}{'alias_string'} . " ON  (" .
-          join ( ') AND ( ', values %{ $self->{'left_joins'}{$join}{'criteria'} }) . 
-            "))";
+        $join_clause = "( "
+          . $join_clause
+          . $self->{'left_joins'}{$join}{'alias_string'}
+          . " ON  ("
+          . join ( ') AND ( ',
+                   values %{ $self->{'left_joins'}{$join}{'criteria'} } )
+          . "))";
     }
-    my   $aliases = join ( ", ", @{ $self->{'aliases'} } );
+    my $aliases = join ( ", ", @{ $self->{'aliases'} } );
     $join_clause .= ", $aliases" if ($aliases);
 
-   return ($join_clause);
+    return ($join_clause);
+
+}
+
+# }}}
+# {{{ sub _isJoined
+
+=head2 _isJoined 
+
+Returns true if this Searchbuilder requires joins between tables
+
+=cut
+
+sub _isJoined {
+    my $self = shift;
+    if ($self->{'left_joins'} || $self->{'aliases'}) {
+        return(1);
+    } else {
+        return undef;
+
+     }
+    
 
 }
 
