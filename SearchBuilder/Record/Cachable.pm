@@ -162,12 +162,12 @@ sub _gc_expired () {
   my ($this) = @_; 
   
   foreach my $cache_key (keys %{$this->_KeyCache}) {
-    my $cache_time = $this->_RecordCache->{$cache_key}{'time'};  
+    my $cache_time = $this->_RecordCache->{$cache_key}{'time'} || 0;  
     $this->_expire($cache_key) 
       if ((time() - $cache_time) > $this->{'_CacheConfig'}{'cache_for_sec'});
   }
   foreach my $cache_key (keys %{$this->_RecordCache}) {
-    my $cache_time = $this->_RecordCache->{$cache_key}{'time'};  
+    my $cache_time = $this->_RecordCache->{$cache_key}{'time'} || 0 ;  
     $this->_expire($cache_key) 
       if ((time() - $cache_time) > $this->{'_CacheConfig'}{'cache_for_sec'});
   }
