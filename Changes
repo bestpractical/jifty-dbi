@@ -1,5 +1,9 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+0.85 June 7 2003
+        - Stan's destroy fix was actually badly breaking RT
+        - It's now an optional parameter.
+
 0.84 June 4 2003
         - Bumped the version for release
 

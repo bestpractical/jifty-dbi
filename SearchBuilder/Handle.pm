@@ -98,7 +98,11 @@ sub Insert {
 
 Takes a paramhash and connects to your DBI datasource. 
 
+You should _always_ set
 
+     DisconnectHandleOnDestroy => 1 
+
+unless you have a legacy app like RT2 or RT 3.0.{0,1,2} that depends on the broken behaviour.
 =cut
 
 sub Connect  {
@@ -112,11 +116,20 @@ sub Connect  {
 	       User => undef,
 	       Password => undef,
 	       RequireSSL => undef,
+           DisconnectHandleOnDestroy => undef,
 	       @_);
+
+    my $dsn = $self->DSN;
+
+    # Setting this actually breaks old RT versions in subtle ways. So we need to explicitly call it
+
+    $self->{'DisconnectHandleOnDestroy'} = $args{'DisconnectHandleOnDestroy'};
 
   $self->BuildDSN(%args);
 
-  my $handle = DBI->connect($self->DSN, $args{'User'}, $args{'Password'}) || croak "Connect Failed $DBI::errstr\n" ;
+    # Only connect if we're not connected to this source already
+   if ((! $self->dbh ) || ($self->DSN ne $dsn) ) { 
+     my $handle = DBI->connect($self->DSN, $args{'User'}, $args{'Password'}) || croak "Connect Failed $DBI::errstr\n" ;
  
   #databases do case conversion on the name of columns returned. 
   #actually, some databases just ignore case. this smashes it to something consistent 
@@ -124,8 +137,11 @@ sub Connect  {
 
   #Set the handle 
   $self->dbh($handle);
-
   return (1); 
+    }
+
+    return(undef);
+
 }
 # }}}
 
@@ -248,7 +264,11 @@ Disconnect from your DBI datasource
 
 sub Disconnect  {
   my $self = shift;
-  return ($self->dbh->disconnect());
+  if ($self->dbh) {
+      return ($self->dbh->disconnect());
+  } else {
+      return;
+  }
 }
 
 # }}}
@@ -739,9 +759,7 @@ When we get rid of the Searchbuilder::Handle, we need to disconnect from the dat
   
 sub DESTROY {
   my $self = shift;
-  if( defined $self->dbh ) {
-    $self->Disconnect();
-  }
+  $self->Disconnect if $self->{'DisconnectHandleOnDestroy'};
 }
 
 
