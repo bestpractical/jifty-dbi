@@ -127,7 +127,7 @@ sub Connect  {
 
 # {{{ BuildDSN
 
-=item  BuildDSN PARAMHASH
+=head2 BuildDSN PARAMHASH
 
 Takes a bunch of parameters:  
 
@@ -162,7 +162,7 @@ sub BuildDSN {
 
 # {{{ DSN
 
-=item DSN
+=head2 DSN
 
     Returns the DSN for this database connection.
 
@@ -373,6 +373,15 @@ sub SimpleQuery  {
 	    return ($ret->return_value);
 	}
     }
+    # Check @bind_values for HASH refs 
+    for (my $bind_idx = 0; $bind_idx < scalar @bind_values; $bind_idx++) {
+        if (ref($bind_values[$bind_idx]) eq "HASH") {
+            my $bhash = $bind_values[$bind_idx];
+            $bind_values[$bind_idx] = $bhash->{'value'};
+            delete $bhash->{'value'};
+            $sth->bind_param($bind_idx+1, undef, $bhash );
+        }
+    }
     unless ( $sth->execute(@bind_values) ) {
         if ($DEBUG) {
             die "$self couldn't execute the query '$QueryString'"
@@ -436,6 +445,39 @@ Returns undef if the current database doesn't support BLOBs with embedded nulls
 sub BinarySafeBLOBs {
     my $self = shift;
     return(1);
+}
+
+# }}}
+
+# {{{ KnowsBLOBs
+
+=head2 KnowsBLOBs
+
+Returns 1 if the current database supports inserts of BLOBs automatically.
+Returns undef if the current database must be informed of BLOBs for inserts.
+
+=cut
+
+sub KnowsBLOBs {
+    my $self = shift;
+    return(1);
+}
+
+# }}}
+
+# {{{ BLOBParams
+
+=head2 BLOBParams FIELD_NAME FIELD_TYPE
+
+Returns a hash ref for the bind_param call to identify BLOB types used by 
+the current database for a particular column type.                 
+
+=cut
+
+sub BLOBParams {
+    my $self = shift;
+    # Don't assign to key 'value' as it is defined later. 
+    return ( {} );
 }
 
 # }}}

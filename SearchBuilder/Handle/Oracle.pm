@@ -107,7 +107,10 @@ sub Insert  {
     #TODO: don't hardcode this to id pull it from somewhere else
     #call super::Insert with the new column id.
 
-   $sth =  $self->SUPER::Insert( $table, 'id', $unique_id, @_);
+    my %attribs = @_;
+    $attribs{'id'} = $unique_id;
+    delete $attribs{'Id'};
+    $sth =  $self->SUPER::Insert( $table, %attribs);
 
    unless ($sth) {
      if ($main::debug) {
@@ -121,6 +124,81 @@ sub Insert  {
     $self->{'id'} = $unique_id;
     return( $self->{'id'}); #Add Succeded. return the id
   }
+
+# }}}
+
+# {{{ BuildDSN
+
+=head2  BuildDSN PARAMHASH
+
+Takes a bunch of parameters:  
+
+Required: Driver, Database or Host/SID,
+Optional: Port and RequireSSL
+
+Builds a DSN suitable for an Oracle DBI connection
+
+=cut
+
+sub BuildDSN {
+    my $self = shift;
+  my %args = ( Driver => undef,
+	       Database => undef,
+	       Host => undef,
+	       Port => undef,
+           SID => undef,
+	       RequireSSL => undef,
+	       @_);
+  
+  my $dsn = "dbi:$args{'Driver'}:";
+
+  if (defined $args{'Host'} && $args{'Host'} 
+   && defined $args{'SID'}  && $args{'SID'} ) {
+      $dsn .= "host=$args{'Host'};sid=$args{'SID'}";
+  } else {
+      $dsn .= "$args{'Database'}" if (defined $args{'Database'} && $args{'Database'});
+  }
+  $dsn .= ";port=$args{'Port'}" if (defined $args{'Port'} && $args{'Port'});
+  $dsn .= ";requiressl=1" if (defined $args{'RequireSSL'} && $args{'RequireSSL'});
+
+  $self->{'dsn'}= $dsn;
+}
+
+# }}}
+
+# {{{ KnowsBLOBs      
+
+=head2 KnowsBLOBs     
+
+Returns 1 if the current database supports inserts of BLOBs automatically.      
+Returns undef if the current database must be informed of BLOBs for inserts.    
+
+=cut
+
+sub KnowsBLOBs {     
+    my $self = shift;
+    return(undef);
+}
+
+# }}}
+
+# {{{ BLOBParams 
+
+=head2 BLOBParams FIELD_NAME FIELD_TYPE
+
+Returns a hash ref for the bind_param call to identify BLOB types used by 
+the current database for a particular column type.
+The current Oracle implementation only supports ORA_CLOB types (112).
+
+=cut
+
+sub BLOBParams { 
+    my $self = shift;
+    my $field = shift;
+    #my $type = shift;
+    # Don't assign to key 'value' as it is defined later.
+    return ( { ora_field => $field, ora_type => 112 });    
+}
 
 # }}}
 
