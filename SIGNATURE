@@ -19,7 +19,7 @@ SHA1 18140f7c18568ff61e968e3bb5fe62a70fff433a MANIFEST
 SHA1 ff5270f1d83d26e8bcf23b283a0b52359ecc611b MANIFEST.SKIP
 SHA1 93c3ffd5e03ad4f0bdfe842a7b556dbc1499d42d META.yml
 SHA1 7d39dfda212a6558dae2123aa958e033c8f310bd Makefile.PL
-SHA1 fdff9c0cf690b334b13801a1656de0cec2dbce70 SearchBuilder.pm
+SHA1 9b7866b25a6b2809961dd9a9ece13e8981f218e3 SearchBuilder.pm
 SHA1 e45a572eb0906d74425cf4ce8c6cf280eb066cba SearchBuilder/Handle.pm
 SHA1 35f764ab7e3c675ffc568f5bcb1ebf921813d801 SearchBuilder/Handle/ODBC.pm
 SHA1 b7fd5ef2fcb2f18ff19a6561bfec4122995daa57 SearchBuilder/Handle/Oracle.pm
@@ -40,7 +40,7 @@ SHA1 71ce3b59b3feeca937fccd3f18c146d8ccbbf6a5 test.pl
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.2.3 (Darwin)
 
-iD8DBQE/oUd2QaM/s3DrrJARAuldAKC/FWtRB5XyGOox79MMuK/t8MpNnwCgoEdr
-0bXov6dSSKyGZYT+6SDN4ys=
-=r2Wo
+iD8DBQE/oUgPQaM/s3DrrJARAiY5AKDhvcH/xjTDrXwnpHhT0pwpM3ssOwCfe4yc
+YmhX/tZEe6Xj9Cw5mUurnYw=
+=UQiQ
 -----END PGP SIGNATURE-----
