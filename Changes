@@ -1,5 +1,8 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+1.18
+    - Release the changes from 1.17
+
 1.17_03
     - Properly mark BLOB columns in UPDATE calls. (DBD::Oracle 1.16 broke without this)
 
