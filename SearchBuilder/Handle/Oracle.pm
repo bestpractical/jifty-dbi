@@ -1,12 +1,12 @@
 # $Header: /home/jesse/DBIx-SearchBuilder/history/SearchBuilder/Handle/Oracle.pm,v 1.14 2002/01/28 06:11:37 jesse Exp $
 
-package DBIx::SearchBuilder::Handle::Oracle;
-use DBIx::SearchBuilder::Handle;
-@ISA = qw(DBIx::SearchBuilder::Handle);
-
-use vars qw($VERSION @ISA $DBIHandle $DEBUG);
-
 use strict;
+package DBIx::SearchBuilder::Handle::Oracle;
+use base qw/DBIx::SearchBuilder::Handle/;
+use DBD::Oracle qw(:ora_types);
+         
+use vars qw($VERSION $DBIHandle $DEBUG);
+
 
 =head1 NAME
 
@@ -191,7 +191,7 @@ sub BLOBParams {
     my $field = shift;
     #my $type = shift;
     # Don't assign to key 'value' as it is defined later.
-    return ( { ora_field => $field, ora_type => 112 });    
+    return ( { ora_field => $field, ora_type => ORA_CLOB });    
 }
 
 # }}}

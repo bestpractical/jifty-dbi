@@ -1148,8 +1148,7 @@ sub Create {
         my $ca = $self->_ClassAccessible();
         foreach $key ( keys %attribs ) {
             if ( $ca->{$key}->{'type'} =~ /^(text|longtext|clob|blob|lob)$/i ) {
-                my $bhash =
-                  $self->_Handle->BLOBParams( $key, $ca->{$key}->{'type'} );
+                my $bhash = $self->_Handle->BLOBParams( $key, $ca->{$key}->{'type'} );
                 $bhash->{'value'} = $attribs{$key};
                 $attribs{$key} = $bhash;
             }
