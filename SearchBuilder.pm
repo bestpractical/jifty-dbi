@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder.pm,v 1.23 2001/06/01 00:36:46 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder.pm,v 1.24 2001/06/01 18:34:14 jesse Exp $
 
 # {{{ Version, package, new, etc
 
@@ -7,7 +7,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "0.37";
+$VERSION = "0.38";
 
 =head1 NAME
 
@@ -105,14 +105,15 @@ sub _DoSearch  {
     my ($QueryString, $Order);
     
     
-    $QueryString = "SELECT main.* FROM " . $self->_TableAliases . " " ;
+    $QueryString = "SELECT DISTINCT main.* FROM " . $self->_TableAliases . " " ;
     
     $QueryString .= $self->_LeftJoins . " ";
 
     $QueryString .= $self->_WhereClause . " ".  $self->{'table_links'}. " " 
       if ($self->_isLimited > 0);
    
-    $QueryString .= $self->_GroupByClause. " ";
+    # TODO: GroupBy won't work with postgres.
+    # $QueryString .= $self->_GroupByClause. " ";
     
     $QueryString .=  $self->_OrderClause . $self->_LimitClause;
     
