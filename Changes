@@ -1,8 +1,12 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+
+
 1.13
     - Silenced warnings about uninitialized warnings when inserting null cols
       into the database.
+
+    - Started adding lowercase method name aliases
 
 1.12
     - Better error handling for some query build failure cases

@@ -1049,6 +1049,12 @@ sub Create  {
 
 # {{{ sub Delete 
 
+=head2 Delete
+
+  Delete this record from the database. On failure return a Class::ReturnValue with the error. On success, return 1;
+
+=cut
+
 *delete =  \&Delete;
 
 sub Delete {
@@ -1072,7 +1078,14 @@ sub __Delete {
 
     $where =~ s/AND\s$//;
     my $QueryString = "DELETE FROM ". $self->Table . ' ' . $where;
-    return($self->_Handle->SimpleQuery($QueryString, @bind));
+   my $return = $self->_Handle->SimpleQuery($QueryString, @bind);
+
+    if (UNIVERSAL::isa('Class::ReturnValue')) {
+        return ($return);
+    } else {
+        return(1); 
+    } 
+
 }
 
 # }}}
