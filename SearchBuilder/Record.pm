@@ -525,6 +525,36 @@ class.
 
 # }}}
 
+=head2 ReadableAttributes
+
+Returns an array of the attributes of this class defined as "read" => 1 in this class' _ClassAccessible datastructure
+
+=cut
+
+sub ReadableAttributes {
+    my $self = shift;
+    my $ca = $self->_ClassAccessible();
+    my @readable = grep { $ca->{$_}->{read}} keys %{$ca};
+    return (@readable);
+}
+
+
+=head2 WritableAttributes
+
+Returns an array of the attributes of this class defined as "write" => 1 in this class' _ClassAccessible datastructure
+
+=cut
+
+sub WritableAttributes {
+    my $self = shift;
+    my $ca = $self->_ClassAccessible();
+    my @writable = grep { $ca->{$_}->{write}} keys %{$ca};
+    return (@writable);
+
+}
+
+
+
 # {{{ sub __Value {
 
 =head2 __Value

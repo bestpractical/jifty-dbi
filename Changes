@@ -1,5 +1,8 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+0.79 Jan 19 2003
+        - ReadableAttributes and WritableAttributes added as methods to Record.pm
+
 0.78 Jan 16 2003
         - SB->Count should return no results unless the search is limited
         - Eliminate a warning on empty searches
