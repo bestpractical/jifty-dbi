@@ -123,12 +123,12 @@ sub LoadByCols {
 # Args    : see DBIx::SearchBuilder::Record::_Set
 # Lvalue  : ?
 
-sub _Set () { 
+sub __Set () { 
   my ($this, %attr) = @_; 
 
   $this->_expire( $this->_gen_primary_cache_key());
  
-  return $this->SUPER::_Set(%attr);
+  return $this->SUPER::__Set(%attr);
 
 }
 

@@ -1,5 +1,8 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+0.87 June 16 2003
+        - Changed DBIx::SB::Record::Cachable to expire cached object when a "deeper" method call changes their values
+
 0.86 June 7 2003
         - Doing conditional connections was failing on postgres, because the handle was defined, but not connected
 

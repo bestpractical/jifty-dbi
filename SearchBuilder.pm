@@ -5,11 +5,11 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "0.86";
+$VERSION = "0.87";
 
 =head1 NAME
 
-DBIx::SearchBuilder - Perl extension for easy SQL SELECT Statement generation
+DBIx::SearchBuilder - Encapsulate SQL queries and rows in simple perl objects
 
 =head1 SYNOPSIS
 
