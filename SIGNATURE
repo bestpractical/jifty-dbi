@@ -1,5 +1,5 @@
 This file contains message digests of all files listed in MANIFEST,
-signed via the Module::Signature module, version 0.37.
+signed via the Module::Signature module, version 0.35.
 
 To verify the content in this distribution, first make sure you have
 Module::Signature installed, then type:
@@ -14,13 +14,14 @@ not run its Makefile.PL or Build.PL.
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA1
 
-SHA1 6e0f93db0202bcec9f27e9578fd409e875e513a5 Changes
-SHA1 18140f7c18568ff61e968e3bb5fe62a70fff433a MANIFEST
+SHA1 ed87937a3c665efcf58c6e66f840e1d96ab1eb3a Changes
+SHA1 b0ce864348c4270aeba74aa089f052464442e263 MANIFEST
 SHA1 ff5270f1d83d26e8bcf23b283a0b52359ecc611b MANIFEST.SKIP
 SHA1 93c3ffd5e03ad4f0bdfe842a7b556dbc1499d42d META.yml
 SHA1 7d39dfda212a6558dae2123aa958e033c8f310bd Makefile.PL
-SHA1 79a9756bb2e4ed06042700a968fd65d143bfd419 SearchBuilder.pm
-SHA1 e45a572eb0906d74425cf4ce8c6cf280eb066cba SearchBuilder/Handle.pm
+SHA1 62e36e92fb70230cbf0fed1a513a09a74d0ec78e SearchBuilder.pm
+SHA1 47e0932f707b28fb6296b72b62ce27817264eded SearchBuilder/Handle.pm
+SHA1 68a6d7d744e5d123e3c8b59041d12253fcee5d04 SearchBuilder/Handle/Informix.pm
 SHA1 35f764ab7e3c675ffc568f5bcb1ebf921813d801 SearchBuilder/Handle/ODBC.pm
 SHA1 b7fd5ef2fcb2f18ff19a6561bfec4122995daa57 SearchBuilder/Handle/Oracle.pm
 SHA1 b20492f890fa9c34ca3ca38847bcac0b090b1d4a SearchBuilder/Handle/Pg.pm
@@ -38,9 +39,10 @@ SHA1 02a89263781b0a3364d09c3c8f2bafb83f1f4549 inc/Module/Install/Metadata.pm
 SHA1 eb3a15cf26737881d10b02c51d5074cc9fe10443 inc/Module/Install/Win32.pm
 SHA1 71ce3b59b3feeca937fccd3f18c146d8ccbbf6a5 test.pl
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.3 (GNU/Linux)
+Version: GnuPG v1.0.6 (GNU/Linux)
+Comment: For info see http://www.gnupg.org
 
-iD8DBQE/tIC8QaM/s3DrrJARApNsAKCe9mwV82jn9Nyff5pbgyBnQziCewCg4aeR
-q+DNkQm+kwQVsccwx0Lvyxc=
-=cGOA
+iEYEARECAAYFAj+2v1kACgkQQaM/s3DrrJAgKwCg5p3/5b1alK5Yb/vwxrmzOmLo
+bwAAoLiLKuDNV7GhD5tMu2T2cRDNY4xB
+=WTL9
 -----END PGP SIGNATURE-----

@@ -9,6 +9,7 @@ SearchBuilder/Handle/mysql.pm
 SearchBuilder/Handle/mysqlPP.pm
 SearchBuilder/Record/Cachable.pm
 SearchBuilder/Handle/Oracle.pm
+SearchBuilder/Handle/Informix.pm
 SearchBuilder/Handle/SQLite.pm
 SearchBuilder/Handle/Pg.pm
 SearchBuilder/Handle/ODBC.pm

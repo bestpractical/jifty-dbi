@@ -4,7 +4,7 @@ use Carp;
 use DBI;
 use strict;
 use Class::ReturnValue;
-use vars qw($VERSION @ISA %DBIHandle $DEBUG $TRANSDEPTH);
+use vars qw($VERSION @ISA %DBIHandle $PrevHandle $DEBUG $TRANSDEPTH);
 
 $TRANSDEPTH = 0;
 
@@ -288,9 +288,9 @@ sub dbh {
   my $self=shift;
   
   #If we are setting the database handle, set it.
-  $DBIHandle{$self} = shift if (@_);
+  $DBIHandle{$self} = $PrevHandle = shift if (@_);
 
-  return($DBIHandle{$self});
+  return($DBIHandle{$self} ||= $PrevHandle);
 }
 
 # }}}

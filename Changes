@@ -1,5 +1,7 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+0.94-   - Fix for multiple handles in one app from Autrijus Tang
+
 0.93 
         - Added ODBC database driver from Autrijus Tang
         - Added the ability to sort on functions of columns from Autrijus Tang
