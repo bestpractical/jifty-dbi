@@ -1,12 +1,13 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle/mysql.pm,v 1.4 2001/01/11 00:05:13 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle/mysql.pm,v 1.5 2001/01/25 03:06:31 jesse Exp $
 
 package DBIx::SearchBuilder::Handle::mysql;
 use DBIx::SearchBuilder::Handle;
 @ISA = qw(DBIx::SearchBuilder::Handle);
 
+use vars qw($VERSION @ISA $DBIHandle $DEBUG);
 
 
-
+use strict;
 # {{{ sub Insert
 
 =head2 Insert
@@ -22,10 +23,10 @@ sub Insert  {
     my $sth = $self->SUPER::Insert(@_);
     if (!$sth) {
        if ($main::debug) {
-       	die "Error with $QueryString: ". $self->dbh->errstr;
+       	die "Error with Insert: ". $self->dbh->errstr;
       }
        else {
-	    return (0);
+	    return (undef);
        }
      }
 

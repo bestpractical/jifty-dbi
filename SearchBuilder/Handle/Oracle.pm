@@ -1,8 +1,12 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle/Oracle.pm,v 1.6 2000/10/23 22:01:34 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle/Oracle.pm,v 1.7 2001/01/25 03:06:31 jesse Exp $
 
 package DBIx::SearchBuilder::Handle::Oracle;
 use DBIx::SearchBuilder::Handle;
 @ISA = qw(DBIx::SearchBuilder::Handle);
+
+use vars qw($VERSION @ISA $DBIHandle $DEBUG);
+
+use strict;
 
 
 
@@ -32,7 +36,7 @@ sub Connect {
     
     $self->SimpleQuery("ALTER SESSION set NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS'");
     
-    return ($Handle); 
+    return ($DBIHandle); 
 }
 # }}}
 
@@ -54,7 +58,7 @@ sub Insert  {
 
   # Oracle Hack to replace non-supported mysql_rowid call
  
-    $QueryString = "SELECT ".$table."_seq.nextval FROM DUAL";
+    my $QueryString = "SELECT ".$table."_seq.nextval FROM DUAL";
  
     $sth = $self->SimpleQuery($QueryString);
     if (!$sth) {

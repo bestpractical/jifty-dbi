@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder.pm,v 1.10 2001/01/16 04:59:06 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder.pm,v 1.12 2001/01/24 23:08:17 jesse Exp $
 
 # {{{ Version, package, new, etc
 
@@ -7,7 +7,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "0.19";
+$VERSION = "0.20";
 
 =head1 NAME
 
@@ -145,15 +145,15 @@ sub _DoSearch  {
     # TODO: this could be made much more efficient
     
     while (my $row = $self->{'records'}->fetchrow_hashref()) {
-	
-	$counter++;
-	
+		
 	$self->{'items'}[$counter] = $self->NewItem();
 	$self->{'items'}[$counter]->LoadFromHash($row);
 	
 	print STDERR "ID is ". $self->{'items'}[$counter]->Id()."\n"
 	  if ($self->DEBUG);
 	
+
+	$counter++;
     }
     
     #How many rows did we get out of that?
@@ -231,13 +231,14 @@ sub Next  {
     my $self = shift;
     my @row;
     
-    return(undef) if (!$self->_isLimited);
+    return(undef) unless ($self->_isLimited);
     
     $self->_DoSearch() if ($self->{'must_redo_search'} != 0);
     
     if ($self->{'itemscount'} < $self->{'rows'}) { #return the next item
+	my $item = ($self->{'items'}[$self->{'itemscount'}]);
 	$self->{'itemscount'}++;
-	return ($self->{'items'}[$self->{'itemscount'}]);
+	return ($item);
     }
     else { #we've gone through the whole list. reset the count.
 	$self->GotoFirstItem();
@@ -297,6 +298,29 @@ sub First  {
 
 # }}}
 
+# {{{ ItemsArrayRef 
+
+=head2 ItemsArrayRef
+
+Return a refernece to an array containing all objects found by this search.
+
+=cut
+
+sub ItemsArrayRef {
+    my $self = shift;
+    
+    #If we're not limited, return an empty array
+    return [] unless $self->_isLimited;
+    
+    #Do a search if we need to.
+    $self->_DoSearch() if $self->{'must_redo_search'};
+
+    #If we've got any items in the array, return them.
+    # Otherwise, return an empty array
+    return ($self->{'items'} || []);
+}
+
+# }}}
 # {{{ sub NewItem 
 
 =head2 NewItem

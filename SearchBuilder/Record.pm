@@ -1,4 +1,4 @@
-#$Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Record.pm,v 1.13 2001/01/10 04:49:15 jesse Exp $
+#$Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Record.pm,v 1.16 2001/01/30 05:01:09 jesse Exp $
 package DBIx::SearchBuilder::Record;
 
 use strict;
@@ -28,16 +28,22 @@ DBIx::SearchBuilder::Record - Perl extension for subclassing, so you can deal wi
       return($self->SUPER::_Init(@_));
   }
   
-  # The subroutine _Accessible is used by the autoloader 
-  # to construct Attrib and SetAttrib methods.
+  #Preferred and most efficient way to specify fields attributes in a derived
+  #class, used by the autoloader to construct Attrib and SetAttrib methods.
 
-  # If a hash key, Foo in %Cols has a value matching /read/, then
-  # calling $Object->Foo will return the value of this record's Foo column
+  # read: calling $Object->Foo will return the value of this record's Foo column  # write: calling $Object->SetFoo with a single value will set Foo's value in
+  #        both the loaded object and the database
 
-  # If a hash key, Foo in %Cols has a value matching /write/, then
-  # calling $Object->SetFoo with a single value will set Foo's value in both
-  # the loaded object and the database.
- 
+  sub _ClassAccessible {
+    { 
+	 Tofu  => { 'read'=>1, 'write'=>1 },
+         Maz   => { 'auto'=>1, },
+         Roo   => { 'read'=>1, 'auto'=>1, 'public'=>1, },
+    };
+  }
+
+  # specifying an _Accessible subroutine in a derived class is depriciated.
+  # only '/' and ',' delimiters work, not full regexes
   
   sub _Accessible  {
       my $self = shift;
@@ -91,6 +97,7 @@ DBIx::SearchBuilder::Record - Perl extension for subclassing, so you can deal wi
 DBIx::SearchBuilder::Record is designed to work with DBIx::SearchBuilder.
 
 =head1 METHODS
+
 =cut
 
 # Preloaded methods go here.
@@ -106,6 +113,8 @@ sub new  {
     my $self  = {};
     bless ($self, $class);
     $self->_Init(@_);
+    $self->{'_AccessibleCache'} = $self->_ClassAccessible()
+      if $self->can('_ClassAccessible');
     return $self;
   }
 
@@ -194,18 +203,60 @@ sub AUTOLOAD  {
 sub _Accessible  {
   my $self = shift;
   my $attr = shift;
-  my $mode = shift;
-  my %cols = @_;
+  my $mode = lc(shift);
+  if ( !defined($self->{'_AccessibleCache'}) && @_ ) {
+    my %cols = @_;
+    $self->_AccessibleLoad( map { $_ => $cols{$_} }
+#      grep !defined($self->{'_AccessibleCache'}->{$_}),
+       keys %cols
+    );
+
+  }
 
   #return 0 if it's not a valid attribute;
-  return undef unless ($cols{"$attr"});
+  return 0 unless defined($self->{'_AccessibleCache'}->{$attr});
   
   #  return true if we can $mode $Attrib;
-  $cols{$attr} =~ /$mode/i;
+  local($^W)=0;
+  $self->{'_AccessibleCache'}->{$attr}->{$mode} || 0;
 }
 
 # }}}
 
+# {{{ sub _AccessibleLoad
+
+=head2 _AccessibleLoad COLUMN => OPERATIONS, ...
+
+=cut
+
+sub _AccessibleLoad {
+  my $self = shift;
+  while ( my $col = shift ) {
+    $self->{'_AccessibleCache'}->{$col}->{lc($_)} = 1
+      foreach split(/[\/,]/, shift);
+  }
+}
+
+# }}}
+
+# {{{ sub _ClassAccessible
+
+=head2 _ClassAccessible HASHREF
+
+Preferred and most efficient way to specify fields attributes in a derived
+class.
+
+  sub _ClassAccessible {
+    { 
+	 Tofu  => { 'read'=>1, 'write'=>1 },
+         Maz   => { 'auto'=>1, },
+         Roo   => { 'read'=>1, 'auto'=>1, 'public'=>1, },
+    };
+  }
+
+=cut
+
+# }}}
 
 # {{{ sub __Value {
 
@@ -371,21 +422,22 @@ keys.
 sub LoadByCols  {
     my $self = shift;
     my %hash  = (@_);
-
-    my ($key, @phrases, $val);
-    foreach $key (keys %hash) {
-	
-	$val = $self->_Handle->safe_quote($hash{$key});	
-	my $phrase = "$key = $val";
-	push (@phrases, $phrase);
-    }	
-    
-    
+    my (@bind, @phrases);
+    foreach my $key (keys %hash) {  
+	if (defined $hash{$key}) {
+		push @phrases, "$key = ?"; 
+		push @bind, $hash{$key}; 
+	}
+	else {
+		push @phrases, "$key is null";
+	}
+    }
     
     my $QueryString = "SELECT  * FROM ".$self->Table." WHERE ". 
-      join(' AND ', @phrases) ;
-    return ($self->_LoadFromSQL($QueryString));
-  }
+    join(' AND ', @phrases) ;
+    return ($self->_LoadFromSQL($QueryString, @bind));
+}
+
 
 # }}}
 
@@ -405,6 +457,7 @@ sub LoadById  {
     $id = 0 if (!defined($id));
     return ($self->LoadByCols('id',$id));
 }
+
 # }}}  
 
 # {{{ sub LoadFromHash
@@ -431,10 +484,10 @@ sub LoadFromHash {
 sub _LoadFromSQL  {
     my $self = shift;
     my $QueryString = shift;
+    my @bind_values = (@_);
     
-    my $sth = $self->_Handle->SimpleQuery($QueryString);
-    
-
+    my $sth = $self->_Handle->SimpleQuery($QueryString, @bind_values);
+        
     #TODO this only gets the first row. we should check if there are more.
 
     eval {
@@ -498,8 +551,9 @@ sub Delete  {
     
     #TODO Check to make sure the key's not already listed.
     #TODO Update internal data structure
-    my $QueryString = "DELETE FROM ".$self->Table . " WHERE id  = ". $self->id();
-    return($self->_Handle->SimpleQuery($QueryString));
+    my $QueryString = "DELETE FROM ". $self->Table . " WHERE id  = ?"; 
+    
+    return($self->_Handle->SimpleQuery($QueryString, $self->Id));
   }
 
 # }}}
@@ -578,7 +632,8 @@ __END__
 
 =head1 AUTHOR
 
-Jesse Vincent, jesse@fsck.com
+Jesse Vincent, <jesse@fsck.com> 
+Ivan Kohler, <ivan-rt@420.am>
 
 =head1 SEE ALSO
 

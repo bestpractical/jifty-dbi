@@ -1,9 +1,9 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle.pm,v 1.11 2001/01/16 04:59:06 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle.pm,v 1.12 2001/01/25 03:06:31 jesse Exp $
 package DBIx::SearchBuilder::Handle;
 use Carp;
 use DBI;
 use strict;
-use vars qw($VERSION @ISA $DBIHandle);
+use vars qw($VERSION @ISA $DBIHandle $DEBUG);
 
 
 $VERSION = '$Version$';
@@ -56,7 +56,7 @@ sub new  {
     my $self  = {};
     bless ($self, $class);
     return $self;
-  }
+}
 
 # }}}
 
@@ -69,31 +69,25 @@ Takes a table name and a set of key-value pairs in an array. splits the key valu
 
 sub Insert {
   my($self, $table, @pairs) = @_;
-  my(@cols, @vals);
+  my(@cols, @vals, @bind);
 
 #  my %seen; #only the *first* value is used - allows drivers to specify default
   while ( my $key = shift @pairs ) {
     my $value = shift @pairs;
-#    next if $seen{$key}++;
+    #    next if $seen{$key}++;
     push @cols, $key;
-    if ( defined($value) ) {
-      $value = $self->safe_quote($value)
-        unless ( $key eq 'Created' || $key eq 'LastUpdated' )
-               && lc($value) eq 'now()';
-      push @vals, $value;
-    } else {
-      push @vals, 'NULL';
-    }
+    push @vals, '?';
+    push @bind, $value;  
   }
 
   my $QueryString =
     "INSERT INTO $table (". join(", ", @cols). ") VALUES ".
     "(". join(", ", @vals). ")";
-  #warn $QueryString;
-
-   my $sth =  $self->SimpleQuery($QueryString);
-   return ($sth);
-}
+    warn $QueryString if $DEBUG;
+    
+    my $sth =  $self->SimpleQuery($QueryString, @bind);
+    return ($sth);
+  }
 # }}}
 
 # {{{ sub Connect 
@@ -111,6 +105,7 @@ sub Connect  {
   my %args = ( Driver => undef,
 	       Database => undef,
 	       Host => 'localhost',
+	       Port => undef,
 	       User => undef,
 	       Password => undef,
 	       @_);
@@ -118,7 +113,8 @@ sub Connect  {
   my $dsn;
   
   $dsn = "dbi:$args{'Driver'}:dbname=$args{'Database'};host=$args{'Host'}";
-  
+  $dsn .= ";port=$args{'Port'}" if defined($args{'Port'});
+
   my $handle = DBI->connect_cached($dsn, $args{'User'}, $args{'Password'}) || croak "Connect Failed $DBI::errstr\n" ;
 
   #Set the handle 
@@ -227,45 +223,22 @@ sub UpdateTableValue  {
     my $NewValue = shift;
     my $Record = shift;
     my $is_sql = shift;
-    my $QueryString;
-    
-    # quote the value
-    # TODO: We need some general way to escape SQL functions.
-    $NewValue=$self->safe_quote($NewValue) unless ($is_sql);
-    # build the query string
-    $QueryString = "UPDATE $Table SET $Col = $NewValue WHERE id = $Record";
-    
-  
-    my $sth = $self->dbh->prepare($QueryString);
-    
-    if (!$sth) {
-	
-	if ($main::debug) {
-	    die "Error:" . $self->dbh->errstr . "\n";
-	}
-	else {
-	    return (0);
-	}
-    }
-    if (!$sth->execute) {
-	if ($self->{'debug'}) {
-	    die "Error:" . $sth->errstr . "\n";
-	}
-	else {
-	    
-	    return(0);
-	}
-	
-    }
-    
-    return (1); #Update Succeded
-}
 
+    if ( $is_sql ) {
+	return ($self->SimpleQuery( "UPDATE $Table SET $Col = $NewValue WHERE id = ?",
+				    $Record
+				  ));
+    } else { 
+	return ($self->SimpleQuery( "UPDATE $Table SET $Col = ? WHERE id = ?",
+				    $NewValue, $Record
+				  ));
+    }
+}
 # }}}
 
 # {{{ sub SimpleQuery
 
-=head2 SimpleQuery QUERY_STRING
+=head2 SimpleQuery QUERY_STRING, [ BIND_VALUE, ... ]
 
 Execute the SQL string specified in QUERY_STRING
 
@@ -274,44 +247,45 @@ Execute the SQL string specified in QUERY_STRING
 sub SimpleQuery  {
     my $self = shift;
     my $QueryString = shift;
-    
-	my $sth = $self->dbh->prepare($QueryString);
-	if (!$sth) {
-	    if ($main::debug) {
-		die "$self couldn't prepare the query '$QueryString'" . 
-		  $self->dbh->errstr . "\n";
-	    }
-	    else {
-		warn "$self couldn't prepare the query '$QueryString'" . 
+    my @bind_values = (@_);
+ 
+    my $sth = $self->dbh->prepare($QueryString);
+    unless ($sth) {
+	if ($DEBUG) {
+	    die "$self couldn't prepare the query '$QueryString'" . 
 	      $self->dbh->errstr . "\n";
-		return (undef);
-	    }
 	}
-	if (!$sth->execute) {
-	    if ($self->{'debug'}) {
-		die "$self couldn't execute the query '$QueryString'" . 
-		  $self->dbh->errstr . "\n";
-		
-	    }
-	    else {
-		warn "$self couldn't execute the query '$QueryString'" . 
-		  $self->dbh->errstr . "\n";
-		return(undef);
-	    }
+	else {
+	    warn "$self couldn't prepare the query '$QueryString'" . 
+	      $self->dbh->errstr . "\n";
+	    return (undef);
+	}
+    }
+    unless ($sth->execute(@bind_values)) {
+	if ($DEBUG) {
+	    die "$self couldn't execute the query '$QueryString'" . 
+	      $self->dbh->errstr . "\n";
 	    
-	   }
-       return ($sth);
+	}
+	else {
+	    warn "$self couldn't execute the query '$QueryString'" . 
+	      $self->dbh->errstr . "\n";
+	    return(undef);
+	}
+	
+    }
+    return ($sth);
     
     
-}
+  }
 
 # }}}
 
 # {{{ sub FetchResult
 
-=head2 FetchResult
+=head2 FetchResult QUERY, [ BIND_VALUE, ... ]
 
-Takes a SELECT query as a string.
+Takes a SELECT query as a string, along with an array of BIND_VALUEs
 Returns the first row as an array
 
 =cut 
@@ -319,39 +293,13 @@ Returns the first row as an array
 sub FetchResult {
   my $self = shift;
   my $query = shift;
-  my $sth = $self->SimpleQuery($query);
+  my @bind_values = @_;
+  my $sth = $self->SimpleQuery($query, @bind_values);
   
   return ($sth->fetchrow);
 }
 # }}}
 
-# {{{ sub safe_quote 
-
-=head2 safe_quote IN_VAL
-
-If IN_VAL is null, turn it into an empty quoted string. otherwise, use the DBI quote function. Returns the new string.
-
-=cut
-
-sub safe_quote  {
-   my $self = shift;
-   my $in_val = shift;
-   my ($out_val);
-   if (!defined $in_val) {
-     return ("''");
-     
-   }
-   else {
-     $out_val = $self->dbh->quote($in_val);
-     
-   }
-   return("$out_val");
-   
-}
-
-# }}}
- 
- 
  
 # Autoload methods go after =cut, and are processed by the autosplit program.
  
@@ -360,13 +308,10 @@ __END__
 
 # {{{ POD
 
-
-
 =head1 SEE ALSO
 
 perl(1), L<DBIx::SearchBuilder>
 
 =cut
 
-# }}} POD
-
+# }}}
