@@ -372,7 +372,6 @@ string will be inserted into the query directly rather then as a binding.
 
 =cut
 
-## Please see file perltidy.ERR
 sub UpdateRecordValue {
     my $self = shift;
     my %args = ( Table         => undef,
@@ -859,10 +858,7 @@ sub Join {
 
         }
 
-        unless ($alias) {
-            return ( $self->_NormalJoin(%args) );
-        }
-        if ( $args{'ALIAS1'} ) {
+        if ( !$alias || $args{'ALIAS1'} ) {
             return ( $self->_NormalJoin(%args) );
         }
 
@@ -943,8 +939,16 @@ sub _BuildJoins {
 
     $seen_aliases{'main'} = 1;
 
+   	# We don't want to get tripped up on a dependency on a simple alias. 
+    	foreach my $alias ( @{ $sb->{'aliases'}} ) {
+          if ( $alias =~ /^(.*?)\s+(.*?)$/ ) {
+              $seen_aliases{$2} = 1;
+          }
+    }
+
     my $join_clause = $sb->{'table'} . " main ";
 
+	
     my @keys = ( keys %{ $sb->{'left_joins'} } );
     my %seen;
 
