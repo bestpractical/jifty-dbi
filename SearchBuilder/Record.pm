@@ -489,22 +489,24 @@ sub AUTOLOAD  {
 
 # }}}
 
-# {{{ sub _Accessible 
+# {{{ sub _Accessible
 
-*_accessible = \&Accessible;
+=head2 _Accessible KEY MODE
+
+Private method.
+
+Returns undef unless C<KEY> is accessible in C<MODE> otherwise returns C<MODE> value
+
+=cut
+
+*_accessible = \&_Accessible;
 sub _Accessible {
     my $self = shift;
     my $attr = shift;
-    my $mode = lc(shift);
+    my $mode = lc(shift || '');
 
-    # @_ is the Accessible data from our subclass. Time to populate
-    # the accessible columns datastructure (but only if we're using
-    # something with the ancient API that predates ClassAccessible
-
-    #  return true if we can $mode $Attrib;
-    local ($^W) = 0;
     my $attribute = $self->_ClassAccessible(@_)->{$attr};
-    return 0 unless (defined $attribute && $attribute->{$mode});
+    return unless defined $attribute;
     return $attribute->{$mode};
 }
 

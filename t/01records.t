@@ -9,7 +9,7 @@ eval "use DBD::SQLite";
 if ($@) { 
 plan skip_all => "DBD::SQLite required for testing database interaction" 
 } else{
-plan tests => 31;
+plan tests => 34;
 }
     my $handle;
 use_ok('DBIx::SearchBuilder::Handle::SQLite');
@@ -29,6 +29,11 @@ isa_ok($ret,'DBI::st', "Inserted the schema. got a statement handle back");
 
 my $rec = TestApp::Address->new($handle);
 isa_ok($rec, 'DBIx::SearchBuilder::Record');
+
+# _Accessible testings
+is( $rec->_Accessible('id' => 'read'), 1, 'id is accessible for read' );
+is( $rec->_Accessible('id' => 'write'), undef, 'id is not accessible for write' );
+is( $rec->_Accessible('unexpected_field' => 'read'), undef, "field doesn't exist and can't be accessible for read" );
 
 can_ok($rec,'Create');
 

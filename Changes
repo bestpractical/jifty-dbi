@@ -1,5 +1,9 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+1.17_02
+    - Better handling of empty values for SB::Record::_Accessible. ( --Ruslan)
+
+
 1.17_01
     - More record tests from Ruz
 
