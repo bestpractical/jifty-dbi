@@ -29,6 +29,9 @@ print "ok 6\n";
 use DBIx::SearchBuilder::Handle::ODBC;
 $obdc =1;
 print "ok 7\n";
+use DBIx::SearchBuilder::Record::Cachable;
+$obdc =1;
+print "ok 8\n";
 ######################### End of black magic.
 
 # Insert your test code below (better if it prints "ok 13"

@@ -67,10 +67,13 @@ sub LoadFromHash {
 
     my $cache_key = $this->_gen_primary_cache_key();
 
+
     ## Check the return value, if its good, cache it! 
     if ($rvalue) {
      ## Only cache the object if its okay to do so. 
-        $this->_store() if ($this->{'_CacheConfig'}{'cache_p'});
+    if ($this->{'_CacheConfig'}{'cache_p'}) {
+        $this->_store() ;
+    }
     }
 
     return($rvalue,$msg);
@@ -87,7 +90,6 @@ sub LoadByCols {
   ## Generate the cache key
   my $alternate_key=$this->_gen_alternate_cache_key(%attr);
   my $cache_key = $this->_lookup_primary_cache_key($alternate_key);
-
 
   if ($cache_key && exists $this->_RecordCache->{$cache_key}) { 
     $cache_time = $this->_RecordCache->{$cache_key}{'time'};
@@ -160,7 +162,8 @@ sub Delete () {
 
 sub _gc_expired () { 
   my ($this) = @_; 
- 
+
+
   my $time = time(); 
   foreach my $cache_key (keys %{$this->_KeyCache}) {
     my $cache_time = $this->_RecordCache->{$cache_key}{'time'} || 0;  
@@ -286,11 +289,13 @@ sub _gen_primary_cache_key {
     return undef unless ($this->Id);
 
     my $primary_cache_key = $this->Table() . ':';
+    my @attributes; 
     foreach my $key (@{$this->_PrimaryKeys}) {
-        $primary_cache_key .= $key.'='.
-      $this->SUPER::__Value($key).  ',';
+        push @attributes, $key.'='.  $this->SUPER::__Value($key);
     }
-    chomp ($primary_cache_key);
+
+    $primary_cache_key .= join(',',@attributes);
+
     return($primary_cache_key);
 
 }
@@ -301,20 +306,26 @@ sub _gen_primary_cache_key {
 # Args    : string(alternate cache id)
 # Lvalue  : string(cache id)
 sub _lookup_primary_cache_key {
-    my $this = shift;
-    my $alternate_key = shift;
-    if (exists $this->_KeyCache->{$alternate_key}) { 
-         $cache_time = $this->_KeyCache->{$alternate_key}{'time'};
+    my $this          = shift;
+    my $alternate_key = shift;  
+    if ( exists $this->_KeyCache->{$alternate_key} ) {
+        $cache_time = $this->_KeyCache->{$alternate_key}{'time'};
 
-    ## Decide if the cache object is too old
-    if ((time() - $cache_time) <= $this->{'_CacheConfig'}{'cache_for_sec'}) {
-         return $this->_KeyCache->{$alternate_key};
+        ## Decide if the cache object is too old
+        if ( ( time() - $cache_time ) <=
+             $this->{'_CacheConfig'}{'cache_for_sec'} ) {
+            return $this->_KeyCache->{$alternate_key};
+        }
+        else {
+            $this->_gc_expired();
+        }
     }
-    else { 
-      $this->_gc_expired();
+    # If what we thought was the alternate key was actually the primary key
+    if ($alternate_key && exists $this->_RecordCache->{$alternate_key}) { 
+        return($alternate_key);
     }
-  } 
-  return (undef)
+    # not found
+    return (undef);
 }
 
 
@@ -327,5 +338,4 @@ sub _CacheConfig {
      'cache_for_sec'  => 5,
   }
 }
-
 1;
