@@ -1,5 +1,11 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+1.16 Thu Dec  9 23:49:39 EST 2004
+    - Fixed a bug in D::SB::R::Cachable that could cause it to load the wrong row from the cache if you were loading 
+      by alternate keys and had since changed one of the attributes of a previous row.  This was unmasked by a 
+      bug that Ruslan Zakirov found in RT 3.3's custom field handling
+
+
 1.15 Sat Nov 27 13:09:56 EST 2004
     - Fix a testsuite bug when DBD::SQLite isn't there
 

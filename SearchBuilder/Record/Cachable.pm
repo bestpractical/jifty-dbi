@@ -75,6 +75,19 @@ sub _KeyCache {
 
 }
 
+=head2 _FlushKeyCache
+
+Blow away this record type's key cache
+
+=cut
+
+
+sub _FlushKeyCache {
+    my $self = shift;
+    my $cache = $self->_Handle->DSN . "-KEYS--" . ($self->{'_Class'} ||= ref($self));
+    $self->_SetupCache($cache);
+}
+
 sub _RecordCache {
     my $self = shift;
     my $cache = $self->_Handle->DSN . "--" . ($self->{'_Class'} ||= ref($self));
@@ -171,6 +184,9 @@ sub __Delete () {
 sub _expire (\$) {
     my $self = shift;
     $self->_RecordCache->set( $self->_primary_RecordCache_key , undef, time-1);
+    # We should be doing something more surgical to clean out the key cache. but we do need to expire it
+    $self->_FlushKeyCache;
+   
 }
 
 # Function: _fetch
