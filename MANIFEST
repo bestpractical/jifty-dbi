@@ -13,6 +13,7 @@ SearchBuilder/Handle/Oracle.pm
 SearchBuilder/Handle/Informix.pm
 SearchBuilder/Handle/SQLite.pm
 SearchBuilder/Handle/Pg.pm
+SearchBuilder/Handle/Sybase.pm
 SearchBuilder/Handle/ODBC.pm
 inc/Module/Install/Base.pm
 inc/Module/Install/Makefile.pm
