@@ -122,5 +122,75 @@ sub Insert  {
     return( $self->{'id'}); #Add Succeded. return the id
   }
 
+# }}}
 
+# {{{ ApplyLimits
+
+=head2 ApplyLimits STATEMENTREF ROWS_PER_PAGE FIRST_ROW
+
+takes an SQL SELECT statement and massages it to return ROWS_PER_PAGE starting with FIRST_ROW;
+
+
+=cut
+
+sub ApplyLimits {
+    my $self = shift;
+    my $statementref = shift;
+    my $per_page = shift;
+    my $first = shift;
+
+    # Transform an SQL query from:
+    #
+    # SELECT main.* 
+    #   FROM Tickets main   
+    #  WHERE ((main.EffectiveId = main.id)) 
+    #    AND ((main.Type = 'ticket')) 
+    #    AND ( ( (main.Status = 'new')OR(main.Status = 'open') ) 
+    #    AND ( (main.Queue = '1') ) )  
+    #
+    # to: 
+    #
+    # SELECT * FROM (
+    #     SELECT limitquery.*,rownum limitrownum FROM (
+    #             SELECT main.* 
+    #               FROM Tickets main   
+    #              WHERE ((main.EffectiveId = main.id)) 
+    #                AND ((main.Type = 'ticket')) 
+    #                AND ( ( (main.Status = 'new')OR(main.Status = 'open') ) 
+    #                AND ( (main.Queue = '1') ) )  
+    #     ) limitquery WHERE rownum <= 50
+    # ) WHERE limitrownum >= 1
+    #
+
+    if ($per_page) {
+        # Oracle orders from 1 not zero
+        $first++; 
+        # Make current query a sub select
+        $$statementref = "SELECT * FROM ( SELECT limitquery.*,rownum limitrownum FROM ( $$statementref ) limitquery WHERE rownum <= " . ($first + $per_page - 1) . " ) WHERE limitrownum >= " . $first;
+    }
+}
+
+# }}}
+
+# {{{ DistinctQuery
+
+=head2 DistinctQuery STATEMENTREF
+
+takes an incomplete SQL SELECT statement and massages it to return a DISTINCT result set.
+
+
+=cut
+
+sub DistinctQuery {
+    my $self = shift;
+    my $statementref = shift;
+    my $table = shift;
+
+    # Wrapper select query in a subselect as Oracle doesn't allow
+    # DISTINCT against CLOB/BLOB column types.
+    $$statementref = "SELECT main.* FROM ( SELECT DISTINCT main.id FROM $$statementref ) distinctquery, $table main WHERE (main.id = distinctquery.id) ";
+
+}
+
+# }}}
 

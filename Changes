@@ -1,5 +1,8 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+0.81_01 Mar 27 2003
+        - Select Distinct altered to support oracle
+
 0.80 Mar 08 2003
         - Count method enhanced to ignore "LIMIT"s
         - LIMIT behaviour changed to be handle specific

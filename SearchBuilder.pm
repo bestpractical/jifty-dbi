@@ -5,7 +5,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "0.80";
+$VERSION = "0.81_01";
 
 =head1 NAME
 
@@ -105,7 +105,9 @@ sub _DoSearch {
     my $self = shift;
     my ( $QueryString, $Order );
 
-    $QueryString = "SELECT DISTINCT main.* FROM " . $self->_TableAliases . " ";
+    # The initial SELECT or SELECT DISTINCT is decided later
+
+    $QueryString = $self->_TableAliases . " ";
 
     $QueryString .= $self->_LeftJoins . " ";
 
@@ -115,8 +117,14 @@ sub _DoSearch {
     # TODO: GroupBy won't work with postgres.
     # $QueryString .= $self->_GroupByClause. " ";
 
-    $QueryString .= $self->_OrderClause;
+    # DISTINCT query only required for multi-table selects
+    if ($#{$self->{'aliases'}} < 0) {
+        $QueryString = "SELECT main.* FROM $QueryString";
+    } else {
+        $self->_DistinctQuery(\$QueryString, $self->{'table'});
+    }
 
+    $QueryString .= $self->_OrderClause;
 
     $self->_ApplyLimits(\$QueryString);
 
@@ -195,16 +203,19 @@ sub _DoCount {
     #TODO refactor DoSearch and DoCount such that we only have
     # one place where we build most of the querystring
 
-    $QueryString =
-      "SELECT count(DISTINCT main.id) FROM " . $self->_TableAliases . " ";
+    # DISTINCT query only required for multi-table selects
+    if ($#{$self->{'aliases'}} < 0) {
+        $QueryString = "SELECT count(main.id) FROM ";
+    } else {
+        $QueryString = "SELECT count(DISTINCT main.id) FROM ";
+    }
+
+    $QueryString .= $self->_TableAliases . " ";
 
     $QueryString .= $self->_LeftJoins . " ";
 
     $QueryString .= $self->_WhereClause . " " . $self->{'table_links'} . " "
       if ( $self->_isLimited > 0 );
-
-
-    $self->_ApplyLimits(\$QueryString) unless ($all); 
 
 
     print STDERR "DBIx::SearchBuilder->DoSearch Query:  $QueryString\n"
@@ -265,6 +276,24 @@ sub _ApplyLimits {
     
 }
 
+# {{{ sub _DistinctQuery
+
+=head2 _DistinctQuery STATEMENTREF
+
+This routine takes a reference to a scalar containing an SQL statement. 
+It massages the statement to ensure a distinct result set is returned.
+
+
+=cut
+
+sub _DistinctQuery {
+    my $self = shift;
+    my $statementref = shift;
+    my $table = shift;
+    $self->_Handle->DistinctQuery($statementref, $table);
+}
+
+# }}}
 
 # {{{ sub _LimitClause
 

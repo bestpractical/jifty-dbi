@@ -573,6 +573,26 @@ sub ApplyLimits {
 
 }
 
+# {{{ DistinctQuery
+
+=head2 DistinctQuery STATEMENTREF 
+
+takes an incomplete SQL SELECT statement and massages it to return a DISTINCT result set.
+
+
+=cut
+
+sub DistinctQuery {
+    my $self = shift;
+    my $statementref = shift;
+    #my $table = shift;
+
+    # Prepend select query for DBs which allow DISTINCT on all column types.
+    $$statementref = "SELECT DISTINCT main.* FROM $$statementref";
+
+}
+
+# }}}
 
 1;
 __END__
