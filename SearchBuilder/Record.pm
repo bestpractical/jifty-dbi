@@ -408,9 +408,7 @@ sub AUTOLOAD  {
 
     *{$AUTOLOAD} = sub { return ($_[0]->_Value($Attrib))};
     return($self->_Value($Attrib));
-  }
-    
-  elsif ($AUTOLOAD =~ /.*::[sS]et_?(\w+)/o) {
+  } elsif ($AUTOLOAD =~ /.*::[sS]et_?(\w+)/o) {
 
     if ($self->_Accessible($1,'write')) {
       my $Attrib = $1;
@@ -432,7 +430,22 @@ sub AUTOLOAD  {
     else { 
       return(0, 'Nonexistant field?');
     }
+  } elsif ($AUTOLOAD =~ /.*::(\w+?)_?[oO]bj$/o) {
+    if ($self->_Accessible($1,'object')) {
+      my $Attrib = $1;
+      *{$AUTOLOAD} = sub {
+      	my $s = shift;
+      	return $s->_Object(
+      			Field => $Attrib,
+      			Args => [@_],
+      		);
+      };
+      return $self->_Object( Field => $Attrib, Args => [@_] );
+    } else {
+      return(0, 'No object mapping for field');
+    }
   }
+
 
   #Previously, I checked for writability here. but I'm not sure that's the
   #right idea. it breaks the ability to do ValidateQueue for a ticket
@@ -720,6 +733,50 @@ sub _Validate  {
   }	
 
 # }}}	
+# {{{ sub _Object 
+
+=head2 _Object
+
+_Object takes a single column name and an array reference.
+It creates new object instance of class specified in _ClassAccessable
+structure and calls LoadById on recently created object with the
+current column value as argument. It uses the array reference as
+the object constructor's arguments.
+Subclasses can override _Object to insert custom access control or
+define default contructor arguments.
+
+=cut
+
+sub _Object
+{
+  my $self = shift;
+  return $self->__Object(@_);
+}
+
+sub __Object
+{
+  my $self = shift;
+  my %args = ( Field => '', Args => [], @_ );
+
+  my $field = $args{'Field'};
+  my $class = $self->_Accessible( $field, 'object' );
+
+# Globs magic to be sure that we call 'eval "require $class"' only once
+# because eval is quite slow -- cubic@acronis.ru
+  no strict qw( refs );
+  my $vglob = ${ $class . '::' }{'VERSION'};
+  unless ( $vglob && *$vglob{'SCALAR'} ) {
+    eval "require $class";
+    die "Couldn't use $class: $@" if ( $@ );
+    unless ( $vglob && *$vglob{'SCALAR'} ) {
+      *{$class."::VERSION"} = '-1, By DBIx::SerchBuilder';
+    }
+  }
+
+  my $object = $class->new( @{ $args{'Args'} } );
+  $object->LoadById( $self->__Value( $field ) );
+  return $object;
+}
 
 # }}}
   

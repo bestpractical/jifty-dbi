@@ -1,5 +1,15 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+1.02_01 Wed Jul  7 12:28:08 EDT 2004
+        - magic _Object instantiation from cubic@acronis.ru
+        - make SB::_Handle settable directly  (cubic@acronis.ru)
+        - document the above        
+
+
+1.01    Sun Jun 27 23:35:46 EDT 2004
+
+        - Releasing 1.00_06 as stable
+
 1.00_06 - Pg/Oracle: Don't attempt to do case insensitive comparisons on
           integer values.
 

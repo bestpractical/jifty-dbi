@@ -5,7 +5,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "1.00_06";
+$VERSION = "1.02_01";
 
 =head1 NAME
 
@@ -91,8 +91,18 @@ sub CleanSlate {
 # }}}
 
 # {{{ sub _Handle
+
+=head2 _Handle  [DBH]
+
+Get or set this object's DBI database handle.
+
+=cut
+
 sub _Handle {
     my $self = shift;
+    if (@_) {
+        $self->{'DBIxHandle'} = shift;
+    }
     return ( $self->{'DBIxHandle'} );
 }
 
@@ -1439,7 +1449,7 @@ __END__
 
 =head1 AUTHOR
 
-Copyright (c) 2001 Jesse Vincent, jesse@fsck.com.
+Copyright (c) 2001-2004 Jesse Vincent, jesse@fsck.com.
 
 All rights reserved.
 
