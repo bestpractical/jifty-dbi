@@ -1,5 +1,8 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+0.89_02 July 19, 2003
+	- Patch from Grant DeGraw to allow ordering by multiple columns.
+
 0.89_01 July 18 2003
 	- Patch from Brook for:
 	-	better oracle support

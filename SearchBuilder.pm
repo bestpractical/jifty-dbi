@@ -5,7 +5,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "0.89_01";
+$VERSION = "0.89_02";
 
 =head1 NAME
 
@@ -931,24 +931,59 @@ ORDER defaults to ASC(ending).  DESC(ending) is also a valid value for OrderBy
 
 sub OrderBy {
     my $self = shift;
-    my %args = ( ALIAS => 'main',
-                 FIELD => undef,
-                 ORDER => 'ASC',
-                 @_ );
-    $self->{'order_by_alias'} = $args{'ALIAS'};
-    $self->{'order_by_field'} = $args{'FIELD'};
-    if ( $args{'ORDER'} =~ /^des/i ) {
-        $self->{'order_by_order'} = "DESC";
-    }
-    else {
-        $self->{'order_by_order'} = "ASC";
-    }
+    my %args = ( @_ );
 
-    $self->RedoSearch();
-
+    $self->OrderByCols( \%args );
 }
 
-# }}}
+=head2 OrderByCols ARRAY
+
+OrderByCols takes an array of paramhashes of the form passed to OrderBy.
+The result set is ordered by the items in the array.
+
+=cut
+
+sub OrderByCols {
+    my $self = shift;
+    my @args = @_;
+    my $row;
+    my $clause;
+
+    foreach $row ( @args ) {
+
+        my %rowhash = ( ALIAS => 'main',
+			FIELD => undef,
+			ORDER => 'ASC',
+			%$row
+		      );
+        if ($rowhash{'ORDER'} =~ /^des/i) {
+	    $rowhash{'ORDER'} = "DESC";
+        }
+        else {
+	    $rowhash{'ORDER'} = "ASC";
+        }
+
+        if ( ($rowhash{'ALIAS'}) and
+	     ($rowhash{'FIELD'}) and
+             ($rowhash{'ORDER'}) ) {
+
+            $clause .= ($clause ? ", " : " ");
+            $clause .= $rowhash{'ALIAS'} . ".";
+            $clause .= $rowhash{'FIELD'} . " ";
+            $clause .= $rowhash{'ORDER'};
+        }
+    }
+
+    if ($clause) {
+	$self->{'order_clause'} = "ORDER BY" . $clause;
+    }
+    else {
+	$self->{'order_clause'} = "";
+    }
+    $self->RedoSearch();
+}
+
+# }}} 
 
 # {{{ sub _OrderClause
 
@@ -961,26 +996,10 @@ returns the ORDER BY clause for the search.
 sub _OrderClause {
     my $self = shift;
 
-    my $clause = "";
-
-    #If we don't have an order defined, set the defaults
-    unless ( defined $self->{'order_by_field'} ) {
-        $self->OrderBy();
+    unless ( defined $self->{'order_clause'} ) {
+	return "";
     }
-
-    if (     ( $self->{'order_by_field'} )
-         and ( $self->{'order_by_alias'} )
-         and ( $self->{'order_by_order'} ) ) {
-
-        $clause = "ORDER BY ";
-        $clause .= $self->{'order_by_alias'} . "."
-          if ( $self->{'order_by_alias'} );
-        $clause .= $self->{'order_by_field'};
-        $clause .= " " . $self->{'order_by_order'}
-          if ( $self->{'order_by_order'} );
-    }
-
-    return ($clause);
+    return ($self->{'order_clause'});
 }
 
 # }}}
@@ -1213,6 +1232,8 @@ sub _ItemsCounter {
 Returns the number of records in the set.
 
 =cut
+
+
 
 sub Count {
     my $self = shift;
