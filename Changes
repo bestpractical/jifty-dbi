@@ -1,5 +1,8 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+0.84 June 4 2003
+        - Bumped the version for release
+
 0.83_05 June 2 2003
         - Provide support for blowing away nested transactions that aren't yet committed.
 
