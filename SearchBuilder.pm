@@ -1055,7 +1055,7 @@ sub _OrderClause {
 
 # {{{ GroupBy (OBSOLETE)
 
-=head2 GroupBy
+=head2 GroupBy  (DEPRECATED)
 
 Alias for the GroupByCols method.
 
