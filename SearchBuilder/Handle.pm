@@ -573,6 +573,51 @@ sub ApplyLimits {
 
 }
 
+=head2 Join { Paramhash }
+
+Takes a paramhash of everything Searchbuildler::Record does + a parameter called 'SearchBuilder that contains a ref to a SearchBuilder object'.
+This performs the join.
+
+
+=cut
+
+
+sub Join {
+
+    my $self = shift;
+    my %args = (
+                SearchBuilder => undef,
+                 TYPE   => 'normal',
+                 FIELD1 => undef, ALIAS1 => undef,
+                 TABLE2 => undef, FIELD2 => undef, ALIAS2 => undef,
+                 @_ );
+
+
+
+    if ( $args{'TYPE'} =~ /LEFT/i ) {
+        my $alias = $args{'SearchBuilder'}->_GetAlias( $args{'TABLE2'} );
+
+        $args{'SearchBuilder'}->{'left_joins'}{"$alias"}{'alias_string'} =
+          " LEFT JOIN $args{'TABLE2'} as $alias ";
+
+        $args{'SearchBuilder'}->{'left_joins'}{"$alias"}{'criteria'}{'base_criterion'} =
+          " $args{'ALIAS1'}.$args{'FIELD1'} = $alias.$args{'FIELD2'}";
+
+        return ($alias);
+    }
+
+    # we need to build the table of links.
+    my $clause =
+      $args{'ALIAS1'} . "."
+      . $args{'FIELD1'} . " = "
+      . $args{'ALIAS2'} . "."
+      . $args{'FIELD2'};
+    $args{'SearchBuilder'}->{'table_links'} .= " AND $clause ";
+
+}
+
+
+
 # {{{ DistinctQuery
 
 =head2 DistinctQuery STATEMENTREF 
