@@ -1,5 +1,8 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+1.20 Tue Jan 18 08:24:15 EST 2005
+    - Minor test suite fixes from Ruslan.
+
 1.19 Sat Jan  8 18:22:59 EST 2005
 
     - Performing a search multiple times could result in multiple copies of 

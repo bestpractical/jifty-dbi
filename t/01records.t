@@ -18,7 +18,7 @@ use_ok('DBIx::SearchBuilder::Handle::SQLite');
 
 isa_ok($handle, 'DBIx::SearchBuilder::Handle');
 isa_ok($handle, 'DBIx::SearchBuilder::Handle::SQLite');
-        $handle->Connect( Driver => 'SQLite', Database => File::Spec->tmpdir()."sb-test.$$" );
+        $handle->Connect( Driver => 'SQLite', Database => File::Spec->catfile(File::Spec->tmpdir(), "sb-test.$$"));
 
 can_ok($handle, 'dbh');
 isa_ok($handle->dbh, 'DBI::db');

@@ -14,11 +14,11 @@ not run its Makefile.PL or Build.PL.
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA1
 
-SHA1 d0b3b5466d8bd79c94ec91832d06421f522aaf27 Changes
+SHA1 c7311168844f57557a504df4c41cad0d991c44f7 Changes
 SHA1 34b52e3b49804977930e52fa19f2d7a4297475d5 MANIFEST
-SHA1 2d5eacbcafcd7d1c143679d86413353fae13a0a9 META.yml
+SHA1 11ad0b86828d850a8953e7f379aa871fb678f3ce META.yml
 SHA1 9921c69b0d05a54c5bb744a13cf1538bb06c4d82 Makefile.PL
-SHA1 4a7dd00d1cc16958d1f352500e086e75d097d5af SearchBuilder.pm
+SHA1 e4fd5b7003266b26b937928febeeac64a9ccd62b SearchBuilder.pm
 SHA1 54e8db633ab6ae417a04e98bc70a9268353932f0 SearchBuilder/Handle.pm
 SHA1 0103d897704a95032b32363dc65ea4f0d8f5965d SearchBuilder/Handle/Informix.pm
 SHA1 861cee4205d1f367af5cc68b561fd37e38c1acf0 SearchBuilder/Handle/ODBC.pm
@@ -36,13 +36,13 @@ SHA1 2e300b145ee61eea9dfd71624b17b0bc9218aa4f inc/Module/Install/Base.pm
 SHA1 e094fe96aef06c68d7a424818c12e52b11f1ccdd inc/Module/Install/Makefile.pm
 SHA1 e448c6dc5351ef425e3f8bdbeb642409120bc3ca inc/Module/Install/Metadata.pm
 SHA1 9d0f73416a27649c504bb990e74c6aa24e987299 t/00.load.t
-SHA1 a043135e88925059bf68fb193f6c710dfe586183 t/01records.t
-SHA1 8a2c4b7f487830ad504bdaf94ac7fdf34f2bf390 t/02records_object.t
+SHA1 b78dd9c6e4e117976381c0723f6e39cb304bebc8 t/01records.t
+SHA1 aa553933c4d96cd11ca89051f99c3ec05ddfa5e3 t/02records_object.t
 SHA1 e9c6a5881fc60173fbc8d479c1afd2ce3b43bef1 t/pod.t
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.2.5 (GNU/Linux)
 
-iD8DBQFB4Gw7Ei9d9xCOQEYRAk/MAJoCQOLjJTJJVnFor784ooFOH+B6+ACgwXm3
-uPXA9aNzOYAbk6sy8cOjuus=
-=5j9p
+iD8DBQFB7Q5DEi9d9xCOQEYRAj2oAKCCndJ4WaJfJsF8ovYNFMzxLQ70qACgq22S
+IrbtpekL2L8II2e6WU0W6qI=
+=eIKh
 -----END PGP SIGNATURE-----
