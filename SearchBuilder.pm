@@ -5,7 +5,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "0.83_02";
+$VERSION = "0.83_03";
 
 =head1 NAME
 
@@ -1289,20 +1289,6 @@ sub DEBUG {
 
 # }}}
 
-
-=head2 DESTROY
-
-When we get rid of the Searchbuilder::Handle, we need to disconnect from the database
-
-=cut
-
-  
-sub DESTROY {
-  my $self = shift;
-  if( defined $self->dbh ) {
-    $self->Disconnect();
-  }
-}
 
 
 

@@ -1,5 +1,8 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+0.83_03 May 30 2003
+        - Moved Stan's destryo fix to the right file
+
 0.83_02 May 27 2003
         - Better oracle support for unique ids on indexes from Brook
 
