@@ -1,5 +1,9 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+0.82	May 19 2003
+	- Query builder changes to improve some join performance
+	- Fixes to a tight loop for cache expiry
+
 0.81_04 April 14 2003
         - Fixed a bug in "Distinct" logic introduced in 0.81_01
 

@@ -235,16 +235,18 @@ sub _BuildJoins {
 
     $seen_aliases{'main'} = 1;
 
-    my $join_clause = $sb->{'table'} . " main ";
+    my $join_clause =$sb->{'table'} . " main " ;
 
     my @keys = ( keys %{ $sb->{'left_joins'} } );
 
     while ( my $join = shift @keys ) {
         if ( $seen_aliases{ $sb->{'left_joins'}{$join}{'depends_on'} } ) {
-            $join_clause .= $sb->{'left_joins'}{$join}{'alias_string'} . " ON ";
+            $join_clause  = "(" . $join_clause;
+            $join_clause .= $sb->{'left_joins'}{$join}{'alias_string'} . " ON (";
             $join_clause .=
-              join ( ' AND ', values %{ $sb->{'left_joins'}{$join}{'criteria'} }
+              join ( ') AND( ', values %{ $sb->{'left_joins'}{$join}{'criteria'} }
               );
+            $join_clause .= ")) ";
 
             $seen_aliases{$join} = 1;
         }
@@ -253,9 +255,8 @@ sub _BuildJoins {
         }
 
     }
-    my $alias_clause .= join ( ", ", @{ $sb->{'aliases'} } );
-    $join_clause .= ", " . $alias_clause if ($alias_clause);
-    return ($join_clause);
+    return (
+                    join ( ", ", ($join_clause, @{ $sb->{'aliases'} }))) ;
 
 }
 

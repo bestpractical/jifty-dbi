@@ -5,7 +5,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "0.81";
+$VERSION = "0.82";
 
 =head1 NAME
 
@@ -305,10 +305,28 @@ Build up all of the joins we need to perform this query
 sub _BuildJoins {
     my $self = shift;
 
+    # if we have a handle specific query builder, let's use that
     if ($self->_Handle->can('_BuildJoins')) {
         return ($self->_Handle->_BuildJoins($self));
     }
-    return( $self->_TableAliases . " ".  $self->_LeftJoins . " ");
+
+    #Otherwise, let's do something generic
+
+
+    my $join_clause = $self->{'table'} . " main";
+
+
+
+    foreach my $join ( keys %{ $self->{'left_joins'} } ) {
+        $join_clause = "( " . $join_clause . $self->{'left_joins'}{$join}{'alias_string'} . " ON  (" .
+          join ( ') AND ( ', values %{ $self->{'left_joins'}{$join}{'criteria'} }) . 
+            "))";
+    }
+    my   $aliases = join ( ", ", @{ $self->{'aliases'} } );
+    $join_clause .= ", $aliases" if ($aliases);
+
+   return ($join_clause);
+
 }
 
 # }}}
@@ -820,23 +838,6 @@ sub _AddSubClause {
 
 # }}}
 
-# {{{ sub _TableAliases
-
-#Construct a list of tables and aliases suitable for building our SELECT statement
-sub _TableAliases {
-    my $self = shift;
-
-    # Set up the first alias. for the _main_ table and
-    # go through all the other aliases we set up and build the compiled
-    # aliases string
-    my $compiled_aliases =
-      join ( ", ", $self->{'table'} . " main", @{ $self->{'aliases'} } );
-
-    return ($compiled_aliases);
-}
-
-# }}}
-
 # {{{ sub _WhereClause
 
 sub _WhereClause {
@@ -1025,25 +1026,6 @@ sub _GetAlias {
 }
 
 # }}}
-
-# {{{ sub _LeftJoins
-
-# Return the left joins clause
-
-sub _LeftJoins {
-    my $self        = shift;
-    my $join_clause = '';
-    foreach my $join ( keys %{ $self->{'left_joins'} } ) {
-        $join_clause .= $self->{'left_joins'}{$join}{'alias_string'} . " ON ";
-        $join_clause .=
-          join ( ' AND ',
-                 values
-                                 %{ $self->{'left_joins'}{$join}{'criteria'} }
-          );
-    }
-
-    return ($join_clause);
-}
 
 # {{{ sub Join
 

@@ -356,6 +356,7 @@ sub SimpleQuery  {
     my $self = shift;
     my $QueryString = shift;
     my @bind_values = (@_);
+
  
     my $sth = $self->dbh->prepare($QueryString);
     unless ($sth) {
