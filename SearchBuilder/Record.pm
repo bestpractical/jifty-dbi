@@ -781,7 +781,7 @@ sub LoadByCols  {
     my %hash  = (@_);
     my (@bind, @phrases);
     foreach my $key (keys %hash) {  
-	if (defined $hash{$key} && $hash{$key} ne '') {
+	if (defined $hash{$key} &&  $hash{$key} ne '') {
 		push @phrases, "$key = ?"; 
 		push @bind, $hash{$key}; 
 	}

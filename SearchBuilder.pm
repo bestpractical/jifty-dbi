@@ -5,7 +5,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "0.92";
+$VERSION = "0.93_01";
 
 =head1 NAME
 
@@ -786,11 +786,12 @@ sub _GenericRestriction {
 
     # If it's a new value or we're overwriting this sort of restriction,
 
-    if ( $self->_Handle->CaseSensitive && defined $args{'VALUE'} && $args{'VALUE'} ne '' ) {
+    if ( $self->_Handle->CaseSensitive && defined $args{'VALUE'} && $args{'VALUE'} ne ''  && $args{'VALUE'} ne "''" && ($args{'OPERATOR'} !~/IS/ && $args{'VALUE'} !~ /^null$/i)) {
 
         unless ( $args{'CASESENSITIVE'} ) {
-            $QualifiedField = "lower($QualifiedField)";
-            $args{'VALUE'} = lc( $args{'VALUE'} );
+               ( $QualifiedField, $args{'OPERATOR'}, $args{'VALUE'} ) =
+                 $self->_Handle->_MakeClauseCaseInsensitive( $QualifiedField,
+                $args{'OPERATOR'}, $args{'VALUE'} );
         }
 
     }

@@ -529,8 +529,6 @@ sub DatabaseVersion {
 
 # {{{ CaseSensitive
 
-
-
 =head2 CaseSensitive
 
 Returns 1 if the current database's searches are case sensitive by default
@@ -545,6 +543,33 @@ sub CaseSensitive {
 
 
 # }}} 
+
+
+# {{{ _MakeClauseCaseInsensitive
+
+=head2 _MakeClauseCaseInsensitive FIELD OPERATOR VALUE
+
+Takes a field, operator and value. performs the magic necessary to make
+your database treat this clause as case insensitive.
+
+Returns a FIELD OPERATOR VALUE triple.
+
+=cut
+
+sub _MakeClauseCaseInsensitive {
+    my $self = shift;
+    my $field = shift;
+    my $operator = shift;
+    my $value = shift;
+
+    $field = "lower($field)";
+    $value = lc($value);
+
+    return ($field, $operator, $value);
+}
+
+
+# }}}
 
 # {{{ BeginTransaction
 

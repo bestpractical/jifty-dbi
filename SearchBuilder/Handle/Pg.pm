@@ -249,5 +249,32 @@ sub _BuildJoins {
                     join ( ", ", ($join_clause, @{ $sb->{'aliases'} }))) ;
 
 }
+# {{{ _MakeClauseCaseInsensitive
 
+=head2 _MakeClauseCaseInsensitive FIELD OPERATOR VALUE
+
+Takes a field, operator and value. performs the magic necessary to make
+your database treat this clause as case insensitive.
+
+Returns a FIELD OPERATOR VALUE triple.
+
+=cut
+
+sub _MakeClauseCaseInsensitive {
+    my $self = shift;
+    my $field = shift;
+    my $operator = shift;
+    my $value = shift;
+ 
+
+
+    if  ($operator =~ /LIKE/i ) {
+        $operator =~ s/LIKE/ILIKE/ig; 
+        return ($field, $operator, $value);
+    } else {
+        $self->SUPER::_MakeClauseCaseInsensitive($field, $operator,$value);
+    }
+}
+
+# }}}
 1;
