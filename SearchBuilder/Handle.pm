@@ -6,6 +6,7 @@ use strict;
 use Class::ReturnValue;
 use vars qw($VERSION @ISA %DBIHandle $PrevHandle $DEBUG $TRANSDEPTH);
 
+
 $TRANSDEPTH = 0;
 
 $VERSION = '$Version$';
@@ -57,6 +58,8 @@ sub new  {
     my $class = ref($proto) || $proto;
     my $self  = {};
     bless ($self, $class);
+
+    @{$self->{'StatementLog'}} = ();
     return $self;
 }
 
@@ -233,6 +236,67 @@ sub PrintError {
 
 # }}}
 
+=head2 LogSQLStatements BOOL
+
+Takes a boolean argument. If the boolean is true, SearchBuilder will log all SQL
+statements, as well as their invocation times and execution times.
+
+Returns whether we're currently logging or not as a boolean
+
+=cut
+
+sub LogSQLStatements {
+    my $self = shift;
+    if (@_) {
+
+        require Time::HiRes;
+    $self->{'_DoLogSQL'} = shift;
+    return ($self->{'_DoLogSQL'});
+    }
+}
+
+=head2 _LogSQLStatement STATEMENT DURATION
+
+add an SQL statement to our query log
+
+=cut
+
+sub _LogSQLStatement {
+    my $self = shift;
+    my $statement = shift;
+    my $duration = shift;
+    push @{$self->{'StatementLog'}} , ([Time::Hires::time(), $statement, $duration]);
+
+}
+
+=head2 ClearSQLStatementLog
+
+Clears out the SQL statement log. 
+
+
+=cut
+
+sub ClearSQLStatementLog {
+    my $self = shift;
+    @{$self->{'StatementLog'}} = ();
+}   
+
+
+=head2 SQLStatementLog
+
+Returns the current SQL statement log as an array of arrays. Each entry is a triple of 
+
+(Time,  Statement, Duration)
+
+=cut
+
+sub SQLStatementLog {
+    my $self = shift;
+    return  (@{$self->{'StatementLog'}});
+
+}
+
+
 # {{{ AutoCommit
 
 =head2 AutoCommit [MODE]
@@ -406,8 +470,20 @@ sub SimpleQuery  {
             $sth->bind_param($bind_idx+1, undef, $bhash );
         }
     }
-    $self->Log($QueryString. " (".join(',',@bind_values).")") if ($DEBUG);
-    unless ( $sth->execute(@bind_values) ) {
+
+    my $basetime;
+    if ($self->LogSQLStatements) {
+        $basetime = Time::HiRes::time(); 
+    }
+
+    my $executed =$sth->execute(@bind_values);
+
+    if ($self->LogSQLStatements) {
+            $self->_LogSQLStatement($QueryString ,tv_interval ( $basetime ));
+ 
+    }
+
+    unless($executed ) {
         if ($DEBUG) {
             die "$self couldn't execute the query '$QueryString'"
               . $self->dbh->errstr . "\n";

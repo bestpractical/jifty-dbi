@@ -896,7 +896,7 @@ sub LoadById  {
     my $id = shift;
 
     $id = 0 if (!defined($id));
-    return ($self->LoadByCols('id',$id));
+    return ($self->LoadByCols(id => $id));
 }
 
 # }}}  
@@ -980,8 +980,6 @@ sub _LoadFromSQL {
         $self->{'fetched'}{lc $f} = 1;
     }
 
-    #$self->_DowncaseValuesHash();
-
     ## I guess to be consistant with the old code, make sure the primary  
     ## keys exist.
 
@@ -990,52 +988,6 @@ sub _LoadFromSQL {
         return ( 0, "Missing a primary key?: $@" );
     }
     return ( 1, "Found Object" );
-
-}
-
-sub _LoadFromSQLold {
-    my $self        = shift;
-    my $QueryString = shift;
-    my @bind_values = (@_);
-
-    my $sth = $self->_Handle->SimpleQuery( $QueryString, @bind_values );
-
-    #TODO this only gets the first row. we should check if there are more.
-
-
-    return($sth) unless ($sth) ;
-
-    my $fetched;
-    eval { $fetched = $sth->fetchrow_hashref() };
-    if ($@) {
-        warn $@;
-    }
-
-    unless ( $fetched ) {
-
-        #warn "something might be wrong here; row not found. SQL: $QueryString";
-        return ( 0, "Couldn't find row" );
-    }
-    
-    foreach my $f ( keys %{$fetched||{}} ) {
-        $self->{'fetched'}->{lc $f} = 1;
-    }
-    
-    $self->{'values'} = $fetched;
-
-    ## I guess to be consistant with the old code, make sure the primary  
-    ## keys exist.
-      #$self->_DowncaseValuesHash();
-    
-        ## I guess to be consistant with the old code, make sure the primary  
-        ## keys exist.
-    
-      eval { $self->PrimaryKeys(); };
-      if ($@) {
-          return ( 0, "Missing a primary key?: $@" );
-      }
-      return ( 1, "Found Object" );
-
 
 }
 
