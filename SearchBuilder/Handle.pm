@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle.pm,v 1.15 2001/03/31 07:25:35 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle.pm,v 1.16 2001/05/16 19:51:40 jesse Exp $
 package DBIx::SearchBuilder::Handle;
 use Carp;
 use DBI;
@@ -159,6 +159,26 @@ sub PrintError {
     $mode = shift if (@_);
 
     $self->dbh->{PrintError}=$mode;
+}
+
+
+# }}}
+
+# {{{ AutoCommit
+
+=head2 AutoCommit [MODE]
+
+Turns on the Database Handle's PrintError attribute.
+
+=cut
+
+sub AutoCommit {
+    my $self = shift;
+
+    my $mode = 1; 
+    $mode = shift if (@_);
+
+    $self->dbh->{AutoCommit}=$mode;
 }
 
 

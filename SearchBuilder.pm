@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder.pm,v 1.19 2001/05/11 16:29:45 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder.pm,v 1.20 2001/05/14 01:07:45 jesse Exp $
 
 # {{{ Version, package, new, etc
 
@@ -7,7 +7,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "0.31";
+$VERSION = "0.33";
 
 =head1 NAME
 
@@ -718,9 +718,9 @@ ORDER defaults to ASC(ending).  DESC(ending) is also a valid value for OrderBy
 
 sub OrderBy {
     my $self = shift;
-    my %args = ( ALIAS => undef,
+    my %args = ( ALIAS => 'main',
 		 FIELD => undef,
-		 ORDER => undef,
+		 ORDER => 'ASC',
 		 @_
 	       );
     $self->{'order_by_alias'} = $args{'ALIAS'};
@@ -752,13 +752,14 @@ sub _OrderClause {
     my $clause = "";
 
     #If we don't have an order defined, set the defaults
-    unless ((defined $self->{'order_by_alias'}) and
-            (defined $self->{'order_by_field'}) and
-            (defined $self->{'order_by_order'})) {
+    unless ( defined $self->{'order_by_field'} ) {
         $self->OrderBy();
     }
    
-    if ($self->{'order_by_field'}) {
+    if ( ($self->{'order_by_field'}) and
+ 	 ($self->{'order_by_alias'}) and
+	 ($self->{'order_by_order'}) ) {
+
         $clause = "ORDER BY ";
         $clause .= $self->{'order_by_alias'} . "."      if ($self->{'order_by_alias'});
         $clause .= $self->{'order_by_field'}; 

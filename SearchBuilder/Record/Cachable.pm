@@ -1,5 +1,5 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Record/Cachable.pm,v 1.2 2001/05/12 18:48:21 jesse Exp $
-# DBIx::SearchBuilder::Record::Cachable by <mhat@netlag.com>
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Record/Cachable.pm,v 1.3 2001/05/16 00:49:48 jesse Exp $
+# by Matt Knopp <mhat@netlag.com>
 
 package DBIx::SearchBuilder::Record::Cachable; 
 
@@ -8,7 +8,6 @@ use DBIx::SearchBuilder::Handle;
 @ISA = qw (DBIx::SearchBuilder::Record);
 
 my %_RECORD_CACHE = (); 
-
 
 
 # Function: new 
@@ -51,20 +50,25 @@ sub LoadByCols {
     ## Decide if the cache object is too old
     if ((time() - $cache_time) <= $this->{'_CacheConfig'}{'cache_for_sec'}) {
       $this->_fetch($cache_key); 
-
       return (1, "Fetched from cache");
     }
     else { 
-      $this->_expire($cache_key); 
+      $this->_gc_expired();
     }
   } 
 
   ## Fetch from the DB!
   my ($rvalue, $msg) = $this->SUPER::LoadByCols(%attr);
  
-  ## Only cache the object if its okay to do so. 
-  $this->_store($cache_key) if ($this->{'_CacheConfig'}{'cache_p'});
-  return ($rvalue, $msg);
+  ## Check the return value, if its good, cache it! 
+  if ($rvalue) {
+    ## Only cache the object if its okay to do so. 
+    $this->_store($cache_key) if ($this->{'_CacheConfig'}{'cache_p'});
+    return ($rvalue, $msg);
+  }
+  else { 
+    return ($rvalue, $msg);
+  }
 
   return (0, "Unexpected something or other [never hapens].");
 }
@@ -82,11 +86,30 @@ sub _Set () {
   my $cache_key = $this->{'_CacheConfig'}{'cache_key'};
 
   if (exists $this->{'_RECORD_CACHE'}{$cache_key}) {
-    $this->_expire($cache_key);
+    $this->_expire();
   }
  
   return $this->SUPER::_Set(%attr);
 
+}
+
+
+
+
+# Function: _gc_expired
+# Type    : private instance
+# Args    : nil
+# Lvalue  : 1
+# Desc    : Looks at all cached objects and expires if needed. 
+
+sub _gc_expired () { 
+  my ($this) = @_; 
+  
+  foreach $cache_key (keys %{$this->{'_RECORD_CACHE'}}) {
+    my $cache_time = $this->{'_RECORD_CACHE'}{$cache_key}{'time'};  
+    $this->_expire($cache_key) 
+      if ((time() - $cache_time) > $this->{'_CacheConfig'}{'cache_for_sec'});
+  }
 }
 
 
@@ -98,7 +121,7 @@ sub _Set () {
 # Lvalue  : 1
 # Desc    : Removes this object from the cache. 
 
-sub _expire () {
+sub _expire (\$) {
   my ($this, $cache_key) = @_; 
   delete $this->{'_RECORD_CACHE'}{$cache_key};
   return (1);
@@ -118,7 +141,6 @@ sub _fetch () {
 
   $this->{'values'}  = 
     $this->{'_RECORD_CACHE'}{$cache_key}{'obj'}{'values'};
-
   return(1); 
 }
 
@@ -131,7 +153,7 @@ sub _fetch () {
 # Lvalue  : 1
 # Desc    : Stores this object in the cache. 
 
-sub _store () { 
+sub _store (\$) { 
   my ($this, $cache_key) = @_; 
   $this->{'_CacheConfig'}{'cache_key'} = $cache_key;
   $this->{'_RECORD_CACHE'}{$cache_key}{'obj'}=$this;
@@ -151,7 +173,7 @@ sub _store () {
 
 sub _gen_cache_key {
   my ($this, %attr) = @_;
-  my $cache_key = $this->Table() . ":";
+  my $cache_key=$this->Table() . ':';
   while (my ($key, $value) = each %attr) {
     $cache_key .= $key . '=' . $value . ',';
   }
@@ -166,9 +188,9 @@ package __CachableDefaults;
 
 sub _CacheConfig { 
   { 
-     'cache_p'       => 1,
-     'fast_update_p' => 1,
-     'cache_for_sec' => 5,
+     'cache_p'        => 1,
+     'fast_update_p'  => 1,
+     'cache_for_sec'  => 5,
   }
 }
 
