@@ -117,6 +117,10 @@ sub Connect  {
   $self->BuildDSN(%args);
 
   my $handle = DBI->connect($self->DSN, $args{'User'}, $args{'Password'}) || croak "Connect Failed $DBI::errstr\n" ;
+ 
+  #databases do case conversion on the name of columns returned. 
+  #actually, some databases just ignore case. this smashes it to something consistent 
+  $handle->{FetchHashKeyName} ='NAME_lc';
 
   #Set the handle 
   $self->dbh($handle);
@@ -537,7 +541,7 @@ sub BeginTransaction {
     if ($TRANSCOUNT > 1 ) {
         return ($TRANSCOUNT);
     } else {
-        return($self->dbh->begin_work);
+       return($self->dbh->begin_work);
     }
 }
 
@@ -577,11 +581,11 @@ This will turn Autocommit mode back on.
 
 sub Rollback {
     my $self = shift;
-    unless ($TRANSCOUNT) {Carp::confess("Attempted to rollback a transaction with none in progress")};
+    #unless ($TRANSCOUNT) {Carp::confess("Attempted to rollback a transaction with none in progress")};
     $TRANSCOUNT--;
 
     if ($TRANSCOUNT == 0 ) {
-        return($self->dbh->rollback);
+       return($self->dbh->rollback);
     } else { #we're inside a transaction
         return($TRANSCOUNT);
     }

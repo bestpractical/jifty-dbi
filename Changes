@@ -1,5 +1,9 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+0.83_04 June 2 2003
+        - Fixed how values of returned hashes are downcased. 
+        - Should be a minor perf improvement
+
 0.83_03 May 30 2003
         - Moved Stan's destryo fix to the right file
 

@@ -847,7 +847,7 @@ sub LoadFromHash {
   my $hashref = shift;
   
   $self->{'values'} = $hashref;
-  $self->_DowncaseValuesHash();
+  #$self->_DowncaseValuesHash();
   return ($self->{'values'}{'id'});
 }
 
@@ -883,7 +883,7 @@ sub _LoadFromSQL {
         return ( 0, "Couldn't find row" );
     }
 
-    $self->_DowncaseValuesHash();
+    #$self->_DowncaseValuesHash();
 
     ## I guess to be consistant with the old code, make sure the primary  
     ## keys exist.
@@ -924,7 +924,7 @@ sub _LoadFromSQLold {
 
     ## I guess to be consistant with the old code, make sure the primary  
     ## keys exist.
-      $self->_DowncaseValuesHash();
+      #$self->_DowncaseValuesHash();
     
         ## I guess to be consistant with the old code, make sure the primary  
         ## keys exist.
