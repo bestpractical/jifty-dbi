@@ -1,0 +1,5 @@
+Revision history for Perl extension DBIx::SearchBuilder.
+
+0.01  Tue Aug 29 16:08:54 2000
+	- original version; created by h2xs 1.19
+

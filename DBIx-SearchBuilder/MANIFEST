@@ -1,0 +1,9 @@
+Changes
+Makefile.PL
+MANIFEST
+SearchBuilder.pm
+SearchBuilder/Handle.pm
+SearchBuilder/Record.pm
+SearchBuilder/Handle/mysql.pm
+SearchBuilder/Handle/Oracle.pm
+test.pl
