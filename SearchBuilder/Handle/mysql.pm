@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle/mysql.pm,v 1.3 2000/10/17 06:59:17 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle/mysql.pm,v 1.4 2001/01/11 00:05:13 jesse Exp $
 
 package DBIx::SearchBuilder::Handle::mysql;
 use DBIx::SearchBuilder::Handle;
@@ -29,7 +29,8 @@ sub Insert  {
        }
      }
 
-    $self->{'id'}=$sth->{'mysql_insertid'};
+    $self->{'id'}=$self->dbh->{'mysql_insertid'};
+    warn "$self no row id returned on row creation" unless ($self->{'id'});
     return( $self->{'id'}); #Add Succeded. return the id
   }
 

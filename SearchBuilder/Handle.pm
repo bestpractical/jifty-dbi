@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle.pm,v 1.10 2001/01/10 22:07:41 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Handle.pm,v 1.11 2001/01/16 04:59:06 jesse Exp $
 package DBIx::SearchBuilder::Handle;
 use Carp;
 use DBI;
@@ -119,14 +119,58 @@ sub Connect  {
   
   $dsn = "dbi:$args{'Driver'}:dbname=$args{'Database'};host=$args{'Host'}";
   
-  $DBIHandle = DBI->connect_cached($dsn, $args{'User'}, $args{'Password'}) || croak "Connect Failed $DBI::errstr\n" ;
+  my $handle = DBI->connect_cached($dsn, $args{'User'}, $args{'Password'}) || croak "Connect Failed $DBI::errstr\n" ;
 
+  #Set the handle 
+  $self->dbh($handle);
 
-  $self->dbh->{RaiseError}=1;
-  $self->dbh->{PrintError}=1;
   return (1); 
 }
 # }}}
+
+
+# {{{ RaiseError
+
+=head2 RaiseError [MODE]
+
+Turns on the Database Handle's RaiseError attribute.
+
+=cut
+
+sub RaiseError {
+    my $self = shift;
+
+    my $mode = 1; 
+    $mode = shift if (@_);
+
+    $self->dbh->{RaiseError}=$mode;
+}
+
+
+# }}}
+
+# {{{ PrintError
+
+=head2 PrintError [MODE]
+
+Turns on the Database Handle's PrintError attribute.
+
+=cut
+
+sub PrintError {
+    my $self = shift;
+
+    my $mode = 1; 
+    $mode = shift if (@_);
+
+    $self->dbh->{PrintError}=$mode;
+}
+
+
+# }}}
+
+
+
 
 # {{{ sub Disconnect 
 
@@ -145,9 +189,9 @@ sub Disconnect  {
 
 # {{{ sub Handle / dbh 
 
-=head2 dbh
+=head2 dbh [HANDLE]
 
-Return the current DBI handle
+Return the current DBI handle. If we're handed a parameter, make the database handle that.
 
 =cut
 
@@ -156,6 +200,10 @@ Return the current DBI handle
 
 sub dbh {
   my $self=shift;
+  
+  #If we are setting the database handle, set it.
+  $DBIHandle = shift if (@_);
+
   return($DBIHandle);
 }
 

@@ -1,4 +1,4 @@
-# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder.pm,v 1.9 2001/01/10 04:49:15 jesse Exp $
+# $Header: /raid/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder.pm,v 1.10 2001/01/16 04:59:06 jesse Exp $
 
 # {{{ Version, package, new, etc
 
@@ -7,7 +7,7 @@ package DBIx::SearchBuilder;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "0.18";
+$VERSION = "0.19";
 
 =head1 NAME
 
@@ -100,7 +100,7 @@ sub _DoSearch  {
     my ($QueryString, $Order);
     
     
-    $QueryString = "SELECT distinct main.* FROM " . $self->_TableAliases;
+    $QueryString = "SELECT main.* FROM " . $self->_TableAliases;
     
     $QueryString .= $self->_WhereClause . " ".  $self->{'table_links'}. " " 
       if ($self->_isLimited > 0);
