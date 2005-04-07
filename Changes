@@ -1,7 +1,7 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+1.24 Wed Apr  6 22:54:37 EDT 2005
     - Added a new "SearchBuilder::Unique module for uniquifying search results
-
 
 1.23
     - Now use DBI->quote_identifier to quote column and table names (Ruslan)
