@@ -343,7 +343,7 @@ sub Insert {
   }
 
   my $QueryString =
-    "INSERT INTO $table (". join(", ", map {$self->dbh->quote_identifier($_) } @cols). ") VALUES ".
+    "INSERT INTO $table (". join(", ", @cols). ") VALUES ".
     "(". join(", ", @vals). ")";
 
     my $sth =  $self->SimpleQuery($QueryString, @bind);
@@ -374,8 +374,8 @@ sub UpdateRecordValue {
                  @_ );
 
     my @bind  = ();
-    my $query = 'UPDATE ' . $self->dbh->quote_identifier($args{'Table'}) . ' ';
-     $query .= 'SET '    . $self->dbh->quote_identifier($args{'Column'}) . '=';
+    my $query = 'UPDATE ' . $args{'Table'} . ' ';
+     $query .= 'SET '    . $args{'Column'} . '=';
 
   ## Look and see if the field is being updated via a SQL function. 
   if ($args{'IsSQLFunction'}) {
@@ -389,7 +389,7 @@ sub UpdateRecordValue {
   ## Constructs the where clause.
   my $where  = 'WHERE ';
   foreach my $key (keys %{$args{'PrimaryKeys'}}) {
-     $where .= $self->dbh->quote_identifier($key) . "=?" . " AND ";
+     $where .= $key . "=?" . " AND ";
      push (@bind, $args{'PrimaryKeys'}{$key});
   }
      $where =~ s/AND\s$//;
