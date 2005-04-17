@@ -808,6 +808,7 @@ sub Join {
         TABLE2        => undef,
         FIELD2        => undef,
         ALIAS2        => undef,
+        EXPRESSION    => undef,
         @_
     );
 
@@ -882,12 +883,21 @@ sub Join {
         $string = " JOIN " . $args{'TABLE2'} . " $alias ";
 
     }
+
+
+    my $criterion;
+    if ($args{'EXPRESSION'}) {
+        $criterion = $args{'EXPRESSION'};
+    } else {
+        $criterion = $args{'ALIAS1'}.".".$args{'FIELD1'};
+    }
+
     $args{'SearchBuilder'}->{'left_joins'}{"$alias"}{'alias_string'} = $string;
     $args{'SearchBuilder'}->{'left_joins'}{"$alias"}{'depends_on'}   =
       $args{'ALIAS1'};
     $args{'SearchBuilder'}->{'left_joins'}{"$alias"}{'criteria'}
       { 'criterion' . $args{'SearchBuilder'}->{'criteria_count'}++ } =
-      " $args{'ALIAS1'}.$args{'FIELD1'} = $alias.$args{'FIELD2'}";
+      " $alias.$args{'FIELD2'} = $criterion";
 
     return ($alias);
 }

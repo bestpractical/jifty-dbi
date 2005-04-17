@@ -5,6 +5,7 @@ inc/Module/Install/Makefile.pm
 inc/Module/Install/Metadata.pm
 Makefile.PL
 MANIFEST			This list of files
+SIGNATURE
 META.yml
 SearchBuilder.pm
 SearchBuilder/Handle.pm
@@ -20,7 +21,9 @@ SearchBuilder/Record.pm
 SearchBuilder/Record/Cachable.pm
 SearchBuilder/Union.pm
 SearchBuilder/Unique.pm
+t/utils.pl
 t/00.load.t
+t/01basics.t
 t/01records.t
 t/02records_object.t
 t/pod.t
