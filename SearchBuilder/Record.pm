@@ -337,11 +337,10 @@ For simple use, thats more or less all there is to it.  In the future, I hope to
 this HowTo to discuss using container classes,  overloading, and what 
 ever else I think of.
 
-
-=head1 METHODS NAMING
+=head1 METHOD NAMING
  
-All methods has lower case aliases, '_' is used to distinguish words.
-For example method C<_PrimaryKeys> has alias C<_primary_keys>.
+Each method has a lower case alias; '_' is used to separate words.
+For example, the method C<_PrimaryKeys> has the alias C<_primary_keys>.
 
 =head1 METHODS
 

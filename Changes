@@ -1,6 +1,6 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
-    - Patches from Ruslan to switch to using 'capitalize.pm' for our regular_case subroutine aliases
+    - Patches from Ruslan to switch to using 'capitalization.pm' for our regular_case subroutine aliases
 
 1.27 Sun May  8 22:49:30 EDT 2005
 

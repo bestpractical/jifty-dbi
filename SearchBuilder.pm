@@ -31,10 +31,10 @@ DBIx::SearchBuilder - Encapsulate SQL queries and rows in simple perl objects
 
 This module provides an object-oriented mechanism for retrieving and updating data in a DBI-accesible database. 
 
-=head1 METHODS NAMING
+=head1 METHOD NAMING
  
-All methods has lower case aliases, '_' is used to distinguish words.
-For example method C<RedoSearch> has alias C<redo_search>.
+Each method has a lower case alias; '_' is used to separate words.
+For example, the method C<RedoSearch> has the alias C<redo_search>.
 
 =head1 METHODS
 
