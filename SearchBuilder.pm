@@ -1084,8 +1084,12 @@ sub GroupByCols {
 			FIELD => undef,
 			%$row
 		      );
+        if ($rowhash{'FUNCTION'} ) {
+            $clause .= ($clause ? ", " : " ");
+            $clause .= $rowhash{'FUNCTION'};
 
-        if ( ($rowhash{'ALIAS'}) and
+        }
+        elsif ( ($rowhash{'ALIAS'}) and
              ($rowhash{'FIELD'}) ) {
 
             $clause .= ($clause ? ", " : " ");
@@ -1498,9 +1502,17 @@ sub Column {
         if ( $func =~ /^DISTINCT\s*COUNT$/i ) {
             $name = "COUNT(DISTINCT $name)";
         }
-        else {
-            $name = "\U$func\E($name)";
+        # If we want to substitute 
+        elsif ($func =~ /\?/) {
+            $name = join($name,split(/\?/,$func));
         }
+        # If we want to call a simple function on the column
+        elsif ($func !~ /\(/)  {
+            $name = "\U$func\E($name)";
+        } else {
+            $name = $func;
+        }
+        
     }
 
     my $column = "col" . @{ $self->{columns} ||= [] };
