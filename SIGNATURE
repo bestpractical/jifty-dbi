@@ -14,11 +14,11 @@ not run its Makefile.PL or Build.PL.
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA1
 
-SHA1 2cf45efdc104a936342f4d3ea5283a8e6b1ccaec Changes
+SHA1 82cd67dad9314c6304aecf52827635de81fd60cf Changes
 SHA1 dceebecaec0a60f15be74ac0ecd26eb6dfe7cf91 MANIFEST
-SHA1 e44f79a0d8ad6bb8541758f026054c215f055e96 META.yml
+SHA1 8ffc4a3c3155957c5c4275c3a32403c6506e9c07 META.yml
 SHA1 6d660abb8f5ceb477b017d1cdbc8c73812a86eb2 Makefile.PL
-SHA1 a30f290b8430e2be7eb83b1d73180511ff1f1f36 SearchBuilder.pm
+SHA1 78de43209e1343572d5dda7b7ad2204325bab471 SearchBuilder.pm
 SHA1 799f8da0756e572d3a1397a5ecbf363a482f1ab9 SearchBuilder/Handle.pm
 SHA1 0103d897704a95032b32363dc65ea4f0d8f5965d SearchBuilder/Handle/Informix.pm
 SHA1 861cee4205d1f367af5cc68b561fd37e38c1acf0 SearchBuilder/Handle/ODBC.pm
@@ -45,7 +45,7 @@ SHA1 97cdae718319ca9e2cd6d2c0cfe2f07cda098284 t/utils.pl
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.2.5 (GNU/Linux)
 
-iD8DBQFCYvFUEi9d9xCOQEYRAqFaAJ9IsDjtvFpvvNPREAw34cEeDV+OuQCdEIA/
-pUFP9nKbE/9jzOLX1X230Nk=
-=/fut
+iD8DBQFCftBOEi9d9xCOQEYRAgaPAJ48HqtCHHPXOviDnywqb4KZGkpIuQCfV54K
+qtwpNKUdwewDvW5Tj6TPs9A=
+=P2YO
 -----END PGP SIGNATURE-----
