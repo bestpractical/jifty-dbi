@@ -1,8 +1,9 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
-1.27
+1.27 Sun May  8 22:49:30 EDT 2005
 
-    - Added supoprt for functions containing "?" to represent the parameter in ->Column()
+    - Added supoprt for functions containing "?" to represent the parameter 
+        in ->Column()
     - Added better support for functional columns in search listings and
       group by clauses
 
