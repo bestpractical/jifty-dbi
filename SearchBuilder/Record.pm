@@ -8,6 +8,7 @@ use vars qw($AUTOLOAD);
 use Class::ReturnValue;
 
 
+
 # {{{ Doc
 
 =head1 NAME
@@ -337,6 +338,10 @@ this HowTo to discuss using container classes,  overloading, and what
 ever else I think of.
 
 
+=head1 METHODS NAMING
+ 
+All methods has lower case aliases, '_' is used to distinguish words.
+For example method C<_PrimaryKeys> has alias C<_primary_keys>.
 
 =head1 METHODS
 
@@ -375,9 +380,10 @@ Returns this row's primary key.
 =cut
 
 
-*Id = \&id;
 
-sub id  {
+*id = \&Id;
+
+sub Id  {
     my $pkey = $_[0]->_PrimaryKey();
     $_[0]->{'values'}->{$pkey};
 }
@@ -394,7 +400,7 @@ Return a hash of the values of our primary keys for this function.
 
 
 
-*primary_keys = \&PrimaryKeys;
+
 sub PrimaryKeys { 
     my $self = shift; 
     my %hash = map { $_ => $self->{'values'}->{$_} } @{$self->_PrimaryKeys};
@@ -501,7 +507,7 @@ Returns undef unless C<KEY> is accessible in C<MODE> otherwise returns C<MODE> v
 
 =cut
 
-*_accessible = \&_Accessible;
+
 sub _Accessible {
     my $self = shift;
     my $attr = shift;
@@ -614,7 +620,7 @@ override __Value.
 
 =cut
 
-*__value = \&__Value;
+
 sub __Value {
   my $self = shift;
   my $field = lc(shift);
@@ -642,7 +648,7 @@ Subclasses can override _Value to insert custom access control.
 
 =cut
 
-*_value = \&_Value;
+
 sub _Value  {
   my $self = shift;
   return ($self->__Value(@_));
@@ -660,7 +666,7 @@ Subclasses can override _Set to insert custom access control.
 
 =cut
 
-*_set = \&_Set;
+
 sub _Set {
     my $self = shift;
     return ($self->__Set(@_));
@@ -668,7 +674,7 @@ sub _Set {
 
 
 
-*__set = \&__Set;
+
 sub __Set {
     my $self = shift;
 
@@ -789,7 +795,7 @@ sub __Set {
 
 #TODO: Implement _Validate.
 
-*_validate = \&_Validate;
+
 sub _Validate  {
     my $self = shift;
     my $field = shift;
@@ -926,7 +932,7 @@ is $id
 =cut
 
 
-*load = \&Load;
+
 sub Load  {
     my $self = shift;
     # my ($package, $filename, $line) = caller;
@@ -944,7 +950,7 @@ undefined
 
 =cut
 
-*load_by_col = \&LoadByCol;
+
 
 sub LoadByCol  {
     my $self = shift;
@@ -970,7 +976,7 @@ OR has references which contain 'operator' and 'value'
 
 =cut
 
-*load_by_cols = \&LoadByCols;
+
 sub LoadByCols  {
     my $self = shift;
     my %hash  = (@_);
@@ -1013,7 +1019,7 @@ Loads a record by its primary key. Your record class must define a single primar
 
 =cut
 
-*load_by_id = \&LoadById;
+
 sub LoadById  {
     my $self = shift;
     my $id = shift;
@@ -1034,7 +1040,7 @@ Like LoadById with basic support for compound primary keys.
 
 =cut
 
-*load_by_primary_keys = \&LoadByPrimaryKeys;
+
 
 sub LoadByPrimaryKeys {
     my ($self, $data) = @_;
@@ -1063,7 +1069,7 @@ loaded values hash.
 
 =cut
 
-*load_from_hash = \&LoadFromHash;
+
 
 sub LoadFromHash {
   my $self = shift;
@@ -1087,7 +1093,7 @@ Load a record as the result of an SQL statement
 
 =cut
 
-*load_from_sql = \&LoadFromSQL;
+
 
 
 sub _LoadFromSQL {
@@ -1143,7 +1149,7 @@ as columns for this recordtype
 
 =cut 
 
-*create = \&Create;
+
 
 sub Create {
     my $self    = shift;
@@ -1229,7 +1235,7 @@ Returns or sets the name of the current Table
 
 =cut
 
-*table = \&Table;
+
 
 sub Table {
     my $self = shift;
@@ -1249,7 +1255,7 @@ Returns or sets the current DBIx::SearchBuilder::Handle object
 
 =cut
 
-*_handle = \&_Handle;
+
 sub _Handle  {
     my $self = shift;
     if (@_) {
@@ -1260,6 +1266,9 @@ sub _Handle  {
 
 # }}}
 
+if( eval { require capitalization } ) {
+	capitalization->unimport( __PACKAGE__ );
+}
 
 1;
 

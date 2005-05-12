@@ -31,6 +31,11 @@ DBIx::SearchBuilder - Encapsulate SQL queries and rows in simple perl objects
 
 This module provides an object-oriented mechanism for retrieving and updating data in a DBI-accesible database. 
 
+=head1 METHODS NAMING
+ 
+All methods has lower case aliases, '_' is used to distinguish words.
+For example method C<RedoSearch> has alias C<redo_search>.
+
 =head1 METHODS
 
 =cut
@@ -397,7 +402,7 @@ such that the following call to Next will start over with the first item retriev
 
 =cut
 
-*next = \&Next;
+
 
 sub Next {
     my $self = shift;
@@ -430,7 +435,7 @@ through the result set.
 
 =cut
 
-*goto_first_item = \&GotoFirstItem;
+
 sub GotoFirstItem {
     my $self = shift;
     $self->GotoItem(0);
@@ -1345,7 +1350,7 @@ Returns the number of records in the set.
 =cut
 
 
-*count = \&Count;
+
 sub Count {
     my $self = shift;
 
@@ -1615,7 +1620,9 @@ sub Table {
 
 
 # }}}
-
+if( eval { require capitalization } ) {
+	capitalization->unimport( __PACKAGE__ );
+}
 
 1;
 __END__
