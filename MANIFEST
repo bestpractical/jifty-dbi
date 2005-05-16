@@ -24,6 +24,7 @@ SearchBuilder/Unique.pm
 t/utils.pl
 t/00.load.t
 t/01basics.t
+t/01nocap_api.t
 t/01records.t
 t/02records_object.t
 t/pod.t

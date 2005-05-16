@@ -14,11 +14,11 @@ not run its Makefile.PL or Build.PL.
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA1
 
-SHA1 36f1b39fa1954918c795260cb30d7786a5aaa39b Changes
-SHA1 dceebecaec0a60f15be74ac0ecd26eb6dfe7cf91 MANIFEST
-SHA1 ac613ff693089e25be0fbff0336aacfa927f792e META.yml
+SHA1 ae7bdf7e5da304bc4e6f39363d96e26f082be936 Changes
+SHA1 5e06a97a59ff3a371ce70db27d1418bc2b8b0b3b MANIFEST
+SHA1 580710a5fada4ef1161188d1bd9cc773a9015b6e META.yml
 SHA1 8f26409a8eabeda3793ac784e003a01ba3acdf67 Makefile.PL
-SHA1 08a05064bbce5a1ba2b07d104e45adebb0debb9b SearchBuilder.pm
+SHA1 7a49c6b6ee2af0d29fecfdc1cf310a2aed66c730 SearchBuilder.pm
 SHA1 799f8da0756e572d3a1397a5ecbf363a482f1ab9 SearchBuilder/Handle.pm
 SHA1 0103d897704a95032b32363dc65ea4f0d8f5965d SearchBuilder/Handle/Informix.pm
 SHA1 861cee4205d1f367af5cc68b561fd37e38c1acf0 SearchBuilder/Handle/ODBC.pm
@@ -28,7 +28,7 @@ SHA1 52b3c2a83c16965ee9a8aecd4dae60ac1051a0d5 SearchBuilder/Handle/SQLite.pm
 SHA1 aec168c75ba6a33e3e5ac85cbefd2e2d7c036696 SearchBuilder/Handle/Sybase.pm
 SHA1 6399c19c7600c01f75e187facb1c01b2611b95df SearchBuilder/Handle/mysql.pm
 SHA1 f4f6ea88631e6310243b6351e8df11e1ec88b261 SearchBuilder/Handle/mysqlPP.pm
-SHA1 88397d5538cb464547d35860cf7214a34bee6fed SearchBuilder/Record.pm
+SHA1 37e29e5786b13425320ddb391be84f01e33863a7 SearchBuilder/Record.pm
 SHA1 4ecb1213589d62c08b3e3bb46bffbd9cda09ea10 SearchBuilder/Record/Cachable.pm
 SHA1 446f59a1fa8fa631c908f1fe3ea671c7178c9270 SearchBuilder/Union.pm
 SHA1 e337b5cb2776245f943a3445a2187fe80823ffd1 SearchBuilder/Unique.pm
@@ -38,6 +38,7 @@ SHA1 e094fe96aef06c68d7a424818c12e52b11f1ccdd inc/Module/Install/Makefile.pm
 SHA1 e448c6dc5351ef425e3f8bdbeb642409120bc3ca inc/Module/Install/Metadata.pm
 SHA1 e59ea21b9407644714a5f67c7132a11916c25133 t/00.load.t
 SHA1 c59e7dce93fbfd0d942cad8fc7f723a08301da39 t/01basics.t
+SHA1 2b2dc6f72370f60e1d233f2f8c12bb87414e825c t/01nocap_api.t
 SHA1 14bcc915f2138bd9e2cfc2d71a1dc81f48d1c2a9 t/01records.t
 SHA1 c6d09fe0aed0504426b40f9bd630690f7ba69e4d t/02records_object.t
 SHA1 e9c6a5881fc60173fbc8d479c1afd2ce3b43bef1 t/pod.t
@@ -45,7 +46,7 @@ SHA1 97cdae718319ca9e2cd6d2c0cfe2f07cda098284 t/utils.pl
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.2.5 (GNU/Linux)
 
-iD8DBQFCiQOIEi9d9xCOQEYRAu9fAJ9qgPggd5Qwf/Q4/+OBW5/ZbwXU+wCeKQvN
-83J9Hgf7F/LKlcj94sWkOxw=
-=wRBd
+iD8DBQFCiQTwEi9d9xCOQEYRAmXgAJ9oPd7lEQXtJz4KMlPH1r5EqHu/WQCgmEW8
+R6ZXorIg+lxhg4EXaIgf1WQ=
+=gFh+
 -----END PGP SIGNATURE-----
