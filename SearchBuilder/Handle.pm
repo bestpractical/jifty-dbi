@@ -85,7 +85,7 @@ sub Connect  {
            DisconnectHandleOnDestroy => undef,
 	       @_);
 
-    my $dsn = $self->DSN;
+    my $dsn = $self->DSN || '';
 
     # Setting this actually breaks old RT versions in subtle ways. So we need to explicitly call it
 

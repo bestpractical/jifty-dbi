@@ -4,17 +4,15 @@ use strict;
 
 use Test::More;
 BEGIN { require "t/utils.pl" }
-our (@SupportedDrivers);
+our (@AvailableDrivers);
 
-my $total = scalar(@SupportedDrivers) * 4;
+use constant TESTS_PER_DRIVER => 4;
+
+my $total = scalar(@AvailableDrivers) * TESTS_PER_DRIVER;
 plan tests => $total;
 
-foreach my $d ( @SupportedDrivers ) {
+foreach my $d ( @AvailableDrivers ) {
 SKIP: {
-	eval "require DBD::$d";
-	if( $@ ) {
-		skip "DBD::$d is not installed", 4;
-	}
 	use_ok('DBIx::SearchBuilder::Handle::'. $d);
 	my $handle = get_handle( $d );
 	isa_ok($handle, 'DBIx::SearchBuilder::Handle');
