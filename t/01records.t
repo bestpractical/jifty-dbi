@@ -8,7 +8,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@AvailableDrivers);
 
-use constant TESTS_PER_DRIVER => 30;
+use constant TESTS_PER_DRIVER => 44;
 
 my $total = scalar(@AvailableDrivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -32,10 +32,13 @@ SKIP: {
 	my $rec = TestApp::Address->new($handle);
 	isa_ok($rec, 'DBIx::SearchBuilder::Record');
 
-	# _Accessible testings
+# _Accessible testings
 	is( $rec->_Accessible('id' => 'read'), 1, 'id is accessible for read' );
 	is( $rec->_Accessible('id' => 'write'), undef, 'id is not accessible for write' );
+	is( $rec->_Accessible('id'), undef, "any field is not accessible in undefined mode" );
 	is( $rec->_Accessible('unexpected_field' => 'read'), undef, "field doesn't exist and can't be accessible for read" );
+	is_deeply( [sort($rec->ReadableAttributes)], [qw(EmployeeId Name Phone id)], 'readable attributes' );
+	is_deeply( [sort($rec->WritableAttributes)], [qw(EmployeeId Name Phone)], 'writable attributes' );
 
 	can_ok($rec,'Create');
 
@@ -51,13 +54,13 @@ SKIP: {
 	ok($val, $msg) ;
 	is($rec->Name, 'Obra', "We did actually change the name");
 
-	# Validate immutability of the field id
+# Validate immutability of the field id
 	($val, $msg) = $rec->Setid( $rec->id + 1 );
 	ok(!$val, $msg);
 	is($msg, 'Immutable field', 'id is immutable field');
 	is($rec->id, $id, "The record still has its id");
 
-	# Check some non existant field
+# Check some non existant field
 	ok( !eval{ $rec->SomeUnexpectedField }, "The record has no 'SomeUnexpectedField'");
 	{
 		# test produce DBI warning
@@ -71,7 +74,7 @@ SKIP: {
 	ok(!$val, "$msg");
 
 
-	# Validate truncation on update
+# Validate truncation on update
 
 	($val,$msg) = $rec->SetName('1234567890123456789012345678901234567890');
 
@@ -81,7 +84,7 @@ SKIP: {
 
 
 
-	# Test unicode truncation:
+# Test unicode truncation:
 	my $univalue = "這是個測試";
 
 	($val,$msg) = $rec->SetName($univalue.$univalue);
@@ -92,14 +95,14 @@ SKIP: {
 
 
 
-	# make sure we do _not_ truncate things which should not be truncated
+# make sure we do _not_ truncate things which should not be truncated
 	($val,$msg) = $rec->SetEmployeeId('1234567890');
 
 	ok($val, $msg) ;
 
 	is($rec->EmployeeId, '1234567890', "Did not truncate id on create");
 
-	# make sure we do truncation on create
+# make sure we do truncation on create
 	my $newrec = TestApp::Address->new($handle);
 	my $newid = $newrec->Create( Name => '1234567890123456789012345678901234567890',
 	                             EmployeeId => '1234567890' );
@@ -109,6 +112,42 @@ SKIP: {
 	ok ($newid, "Created a new record");
 	is($newrec->Name, '12345678901234', "Truncated on create");
 	is($newrec->EmployeeId, '1234567890', "Did not truncate id on create");
+
+# no prefetch feature and _LoadFromSQL sub checks
+	$newrec = TestApp::Address->new($handle);
+	($val, $msg) = $newrec->_LoadFromSQL('SELECT id FROM Address WHERE id = ?', $newid);
+	is($val, 1, 'found object');
+	is($newrec->Name, '12345678901234', "autoloaded not prefetched field");
+	is($newrec->EmployeeId, '1234567890', "autoloaded not prefetched field");
+
+# _LoadFromSQL and missing PK
+	$newrec = TestApp::Address->new($handle);
+	($val, $msg) = $newrec->_LoadFromSQL('SELECT Name FROM Address WHERE Name = ?', '12345678901234');
+	is($val, 0, "didn't find object");
+	is($msg, "Missing a primary key?", "reason is missing PK");
+
+# _LoadFromSQL and not existant row
+	$newrec = TestApp::Address->new($handle);
+	($val, $msg) = $newrec->_LoadFromSQL('SELECT id FROM Address WHERE id = ?', 0);
+	is($val, 0, "didn't find object");
+	is($msg, "Couldn't find row", "reason is wrong id");
+
+# _LoadFromSQL and wrong SQL
+	$newrec = TestApp::Address->new($handle);
+	{
+		local $SIG{__WARN__} = sub{return};
+		($val, $msg) = $newrec->_LoadFromSQL('SELECT ...');
+	}
+	is($val, 0, "didn't find object");
+	is($msg, "Couldn't execute query", "reason is bad SQL");
+
+# deletes
+	$newrec = TestApp::Address->new($handle);
+	$newrec->Load( $newid );
+	is( $newrec->Delete, 1, 'successfuly delete record');
+	$newrec = TestApp::Address->new($handle);
+	$newrec->Load( $newid );
+	is( $newrec->id, undef, "record doesn't exist any more");
 
 	cleanup_schema( 'TestApp::Address', $handle );
 }} # SKIP, foreach blocks

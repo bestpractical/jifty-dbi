@@ -9,7 +9,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@AvailableDrivers);
 
-use constant TESTS_PER_DRIVER => 8;
+use constant TESTS_PER_DRIVER => 11;
 
 my $total = scalar(@AvailableDrivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -42,8 +42,14 @@ SKIP: {
 
 	my $obj = $phone->EmployeeObj($handle);
 	ok($obj, "Employee #$e_id has phone #$p_id");
+	isa_ok( $obj, 'TestApp::Employee');
 	is($obj->id, $e_id);
 	is($obj->Name, 'RUZ');
+
+	# tests for no object mapping
+	my ($state, $msg) = $phone->ValueObj($handle);
+	ok(!$state, "State is false");
+	is( $msg, 'No object mapping for field', 'Error message is correct');
 
 	cleanup_schema( 'TestApp', $handle );
 }} # SKIP, foreach blocks
