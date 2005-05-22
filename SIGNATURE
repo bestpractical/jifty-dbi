@@ -14,12 +14,12 @@ not run its Makefile.PL or Build.PL.
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA1
 
-SHA1 ae7bdf7e5da304bc4e6f39363d96e26f082be936 Changes
+SHA1 b4660f1a8388cb9516b5b3c86142889be861c0f2 Changes
 SHA1 b9603bb5089fa4e9fdcd77d0292639659853bb5b MANIFEST
 SHA1 580710a5fada4ef1161188d1bd9cc773a9015b6e META.yml
 SHA1 8f26409a8eabeda3793ac784e003a01ba3acdf67 Makefile.PL
-SHA1 7a49c6b6ee2af0d29fecfdc1cf310a2aed66c730 SearchBuilder.pm
-SHA1 799f8da0756e572d3a1397a5ecbf363a482f1ab9 SearchBuilder/Handle.pm
+SHA1 279c67752c054a73fd7759ad2623e3a8bfb1b69c SearchBuilder.pm
+SHA1 2ea5037454e3a775bfba1e125a9a5d943a5c096e SearchBuilder/Handle.pm
 SHA1 0103d897704a95032b32363dc65ea4f0d8f5965d SearchBuilder/Handle/Informix.pm
 SHA1 861cee4205d1f367af5cc68b561fd37e38c1acf0 SearchBuilder/Handle/ODBC.pm
 SHA1 6f798ff065f28239767230fcd8c9330dae4eafa7 SearchBuilder/Handle/Oracle.pm
@@ -28,7 +28,7 @@ SHA1 52b3c2a83c16965ee9a8aecd4dae60ac1051a0d5 SearchBuilder/Handle/SQLite.pm
 SHA1 aec168c75ba6a33e3e5ac85cbefd2e2d7c036696 SearchBuilder/Handle/Sybase.pm
 SHA1 6399c19c7600c01f75e187facb1c01b2611b95df SearchBuilder/Handle/mysql.pm
 SHA1 f4f6ea88631e6310243b6351e8df11e1ec88b261 SearchBuilder/Handle/mysqlPP.pm
-SHA1 37e29e5786b13425320ddb391be84f01e33863a7 SearchBuilder/Record.pm
+SHA1 88e3e675ba2aef8203e58ac1132250a3468839b1 SearchBuilder/Record.pm
 SHA1 4ecb1213589d62c08b3e3bb46bffbd9cda09ea10 SearchBuilder/Record/Cachable.pm
 SHA1 446f59a1fa8fa631c908f1fe3ea671c7178c9270 SearchBuilder/Union.pm
 SHA1 e337b5cb2776245f943a3445a2187fe80823ffd1 SearchBuilder/Unique.pm
@@ -38,16 +38,16 @@ SHA1 2e300b145ee61eea9dfd71624b17b0bc9218aa4f inc/Module/Install/Base.pm
 SHA1 e094fe96aef06c68d7a424818c12e52b11f1ccdd inc/Module/Install/Makefile.pm
 SHA1 e448c6dc5351ef425e3f8bdbeb642409120bc3ca inc/Module/Install/Metadata.pm
 SHA1 e59ea21b9407644714a5f67c7132a11916c25133 t/00.load.t
-SHA1 c59e7dce93fbfd0d942cad8fc7f723a08301da39 t/01basics.t
+SHA1 a7ed1ee359ebe2842b354b5652a441403e802080 t/01basics.t
 SHA1 2b2dc6f72370f60e1d233f2f8c12bb87414e825c t/01nocap_api.t
-SHA1 14bcc915f2138bd9e2cfc2d71a1dc81f48d1c2a9 t/01records.t
-SHA1 c6d09fe0aed0504426b40f9bd630690f7ba69e4d t/02records_object.t
+SHA1 ad7bf4a92137528705c5adda84b437b26f91f6cd t/01records.t
+SHA1 624e75995c97c0bc42e1f81d009e39c88335fff1 t/02records_object.t
 SHA1 e9c6a5881fc60173fbc8d479c1afd2ce3b43bef1 t/pod.t
-SHA1 97cdae718319ca9e2cd6d2c0cfe2f07cda098284 t/utils.pl
+SHA1 8d791be071e295d22687190ae5adf94f1868cf62 t/utils.pl
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.2.5 (GNU/Linux)
 
-iD8DBQFCiQV1Ei9d9xCOQEYRAgMRAJ9w1QMM4WSQGlDtnokfVACcXUtWHACgrZGl
-tEqg9jjRBgXnY6ZaauZSvG4=
-=0UgA
+iD8DBQFCkNvjEi9d9xCOQEYRAjSZAJ47V88NE8ZZUGyhg8KbgyFI5T7CCwCeLwtJ
+f4wc2NEGuQ1IU4nI+WiW4gk=
+=xhGl
 -----END PGP SIGNATURE-----
