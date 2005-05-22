@@ -419,16 +419,14 @@ sub DESTROY {
 # {{{ sub AUTOLOAD 
 
 sub AUTOLOAD {
-    my $self = shift;
+    my $self = $_[0];
 
     no strict 'refs';
-    my $Attrib;
-    if ( $AUTOLOAD =~ /.*::(\w+)/o ) {
-        $Attrib = $1;
-    } 
-    if ( $Attrib &&  $self->_Accessible( $Attrib, 'read' ) ) {
+    my ($Attrib) = ( $AUTOLOAD =~ /::(\w+)$/o );
+
+    if ( $self->_Accessible( $Attrib, 'read' ) ) {
         *{$AUTOLOAD} = sub { return ( $_[0]->_Value($Attrib) ) };
-        return ( $self->_Value($Attrib) );
+	goto &$AUTOLOAD;
     }
     elsif ( $AUTOLOAD =~ /.*::[sS]et_?(\w+)/o ) {
             $Attrib = $1;
@@ -438,16 +436,12 @@ sub AUTOLOAD {
             *{$AUTOLOAD} = sub {
                 return ( $_[0]->_Set( Field => $Attrib, Value => $_[1] ) );
             };
-
-            my $Value = shift @_;
-            return ( $self->_Set( Field => $Attrib, Value => $Value ) );
+	    goto &$AUTOLOAD;
         }
 
         elsif ( $self->_Accessible( $Attrib, 'read' ) ) {
-            *{$AUTOLOAD} = sub {
-                return ( 0, 'Immutable field' );
-            };
-            return ( 0, 'Immutable field' );
+            *{$AUTOLOAD} = sub { return ( 0, 'Immutable field' ) };
+	    goto &$AUTOLOAD;
         }
         else {
             return ( 0, 'Nonexistant field?' );
@@ -457,13 +451,12 @@ sub AUTOLOAD {
         $Attrib = $1;
         if ( $self->_Accessible( $Attrib, 'object' ) ) {
             *{$AUTOLOAD} = sub {
-                my $s = shift;
-                return $s->_Object(
+                return (shift)->_Object(
                     Field => $Attrib,
                     Args  => [@_],
                 );
             };
-            return $self->_Object( Field => $Attrib, Args => [@_] );
+	    goto &$AUTOLOAD;
         }
         else {
             return ( 0, 'No object mapping for field' );
@@ -478,8 +471,7 @@ sub AUTOLOAD {
         $Attrib = $1;
 
         *{$AUTOLOAD} = sub { return ( $_[0]->_Validate( $Attrib, $_[1] ) ) };
-        my $Value = shift @_;
-        return ( $self->_Validate( $Attrib, $Value ) );
+	goto &$AUTOLOAD;
     }
 
     # TODO: if autoload = 0 or 1 _ then a combination of lowercase and _ chars,
