@@ -1,12 +1,38 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+1.30_02 Sun May 22 15:21:19 EDT 2005
+
+ - Lots of patches from Ruslan:
+
+   First and main change is using of `goto &$AUTOLOAD` syntax, that helps
+   avoid code duplication and hides AUTOLOAD sub from stack trace. I think 
+   this also would help implement CompileAllAutoSubs method easier.
+   
+ - It's also one of the steps to better tests coverage.
+   
+ - Test coverage for Record.pm grows from 66% to 75.2%.
+   
+ - _LoadFromSQL never reported error when PK fields are missed. Fixed. 
+   
+ - fetchrow_hashref dies only when RaiseErrors is true, because we can 
+   control this from Handle obj so we should die according to
+   $Handle->RaiseErrors property. Fixed. 
+ - When RaiseErrors is "false" then fetchrow_hashref returns undef and we
+   should check $sth->err(see `perldoc DBI`). Fixed. 
+   
+ - After call to fetchrow we should clean "fetched" internal hash and fill 
+   it only when we return successful result. Fixed.
+   
+ - If SimpleQuery fails, _LoadFromSQL method doesn't return any error
+   message. Fixed.
+
 1.30_01 Mon May 16 21:37:03 BST 2005
 
     - Patches from Ruslan to switch to using 'capitalization.pm' for our regular_case subroutine aliases
 
 1.27 Sun May  8 22:49:30 EDT 2005
 
-    - Added supoprt for functions containing "?" to represent the parameter 
+    - Added supoprt for functions containing "?" to represent the parameter
         in ->Column()
     - Added better support for functional columns in search listings and
       group by clauses
@@ -42,7 +68,7 @@ Revision history for Perl extension DBIx::SearchBuilder.
 
 1.19 Sat Jan  8 18:22:59 EST 2005
 
-    - Performing a search multiple times could result in multiple copies of 
+    - Performing a search multiple times could result in multiple copies of
       records in a collection. Uncovered thanks to Kevin Chen and Alex Vandiver.
 
 1.18
@@ -59,8 +85,8 @@ Revision history for Perl extension DBIx::SearchBuilder.
     - More record tests from Ruz
 
 1.16 Thu Dec  9 23:49:39 EST 2004
-    - Fixed a bug in D::SB::R::Cachable that could cause it to load the wrong row from the cache if you were loading 
-      by alternate keys and had since changed one of the attributes of a previous row.  This was unmasked by a 
+    - Fixed a bug in D::SB::R::Cachable that could cause it to load the wrong row from the cache if you were loading
+      by alternate keys and had since changed one of the attributes of a previous row.  This was unmasked by a
       bug that Ruslan Zakirov found in RT 3.3's custom field handling
 
 
@@ -80,9 +106,9 @@ Revision history for Perl extension DBIx::SearchBuilder.
     - SearchBuilder now truncates strings before inserting them into character
       types in the database as mysql generally does. Additionally, it truncates
       things at utf8 character boundaries...as mysql does not.
-    - Fix for an undefined record cache warning on load from Autrijus Tang    
+    - Fix for an undefined record cache warning on load from Autrijus Tang
     - Major documentation cleanups --Simon Cavalletto
-    - A few tweaks to the ::Record class to eliminate the              
+    - A few tweaks to the ::Record class to eliminate the
       hard-coding of the name of the id column --Simon Cavalletto
 
 1.12
@@ -92,8 +118,8 @@ Revision history for Perl extension DBIx::SearchBuilder.
 
 1.11
 
-    - When loading an object whose "id" has been altered, as in the case of RT's 
-      "Merge" functionality, the wrong object was returned by the caching layer. 
+    - When loading an object whose "id" has been altered, as in the case of RT's
+      "Merge" functionality, the wrong object was returned by the caching layer.
        Special casing for the "id" method was removed.
 
 
@@ -104,7 +130,7 @@ Revision history for Perl extension DBIx::SearchBuilder.
 
 1.10_05
 
-    -   Reworked the _Accessible mechanism in DBIx::SearchBuilder::Record to 
+    -   Reworked the _Accessible mechanism in DBIx::SearchBuilder::Record to
         remove a horribly crufty old caching mechanism that created a copy
         of the accessible hash for each and every object instantiated,
         sometimes quite slowly.
@@ -113,7 +139,7 @@ Revision history for Perl extension DBIx::SearchBuilder.
 1.10_04 Mon Aug 30 17:33:18 EDT 2004
 
 
-A query builder fix for an issue that bit RT2: 
+A query builder fix for an issue that bit RT2:
 
  Unsatisfied dependency chain in Joins Users_2 at /usr/local/share/perl/5.8.3/DBIx/SearchBuilder/Handle.pm line 965,  line 69.
 
@@ -136,7 +162,7 @@ Stack:
 
 
 1.02_03 Thu Jul 22 13:29:17 EDT 2004
-        - Additional bullet proofing for joins. 
+        - Additional bullet proofing for joins.
           Now we default to ALIAS1 being "main"  (cubic@acronis.ru)
 
 1.02_02 Tue Jul 20 13:06:06 EDT 2004
@@ -146,7 +172,7 @@ Stack:
 1.02_01 Wed Jul  7 12:28:08 EDT 2004
         - magic _Object instantiation from cubic@acronis.ru
         - make SB::_Handle settable directly  (cubic@acronis.ru)
-        - document the above        
+        - document the above
 
 
 1.01    Sun Jun 27 23:35:46 EDT 2004
@@ -159,7 +185,7 @@ Stack:
 1.00_05 - Force utf8 flag on when doing searches for utf8 data; this
           is a workaround for DBDs that don't do it themselves.
 
-1.00_04	- Move Postgres specific join behaviour to the superclass so 
+1.00_04	- Move Postgres specific join behaviour to the superclass so
 	  everyone gets the benefit.
 
 1.00_03 - Remove "AS" from table name aliases on joins, since Oracle
@@ -176,7 +202,7 @@ Stack:
 
 	  Released at the YAPC::Taipei::22004 Release Party
 
-0.98_04 - New mysql/oracle "Join" code that allows more complex bundling of 
+0.98_04 - New mysql/oracle "Join" code that allows more complex bundling of
 	  joins from Linda and Robert
 
 0.98_03 - New test infrastructure from Andy Lester
@@ -191,18 +217,18 @@ Stack:
 0.96    - Releasing 0.96_01 as usable
 
 0.96_01 - Fix a couple of spurious warnings in Record::Cachable
-          Records loaded from multiple-record searches were never cached 
+          Records loaded from multiple-record searches were never cached
           correctly
 
 0.95_03 - Allow case-insensitive loading by columns in SearchBuilder::Record
-        - Record::LoadByCols now lets you specify operator and values 
+        - Record::LoadByCols now lets you specify operator and values
 
-0.95_01 
+0.95_01
         - Removed historical escaping for non-ascii searche queries
 
 0.94-   - Fix for multiple handles in one app from Autrijus Tang
 
-0.93 
+0.93
         - Added ODBC database driver from Autrijus Tang
         - Added the ability to sort on functions of columns from Autrijus Tang
         - Improved case-insensitve searching behavior for PostgreSQL
@@ -213,7 +239,7 @@ Stack:
         - Fixed a bug that caused certain types of pre-canned table aliases to fail to work on join
 
 0.90    Aug 8, 2003
-        - Disable Class::ReturnValue's stack trace feature as it interacted poorly with a stack containing lots of data 
+        - Disable Class::ReturnValue's stack trace feature as it interacted poorly with a stack containing lots of data
 
 0.89_02 July 19, 2003
 	- Patch from Grant DeGraw to allow ordering by multiple columns.
@@ -243,7 +269,7 @@ Stack:
         - Provide support for blowing away nested transactions that aren't yet committed.
 
 0.83_04 June 2 2003
-        - Fixed how values of returned hashes are downcased. 
+        - Fixed how values of returned hashes are downcased.
         - Should be a minor perf improvement
 
 0.83_03 May 30 2003
@@ -254,7 +280,7 @@ Stack:
 
 0.83_01 May 27 2003
         - Stan's DESTROY fix
-        -  Mathieu Arnold's patch to make function naming for 
+        -  Mathieu Arnold's patch to make function naming for
            autoloaded functions a bit more flexible
 
 0.82	May 19 2003
@@ -291,14 +317,14 @@ Stack:
 
 0.76 Dec 30 2002
         - Extra checking for cache misses in DBIx::SearchBuilder::Record::Cachable
-        - The start of support for checking database version, so that we can do 
+        - The start of support for checking database version, so that we can do
           version-specific SQL
         - A patch from Autrijus Tang that allows utf-8 safe searching
 
 0.75 Dec 06 2002
         - Applying a patch from Rob Spier <rspier@pobox.com> which enables
-          arbitrarily complex grouping clauses. It's a hack, but we love it 
-          anyway....at least until SB gets redone with proper arbitrarily 
+          arbitrarily complex grouping clauses. It's a hack, but we love it
+          anyway....at least until SB gets redone with proper arbitrarily
           complex query generation.
 
 0.74 Oct 11 2002
@@ -306,7 +332,7 @@ Stack:
 
 0.73 Sep 10 2002
         - More class-returnvalue ification
-        - Fixed a caching bug that caused multiple copies of an object in memory to not 
+        - Fixed a caching bug that caused multiple copies of an object in memory to not
           be kept in sync
 
 0.72  Aug 28 2002
@@ -330,7 +356,7 @@ Stack:
 
 0.30  Fri May 11 14:59:17 EDT 2001
         - Added DBIx::SearchBuilder::Record::Cachable from <mhat@netlag.com>
-        - Changed SearchBuilder->Count to do the right thing if no 
+        - Changed SearchBuilder->Count to do the right thing if no
           query has been performed
         - No longer specify a sort order if no sort order was specified ;)
 
