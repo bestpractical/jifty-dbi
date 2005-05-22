@@ -1096,30 +1096,27 @@ sub _LoadFromSQL {
 
     #TODO this only gets the first row. we should check if there are more.
 
-    unless ($sth) {
-        return($sth);
-    }
+    return ( 0, "Couldn't execute query" ) unless $sth;
 
-    eval { $self->{'values'} = $sth->fetchrow_hashref; };
-    if ($@) {
-        warn $@;
+    $self->{'values'} = $sth->fetchrow_hashref;
+    $self->{'fetched'} = {};
+    if ( !$self->{'values'} && $sth->err ) {
+        return ( 0, "Couldn't fetch row: ". $sth->err );
     }
 
     unless ( $self->{'values'} ) {
         return ( 0, "Couldn't find row" );
     }
 
-    
-    foreach my $f ( keys %{$self->{'values'}||{}} ) {
-        $self->{'fetched'}{lc $f} = 1;
-    }
-
     ## I guess to be consistant with the old code, make sure the primary  
     ## keys exist.
 
-    eval { $self->PrimaryKeys(); };
-    if ($@) {
-        return ( 0, "Missing a primary key?: $@" );
+    if( grep { not defined } $self->PrimaryKeys ) {
+        return ( 0, "Missing a primary key?" );
+    }
+    
+    foreach my $f ( keys %{$self->{'values'}} ) {
+        $self->{'fetched'}{lc $f} = 1;
     }
     return ( 1, "Found Object" );
 
