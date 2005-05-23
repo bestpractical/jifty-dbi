@@ -89,6 +89,21 @@ CREATE TEMPORARY TABLE Phones (
 } ]
 }
 
+sub schema_pg {
+[ q{
+CREATE TEMPORARY TABLE Employees (
+	id serial PRIMARY KEY,
+	Name varchar
+)
+}, q{
+CREATE TEMPORARY TABLE Phones (
+	id serial PRIMARY KEY,
+	Employee integer references Employees(id),
+	Phone varchar
+)
+} ]
+}
+
 package TestApp::Employee;
 
 use base qw/DBIx::SearchBuilder::Record/;

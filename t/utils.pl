@@ -92,7 +92,18 @@ sub connect_mysql
 		Driver => 'mysql',
 		Database => $ENV{'SB_TEST_MYSQL'},
 		User => $ENV{'SB_TEST_MYSQL_USER'} || 'root',
-		Pass => $ENV{'SB_TEST_MYSQL_PASS'} || '',
+		Password => $ENV{'SB_TEST_MYSQL_PASS'} || '',
+	);
+}
+
+sub connect_pg
+{
+	my $handle = shift;
+	return $handle->Connect(
+		Driver => 'Pg',
+		Database => $ENV{'SB_TEST_PG'},
+		User => $ENV{'SB_TEST_PG_USER'} || 'postgres',
+		Password => $ENV{'SB_TEST_PG_PASS'} || '',
 	);
 }
 

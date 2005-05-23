@@ -196,6 +196,18 @@ EOF
 
 }
 
+sub schema_pg {
+<<EOF;
+CREATE TEMPORARY TABLE Address (
+        id serial PRIMARY KEY,
+        Name varchar,
+        Phone varchar,
+        EmployeeId integer
+)
+EOF
+
+}
+
 sub schema_sqlite {
 
 <<EOF;
