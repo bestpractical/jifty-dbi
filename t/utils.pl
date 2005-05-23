@@ -76,6 +76,22 @@ sub connect_handle
 	goto &$call;
 }
 
+=head2 connect_handle_with_driver($handle, $driver)
+
+Connects C<$handle> using driver C<$driver>; can use this to test the
+magic that turns a C<DBIx::SearchBuilder::Handle> into a C<DBIx::SearchBuilder::Handle::Foo>
+on C<Connect>.
+
+=cut
+
+sub connect_handle_with_driver
+{
+	my $call = "connect_". lc $_[1];
+	return unless defined &$call;
+	@_ = $_[0];
+	goto &$call;
+}
+
 sub connect_sqlite
 {
 	my $handle = shift;

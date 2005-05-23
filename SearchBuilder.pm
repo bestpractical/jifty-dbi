@@ -1630,10 +1630,24 @@ __END__
 # {{{ POD
 
 
+=head1 TESTING
+
+In order to test most of the features of C<DBIx::SearchBuilder>, you need
+to provide C<make test> with a test database.  For each DBI driver that you
+would like to test, set the environment variables C<SB_TEST_FOO>, C<SB_TEST_FOO_USER>,
+and C<SB_TEST_FOO_PASS> to a database name, database username, and database password,
+where "FOO" is the driver name in all uppercase.  You can test as many drivers
+as you like.  (The appropriate C<DBD::> module needs to be installed in order for
+the test to work.)  Note that the C<SQLite> driver will automatically be tested if C<DBD::Sqlite>
+is installed, using a temporary file as the database.  For example:
+
+  SB_TEST_MYSQL=test SB_TEST_MYSQL_USER=root SB_TEST_MYSQL_PASS=foo \
+    SB_TEST_PG=test SB_TEST_PG_USER=postgres  make test
+
 
 =head1 AUTHOR
 
-Copyright (c) 2001-2004 Jesse Vincent, jesse@fsck.com.
+Copyright (c) 2001-2005 Jesse Vincent, jesse@fsck.com.
 
 All rights reserved.
 
