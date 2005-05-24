@@ -8,7 +8,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@AvailableDrivers);
 
-use constant TESTS_PER_DRIVER => 64;
+use constant TESTS_PER_DRIVER => 65;
 
 my $total = scalar(@AvailableDrivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -169,9 +169,8 @@ SKIP: {
 	$id = $rec->Create( Name => 'Obra', Phone => undef );
 	ok( $id, "new record");
 	$rec = TestApp::Address->new($handle);
-#	$rec->LoadByCols( Name => 'Obra', Phone => undef, EmployeeId => '' );
-#	Fails under Pg
-#    is( $rec->id, $id, "loaded record by empty value" );
+	$rec->LoadByCols( Name => 'Obra', Phone => undef, EmployeeId => '' );
+    is( $rec->id, $id, "loaded record by empty value" );
 
 # __Set error paths
 	$rec = TestApp::Address->new($handle);

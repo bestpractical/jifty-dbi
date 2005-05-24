@@ -986,7 +986,16 @@ sub LoadByCols  {
 		push @bind, $value;
 	}
 	else {
-		push @phrases, "($key IS NULL OR $key = '')";
+       push @phrases, "($key IS NULL OR $key = ?)";
+       my $meta = $self->_ClassAccessible->{$key};
+       $meta->{'type'} ||= '';
+       # TODO: type checking should be done in generic way
+       if ( $meta->{'is_numeric'} || $meta->{'type'} =~ /INT|NUMERIC|DECIMAL|REAL|DOUBLE|FLOAT/i  ) {
+            push @bind, 0;
+       } else {
+            push @bind, '';
+       }
+
 	}
     }
     
