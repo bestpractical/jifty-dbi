@@ -8,7 +8,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@AvailableDrivers);
 
-use constant TESTS_PER_DRIVER => 44;
+use constant TESTS_PER_DRIVER => 64;
 
 my $total = scalar(@AvailableDrivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -77,29 +77,23 @@ SKIP: {
 # Validate truncation on update
 
 	($val,$msg) = $rec->SetName('1234567890123456789012345678901234567890');
-
-	ok($val, $msg) ;
-
+	ok($val, $msg);
 	is($rec->Name, '12345678901234', "Truncated on update");
-
+	$val = $rec->TruncateValue(Phone => '12345678901234567890');
+	is($val, '123456789012345678', 'truncate by length attribute');
 
 
 # Test unicode truncation:
 	my $univalue = "這是個測試";
-
 	($val,$msg) = $rec->SetName($univalue.$univalue);
-
 	ok($val, $msg) ;
-
 	is($rec->Name, '這是個測');
 
 
 
 # make sure we do _not_ truncate things which should not be truncated
 	($val,$msg) = $rec->SetEmployeeId('1234567890');
-
 	ok($val, $msg) ;
-
 	is($rec->EmployeeId, '1234567890', "Did not truncate id on create");
 
 # make sure we do truncation on create
@@ -141,6 +135,61 @@ SKIP: {
 	is($val, 0, "didn't find object");
 	is($msg, "Couldn't execute query", "reason is bad SQL");
 
+# test Load* methods
+	$newrec = TestApp::Address->new($handle);
+	$newrec->Load();
+	is( $newrec->id, undef, "can't load record with undef id");
+
+	$newrec = TestApp::Address->new($handle);
+	$newrec->LoadByCol( Name => '12345678901234' );
+	is( $newrec->id, $newid, "load record by 'Name' column value");
+
+# LoadByCol with operator
+	$newrec = TestApp::Address->new($handle);
+	$newrec->LoadByCol( Name => { value => '%45678%',
+				      operator => 'LIKE' } );
+	is( $newrec->id, $newid, "load record by 'Name' with LIKE");
+
+# LoadByPrimaryKeys
+	$newrec = TestApp::Address->new($handle);
+	($val, $msg) = $newrec->LoadByPrimaryKeys( id => $newid );
+	ok( $val, "load record by PK");
+	is( $newrec->id, $newid, "loaded correct record");
+	$newrec = TestApp::Address->new($handle);
+	($val, $msg) = $newrec->LoadByPrimaryKeys( {id => $newid} );
+	ok( $val, "load record by PK");
+	is( $newrec->id, $newid, "loaded correct record" );
+	$newrec = TestApp::Address->new($handle);
+	($val, $msg) = $newrec->LoadByPrimaryKeys( Phone => 'some' );
+	ok( !$val, "couldn't load, missing PK field");
+	is( $msg, "Missing PK field: 'id'", "right error message" );
+
+# LoadByCols and empty or NULL values
+	$rec = TestApp::Address->new($handle);
+	$id = $rec->Create( Name => 'Obra', Phone => undef );
+	ok( $id, "new record");
+	$rec = TestApp::Address->new($handle);
+#	$rec->LoadByCols( Name => 'Obra', Phone => undef, EmployeeId => '' );
+#	Fails under Pg
+#    is( $rec->id, $id, "loaded record by empty value" );
+
+# __Set error paths
+	$rec = TestApp::Address->new($handle);
+	$rec->Load( $id );
+	$val = $rec->SetName( 'Obra' );
+	isa_ok( $val, 'Class::ReturnValue', "couldn't set same value, error returned");
+	is( ($val->as_array)[1], "That is already the current value", "correct error message" );
+	is( $rec->Name, 'Obra', "old value is still there");
+	$val = $rec->SetName( 'invalid' );
+	isa_ok( $val, 'Class::ReturnValue', "couldn't set invalid value, error returned");
+	is( ($val->as_array)[1], 'Illegal value for Name', "correct error message" );
+	is( $rec->Name, 'Obra', "old value is still there");
+# XXX TODO FIXME: this test cover current implementation that is broken //RUZ
+	$val = $rec->SetName( );
+	isa_ok( $val, 'Class::ReturnValue', "couldn't set empty/undef value, error returned");
+	is( ($val->as_array)[1], "No value passed to _Set", "correct error message" );
+	is( $rec->Name, 'Obra', "old value is still there");
+
 # deletes
 	$newrec = TestApp::Address->new($handle);
 	$newrec->Load( $newid );
@@ -167,6 +216,13 @@ sub _Init {
     $self->_Handle($handle);
 }
 
+sub ValidateName
+{
+	my ($self, $value) = @_;
+	return 0 if $value =~ /invalid/i;
+	return 1;
+}
+
 sub _ClassAccessible {
 
     {   
@@ -176,7 +232,7 @@ sub _ClassAccessible {
         Name => 
         {read => 1, write => 1, type => 'varchar(14)', default => ''},
         Phone => 
-        {read => 1, write => 1, type => 'varchar(18)', default => ''},
+        {read => 1, write => 1, type => 'varchar(18)', length => 18, default => ''},
         EmployeeId => 
         {read => 1, write => 1, type => 'int(8)', default => ''},
 

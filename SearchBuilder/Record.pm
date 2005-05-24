@@ -676,16 +676,12 @@ sub __Set {
         @_
     );
 
-    $args{'Column'}        = $args{'Field'};
-    $args{'IsSQLFunction'} = $args{'IsSQL'};
+    $args{'Column'}        = delete $args{'Field'};
+    $args{'IsSQLFunction'} = delete $args{'IsSQL'};
 
     my $ret = Class::ReturnValue->new();
 
-    ## Cleanup the hash.
-    delete $args{'Field'};
-    delete $args{'IsSQL'};
-
-    unless ( defined( $args{'Column'} ) && $args{'Column'} ) {
+    unless ( $args{'Column'} ) {
         $ret->as_array( 0, 'No column specified' );
         $ret->as_error(
             errno        => 5,
@@ -695,7 +691,16 @@ sub __Set {
         return ( $ret->return_value );
     }
     my $column = lc $args{'Column'};
-    if (    ( defined $self->__Value($column) )
+    if ( !defined( $args{'Value'} ) ) {
+        $ret->as_array( 0, "No value passed to _Set" );
+        $ret->as_error(
+            errno        => 2,
+            do_backtrace => 0,
+            message      => "No value passed to _Set"
+        );
+        return ( $ret->return_value );
+    }
+    elsif (    ( defined $self->__Value($column) )
         and ( $args{'Value'} eq $self->__Value($column) ) )
     {
         $ret->as_array( 0, "That is already the current value" );
@@ -703,15 +708,6 @@ sub __Set {
             errno        => 1,
             do_backtrace => 0,
             message      => "That is already the current value"
-        );
-        return ( $ret->return_value );
-    }
-    elsif ( !defined( $args{'Value'} ) ) {
-        $ret->as_array( 0, "No value passed to _Set" );
-        $ret->as_error(
-            errno        => 2,
-            do_backtrace => 0,
-            message      => "No value passed to _Set"
         );
         return ( $ret->return_value );
     }
@@ -1034,18 +1030,15 @@ Like LoadById with basic support for compound primary keys.
 
 
 sub LoadByPrimaryKeys {
-    my ($self, $data) = @_;
+    my $self = shift;
+    my $data = (ref $_[0] eq 'HASH')? $_[0]: {@_};
 
-    if (ref($data) eq 'HASH') {
-       my %cols=();
-       foreach (@{$self->_PrimaryKeys}) {
-         $cols{$_}=$data->{$_} if (exists($data->{$_}));
-       }
-       return ($self->LoadByCols(%cols));
-    } 
-    else { 
-      return (0, "Invalid data");
+    my %cols=();
+    foreach (@{$self->_PrimaryKeys}) {
+	return (0, "Missing PK field: '$_'") unless defined $data->{$_};
+	$cols{$_}=$data->{$_};
     }
+    return ($self->LoadByCols(%cols));
 }
 
 # }}}
