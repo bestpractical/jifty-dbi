@@ -267,9 +267,11 @@ sub _DoCount {
 =head2 _ApplyLimits STATEMENTREF
 
 This routine takes a reference to a scalar containing an SQL statement. 
-It massages the statement to limit the returned rows only $self->RowsPerPage,
-starting with $self->FirstRow.
-
+It massages the statement to limit the returned rows to only C<< $self->RowsPerPage >>
+rows, skipping C<< $self->FirstRow >> rows.  (That is, if rows are numbered
+starting from 0, row number C<< $self->FirstRow >> will be the first row returned.)
+Note that it probably makes no sense to set these variables unless you are also
+enforcing an ordering on the rows (with C<OrderByCols>, say).
 
 =cut
 
@@ -279,7 +281,7 @@ sub _ApplyLimits {
     my $statementref = shift;
     $self->_Handle->ApplyLimits($statementref, $self->RowsPerPage, $self->FirstRow);
     $$statementref =~ s/main\.\*/join(', ', @{$self->{columns}})/eg
-	if $self->{columns} and @{$self->{columns}};
+	    if $self->{columns} and @{$self->{columns}};
     if (my $groupby = $self->_GroupClause) {
 	    $$statementref =~ s/(LIMIT \d+)?$/$groupby $1/;
     }
@@ -316,7 +318,7 @@ sub _DistinctQuery {
 
 =head2 _BuildJoins
 
-Build up all of the joins we need to perform this query
+Build up all of the joins we need to perform this query.
 
 =cut
 
@@ -333,7 +335,7 @@ sub _BuildJoins {
 
 =head2 _isJoined 
 
-Returns true if this Searchbuilder requires joins between tables
+Returns true if this SearchBuilder will be joining multiple tables together.
 
 =cut
 
