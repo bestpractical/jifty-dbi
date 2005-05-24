@@ -14,22 +14,49 @@ DBIx::SearchBuilder - Encapsulate SQL queries and rows in simple perl objects
 =head1 SYNOPSIS
 
   use DBIx::SearchBuilder;
+  
+  package My::Things;
+  use base qw/DBIx::SearchBuilder/;
+  
+  sub _Init {
+      my $self = shift;
+      $self->Table('Things');
+      return $self->SUPER::_Init(@_);
+  }
+  
+  sub NewItem {
+      my $self = shift;
+      # MyThing is a subclass of DBIx::SearchBuilder::Record
+      return(MyThing->new);
+  }
+  
+  package main;
 
   use DBIx::SearchBuilder::Handle;
   my $handle = DBIx::SearchBuilder::Handle->new();
   $handle->Connect( Driver => 'SQLite', Database => "my_test_db" );
 
-  my $sb = DBIx::SearchBuilder->new( Handle => $handle, Table => "my_table" );
+  my $sb = My::Things->new( Handle => $handle );
 
   $sb->Limit( FIELD => "column_1", VALUE => "matchstring" );
 
   while ( my $record = $sb->Next ) {
-    print $record->my_column_name();
+      print $record->my_column_name();
   }
 
 =head1 DESCRIPTION
 
 This module provides an object-oriented mechanism for retrieving and updating data in a DBI-accesible database. 
+
+In order to use this module, you should create a subclass of C<DBIx::SearchBuilder> and a 
+subclass of C<DBIx::SearchBuilder::Record> for each table that you wish to access.  (See
+the documentation of C<DBIx::SearchBuilder::Record> for more information on subclassing it.)
+
+Your C<DBIx::SearchBuilder> subclass must override C<NewItem>, and probably should override
+at least C<_Init> also; at the very least, C<_Init> should probably call C<_Handle> and C<_Table>
+to set the database handle (a C<DBIx::SearchBuilder::Handle> object) and table name for the class.
+You can try to override just about every other method here, as long as you think you know what you
+are doing.
 
 =head1 METHOD NAMING
  
@@ -42,7 +69,20 @@ For example, the method C<RedoSearch> has the alias C<redo_search>.
 
 # {{{ sub new
 
-#instantiate a new object.
+=head2 new
+
+Creates a new SearchBuilder object and immediately calls C<_Init> with the same parameters
+that were passed to C<new>.  If you haven't overridden C<_Init> in your subclass, this means
+that you should pass in a C<DBIx::SearchBuilder::Handle> (or one of its subclasses) like this:
+
+   my $sb = My::DBIx::SearchBuilder::Subclass->new( Handle => $handle );
+
+However, if your subclass overrides _Init you do not need to take a Handle argument, as long
+as your subclass returns an appropriate handle object from the C<_Handle> method.  This is
+useful if you want all of your SearchBuilder objects to use a shared global handle and don't want
+to have to explicitly pass it in each time, for example.
+
+=cut
 
 sub new {
     my $proto = shift;
@@ -57,7 +97,13 @@ sub new {
 
 # {{{ sub _Init
 
-#Initialize the object
+=head2 _Init
+
+This method is called by C<new> with whatever arguments were passed to C<new>.  
+By default, it takes a C<DBIx::SearchBuilder::Handle> object as a C<Handle>
+argument, although this is not necessary if your subclass overrides C<_Handle>.
+
+=cut
 
 sub _Init {
     my $self = shift;
@@ -75,8 +121,9 @@ sub _Init {
 =head2 CleanSlate
 
 This completely erases all the data in the SearchBuilder object. It's
-useful if a subclass is doing funky stuff to keep track of 
-a search
+useful if a subclass is doing funky stuff to keep track of a search and
+wants to reset the SearchBuilder data without losing its own data;
+it's probably cleaner to accomplish that in a different way, though.
 
 =cut
 
@@ -127,6 +174,14 @@ sub _Handle {
 # }}}
 
 # {{{ sub _DoSearch
+    
+=head2 _DoSearch
+
+This internal private method actually executes the search on the database;
+it is called automatically the first time that you actually need results
+(such as a call to C<Next>).
+
+=cut
 
 sub _DoSearch {
     my $self = shift;
@@ -137,11 +192,9 @@ sub _DoSearch {
     delete $self->{'items'};
 
     eval {
-        
-        # TODO: finer-grained eval and cheking.
-       my  $records = $self->_Handle->SimpleQuery($QueryString);
-        my $counter;
-        $self->{'rows'} = 0;
+        # TODO: finer-grained eval and checking.
+        my $records = $self->_Handle->SimpleQuery($QueryString);
+
         while ( my $row = $records->fetchrow_hashref() ) {
             my $item = $self->NewItem();
             $item->LoadFromHash($row);
@@ -151,26 +204,46 @@ sub _DoSearch {
         $self->{'must_redo_search'} = 0;
     };
 
-    return ( $self->{'rows'});
+    return $self->_RecordCount;
 }
 
 # }}}
 
 =head2 AddRecord RECORD
 
-Adds a record object to this collection
+Adds a record object to this collection.
 
 =cut
 
 sub AddRecord {
     my $self = shift;
     my $record = shift;
-   push @{$self->{'items'}}, $record;
-   $self->{'rows'}++; 
+    push @{$self->{'items'}}, $record;
+}
+
+=head2 _RecordCount
+
+This private internal method returns the number of Record objects saved
+as a result of the last query.
+
+=cut
+
+sub _RecordCount {
+    my $self = shift;
+    return 0 unless defined $self->{'items'};
+    return scalar @{ $self->{'items'} };
 }
 
 
 # {{{ sub _DoCount
+
+=head2 _DoCount
+
+This internal private method actually executes a counting operation on the database;
+it is used by C<Count> and C<CountAll>.
+
+=cut
+
 
 sub _DoCount {
     my $self = shift;
@@ -194,8 +267,8 @@ sub _DoCount {
 =head2 _ApplyLimits STATEMENTREF
 
 This routine takes a reference to a scalar containing an SQL statement. 
-It massages the statement to limit the returned rows to $self->RowsPerPage
-starting with $self->FirstRow
+It massages the statement to limit the returned rows only $self->RowsPerPage,
+starting with $self->FirstRow.
 
 
 =cut
@@ -208,7 +281,7 @@ sub _ApplyLimits {
     $$statementref =~ s/main\.\*/join(', ', @{$self->{columns}})/eg
 	if $self->{columns} and @{$self->{columns}};
     if (my $groupby = $self->_GroupClause) {
-	$$statementref =~ s/(LIMIT \d+)?$/$groupby $1/;
+	    $$statementref =~ s/(LIMIT \d+)?$/$groupby $1/;
     }
     
 }
@@ -412,7 +485,7 @@ sub Next {
 
     $self->_DoSearch() if ( $self->{'must_redo_search'} != 0 );
 
-    if ( $self->{'itemscount'} < $self->{'rows'} ) {    #return the next item
+    if ( $self->{'itemscount'} < $self->_RecordCount ) {    #return the next item
         my $item = ( $self->{'items'}[ $self->{'itemscount'} ] );
         $self->{'itemscount'}++;
         return ($item);
@@ -1372,7 +1445,7 @@ sub Count {
     # If we have loaded everything from the DB we have an
     # accurate count already.
     else {
-        return ( $self->{'rows'} );
+        return $self->_RecordCount;
     }
 }
 
@@ -1427,7 +1500,7 @@ sub CountAll {
     # If we have loaded everything from the DB we have an
     # accurate count already.
     else {
-        return ( $self->{'rows'} );
+        return $self->_RecordCount;
     }
 }
 
@@ -1601,7 +1674,7 @@ sub HasField {
 
 =head2 Table [TABLE]
 
-If called with an arguemnt, sets this collection's table.
+If called with an argument, sets this collection's table.
 
 Always returns this collection's table.
 

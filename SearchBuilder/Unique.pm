@@ -17,7 +17,6 @@ sub AddRecord {
     $self->{"dbix_sb_unique_cache"} = {} unless (@{$self->{'items'}}[0]);
     return if $self->{"dbix_sb_unique_cache"}->{$record->id}++;
     push @{$self->{'items'}}, $record;
-    $self->{'rows'}++;
 }
 
 1;
