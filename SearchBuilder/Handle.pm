@@ -92,11 +92,19 @@ sub Connect  {
            DisconnectHandleOnDestroy => undef,
 	       @_);
 
+   if( $args{'Driver'} && !$self->isa( 'DBIx::SearchBuilder::Handle::'. $args{'Driver'} ) ) {
+      if ( $self->_UpgradeHandle($args{Driver}) ) {
+          return ($self->Connect( %args ));
+      }
+   }
+
+
     my $dsn = $self->DSN || '';
 
     # Setting this actually breaks old RT versions in subtle ways. So we need to explicitly call it
 
     $self->{'DisconnectHandleOnDestroy'} = $args{'DisconnectHandleOnDestroy'};
+    
 
   $self->BuildDSN(%args);
 
@@ -110,8 +118,6 @@ sub Connect  {
 
   #Set the handle 
   $self->dbh($handle);
-  
-  $self->_UpgradeHandle($args{Driver}) if ref($self) eq 'DBIx::SearchBuilder::Handle';
   
   return (1); 
     }
@@ -132,7 +138,6 @@ of the standard driver-specific subclasses.
 
 sub _UpgradeHandle {
     my $self = shift;
-    return unless ref($self) eq 'DBIx::SearchBuilder::Handle';
     
     my $driver = shift;
     my $class = 'DBIx::SearchBuilder::Handle::' . $driver;
@@ -140,7 +145,7 @@ sub _UpgradeHandle {
     return if $@;
     
     bless $self, $class;
-    return;
+    return 1;
 }
 
 # }}}
