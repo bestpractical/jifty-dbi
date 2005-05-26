@@ -177,7 +177,7 @@ sub init_schema
 
 =head2 cleanup_schema
 
-Takes C<$class> and C<$handle> and inits schema by calling
+Takes C<$class> and C<$handle> and cleanup schema by calling
 C<cleanup_schema_$driver> method of the C<$class> if method exists.
 Always returns undef.
 
@@ -193,6 +193,29 @@ sub cleanup_schema
 	foreach my $query( @$schema ) {
 		eval { $handle->SimpleQuery( $query ) };
 	}
+}
+
+=head2 init_data
+
+=cut
+
+sub init_data
+{
+	my ($class, $handle) = @_;
+	my @data = $class->init_data();
+	my @columns = @{ shift @data };
+	my $count = 0;
+	foreach my $values ( @data ) {
+		my %args;
+		for( my $i = 0; $i < @columns; $i++ ) {
+			$args{ $columns[$i] } = $values->[$i];
+		}
+		my $rec = $class->new( $handle );
+		my $id = $rec->Create( %args );
+		die "Couldn't create record" unless $id;
+		$count++;
+	}
+	return $count;
 }
 
 1;
