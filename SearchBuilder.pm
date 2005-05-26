@@ -109,7 +109,7 @@ sub _Init {
     my $self = shift;
     my %args = ( Handle => undef,
                  @_ );
-    $self->{'DBIxHandle'} = $args{'Handle'};
+    $self->_Handle( $args{'Handle'} );
 
     $self->CleanSlate();
 }
@@ -139,14 +139,19 @@ sub CleanSlate {
     $self->{'alias_count'}      = 0;
     $self->{'first_row'}        = 0;
     $self->{'must_redo_search'} = 1;
+    $self->{'show_rows'}        = 0;
     @{ $self->{'aliases'} } = ();
 
-    delete $self->{'items'}        if ( defined $self->{'items'} );
-    delete $self->{'left_joins'}   if ( defined $self->{'left_joins'} );
-    delete $self->{'raw_rows'}     if ( defined $self->{'raw_rows'} );
-    delete $self->{'count_all'}    if ( defined $self->{'count_all'} );
-    delete $self->{'subclauses'}   if ( defined $self->{'subclauses'} );
-    delete $self->{'restrictions'} if ( defined $self->{'restrictions'} );
+    delete $self->{$_} for qw(
+	items
+	left_joins
+	raw_rows
+	count_all
+	subclauses
+	restrictions
+	_open_parens
+	_close_parens
+    );
 
     #we have no limit statements. DoSearch won't work.
     $self->_isLimited(0);
@@ -191,18 +196,17 @@ sub _DoSearch {
     # If we're about to redo the search, we need an empty set of items
     delete $self->{'items'};
 
-    eval {
-        # TODO: finer-grained eval and checking.
-        my $records = $self->_Handle->SimpleQuery($QueryString);
+    my $records = $self->_Handle->SimpleQuery($QueryString);
+    return 0 unless $records;
 
-        while ( my $row = $records->fetchrow_hashref() ) {
-            my $item = $self->NewItem();
-            $item->LoadFromHash($row);
-            $self->AddRecord($item);
-        }
+    while ( my $row = $records->fetchrow_hashref() ) {
+	my $item = $self->NewItem();
+	$item->LoadFromHash($row);
+	$self->AddRecord($item);
+    }
+    return $self->_RecordCount if $records->err;
 
-        $self->{'must_redo_search'} = 0;
-    };
+    $self->{'must_redo_search'} = 0;
 
     return $self->_RecordCount;
 }
@@ -250,15 +254,15 @@ sub _DoCount {
     my $all  = shift || 0;
 
     my $QueryString = $self->BuildSelectCountQuery();
-    eval {
-        # TODO: finer-grained Eval
-        my $records     = $self->_Handle->SimpleQuery($QueryString);
+    my $records     = $self->_Handle->SimpleQuery($QueryString);
+    return 0 unless $records;
 
-        my @row = $records->fetchrow_array();
-        $self->{ $all ? 'count_all' : 'raw_rows' } = $row[0];
+    my @row = $records->fetchrow_array();
+    return 0 if $records->err;
 
-        return ( $row[0] );
-    };
+    $self->{ $all ? 'count_all' : 'raw_rows' } = $row[0];
+
+    return ( $row[0] );
 }
 
 # }}}
@@ -485,7 +489,7 @@ sub Next {
 
     return (undef) unless ( $self->_isLimited );
 
-    $self->_DoSearch() if ( $self->{'must_redo_search'} != 0 );
+    $self->_DoSearch() if $self->{'must_redo_search'};
 
     if ( $self->{'itemscount'} < $self->_RecordCount ) {    #return the next item
         my $item = ( $self->{'items'}[ $self->{'itemscount'} ] );
@@ -1121,9 +1125,7 @@ returns the ORDER BY clause for the search.
 sub _OrderClause {
     my $self = shift;
 
-    unless ( defined $self->{'order_clause'} ) {
-	return "";
-    }
+    return '' unless $self->{'order_clause'};
     return ($self->{'order_clause'});
 }
 
@@ -1141,7 +1143,7 @@ Alias for the GroupByCols method.
 
 =cut
 
-sub GroupBy { (shift)->GroupByCols( @_) }
+sub GroupBy { (shift)->GroupByCols( @_ ) }
 
 # }}}
 
@@ -1199,9 +1201,7 @@ Private function to return the "GROUP BY" clause for this query.
 sub _GroupClause {
     my $self = shift;
 
-    unless ( defined $self->{'group_clause'} ) {
-	    return "";
-    }
+    return '' unless $self->{'group_clause'};
     return ($self->{'group_clause'});
 }
 
@@ -1520,11 +1520,13 @@ Returns true if the current row is the last record in the set.
 sub IsLast {
     my $self = shift;
 
+    return undef unless $self->Count;
+
     if ( $self->_ItemsCounter == $self->Count ) {
         return (1);
     }
     else {
-        return (undef);
+        return (0);
     }
 }
 
