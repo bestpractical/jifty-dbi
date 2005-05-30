@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use Test::More;
 
-use constant TESTS_PER_DRIVER => 10;
+use constant TESTS_PER_DRIVER => 12;
 our @AvailableDrivers;
 
 BEGIN {
@@ -57,12 +57,36 @@ foreach my $d ( @AvailableDrivers ) {
 
     ok($ret != 0, "added model from real class");
 
-    is_spaceless($SG->CreateTableSQL, <<END_SCHEMA, "got the right schema");
-    CREATE TABLE Addresses ( ) ;
+    is_ignoring_space($SG->CreateTableSQL, <<END_SCHEMA, "got the right schema");
+    CREATE TABLE Addresses ( 
+      id serial NOT NULL , 
+      Name varchar ,
+      Phone varchar ,
+      PRIMARY KEY (id)
+    ) ;
+END_SCHEMA
+    
+    $ret = $SG->AddModel('Sample::Employee');
+
+    ok($ret != 0, "added model from another real class");
+
+    is_ignoring_space($SG->CreateTableSQL, <<END_SCHEMA, "got the right schema");
+    CREATE TABLE Addresses ( 
+      id serial NOT NULL , 
+      Name varchar ,
+      Phone varchar ,
+      PRIMARY KEY (id)
+    ) ;
+    CREATE TABLE Employees (
+      id serial NOT NULL ,
+      Dexterity integer ,
+      Name varchar ,
+      PRIMARY KEY (id)
+    ) ;
 END_SCHEMA
 }}
 
-sub is_spaceless {
+sub is_ignoring_space {
   my $a = shift;
   my $b = shift;
   

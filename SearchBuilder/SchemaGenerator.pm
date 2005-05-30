@@ -80,7 +80,8 @@ to the SchemaGenerator.
 
 sub CreateTableSQL {
   my $self = shift;
-  return join "\n\n", map { "$_ ;" } $self->_db_schema->sql($self->handle->dbh);
+  # The sort here is to make it predictable, so that we can write tests.
+  return join "\n\n", map { "$_ ;" } sort $self->_db_schema->sql($self->handle->dbh);
 }
 
 =for private_doc _DBSchemaTableFromModel MODEL
@@ -97,8 +98,27 @@ sub _DBSchemaTableFromModel {
   my $table_name = $model->Table;
   my $desc       = $model->TableDescription;
   
-  my $table = DBIx::DBSchema::Table->new( {
+  my $primary = "id"; # TODO allow override
+  my $primary_col = DBIx::DBSchema::Column->new({
+    name => $primary,
+    type => 'serial',
+  });
+  
+  my @cols = ($primary_col);
+  
+  # The sort here is to make it predictable, so that we can write tests.
+  for my $field (sort keys %$desc) {
+    push @cols, DBIx::DBSchema::Column->new({
+      name => $field,
+      type => $desc->{$field}{'TYPE'},
+      null => 'null',
+    });
+  }
+  
+  my $table = DBIx::DBSchema::Table->new({
     name => $table_name,
+    primary_key => $primary,
+    columns => \@cols,
   });
   
   return $table;

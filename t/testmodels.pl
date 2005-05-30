@@ -16,4 +16,17 @@ sub TableDescription {
     }
 }
 
+package Sample::Employee;
+
+use base qw/DBIx::SearchBuilder::Record/;
+
+sub Table { "Employees" }
+
+sub TableDescription {
+    return {
+      Name => { TYPE => 'varchar', },
+      Dexterity => { TYPE => 'integer', },
+    }
+}
+
 1;
