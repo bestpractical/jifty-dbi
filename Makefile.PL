@@ -12,8 +12,12 @@ build_requires('Test::More');
 
 features(
 	'Lower case API' => [
-		-defaults => 0,
+		-default => 0,
 		'capitalization' => '0.03',
+	],
+	'Schema generation' => [
+	  -default => 1,
+	  'DBIx::DBSchema' => '',
 	],
 );
 auto_install();

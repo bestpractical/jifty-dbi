@@ -4,14 +4,17 @@ use strict;
 use warnings;
 use Test::More;
 
-use constant TESTS_PER_DRIVER => 12;
+use constant TESTS_PER_DRIVER => 13;
 our @AvailableDrivers;
 
 BEGIN {
   require("t/utils.pl");
   my $total = 3 + scalar(@AvailableDrivers) * TESTS_PER_DRIVER;
-
-  plan tests => $total;
+  if( not eval { require DBIx::DBSchema } ) {
+    plan skip_all => "DBIx::DBSchema not installed";
+  } else {
+    plan tests => $total;
+  }
 }
 
 BEGIN { 
@@ -65,10 +68,14 @@ foreach my $d ( @AvailableDrivers ) {
       PRIMARY KEY (id)
     ) ;
 END_SCHEMA
-    
-    $ret = $SG->AddModel('Sample::Employee');
 
-    ok($ret != 0, "added model from another real class");
+    my $employee = Sample::Employee->new;
+    
+    isa_ok($employee, 'Sample::Employee');
+    
+    $ret = $SG->AddModel($employee);
+
+    ok($ret != 0, "added model from an instantiated object");
 
     is_ignoring_space($SG->CreateTableSQL, <<END_SCHEMA, "got the right schema");
     CREATE TABLE Addresses ( 

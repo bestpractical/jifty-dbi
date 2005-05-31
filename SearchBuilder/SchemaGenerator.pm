@@ -38,6 +38,8 @@ Adds a new model class to the SchemaGenerator.  Model should either be an object
 of a subclass of C<DBIx::SearchBuilder::Record>, or the name of such a subclass; in the
 latter case, C<AddModel> will instantiate an object of the subclass.
 
+The model must define the instance methods C<Schema> and C<Table>.
+
 Returns true if the model was added successfully; returns a false C<Class::ReturnValue> error
 otherwise.
 
@@ -50,7 +52,7 @@ sub AddModel {
   # $model could either be a (presumably unfilled) object of a subclass of
   # DBIx::SearchBuilder::Record, or it could be the name of such a subclass.
   
-  unless (UNIVERSAL::isa($model, 'DBIx::SearchBuilder::Record')) {
+  unless (ref $model and UNIVERSAL::isa($model, 'DBIx::SearchBuilder::Record')) {
     my $new_model;
     eval { $new_model = $model->new; };
     
@@ -81,7 +83,7 @@ to the SchemaGenerator.
 sub CreateTableSQL {
   my $self = shift;
   # The sort here is to make it predictable, so that we can write tests.
-  return join "\n\n", map { "$_ ;" } sort $self->_db_schema->sql($self->handle->dbh);
+  return join "\n", map { "$_ ;\n" } sort $self->_db_schema->sql($self->handle->dbh);
 }
 
 =for private_doc _DBSchemaTableFromModel MODEL
@@ -96,22 +98,23 @@ sub _DBSchemaTableFromModel {
   my $model = shift;
   
   my $table_name = $model->Table;
-  my $desc       = $model->TableDescription;
+  my $schema     = $model->Schema;
   
   my $primary = "id"; # TODO allow override
   my $primary_col = DBIx::DBSchema::Column->new({
     name => $primary,
     type => 'serial',
+    null => 'NOT NULL',
   });
   
   my @cols = ($primary_col);
   
   # The sort here is to make it predictable, so that we can write tests.
-  for my $field (sort keys %$desc) {
+  for my $field (sort keys %$schema) {
     push @cols, DBIx::DBSchema::Column->new({
       name => $field,
-      type => $desc->{$field}{'TYPE'},
-      null => 'null',
+      type => $schema->{$field}{'TYPE'},
+      null => 'NULL',
     });
   }
   

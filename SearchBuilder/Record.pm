@@ -356,7 +356,6 @@ Instantiate a new record object.
 =cut
 
 
-
 sub new  {
     my $proto = shift;
    
@@ -369,6 +368,9 @@ sub new  {
   }
 
 # }}}
+
+# Not yet documented here.  Should generally be overloaded.
+sub _Init {}
 
 # {{{ sub Id and id
 

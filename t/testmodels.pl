@@ -8,7 +8,7 @@ sub Table { "Addresses" }
 
 # Class and instance method
 
-sub TableDescription {
+sub Schema {
     return {
         Name => { TYPE => 'varchar', },
         Phone => { TYPE => 'varchar', },
@@ -22,7 +22,7 @@ use base qw/DBIx::SearchBuilder::Record/;
 
 sub Table { "Employees" }
 
-sub TableDescription {
+sub Schema {
     return {
       Name => { TYPE => 'varchar', },
       Dexterity => { TYPE => 'integer', },
