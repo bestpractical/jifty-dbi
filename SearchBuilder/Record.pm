@@ -538,8 +538,10 @@ sub _PrimaryKey {
 
 =head2 _ClassAccessible 
 
-Preferred and most efficient way to specify fields attributes in a derived
-class. 
+An older way to specify fields attributes in a derived class.
+(The current preferred method is by overriding C<Schema>; if you do
+this and don't override C<_ClassAccessible>, the module will generate
+an appropriate C<_ClassAccessible> based on your C<Schema>.)
 
 Here's an example declaration:
 
@@ -553,17 +555,40 @@ Here's an example declaration:
 
 =cut
 
-# XXX This is stub code to deal with the old way we used to do _Accessible
-# It should never be called by modern code
 
 sub _ClassAccessible {
   my $self = shift;
+  
+  return $self->_ClassAccessibleFromSchema if $self->can('Schema');
+  
+  # XXX This is stub code to deal with the old way we used to do _Accessible
+  # It should never be called by modern code
+  
   my %accessible;
   while ( my $col = shift ) {
     $accessible{$col}->{lc($_)} = 1
       foreach split(/[\/,]/, shift);
   }
   return(\%accessible);
+}
+
+sub _ClassAccessibleFromSchema {
+  my $self = shift;
+  
+  my $accessible = {
+    # XXX TODO FIXME: should fetch custom primary key name
+    'id' => { 'read' => 1 },
+  };
+  
+  my $schema = $self->Schema;
+  
+  for my $field (keys %$schema) {
+    next unless $schema->{$field}{'TYPE'} or $schema->{$field}{'REFERENCES'};
+    
+    $accessible->{$field} = { 'read' => 1, 'write' => 1 };
+  }
+  
+  return $accessible;  
 }
 
 # }}}
