@@ -111,6 +111,10 @@ sub _DBSchemaTableFromModel {
   
   # The sort here is to make it predictable, so that we can write tests.
   for my $field (sort keys %$schema) {
+    # TODO XXX FIXME
+    # In lieu of real reference support, make references just integers
+    $schema->{$field}{'TYPE'} = 'integer' if $schema->{$field}{'REFERENCES'};
+    
     push @cols, DBIx::DBSchema::Column->new({
       name => $field,
       type => $schema->{$field}{'TYPE'},
