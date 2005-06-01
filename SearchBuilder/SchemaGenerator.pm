@@ -83,7 +83,7 @@ the models added to the SchemaGenerator.
 sub CreateTableSQLStatements {
   my $self = shift;
   # The sort here is to make it predictable, so that we can write tests.
-  return join "\n\n", map { "$_ ;" } sort $self->_db_schema->sql($self->handle->dbh);
+  return join "\n", map { "$_ ;\n" } sort $self->_db_schema->sql($self->handle->dbh);
 }
 
 =for private_doc _DBSchemaTableFromModel MODEL
