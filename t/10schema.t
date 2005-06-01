@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use Test::More;
 
-use constant TESTS_PER_DRIVER => 13;
+use constant TESTS_PER_DRIVER => 14;
 our @AvailableDrivers;
 
 BEGIN {
@@ -27,7 +27,7 @@ require_ok("t/testmodels.pl");
 foreach my $d ( @AvailableDrivers ) {
   SKIP: {
     unless ($d eq 'Pg') {
-      skip "first goal is to work on Pg, not $d", TESTS_PER_DRIVER;
+      skip "first goal is to work on Pg", TESTS_PER_DRIVER;
     }
     
     unless( should_test( $d ) ) {
@@ -45,7 +45,7 @@ foreach my $d ( @AvailableDrivers ) {
 
     isa_ok($SG->_db_schema, 'DBIx::DBSchema');
 
-    is($SG->CreateTableSQL, '', "no tables means no sql");
+    is($SG->CreateTableSQLText, '', "no tables means no sql");
 
     my $ret = $SG->AddModel('Sample::This::Does::Not::Exist');
 
@@ -54,13 +54,13 @@ foreach my $d ( @AvailableDrivers ) {
     like($ret->error_message, qr/Error making new object from Sample::This::Does::Not::Exist/, 
       "couldn't add model from nonexistent class");
 
-    is($SG->CreateTableSQL, '', "no tables means no sql");
+    is($SG->CreateTableSQLText, '', "no tables means no sql");
 
     $ret = $SG->AddModel('Sample::Address');
 
     ok($ret != 0, "added model from real class");
 
-    is_ignoring_space($SG->CreateTableSQL, <<END_SCHEMA, "got the right schema");
+    is_ignoring_space($SG->CreateTableSQLText, <<END_SCHEMA, "got the right schema");
     CREATE TABLE Addresses ( 
       id serial NOT NULL , 
       Name varchar ,
@@ -77,7 +77,7 @@ END_SCHEMA
 
     ok($ret != 0, "added model from an instantiated object");
 
-    is_ignoring_space($SG->CreateTableSQL, <<END_SCHEMA, "got the right schema");
+    is_ignoring_space($SG->CreateTableSQLText, <<END_SCHEMA, "got the right schema");
     CREATE TABLE Addresses ( 
       id serial NOT NULL , 
       Name varchar ,
@@ -91,6 +91,9 @@ END_SCHEMA
       PRIMARY KEY (id)
     ) ;
 END_SCHEMA
+    
+    my $manually_make_text = join ' ', map { "$_;" } $SG->CreateTableSQLStatements;
+    is_ignoring_space($SG->CreateTableSQLText, $manually_make_text, 'CreateTableSQLText is the statements in CreateTableSQLStatements')
 }}
 
 sub is_ignoring_space {

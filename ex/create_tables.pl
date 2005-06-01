@@ -55,4 +55,4 @@ for my $model (__PACKAGE__->models) {
   $ret or die "couldn't add model $model: ".$ret->error_message;
 }
 
-print $SG->CreateTableSQL;
+print $SG->CreateTableSQLText;
