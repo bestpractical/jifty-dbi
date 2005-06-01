@@ -196,15 +196,15 @@ sub _DoSearch {
     # If we're about to redo the search, we need an empty set of items
     delete $self->{'items'};
 
-    my $records = $self->_Handle->SimpleQuery($QueryString);
-    return 0 unless $records;
+    eval {
+        # TODO: finer-grained eval and checking.
+        my $records = $self->_Handle->SimpleQuery($QueryString);
 
-    while ( my $row = $records->fetchrow_hashref() ) {
-	my $item = $self->NewItem();
-	$item->LoadFromHash($row);
-	$self->AddRecord($item);
-    }
-    return $self->_RecordCount if $records->err;
+        while ( my $row = $records->fetchrow_hashref() ) {
+            my $item = $self->NewItem();
+            $item->LoadFromHash($row);
+            $self->AddRecord($item);
+        }
 
     $self->{'must_redo_search'} = 0;
 
