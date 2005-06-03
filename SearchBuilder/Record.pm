@@ -8,7 +8,6 @@ use vars qw($AUTOLOAD);
 use Class::ReturnValue;
 
 
-
 # {{{ Doc
 
 =head1 NAME
@@ -369,8 +368,12 @@ sub new  {
 
 # }}}
 
-# Not yet documented here.  Should generally be overloaded.
-sub _Init {}
+# Not yet documented here.  Should almost certainly be overloaded.
+sub _Init {
+    my $self = shift;
+    my $handle = shift;
+    $self->_Handle($handle);
+}
 
 # {{{ sub Id and id
 
@@ -593,6 +596,30 @@ sub _ClassAccessibleFromSchema {
 
 # }}}
 
+sub _ToRecord {
+    my $self = shift;
+    my $field = shift;
+    my $value = shift;
+
+    return unless defined $value;
+    
+    my $schema = $self->Schema;
+    my $description = $schema->{$field};
+    
+    return unless $description;
+    
+    return $value unless $description->{'REFERENCES'};
+    
+    my $classname = $description->{'REFERENCES'};
+
+    return unless UNIVERSAL::isa($classname, 'DBIx::SearchBuilder::Record');
+    
+    # XXX TODO FIXME perhaps this is not what should be passed to new, but it needs it
+    my $object = $classname->new( $self->_Handle );
+    $object->LoadById( $value );
+    return $object;
+}
+
 # sub {{{ ReadableAttributes
 
 =head2 ReadableAttributes
@@ -641,7 +668,8 @@ override __Value.
 
 sub __Value {
   my $self = shift;
-  my $field = lc(shift);
+  my $origfield = shift;
+  my $field = lc $origfield;
 
   if (!$self->{'fetched'}{$field} and my $id = $self->id() ) {
     my $pkey = $self->_PrimaryKey();
@@ -654,7 +682,11 @@ sub __Value {
     $self->{'fetched'}{$field} = 1;
   }
 
-  return($self->{'values'}{$field});
+  my $value = $self->{'values'}{$field};
+  
+  $value = $self->_ToRecord($origfield, $value) if $self->can('Schema');
+  
+  return $value;
 }
 # }}}
 # {{{ sub _Value 
@@ -894,6 +926,10 @@ current column value as argument. It uses the array reference as
 the object constructor's arguments.
 Subclasses can override _Object to insert custom access control or
 define default contructor arguments.
+
+Note that if you are using a C<Schema> with a C<REFERENCES> field, 
+this is unnecessary: the method to access the column's value will
+automatically turn it into the appropriate object.
 
 =cut
 

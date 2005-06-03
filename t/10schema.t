@@ -63,6 +63,7 @@ foreach my $d ( @AvailableDrivers ) {
     is_ignoring_space($SG->CreateTableSQLText, <<END_SCHEMA, "got the right schema");
     CREATE TABLE Addresses ( 
       id serial NOT NULL , 
+      EmployeeId integer ,
       Name varchar ,
       Phone varchar ,
       PRIMARY KEY (id)
@@ -80,6 +81,7 @@ END_SCHEMA
     is_ignoring_space($SG->CreateTableSQLText, <<END_SCHEMA, "got the right schema");
     CREATE TABLE Addresses ( 
       id serial NOT NULL , 
+      EmployeeId integer ,
       Name varchar ,
       Phone varchar ,
       PRIMARY KEY (id)

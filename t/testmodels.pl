@@ -12,7 +12,7 @@ sub Schema {
     return {
         Name => { TYPE => 'varchar', },
         Phone => { TYPE => 'varchar', },
-#        EmployeeId => { REFERENCES => 'Sample::Employee', },
+        EmployeeId => { REFERENCES => 'Sample::Employee', },
     }
 }
 
