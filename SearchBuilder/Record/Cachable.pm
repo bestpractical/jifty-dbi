@@ -228,7 +228,7 @@ sub _serialize {
     return (
         {
             values  => $self->{'values'},
-            table   => $self->{'table'},
+            table   => $self->Table,
             fetched => $self->{'fetched'}
         }
     );

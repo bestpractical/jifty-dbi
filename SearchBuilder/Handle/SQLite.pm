@@ -116,7 +116,7 @@ sub _BuildJoins {
           }
     }
 
-    my $join_clause = $sb->{'table'} . " main ";
+    my $join_clause = $sb->Table . " main ";
     
     my @keys = ( keys %{ $sb->{'left_joins'} } );
     my %seen;

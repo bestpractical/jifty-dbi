@@ -422,7 +422,7 @@ sub BuildSelectQuery {
 
     # DISTINCT query only required for multi-table selects
     if ($self->_isJoined) {
-        $self->_DistinctQuery(\$QueryString, $self->{'table'});
+        $self->_DistinctQuery(\$QueryString, $self->Table);
     } else {
         $QueryString = "SELECT main.* FROM $QueryString";
     }
@@ -720,7 +720,7 @@ this search case sensitive
 sub Limit {
     my $self = shift;
     my %args = (
-        TABLE           => $self->{'table'},
+        TABLE           => $self->Table,
         FIELD           => undef,
         VALUE           => undef,
         ALIAS           => undef,
@@ -831,7 +831,7 @@ sub ImportRestrictions {
 
 sub _GenericRestriction {
     my $self = shift;
-    my %args = ( TABLE           => $self->{'table'},
+    my %args = ( TABLE           => $self->Table,
                  FIELD           => undef,
                  VALUE           => undef,
                  ALIAS           => undef,
@@ -861,7 +861,7 @@ sub _GenericRestriction {
     unless ( $args{'ALIAS'} ) {
 
         #if the table we're looking at is the same as the main table
-        if ( $args{'TABLE'} eq $self->{'table'} ) {
+        if ( $args{'TABLE'} eq $self->Table ) {
 
             # TODO this code assumes no self joins on that table.
             # if someone can name a case where we'd want to do that,
@@ -1575,7 +1575,7 @@ sub Column {
             $alias;
         }
         else {
-            $self->{table};
+            $self->Table;
         }
     };
 
@@ -1598,7 +1598,7 @@ sub Column {
     }
 
     my $column = "col" . @{ $self->{columns} ||= [] };
-    $column = $args{FIELD} if $table eq $self->{table} and !$args{ALIAS};
+    $column = $args{FIELD} if $table eq $self->Table and !$args{ALIAS};
     push @{ $self->{columns} }, "$name AS \L$column";
     return $column;
 }

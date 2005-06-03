@@ -389,7 +389,8 @@ Returns this row's primary key.
 
 sub Id  {
     my $pkey = $_[0]->_PrimaryKey();
-    $_[0]->{'values'}->{$pkey};
+    my $ret = $_[0]->{'values'}->{$pkey};
+    return $ret;
 }
 
 # }}}
@@ -436,6 +437,10 @@ sub AUTOLOAD {
     elsif ( $self->_Accessible( $Attrib, 'record-read') ) {
         *{$AUTOLOAD} = sub { $_[0]->_ToRecord( $Attrib, $_[0]->_Value($Attrib) ) };
         goto &$AUTOLOAD;        
+    }
+    elsif ( $self->_Accessible( $Attrib, 'foreign-collection') ) {
+        *{$AUTOLOAD} = sub { $_[0]->_CollectionValue( $Attrib ) };
+        goto &$AUTOLOAD;
     }
     elsif ( $AUTOLOAD =~ /.*::[sS]et_?(\w+)/o ) {
         $Attrib = $1;
@@ -637,6 +642,27 @@ sub _ToRecord {
     my $object = $classname->new( $self->_Handle );
     $object->LoadById( $value );
     return $object;
+}
+
+sub _CollectionValue {
+    my $self = shift;
+    
+    my $method_name =  shift;
+    return unless defined $method_name;
+    
+    my $schema = $self->Schema;
+    my $description = $schema->{$method_name};
+    return unless $description;
+    
+    my $classname = $description->{'REFERENCES'};
+
+    return unless UNIVERSAL::isa($classname, 'DBIx::SearchBuilder');
+    
+    my $coll = $classname->new( Handle => $self->_Handle );
+    
+    $coll->Limit( FIELD => $description->{'KEY'}, VALUE => $self->id);
+    
+    return $coll;
 }
 
 # sub {{{ ReadableAttributes
@@ -1227,6 +1253,10 @@ sub Create {
     my ($key);
     foreach $key ( keys %attribs ) {
         my $method = "Validate$key";
+
+        if ( $self->_Accessible( $key, 'record-write') ) {
+            $attribs{$key} = $attribs{$key}->id if UNIVERSAL::isa($attribs{$key}, 'DBIx::SearchBuilder::Record');
+        }
 
             #Truncate things that are too long for their datatypes
         $attribs{$key} = $self->TruncateValue ($key => $attribs{$key});
