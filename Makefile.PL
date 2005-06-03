@@ -18,6 +18,7 @@ features(
 	'Schema generation' => [
 	  -default => 1,
 	  'DBIx::DBSchema' => '',
+	  'Class::Accessor' => '',
 	],
 );
 auto_install();
