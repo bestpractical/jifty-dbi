@@ -9,7 +9,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@AvailableDrivers);
 
-use constant TESTS_PER_DRIVER => 10;
+use constant TESTS_PER_DRIVER => 17;
 
 my $total = scalar(@AvailableDrivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -33,10 +33,11 @@ SKIP: {
 	my $emp = TestApp::Employee->new($handle);
 	my $e_id = $emp->Create( Name => 'RUZ' );
 	ok($e_id, "Got an id for the new employee: $e_id");
+	$emp->Load($e_id);
+	is($emp->id, $e_id);
 	my $phone = TestApp::Phone->new($handle);
 	isa_ok( $phone, 'TestApp::Phone');
 	my $p_id = $phone->Create( Employee => $e_id, Phone => '+7(903)264-03-51');
-	# XXX: test fails if next string is commented
 	is($p_id, 1, "Loaded phone $p_id");
 	$phone->Load( $p_id );
 
@@ -50,6 +51,24 @@ SKIP: {
 	# tests for no object mapping
 	my $val = $phone->Phone;
 	is( $val, '+7(903)264-03-51', 'Non-object things still work');
+	
+	my $emp2 = TestApp::Employee->new($handle);
+	isa_ok($emp2, 'TestApp::Employee');
+	my $e2_id = $emp2->Create( Name => 'Dave' );
+	ok($e2_id, "Got an id for the new employee: $e2_id");
+
+	$phone->SetEmployee($e2_id);
+	
+	my $emp3 = $phone->Employee;
+	isa_ok($emp3, 'TestApp::Employee');
+	is($emp3->Name, 'Dave', 'changed employees by ID');
+
+	$phone->SetEmployee($emp);
+
+	my $emp4 = $phone->Employee;
+	isa_ok($emp4, 'TestApp::Employee');
+	is($emp4->Name, 'RUZ', 'changed employees by obj');
+	
 
 	cleanup_schema( 'TestApp', $handle );
 }} # SKIP, foreach blocks

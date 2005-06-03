@@ -431,22 +431,33 @@ sub AUTOLOAD {
 
     if ( $self->_Accessible( $Attrib, 'read' ) ) {
         *{$AUTOLOAD} = sub { return ( $_[0]->_Value($Attrib) ) };
-	goto &$AUTOLOAD;
+        goto &$AUTOLOAD;
+    }
+    elsif ( $self->_Accessible( $Attrib, 'record-read') ) {
+        *{$AUTOLOAD} = sub { $_[0]->_ToRecord( $Attrib, $_[0]->_Value($Attrib) ) };
+        goto &$AUTOLOAD;        
     }
     elsif ( $AUTOLOAD =~ /.*::[sS]et_?(\w+)/o ) {
-            $Attrib = $1;
+        $Attrib = $1;
 
         if ( $self->_Accessible( $Attrib, 'write' ) ) {
-
             *{$AUTOLOAD} = sub {
                 return ( $_[0]->_Set( Field => $Attrib, Value => $_[1] ) );
             };
-	    goto &$AUTOLOAD;
-        }
+            goto &$AUTOLOAD;
+        } elsif ( $self->_Accessible( $Attrib, 'record-write') ) {
+            *{$AUTOLOAD} = sub {
+                my $self = shift;
+                my $val = shift;
 
+                $val = $val->id if UNIVERSAL::isa($val, 'DBIx::SearchBuilder::Record');
+                return ( $self->_Set( Field => $Attrib, Value => $val ) );
+            };
+            goto &$AUTOLOAD;            
+        }
         elsif ( $self->_Accessible( $Attrib, 'read' ) ) {
             *{$AUTOLOAD} = sub { return ( 0, 'Immutable field' ) };
-	    goto &$AUTOLOAD;
+            goto &$AUTOLOAD;
         }
         else {
             return ( 0, 'Nonexistant field?' );
@@ -461,7 +472,7 @@ sub AUTOLOAD {
                     Args  => [@_],
                 );
             };
-	    goto &$AUTOLOAD;
+            goto &$AUTOLOAD;
         }
         else {
             return ( 0, 'No object mapping for field' );
@@ -476,7 +487,7 @@ sub AUTOLOAD {
         $Attrib = $1;
 
         *{$AUTOLOAD} = sub { return ( $_[0]->_Validate( $Attrib, $_[1] ) ) };
-	goto &$AUTOLOAD;
+        goto &$AUTOLOAD;
     }
 
     # TODO: if autoload = 0 or 1 _ then a combination of lowercase and _ chars,
@@ -586,9 +597,17 @@ sub _ClassAccessibleFromSchema {
   my $schema = $self->Schema;
   
   for my $field (keys %$schema) {
-    next unless $schema->{$field}{'TYPE'} or $schema->{$field}{'REFERENCES'};
-    
-    $accessible->{$field} = { 'read' => 1, 'write' => 1 };
+    if ($schema->{$field}{'TYPE'}) {
+        $accessible->{$field} = { 'read' => 1, 'write' => 1 };
+    } elsif (my $refclass = $schema->{$field}{'REFERENCES'}) {
+        if (UNIVERSAL::isa($refclass, 'DBIx::SearchBuilder::Record')) {
+            $accessible->{$field} = { 'record-read' => 1, 'record-write' => 1 };
+        } elsif (UNIVERSAL::isa($refclass, 'DBIx::SearchBuilder')) {
+            $accessible->{$field} = { 'foreign-collection' => 1 };
+        } else {
+            warn "Error: $refclass neither Record nor Collection";
+        }
+    }
   }
   
   return $accessible;  
@@ -668,8 +687,7 @@ override __Value.
 
 sub __Value {
   my $self = shift;
-  my $origfield = shift;
-  my $field = lc $origfield;
+  my $field = lc shift;
 
   if (!$self->{'fetched'}{$field} and my $id = $self->id() ) {
     my $pkey = $self->_PrimaryKey();
@@ -683,9 +701,7 @@ sub __Value {
   }
 
   my $value = $self->{'values'}{$field};
-  
-  $value = $self->_ToRecord($origfield, $value) if $self->can('Schema');
-  
+    
   return $value;
 }
 # }}}
