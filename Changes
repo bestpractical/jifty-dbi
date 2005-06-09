@@ -1,5 +1,30 @@
 Revision history for Perl extension DBIx::SearchBuilder.
 
+1.30_03 Thu Jun  9 01:35:49 EDT 2005
+* Significant new tests from Ruslan Zakirov and Dave Glasser
+
+* You no longer need to explicitly bless a DBIx::SearchBuilder::Handle subclass 
+  
+* Start of a major overhaul of the subclass API for DBIx::SearchBuilder::Record objects.
+  A new "schema" method will define the data in _ClassAccessible and also generate database
+  schema using DBIx::DBSchema. 
+
+Fixes from Ruslan:
+
+    * for numeric types, make the empty check be "null or 0", not "null or ''"
+    * New search tests from ruslan
+    * added an init_data method to t/utils.pl
+    * CleanSlate doesnt init show_rows
+    * CleanSlate doesnt clean _{open|close}_parens
+    * get rid of stupid ifs in CleanSlate 
+    * get rid of evals in _DoSearch and _DoCount, use Handle methods to control DBI error handling 
+    * rewrite LoadByPrimaryKeys args handling to consistent with other Load* methods
+    * report error when PK filed is missing in LoadByPrimaryKeys
+    * fix warning in __Set methods when newvalue is undef
+    * small code cleanups
+    * test coverage grows from 75.2% to 84.7% for Record.pm
+
+
 1.30_02 Sun May 22 15:21:19 EDT 2005
 
  - Lots of patches from Ruslan:
