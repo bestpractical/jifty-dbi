@@ -129,9 +129,10 @@ sub _DBSchemaTableFromModel {
     $schema->{$field}{'TYPE'} = 'integer' if $schema->{$field}{'REFERENCES'};
     
     push @cols, DBIx::DBSchema::Column->new({
-      name => $field,
-      type => $schema->{$field}{'TYPE'},
-      null => 'NULL',
+      name    => $field,
+      type    => $schema->{$field}{'TYPE'},
+      null    => 'NULL',
+      default => $schema->{$field}{'DEFAULT'},
     });
   }
   
