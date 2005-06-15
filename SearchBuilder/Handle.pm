@@ -13,7 +13,6 @@ $TRANSDEPTH = 0;
 $VERSION = '$Version$';
 
 
-# {{{ Top POD
 
 =head1 NAME
 
@@ -37,9 +36,7 @@ This class provides a wrapper for DBI handles that can also perform a number of 
  
 =cut
 
-# }}}
 
-# {{{ sub new 
 
 =head2 new
 
@@ -57,9 +54,7 @@ sub new  {
     return $self;
 }
 
-# }}}
 
-# {{{ sub Connect 
 
 =head2 Connect PARAMHASH: Driver, Database, Host, User, Password
 
@@ -125,9 +120,7 @@ sub Connect  {
     return(undef);
 
 }
-# }}}
 
-# {{{ _UpgradeHandle
 
 =head2 _UpgradeHandle DRIVER
 
@@ -148,10 +141,8 @@ sub _UpgradeHandle {
     return 1;
 }
 
-# }}}
 
 
-# {{{ BuildDSN
 
 =head2 BuildDSN PARAMHASH
 
@@ -184,9 +175,7 @@ sub BuildDSN {
   $self->{'dsn'}= $dsn;
 }
 
-# }}}
 
-# {{{ DSN
 
 =head2 DSN
 
@@ -198,9 +187,7 @@ sub DSN {
     return($self->{'dsn'});
 }
 
-# }}}
 
-# {{{ RaiseError
 
 =head2 RaiseError [MODE]
 
@@ -218,9 +205,7 @@ sub RaiseError {
 }
 
 
-# }}}
 
-# {{{ PrintError
 
 =head2 PrintError [MODE]
 
@@ -238,7 +223,6 @@ sub PrintError {
 }
 
 
-# }}}
 
 =head2 LogSQLStatements BOOL
 
@@ -301,7 +285,6 @@ sub SQLStatementLog {
 }
 
 
-# {{{ AutoCommit
 
 =head2 AutoCommit [MODE]
 
@@ -319,9 +302,7 @@ sub AutoCommit {
 }
 
 
-# }}}
 
-# {{{ sub Disconnect 
 
 =head2 Disconnect
 
@@ -338,9 +319,7 @@ sub Disconnect  {
   }
 }
 
-# }}}
 
-# {{{ sub Handle / dbh 
 
 =head2 dbh [HANDLE]
 
@@ -360,9 +339,7 @@ sub dbh {
   return($DBIHandle{$self} ||= $PrevHandle);
 }
 
-# }}}
 
-# {{{ sub Insert
 =head2 Insert $TABLE_NAME @KEY_VALUE_PAIRS
 
 Takes a table name and a set of key-value pairs in an array. splits the key value pairs, constructs an INSERT statement and performs the insert. Returns the row_id of this row.
@@ -389,9 +366,7 @@ sub Insert {
     my $sth =  $self->SimpleQuery($QueryString, @bind);
     return ($sth);
   }
-# }}}
 
-# {{{ sub UpdateRecordValue 
 
 =head2 UpdateRecordValue 
 
@@ -461,9 +436,7 @@ sub UpdateTableValue  {
 
     return $self->UpdateRecordValue(%args)
 }
-# }}}
 
-# {{{ sub SimpleQuery
 
 =head2 SimpleQuery QUERY_STRING, [ BIND_VALUE, ... ]
 
@@ -548,9 +521,7 @@ sub SimpleQuery {
 
 }
 
-# }}}
 
-# {{{ sub FetchResult
 
 =head2 FetchResult QUERY, [ BIND_VALUE, ... ]
 
@@ -573,9 +544,7 @@ sub FetchResult {
    return($sth);
   }
 }
-# }}}
 
-# {{{ BinarySafeBLOBs
 
 =head2 BinarySafeBLOBs
 
@@ -589,9 +558,7 @@ sub BinarySafeBLOBs {
     return(1);
 }
 
-# }}}
 
-# {{{ KnowsBLOBs
 
 =head2 KnowsBLOBs
 
@@ -605,9 +572,7 @@ sub KnowsBLOBs {
     return(1);
 }
 
-# }}}
 
-# {{{ BLOBParams
 
 =head2 BLOBParams FIELD_NAME FIELD_TYPE
 
@@ -622,9 +587,7 @@ sub BLOBParams {
     return ( {} );
 }
 
-# }}}
 
-# {{{ DatabaseVersion
 
 =head2 DatabaseVersion
 
@@ -642,9 +605,7 @@ sub DatabaseVersion {
         $self->{'database_version'}= $vals[0];
     }
 }
-# }}}
 
-# {{{ CaseSensitive
 
 =head2 CaseSensitive
 
@@ -659,10 +620,8 @@ sub CaseSensitive {
 }
 
 
-# }}} 
 
 
-# {{{ _MakeClauseCaseInsensitive
 
 =head2 _MakeClauseCaseInsensitive FIELD OPERATOR VALUE
 
@@ -687,9 +646,7 @@ sub _MakeClauseCaseInsensitive {
 }
 
 
-# }}}
 
-# {{{ BeginTransaction
 
 =head2 BeginTransaction
 
@@ -710,9 +667,7 @@ sub BeginTransaction {
     }
 }
 
-# }}}
 
-# {{{ Commit
 
 =head2 Commit
 
@@ -733,9 +688,7 @@ sub Commit {
     }
 }
 
-# }}}
 
-# {{{ Rollback
 
 =head2 Rollback [FORCE]
 
@@ -764,7 +717,6 @@ sub Rollback {
     }
 }
 
-# }}}
 
 =head2 ForceRollback
 
@@ -790,7 +742,6 @@ sub TransactionDepth {
 }
 
 
-# {{{ ApplyLimits
 
 =head2 ApplyLimits STATEMENTREF ROWS_PER_PAGE FIRST_ROW
 
@@ -820,10 +771,8 @@ sub ApplyLimits {
 }
 
 
-# }}}
 
 
-# {{{ Join
 
 =head2 Join { Paramhash }
 
@@ -1027,9 +976,7 @@ sub _BuildJoins {
 
 }
 
-# }}}
 
-# {{{ DistinctQuery
 
 =head2 DistinctQuery STATEMENTREF 
 
@@ -1048,10 +995,8 @@ sub DistinctQuery {
 
 }
 
-# }}}
 
 
-# {{{ DistinctCount
 
 =head2 DistinctCount STATEMENTREF 
 
@@ -1069,7 +1014,6 @@ sub DistinctCount {
 
 }
 
-# }}}
 
 =head2 Log MESSAGE
 
@@ -1105,7 +1049,6 @@ sub DESTROY {
 1;
 __END__
 
-# {{{ POD
 
 =head1 AUTHOR
 
@@ -1117,4 +1060,3 @@ perl(1), L<DBIx::SearchBuilder>
 
 =cut
 
-# }}}

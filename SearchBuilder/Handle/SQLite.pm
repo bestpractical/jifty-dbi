@@ -22,7 +22,6 @@ compensates for some of the idiosyncrasies of SQLite.
 
 =cut
 
-# {{{ sub Insert
 
 =head2 Insert
 
@@ -50,7 +49,6 @@ sub Insert  {
     return( $self->{'id'}); #Add Succeded. return the id
   }
 
-# }}}
 
 
 =head2 CaseSensitive 
@@ -68,7 +66,6 @@ sub BinarySafeBLOBs {
     return undef;
 }
 
-# }}}
 
 =head2 DistinctCount STATEMENTREF
 
@@ -87,7 +84,6 @@ sub DistinctCount {
 
 }
 
-# }}}
 
 
 =head2 _BuildJoins

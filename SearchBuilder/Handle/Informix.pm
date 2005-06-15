@@ -23,7 +23,6 @@ compensates for some of the idiosyncrasies of Informix.
 
 =cut
 
-# {{{ sub Insert
 
 =head2 Insert
 
@@ -49,7 +48,6 @@ sub Insert  {
     return( $self->{'id'}); #Add Succeded. return the id
   }
 
-# }}}
 
 =head2 CaseSensitive 
 
@@ -62,7 +60,6 @@ sub CaseSensitive {
     return(1);
 }
 
-# }}}
 
 =head2 BuildDSN
 
@@ -87,7 +84,6 @@ sub BuildDSN {
   $self->{'dsn'}= $dsn;
 }
 
-# {{{ ApplyLimits
 
 =head2 ApplyLimits STATEMENTREF ROWS_PER_PAGE FIRST_ROW
 
@@ -108,7 +104,6 @@ sub ApplyLimits {
     }
 }
 
-# }}}
 
 sub Disconnect  {
   my $self = shift;
@@ -121,7 +116,6 @@ sub Disconnect  {
   }
 }
 
-# {{{ DistinctQuery
 
 =head2 DistinctQuery STATEMENTREF
 
@@ -141,7 +135,6 @@ sub DistinctQuery {
 
 }
 
-# }}}
 
 1;
 

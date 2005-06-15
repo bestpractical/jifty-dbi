@@ -26,7 +26,6 @@ compensates for some of the idiosyncrasies of Postgres.
 
 =cut
 
-# {{{ sub Connect
 
 =head2 Connect
 
@@ -45,9 +44,7 @@ sub Connect {
     $self->AutoCommit(1);
     return ($DBIHandle); 
 }
-# }}}
 
-# {{{ sub Insert
 
 =head2 Insert
 
@@ -84,9 +81,7 @@ sub Insert {
     return ($self->{'id'});
 }
 
-# }}}
 
-# {{{ BinarySafeBLOBs
 
 =head2 BinarySafeBLOBs
 
@@ -99,7 +94,6 @@ sub BinarySafeBLOBs {
     return(undef);
 }
 
-# }}}
 
 =head2 ApplyLimits STATEMENTREF ROWS_PER_PAGE FIRST_ROW
 
@@ -128,7 +122,6 @@ sub ApplyLimits {
 
 }
 
-# {{{ _MakeClauseCaseInsensitive
 
 =head2 _MakeClauseCaseInsensitive FIELD OPERATOR VALUE
 
@@ -171,7 +164,6 @@ sub _MakeClauseCaseInsensitive {
     }
 }
 
-# }}}
 1;
 
 __END__

@@ -23,7 +23,6 @@ compensates for some of the idiosyncrasies of MySQL.
 
 =cut
 
-# {{{ sub Insert
 
 =head2 Insert
 
@@ -53,7 +52,6 @@ sub Insert  {
     return( $self->{'id'}); #Add Succeded. return the id
   }
 
-# }}}
 
 
 =head2 DatabaseVersion
@@ -81,7 +79,6 @@ sub CaseSensitive {
     return(undef);
 }
 
-# }}}
 
 1;
 

@@ -24,7 +24,6 @@ compensates for some of the idiosyncrasies of Oracle.
 
 =cut
 
-# {{{ sub Connect 
 
 =head2 Connect PARAMHASH: Driver, Database, Host, User, Password
 
@@ -52,9 +51,7 @@ sub Connect  {
     
     return ($DBIHandle); 
 }
-# }}}
 
-# {{{ sub Insert
 
 =head2 Insert
 
@@ -119,9 +116,7 @@ sub Insert  {
     return( $self->{'id'}); #Add Succeded. return the id
   }
 
-# }}}
 
-# {{{ BuildDSN
 
 =head2  BuildDSN PARAMHASH
 
@@ -158,9 +153,7 @@ sub BuildDSN {
   $self->{'dsn'}= $dsn;
 }
 
-# }}}
 
-# {{{ KnowsBLOBs      
 
 =head2 KnowsBLOBs     
 
@@ -174,9 +167,7 @@ sub KnowsBLOBs {
     return(undef);
 }
 
-# }}}
 
-# {{{ BLOBParams 
 
 =head2 BLOBParams FIELD_NAME FIELD_TYPE
 
@@ -195,9 +186,7 @@ sub BLOBParams {
 });    
 }
 
-# }}}
 
-# {{{ ApplyLimits
 
 =head2 ApplyLimits STATEMENTREF ROWS_PER_PAGE FIRST_ROW
 
@@ -243,9 +232,7 @@ sub ApplyLimits {
     }
 }
 
-# }}}
 
-# {{{ DistinctQuery
 
 =head2 DistinctQuery STATEMENTREF
 
@@ -265,10 +252,8 @@ sub DistinctQuery {
 
 }
 
-# }}}
 
 
-# {{{ BinarySafeBLOBs
 
 =head2 BinarySafeBLOBs
 
@@ -282,7 +267,6 @@ sub BinarySafeBLOBs {
     return(undef);
 }
 
-# }}}
 
 1;
 

@@ -23,7 +23,6 @@ compensates for some of the idiosyncrasies of Sybase.
 
 =cut
 
-# {{{ sub Insert
 
 =head2 Insert
 
@@ -60,7 +59,6 @@ sub Insert {
 
 
 
-# }}}
 
 
 =head2 DatabaseVersion
@@ -90,7 +88,6 @@ sub CaseSensitive {
 }
 
 
-# }}}
 
 
 sub ApplyLimits {
@@ -118,7 +115,6 @@ sub DistinctQuery {
 
 }
 
-# {{{ BinarySafeBLOBs
 
 =head2 BinarySafeBLOBs
 
@@ -132,9 +128,7 @@ sub BinarySafeBLOBs {
     return(undef);
 }
 
-# }}}
 
-# }}}
 
 1;
 

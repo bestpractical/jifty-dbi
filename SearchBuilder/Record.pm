@@ -8,7 +8,6 @@ use vars qw($AUTOLOAD);
 use Class::ReturnValue;
 
 
-# {{{ Doc
 
 =head1 NAME
 
@@ -345,7 +344,6 @@ For example, the method C<_PrimaryKeys> has the alias C<_primary_keys>.
 
 =cut
 
-# }}}
 
 
 =head2  new 
@@ -366,7 +364,6 @@ sub new  {
     return $self;
   }
 
-# }}}
 
 # Not yet documented here.  Should almost certainly be overloaded.
 sub _Init {
@@ -375,7 +372,6 @@ sub _Init {
     $self->_Handle($handle);
 }
 
-# {{{ sub Id and id
 
 =head2 id
 
@@ -393,7 +389,6 @@ sub Id  {
     return $ret;
 }
 
-# }}}
 
 =head2 primary_keys
 
@@ -414,15 +409,11 @@ sub PrimaryKeys {
 
 
 
-# {{{ Routines dealing with getting and setting row data
 
-# {{{ sub DESTROY
 sub DESTROY {
     return 1;
 }
-# }}}
 
-# {{{ sub AUTOLOAD 
 
 sub AUTOLOAD {
     my $self = $_[0];
@@ -507,9 +498,7 @@ sub AUTOLOAD {
 
 }
 
-# }}}
 
-# {{{ sub _Accessible
 
 =head2 _Accessible KEY MODE
 
@@ -530,7 +519,6 @@ sub _Accessible {
     return $attribute->{$mode};
 }
 
-# }}}
 
 
 =head2 _PrimaryKeys
@@ -553,7 +541,6 @@ sub _PrimaryKey {
     return $pkeys->[0];
 }
 
-# {{{ sub _ClassAccessible
 
 =head2 _ClassAccessible 
 
@@ -618,7 +605,6 @@ sub _ClassAccessibleFromSchema {
   return $accessible;  
 }
 
-# }}}
 
 sub _ToRecord {
     my $self = shift;
@@ -680,9 +666,7 @@ sub ReadableAttributes {
     return (@readable);
 }
 
-# }}}
 
-# {{{  sub WritableAttributes 
 
 =head2 WritableAttributes
 
@@ -698,10 +682,8 @@ sub WritableAttributes {
 
 }
 
-# }}}
 
 
-# {{{ sub __Value {
 
 =head2 __Value
 
@@ -730,8 +712,6 @@ sub __Value {
     
   return $value;
 }
-# }}}
-# {{{ sub _Value 
 
 =head2 _Value
 
@@ -746,9 +726,7 @@ sub _Value  {
   return ($self->__Value(@_));
 }
 
-# }}}
 
-# {{{ sub _Set 
 
 =head2 _Set
 
@@ -877,9 +855,7 @@ sub __Set {
     return ( $ret->return_value );
 }
 
-# }}}
 
-# {{{ sub _Validate 
 
 #TODO: Implement _Validate.
 
@@ -900,9 +876,7 @@ sub _Validate  {
    return(1); 
   }	
 
-# }}}	
 
-# {{{ sub TruncateValue 
 
 =head2 TruncateValue  KEY VALUE
 
@@ -955,9 +929,7 @@ sub TruncateValue {
     }
 
 }
-# }}}
 
-# {{{ sub _Object 
 
 =head2 _Object
 
@@ -1004,11 +976,8 @@ sub __Object {
     return $object;
 }
 
-# }}}
   
-# {{{ routines dealing with loading records
 
-# {{{ sub Load 
 
 # load should do a bit of overloading
 # if we call it with only one argument, we're trying to load by reference.
@@ -1031,8 +1000,6 @@ sub Load  {
     return $self->LoadById(@_);
 }
 
-# }}}
-# {{{ sub LoadByCol 
 
 =head2 LoadByCol
 
@@ -1052,9 +1019,7 @@ sub LoadByCol  {
     return($self->LoadByCols($col => $val));
 }
 
-# }}}
 
-# {{{ sub LoadByCols
 
 =head2 LoadByCols
 
@@ -1110,9 +1075,7 @@ sub LoadByCols  {
 }
 
 
-# }}}
 
-# {{{ sub LoadById 
 
 =head2 LoadById
 
@@ -1130,10 +1093,8 @@ sub LoadById  {
     return ($self->LoadByCols($pkey => $id));
 }
 
-# }}}  
 
 
-# {{{ LoadByPrimaryKeys 
 
 =head2 LoadByPrimaryKeys 
 
@@ -1155,10 +1116,8 @@ sub LoadByPrimaryKeys {
     return ($self->LoadByCols(%cols));
 }
 
-# }}}
 
 
-# {{{ sub LoadFromHash
 
 =head2 LoadFromHash
 
@@ -1181,9 +1140,7 @@ sub LoadFromHash {
   return $self->id();
 }
 
-# }}}
 
-# {{{ sub _LoadFromSQL 
 
 =head2 _LoadFromSQL QUERYSTRING @BIND_VALUES
 
@@ -1229,13 +1186,9 @@ sub _LoadFromSQL {
 
 }
 
-# }}}
 
-# }}}
 
-# {{{ Routines dealing with creating or deleting rows in the DB
 
-# {{{ sub Create 
 
 =head2 Create
 
@@ -1279,9 +1232,7 @@ sub Create {
     return ( $self->_Handle->Insert( $self->Table, %attribs ) );
 }
 
-# }}}
 
-# {{{ sub Delete 
 
 =head2 Delete
 
@@ -1321,12 +1272,9 @@ sub __Delete {
     } 
 }
 
-# }}}
-
-# }}}
 
 
-# {{{ sub Table
+
 
 =head2 Table
 
@@ -1344,9 +1292,7 @@ sub Table {
     return ($self->{'table'});
 }
 
-# }}}
 
-# {{{ sub _Handle 
 
 =head2 _Handle
 
@@ -1363,7 +1309,6 @@ sub _Handle  {
     return ($self->{'DBIxHandle'});
   }
 
-# }}}
 
 if( eval { require capitalization } ) {
 	capitalization->unimport( __PACKAGE__ );
@@ -1373,7 +1318,6 @@ if( eval { require capitalization } ) {
 
 __END__
 
-# {{{ POD
 
 
 =head1 AUTHOR
@@ -1390,5 +1334,4 @@ L<DBIx::SearchBuilder>
 
 =cut
 
-# }}}
 

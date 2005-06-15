@@ -11,7 +11,6 @@ use Cache::Simple::TimedExpiry;
 
 use strict;
 
-# {{{ Doc
 
 =head1 NAME
 
@@ -32,7 +31,6 @@ The public interface remains the same, except that records which have been loade
 
 =cut
 
-# }}}
 
 my %_CACHES = ();
 
@@ -346,7 +344,6 @@ sub _CacheConfig {
 
 __END__
 
-# {{{ POD
 
 =head1 AUTHOR
 
@@ -358,5 +355,4 @@ L<DBIx::SearchBuilder>, L<DBIx::SearchBuilder::Record>
 
 =cut
 
-# }}}
 
