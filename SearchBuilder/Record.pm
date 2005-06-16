@@ -662,7 +662,7 @@ Returns an array of the attributes of this class defined as "read" => 1 in this 
 sub ReadableAttributes {
     my $self = shift;
     my $ca = $self->_ClassAccessible();
-    my @readable = grep { $ca->{$_}->{read}} keys %{$ca};
+    my @readable = grep { $ca->{$_}->{'read'} or $ca->{$_}->{'record-read'} } keys %{$ca};
     return (@readable);
 }
 
@@ -677,7 +677,7 @@ Returns an array of the attributes of this class defined as "write" => 1 in this
 sub WritableAttributes {
     my $self = shift;
     my $ca = $self->_ClassAccessible();
-    my @writable = grep { $ca->{$_}->{write}} keys %{$ca};
+    my @writable = grep { $ca->{$_}->{'write'} or $ca->{$_}->{'record-write'} } keys %{$ca};
     return (@writable);
 
 }
