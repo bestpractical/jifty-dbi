@@ -273,10 +273,6 @@ sub _ApplyLimits {
     $self->_Handle->ApplyLimits($statementref, $self->RowsPerPage, $self->FirstRow);
     $$statementref =~ s/main\.\*/join(', ', @{$self->{columns}})/eg
 	    if $self->{columns} and @{$self->{columns}};
-    if (my $groupby = $self->_GroupClause) {
-	    $$statementref =~ s/(LIMIT \d+)?$/$groupby $1/;
-    }
-    
 }
 
 
@@ -402,7 +398,9 @@ sub BuildSelectQuery {
         $QueryString = "SELECT main.* FROM $QueryString";
     }
 
-    $QueryString .= $self->_OrderClause;
+    $QueryString .= ' ' . $self->_GroupClause . ' ';
+
+    $QueryString .= ' ' . $self->_OrderClause . ' ';
 
     $self->_ApplyLimits(\$QueryString);
 

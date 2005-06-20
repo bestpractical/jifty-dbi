@@ -8,7 +8,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@AvailableDrivers);
 
-use constant TESTS_PER_DRIVER => 55;
+use constant TESTS_PER_DRIVER => 59;
 
 my $total = scalar(@AvailableDrivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -143,7 +143,18 @@ SKIP: {
 	is_deeply( $users_obj, $clean_obj, 'after CleanSlate looks like new object');
 	$users_obj->Limit( FIELD => 'Phone', OPERATOR => 'IS NOT', VALUE => 'NULL', QOUTEVALUE => 0 );
 	is( $users_obj->Count, $count_all - 2, "found users who has phone number filled" );
-
+	
+	# ORDER BY / GROUP BY
+	$users_obj->CleanSlate;
+	is_deeply( $users_obj, $clean_obj, 'after CleanSlate looks like new object');
+	$users_obj->UnLimit;
+	$users_obj->GroupByCols({FIELD => 'Login'});
+	$users_obj->OrderBy(FIELD => 'Login', ORDER => 'desc');
+	$users_obj->Column(FIELD => 'Login');
+	is( $users_obj->Count, $count_all, "group by / order by finds right amount");
+	$first_rec = $users_obj->First;
+	isa_ok( $first_rec, 'DBIx::SearchBuilder::Record', 'First returns record object' );
+	is( $first_rec->Login, 'obra', 'login is correct' );
 
 	cleanup_schema( 'TestApp', $handle );
 }} # SKIP, foreach blocks
