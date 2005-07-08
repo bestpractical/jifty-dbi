@@ -6,7 +6,7 @@ use strict;
 
 use vars qw($VERSION @ISA $DBIHandle $DEBUG);
 use base qw(DBIx::SearchBuilder::Handle);
-use Want qw(want);
+use Want qw(want howmany);
 
 use strict;
 
@@ -139,7 +139,7 @@ sub _MakeClauseCaseInsensitive {
     my $value    = shift;
 
 
-    if ($value =~ /^\d+$/) { # we don't need to downcase numeric values
+    if ($value =~ /^['"]?\d+['"]?$/) { # we don't need to downcase numeric values
         	return ( $field, $operator, $value);
     }
 
@@ -148,7 +148,7 @@ sub _MakeClauseCaseInsensitive {
         return ( $field, $operator, $value );
     }
     elsif ( $operator =~ /=/ ) {
-	if (want(4)) {
+	if (howmany() >= 4) {
         	return ( "LOWER($field)", $operator, $value, "LOWER(?)"); 
 	} 
 	# RT 3.0.x and earlier  don't know how to cope with a "LOWER" function 
