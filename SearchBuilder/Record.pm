@@ -855,9 +855,60 @@ sub __Set {
     return ( $ret->return_value );
 }
 
+=head2 _Canonicalize PARAMHASH
+
+This routine massages an input value (VALUE) for FIELD into something that's 
+going to be acceptable.
+
+Takes
+
+=over
+
+=item FIELD
+
+=item VALUE
+
+=item FUNCTION
+
+=back
 
 
-#TODO: Implement _Validate.
+Takes:
+
+=over
+
+=item FIELD
+
+=item VALUE
+
+=item FUNCTION
+
+=back
+
+Returns a replacement VALUE. 
+
+=cut
+
+sub _Canonicalize {
+    my $self = shift;
+    my $field = shift;
+    
+
+
+}
+
+
+=head2 _Validate FIELD VALUE
+
+Validate that VALUE will be an acceptable value for FIELD. 
+
+Currently, this routine does nothing whatsoever. 
+
+If it succeeds (which is always the case right now), returns true. Otherwise returns false.
+
+=cut
+
+
 
 
 sub _Validate  {
@@ -1205,25 +1256,25 @@ sub Create {
 
     my ($key);
     foreach $key ( keys %attribs ) {
-        my $method = "Validate$key";
 
-        if ( $self->_Accessible( $key, 'record-write') ) {
-            $attribs{$key} = $attribs{$key}->id if UNIVERSAL::isa($attribs{$key}, 'DBIx::SearchBuilder::Record');
+        if ( $self->_Accessible( $key, 'record-write' ) ) {
+            $attribs{$key} = $attribs{$key}->id
+              if UNIVERSAL::isa( $attribs{$key},
+                'DBIx::SearchBuilder::Record' );
         }
 
-            #Truncate things that are too long for their datatypes
-        $attribs{$key} = $self->TruncateValue ($key => $attribs{$key});
+        #Truncate things that are too long for their datatypes
+        $attribs{$key} = $self->TruncateValue( $key => $attribs{$key} );
 
-        unless ( $self->$method( $attribs{$key} ) ) {
-            delete $attribs{$key};
-        }
     }
     unless ( $self->_Handle->KnowsBLOBs ) {
+
         # Support for databases which don't deal with LOBs automatically
         my $ca = $self->_ClassAccessible();
         foreach $key ( keys %attribs ) {
             if ( $ca->{$key}->{'type'} =~ /^(text|longtext|clob|blob|lob)$/i ) {
-                my $bhash = $self->_Handle->BLOBParams( $key, $ca->{$key}->{'type'} );
+                my $bhash =
+                  $self->_Handle->BLOBParams( $key, $ca->{$key}->{'type'} );
                 $bhash->{'value'} = $attribs{$key};
                 $attribs{$key} = $bhash;
             }
@@ -1231,7 +1282,6 @@ sub Create {
     }
     return ( $self->_Handle->Insert( $self->Table, %attribs ) );
 }
-
 
 
 =head2 Delete
