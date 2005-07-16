@@ -581,9 +581,9 @@ sub _ClassAccessible {
 sub _ClassAccessibleFromSchema {
   my $self = shift;
   
-  my $accessible = {
-    # XXX TODO FIXME: should fetch custom primary key name
-    'id' => { 'read' => 1 },
+  my $accessible = {};
+  foreach my $key ($self->_PrimaryKeys) {
+   $accessible->{$key} = { 'read' => 1 };
   };
   
   my $schema = $self->Schema;
@@ -677,9 +677,8 @@ Returns an array of the attributes of this class defined as "write" => 1 in this
 sub WritableAttributes {
     my $self = shift;
     my $ca = $self->_ClassAccessible();
-    my @writable = grep { $ca->{$_}->{'write'} or $ca->{$_}->{'record-write'} } keys %{$ca};
-    return (@writable);
-
+    my @writable = grep { $ca->{$_}->{'write'} || $ca->{$_}->{'record-write'} } keys %{$ca};
+    return @writable;
 }
 
 
