@@ -25,13 +25,13 @@ compensates for some of the idiosyncrasies of Oracle.
 =cut
 
 
-=head2 Connect PARAMHASH: Driver, Database, Host, User, Password
+=head2 connect PARAMHASH: Driver, Database, Host, User, Password
 
 Takes a paramhash and connects to your DBI datasource. 
 
 =cut
 
-sub Connect  {
+sub connect  {
   my $self = shift;
   
   my %args = ( Driver => undef,
@@ -42,25 +42,25 @@ sub Connect  {
 	       Host => undef,
 	       @_);
   
-    $self->SUPER::Connect(%args);
+    $self->SUPER::connect(%args);
     
     $self->dbh->{LongTruncOk}=1;
     $self->dbh->{LongReadLen}=8000;
     
-    $self->SimpleQuery("ALTER SESSION set NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS'");
+    $self->simple_query("ALTER SESSION set NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS'");
     
     return ($DBIHandle); 
 }
 
 
-=head2 Insert
+=head2 insert
 
 Takes a table name as the first argument and assumes that the rest of the arguments
 are an array of key-value pairs to be inserted.
 
 =cut
 
-sub Insert  {
+sub insert  {
 	my $self = shift;
 	my $table = shift;
     my ($sth);
@@ -79,7 +79,7 @@ sub Insert  {
  
     $QueryString = "SELECT ".$table."_seq.nextval FROM DUAL";
  
-    $sth = $self->SimpleQuery($QueryString);
+    $sth = $self->simple_query($QueryString);
     if (!$sth) {
        if ($main::debug) {
     	die "Error with $QueryString";
@@ -97,11 +97,11 @@ sub Insert  {
     }
 
     #TODO: don't hardcode this to id pull it from somewhere else
-    #call super::Insert with the new column id.
+    #call super::insert with the new column id.
 
     $attribs{'id'} = $unique_id;
     delete $attribs{'Id'};
-    $sth =  $self->SUPER::Insert( $table, %attribs);
+    $sth =  $self->SUPER::insert( $table, %attribs);
 
    unless ($sth) {
      if ($main::debug) {
@@ -118,7 +118,7 @@ sub Insert  {
 
 
 
-=head2  BuildDSN PARAMHASH
+=head2  build_dsn PARAMHASH
 
 Takes a bunch of parameters:  
 
@@ -129,7 +129,7 @@ Builds a DSN suitable for an Oracle DBI connection
 
 =cut
 
-sub BuildDSN {
+sub build_dsn {
     my $self = shift;
   my %args = ( Driver => undef,
 	       Database => undef,
@@ -155,21 +155,21 @@ sub BuildDSN {
 
 
 
-=head2 KnowsBLOBs     
+=head2 knows_blobs     
 
 Returns 1 if the current database supports inserts of BLOBs automatically.      
 Returns undef if the current database must be informed of BLOBs for inserts.    
 
 =cut
 
-sub KnowsBLOBs {     
+sub knows_blobs {     
     my $self = shift;
     return(undef);
 }
 
 
 
-=head2 BLOBParams FIELD_NAME FIELD_TYPE
+=head2 blob_params FIELD_NAME FIELD_TYPE
 
 Returns a hash ref for the bind_param call to identify BLOB types used by 
 the current database for a particular column type.
@@ -177,7 +177,7 @@ The current Oracle implementation only supports ORA_CLOB types (112).
 
 =cut
 
-sub BLOBParams { 
+sub blob_params { 
     my $self = shift;
     my $field = shift;
     #my $type = shift;
@@ -188,14 +188,14 @@ sub BLOBParams {
 
 
 
-=head2 ApplyLimits STATEMENTREF ROWS_PER_PAGE FIRST_ROW
+=head2 apply_limits STATEMENTREF ROWS_PER_PAGE FIRST_ROW
 
 takes an SQL SELECT statement and massages it to return ROWS_PER_PAGE starting with FIRST_ROW;
 
 
 =cut
 
-sub ApplyLimits {
+sub apply_limits {
     my $self = shift;
     my $statementref = shift;
     my $per_page = shift;
@@ -234,14 +234,14 @@ sub ApplyLimits {
 
 
 
-=head2 DistinctQuery STATEMENTREF
+=head2 distinct_query STATEMENTREF
 
 takes an incomplete SQL SELECT statement and massages it to return a DISTINCT result set.
 
 
 =cut
 
-sub DistinctQuery {
+sub distinct_query {
     my $self = shift;
     my $statementref = shift;
     my $table = shift;
@@ -255,14 +255,14 @@ sub DistinctQuery {
 
 
 
-=head2 BinarySafeBLOBs
+=head2 binary_safe_blobs
 
 Return undef, as Oracle doesn't support binary-safe CLOBS
 
 
 =cut
 
-sub BinarySafeBLOBs {
+sub binary_safe_blobs {
     my $self = shift;
     return(undef);
 }

@@ -23,7 +23,7 @@ compensates for some of the idiosyncrasies of SQLite.
 =cut
 
 
-=head2 Insert
+=head2 insert
 
 Takes a table name as the first argument and assumes that the rest of the arguments
 are an array of key-value pairs to be inserted.
@@ -33,13 +33,13 @@ a Class::ReturnValue object with the error reported.
 
 =cut
 
-sub Insert  {
+sub insert  {
     my $self = shift;
     my $table = shift;
     my %args = ( id => undef, @_);
     # We really don't want an empty id
     
-    my $sth = $self->SUPER::Insert($table, %args);
+    my $sth = $self->SUPER::insert($table, %args);
     return unless $sth;
 
     # If we have set an id, then we want to use that, otherwise, we want to lookup the last _new_ rowid
@@ -51,13 +51,13 @@ sub Insert  {
 
 
 
-=head2 CaseSensitive 
+=head2 case_sensitive 
 
 Returns undef, since SQLite's searches are not case sensitive by default 
 
 =cut
 
-sub CaseSensitive {
+sub case_sensitive {
     my $self = shift;
     return(1);
 }
@@ -67,14 +67,14 @@ sub BinarySafeBLOBs {
 }
 
 
-=head2 DistinctCount STATEMENTREF
+=head2 distinct_count STATEMENTREF
 
 takes an incomplete SQL SELECT statement and massages it to return a DISTINCT result count
 
 
 =cut
 
-sub DistinctCount {
+sub distinct_count {
     my $self = shift;
     my $statementref = shift;
 
@@ -86,7 +86,7 @@ sub DistinctCount {
 
 
 
-=head2 _BuildJoins
+=head2 _build_joins
 
 Adjusts syntax of join queries for SQLite.
 
@@ -98,7 +98,7 @@ Adjusts syntax of join queries for SQLite.
 #     It needs
 # SELECT DISTINCT main.*     FROM Groups main           LEFT JOIN Principals Principals_2  ON ( main.id = Principals_2.id) ,      GroupMembers GroupMembers_1      WHERE ((GroupMembers_1.MemberId = '70'))     AND ((Principals_2.Disabled = '0'))     AND ((main.Domain = 'UserDefined'))     AND ((main.id = GroupMembers_1.GroupId)) ORDER BY main.Name ASC
 
-sub _BuildJoins {
+sub _build_joins {
     my $self = shift;
     my $sb   = shift;
     my %seen_aliases;

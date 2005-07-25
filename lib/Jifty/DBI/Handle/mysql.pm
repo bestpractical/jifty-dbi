@@ -24,7 +24,7 @@ compensates for some of the idiosyncrasies of MySQL.
 =cut
 
 
-=head2 Insert
+=head2 insert
 
 Takes a table name as the first argument and assumes that the rest of the arguments are an array of key-value pairs to be inserted.
 
@@ -33,10 +33,10 @@ a Class::ReturnValue object with the error reported.
 
 =cut
 
-sub Insert  {
+sub insert  {
     my $self = shift;
 
-    my $sth = $self->SUPER::Insert(@_);
+    my $sth = $self->SUPER::insert(@_);
     if (!$sth) {
 	    return ($sth);
      }
@@ -45,7 +45,7 @@ sub Insert  {
  
     # Yay. we get to work around mysql_insertid being null some of the time :/
     unless ($self->{'id'}) {
-	$self->{'id'} =  $self->FetchResult('SELECT LAST_INSERT_ID()');
+	$self->{'id'} =  $self->fetch_result('SELECT LAST_INSERT_ID()');
     }
     warn "$self no row id returned on row creation" unless ($self->{'id'});
     
@@ -54,27 +54,27 @@ sub Insert  {
 
 
 
-=head2 DatabaseVersion
+=head2 database_version
 
 Returns the mysql version, trimming off any -foo identifier
 
 =cut
 
-sub DatabaseVersion {
+sub database_version {
     my $self = shift;
-    my $v = $self->SUPER::DatabaseVersion();
+    my $v = $self->SUPER::database_version();
 
    $v =~ s/\-.*$//;
    return ($v);
 }
 
-=head2 CaseSensitive 
+=head2 case_sensitive 
 
 Returns undef, since mysql's searches are not case sensitive by default 
 
 =cut
 
-sub CaseSensitive {
+sub case_sensitive {
     my $self = shift;
     return(undef);
 }

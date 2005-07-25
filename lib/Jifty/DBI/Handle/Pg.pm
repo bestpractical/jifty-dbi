@@ -27,26 +27,26 @@ compensates for some of the idiosyncrasies of Postgres.
 =cut
 
 
-=head2 Connect
+=head2 connect
 
-Connect takes a hashref and passes it off to SUPER::Connect;
+connect takes a hashref and passes it off to SUPER::connect;
 Forces the timezone to GMT
 it returns a database handle.
 
 =cut
   
-sub Connect {
+sub connect {
     my $self = shift;
     
-    $self->SUPER::Connect(@_);
-    $self->SimpleQuery("SET TIME ZONE 'GMT'");
-    $self->SimpleQuery("SET DATESTYLE TO 'ISO'");
-    $self->AutoCommit(1);
+    $self->SUPER::connect(@_);
+    $self->simple_query("SET TIME ZONE 'GMT'");
+    $self->simple_query("SET DATESTYLE TO 'ISO'");
+    $self->auto_commit(1);
     return ($DBIHandle); 
 }
 
 
-=head2 Insert
+=head2 insert
 
 Takes a table name as the first argument and assumes that the rest of the arguments
 are an array of key-value pairs to be inserted.
@@ -57,11 +57,11 @@ with error info
 =cut
 
 
-sub Insert {
+sub insert {
     my $self = shift;
     my $table = shift;
     
-    my $sth = $self->SUPER::Insert($table, @_ );
+    my $sth = $self->SUPER::insert($table, @_ );
     
     unless ($sth) {
 	    return ($sth);
@@ -70,7 +70,7 @@ sub Insert {
     #Lets get the id of that row we just inserted    
     my $oid = $sth->{'pg_oid_status'};
     my $sql = "SELECT id FROM $table WHERE oid = ?";
-    my @row = $self->FetchResult($sql, $oid);
+    my @row = $self->fetch_result($sql, $oid);
     # TODO: Propagate Class::ReturnValue up here.
     unless ($row[0]) {
 	    print STDERR "Can't find $table.id  for OID $oid";
@@ -83,26 +83,26 @@ sub Insert {
 
 
 
-=head2 BinarySafeBLOBs
+=head2 binary_safe_blobs
 
 Return undef, as no current version of postgres supports binary-safe blobs
 
 =cut
 
-sub BinarySafeBLOBs {
+sub binary_safe_blobs {
     my $self = shift;
     return(undef);
 }
 
 
-=head2 ApplyLimits STATEMENTREF ROWS_PER_PAGE FIRST_ROW
+=head2 apply_limits STATEMENTREF ROWS_PER_PAGE FIRST_ROW
 
 takes an SQL SELECT statement and massages it to return ROWS_PER_PAGE starting with FIRST_ROW;
 
 
 =cut
 
-sub ApplyLimits {
+sub apply_limits {
     my $self = shift;
     my $statementref = shift;
     my $per_page = shift;
@@ -123,7 +123,7 @@ sub ApplyLimits {
 }
 
 
-=head2 _MakeClauseCaseInsensitive FIELD OPERATOR VALUE
+=head2 _make_clause_case_insensitive FIELD OPERATOR VALUE
 
 Takes a field, operator and value. performs the magic necessary to make
 your database treat this clause as case insensitive.
@@ -132,7 +132,7 @@ Returns a FIELD OPERATOR VALUE triple.
 
 =cut
 
-sub _MakeClauseCaseInsensitive {
+sub _make_clause_case_insensitive {
     my $self     = shift;
     my $field    = shift;
     my $operator = shift;
@@ -160,7 +160,7 @@ sub _MakeClauseCaseInsensitive {
 	}
     }
     else {
-        $self->SUPER::_MakeClauseCaseInsensitive( $field, $operator, $value );
+        $self->SUPER::_make_clause_case_insensitive( $field, $operator, $value );
     }
 }
 

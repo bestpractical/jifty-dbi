@@ -17,13 +17,13 @@ Jifty::DBI - Encapsulate SQL queries and rows in simple perl objects
   package My::Things;
   use base qw/Jifty::DBI::Collection/;
   
-  sub _Init {
+  sub _init {
       my $self = shift;
-      $self->Table('Things');
-      return $self->SUPER::_Init(@_);
+      $self->table('Things');
+      return $self->SUPER::_init(@_);
   }
   
-  sub NewItem {
+  sub new_item {
       my $self = shift;
       # MyThing is a subclass of Jifty::DBI::Record
       return(MyThing->new);
@@ -35,11 +35,11 @@ Jifty::DBI - Encapsulate SQL queries and rows in simple perl objects
   my $handle = Jifty::DBI::Handle->new();
   $handle->Connect( Driver => 'SQLite', Database => "my_test_db" );
 
-  my $sb = My::Things->new( Handle => $handle );
+  my $sb = My::Things->new( handle => $handle );
 
   $sb->Limit( FIELD => "column_1", VALUE => "matchstring" );
 
-  while ( my $record = $sb->Next ) {
+  while ( my $record = $sb->next ) {
       print $record->my_column_name();
   }
 
@@ -51,8 +51,8 @@ In order to use this module, you should create a subclass of C<Jifty::DBI> and a
 subclass of C<Jifty::DBI::Record> for each table that you wish to access.  (See
 the documentation of C<Jifty::DBI::Record> for more information on subclassing it.)
 
-Your C<Jifty::DBI> subclass must override C<NewItem>, and probably should override
-at least C<_Init> also; at the very least, C<_Init> should probably call C<_Handle> and C<_Table>
+Your C<Jifty::DBI> subclass must override C<new_item>, and probably should override
+at least C<_init> also; at the very least, C<_init> should probably call C<_handle> and C<_Table>
 to set the database handle (a C<Jifty::DBI::Handle> object) and table name for the class.
 You can try to override just about every other method here, as long as you think you know what you
 are doing.
@@ -60,7 +60,7 @@ are doing.
 =head1 METHOD NAMING
  
 Each method has a lower case alias; '_' is used to separate words.
-For example, the method C<RedoSearch> has the alias C<redo_search>.
+For example, the method C<redo_search> has the alias C<redo_search>.
 
 =head1 METHODS
 
@@ -69,14 +69,14 @@ For example, the method C<RedoSearch> has the alias C<redo_search>.
 
 =head2 new
 
-Creates a new SearchBuilder object and immediately calls C<_Init> with the same parameters
-that were passed to C<new>.  If you haven't overridden C<_Init> in your subclass, this means
+Creates a new SearchBuilder object and immediately calls C<_init> with the same parameters
+that were passed to C<new>.  If you haven't overridden C<_init> in your subclass, this means
 that you should pass in a C<Jifty::DBI::Handle> (or one of its subclasses) like this:
 
-   my $sb = My::Jifty::DBI::Subclass->new( Handle => $handle );
+   my $sb = My::Jifty::DBI::Subclass->new( handle => $handle );
 
-However, if your subclass overrides _Init you do not need to take a Handle argument, as long
-as your subclass returns an appropriate handle object from the C<_Handle> method.  This is
+However, if your subclass overrides _init you do not need to take a handle argument, as long
+as your subclass returns an appropriate handle object from the C<_handle> method.  This is
 useful if you want all of your SearchBuilder objects to use a shared global handle and don't want
 to have to explicitly pass it in each time, for example.
 
@@ -87,32 +87,32 @@ sub new {
     my $class = ref($proto) || $proto;
     my $self  = {};
     bless( $self, $class );
-    $self->_Init(@_);
+    $self->_init(@_);
     return ($self);
 }
 
 
 
-=head2 _Init
+=head2 _init
 
 This method is called by C<new> with whatever arguments were passed to C<new>.  
-By default, it takes a C<Jifty::DBI::Handle> object as a C<Handle>
-argument, although this is not necessary if your subclass overrides C<_Handle>.
+By default, it takes a C<Jifty::DBI::Handle> object as a C<handle>
+argument, although this is not necessary if your subclass overrides C<_handle>.
 
 =cut
 
-sub _Init {
+sub _init {
     my $self = shift;
-    my %args = ( Handle => undef,
+    my %args = ( handle => undef,
                  @_ );
-    $self->_Handle( $args{'Handle'} );
+    $self->_handle( $args{'handle'} );
 
-    $self->CleanSlate();
+    $self->clean_slate();
 }
 
 
 
-=head2 CleanSlate
+=head2 clean_slate
 
 This completely erases all the data in the SearchBuilder object. It's
 useful if a subclass is doing funky stuff to keep track of a search and
@@ -121,9 +121,9 @@ it's probably cleaner to accomplish that in a different way, though.
 
 =cut
 
-sub CleanSlate {
+sub clean_slate {
     my $self = shift;
-    $self->RedoSearch();
+    $self->redo_search();
     $self->{'itemscount'}       = 0;
     $self->{'tables'}           = "";
     $self->{'auxillary_tables'} = "";
@@ -148,29 +148,29 @@ sub CleanSlate {
     );
 
     #we have no limit statements. DoSearch won't work.
-    $self->_isLimited(0);
+    $self->_is_limited(0);
 
 }
 
 
 
-=head2 _Handle  [DBH]
+=head2 _handle  [DBH]
 
 Get or set this object's Jifty::DBI::Handle object.
 
 =cut
 
-sub _Handle {
+sub _handle {
     my $self = shift;
     if (@_) {
-        $self->{'DBIxHandle'} = shift;
+        $self->{'DBIxhandle'} = shift;
     }
-    return ( $self->{'DBIxHandle'} );
+    return ( $self->{'DBIxhandle'} );
 }
 
 
     
-=head2 _DoSearch
+=head2 _do_search
 
 This internal private method actually executes the search on the database;
 it is called automatically the first time that you actually need results
@@ -178,50 +178,50 @@ it is called automatically the first time that you actually need results
 
 =cut
 
-sub _DoSearch {
+sub _do_search {
     my $self = shift;
 
-    my $QueryString = $self->BuildSelectQuery();
+    my $QueryString = $self->build_select_query();
 
     # If we're about to redo the search, we need an empty set of items
     delete $self->{'items'};
 
-    my $records = $self->_Handle->SimpleQuery($QueryString);
+    my $records = $self->_handle->simple_query($QueryString);
     return 0 unless $records;
 
     while ( my $row = $records->fetchrow_hashref() ) {
-	my $item = $self->NewItem();
-	$item->LoadFromHash($row);
-	$self->AddRecord($item);
+	my $item = $self->new_item();
+	$item->load_from_hash($row);
+	$self->add_record($item);
     }
-    return $self->_RecordCount if $records->err;
+    return $self->_record_count if $records->err;
 
     $self->{'must_redo_search'} = 0;
 
-    return $self->_RecordCount;
+    return $self->_record_count;
 }
 
 
-=head2 AddRecord RECORD
+=head2 add_record RECORD
 
 Adds a record object to this collection.
 
 =cut
 
-sub AddRecord {
+sub add_record {
     my $self = shift;
     my $record = shift;
     push @{$self->{'items'}}, $record;
 }
 
-=head2 _RecordCount
+=head2 _record_count
 
 This private internal method returns the number of Record objects saved
 as a result of the last query.
 
 =cut
 
-sub _RecordCount {
+sub _record_count {
     my $self = shift;
     return 0 unless defined $self->{'items'};
     return scalar @{ $self->{'items'} };
@@ -229,20 +229,20 @@ sub _RecordCount {
 
 
 
-=head2 _DoCount
+=head2 _do_count
 
 This internal private method actually executes a counting operation on the database;
-it is used by C<Count> and C<CountAll>.
+it is used by C<Count> and C<count_all>.
 
 =cut
 
 
-sub _DoCount {
+sub _do_count {
     my $self = shift;
     my $all  = shift || 0;
 
-    my $QueryString = $self->BuildSelectCountQuery();
-    my $records     = $self->_Handle->SimpleQuery($QueryString);
+    my $QueryString = $self->build_select_count_query();
+    my $records     = $self->_handle->simple_query($QueryString);
     return 0 unless $records;
 
     my @row = $records->fetchrow_array();
@@ -255,28 +255,28 @@ sub _DoCount {
 
 
 
-=head2 _ApplyLimits STATEMENTREF
+=head2 _apply_limits STATEMENTREF
 
 This routine takes a reference to a scalar containing an SQL statement. 
-It massages the statement to limit the returned rows to only C<< $self->RowsPerPage >>
-rows, skipping C<< $self->FirstRow >> rows.  (That is, if rows are numbered
-starting from 0, row number C<< $self->FirstRow >> will be the first row returned.)
+It massages the statement to limit the returned rows to only C<< $self->rows_per_page >>
+rows, skipping C<< $self->first_row >> rows.  (That is, if rows are numbered
+starting from 0, row number C<< $self->first_row >> will be the first row returned.)
 Note that it probably makes no sense to set these variables unless you are also
-enforcing an ordering on the rows (with C<OrderByCols>, say).
+enforcing an ordering on the rows (with C<order_by_cols>, say).
 
 =cut
 
 
-sub _ApplyLimits {
+sub _apply_limits {
     my $self = shift;
     my $statementref = shift;
-    $self->_Handle->ApplyLimits($statementref, $self->RowsPerPage, $self->FirstRow);
+    $self->_handle->apply_limits($statementref, $self->rows_per_page, $self->first_row);
     $$statementref =~ s/main\.\*/join(', ', @{$self->{columns}})/eg
 	    if $self->{columns} and @{$self->{columns}};
 }
 
 
-=head2 _DistinctQuery STATEMENTREF
+=head2 _distinct_query STATEMENTREF
 
 This routine takes a reference to a scalar containing an SQL statement. 
 It massages the statement to ensure a distinct result set is returned.
@@ -284,44 +284,44 @@ It massages the statement to ensure a distinct result set is returned.
 
 =cut
 
-sub _DistinctQuery {
+sub _distinct_query {
     my $self = shift;
     my $statementref = shift;
     my $table = shift;
 
-    # XXX - Postgres gets unhappy with distinct and OrderBy aliases
+    # XXX - Postgres gets unhappy with distinct and order_by aliases
     if (exists $self->{'order_clause'} && $self->{'order_clause'} =~ /(?<!main)\./) {
         $$statementref = "SELECT main.* FROM $$statementref";
     }
     else {
-	$self->_Handle->DistinctQuery($statementref, $table)
+	$self->_handle->distinct_query($statementref, $table)
     }
 }
 
 
 
-=head2 _BuildJoins
+=head2 _build_joins
 
 Build up all of the joins we need to perform this query.
 
 =cut
 
 
-sub _BuildJoins {
+sub _build_joins {
     my $self = shift;
 
-        return ( $self->_Handle->_BuildJoins($self) );
+        return ( $self->_handle->_build_joins($self) );
 
 }
 
 
-=head2 _isJoined 
+=head2 _is_joined 
 
 Returns true if this SearchBuilder will be joining multiple tables together.
 
 =cut
 
-sub _isJoined {
+sub _is_joined {
     my $self = shift;
     if (keys(%{$self->{'left_joins'}})) {
         return(1);
@@ -338,16 +338,16 @@ sub _isJoined {
 
 
 
-sub _LimitClause {
+sub _limit_clause {
     my $self = shift;
     my $limit_clause;
 
-    if ( $self->RowsPerPage ) {
+    if ( $self->rows_per_page ) {
         $limit_clause = " LIMIT ";
-        if ( $self->FirstRow != 0 ) {
-            $limit_clause .= $self->FirstRow . ", ";
+        if ( $self->first_row != 0 ) {
+            $limit_clause .= $self->first_row . ", ";
         }
-        $limit_clause .= $self->RowsPerPage;
+        $limit_clause .= $self->rows_per_page;
     }
     else {
         $limit_clause = "";
@@ -357,13 +357,13 @@ sub _LimitClause {
 
 
 
-=head2 _isLimited
+=head2 _is_limited
 
 If we've limited down this search, return true. Otherwise, return false.
 
 =cut
 
-sub _isLimited {
+sub _is_limited {
     my $self = shift;
     if (@_) {
         $self->{'is_limited'} = shift;
@@ -376,33 +376,33 @@ sub _isLimited {
 
 
 
-=head2 BuildSelectQuery
+=head2 build_select_query
 
 Builds a query string for a "SELECT rows from Tables" statement for this SearchBuilder object
 
 =cut
 
-sub BuildSelectQuery {
+sub build_select_query {
     my $self = shift;
 
     # The initial SELECT or SELECT DISTINCT is decided later
 
-    my $QueryString = $self->_BuildJoins . " ";
-    $QueryString .= $self->_WhereClause . " "
-      if ( $self->_isLimited > 0 );
+    my $QueryString = $self->_build_joins . " ";
+    $QueryString .= $self->_where_clause . " "
+      if ( $self->_is_limited > 0 );
 
     # DISTINCT query only required for multi-table selects
-    if ($self->_isJoined) {
-        $self->_DistinctQuery(\$QueryString, $self->Table);
+    if ($self->_is_joined) {
+        $self->_distinct_query(\$QueryString, $self->table);
     } else {
         $QueryString = "SELECT main.* FROM $QueryString";
     }
 
-    $QueryString .= ' ' . $self->_GroupClause . ' ';
+    $QueryString .= ' ' . $self->_group_clause . ' ';
 
-    $QueryString .= ' ' . $self->_OrderClause . ' ';
+    $QueryString .= ' ' . $self->_order_clause . ' ';
 
-    $self->_ApplyLimits(\$QueryString);
+    $self->_apply_limits(\$QueryString);
 
     return($QueryString)
 
@@ -410,27 +410,27 @@ sub BuildSelectQuery {
 
 
 
-=head2 BuildSelectCountQuery
+=head2 build_select_count_query
 
 Builds a SELECT statement to find the number of rows this SearchBuilder object would find.
 
 =cut
 
-sub BuildSelectCountQuery {
+sub build_select_count_query {
     my $self = shift;
 
-    #TODO refactor DoSearch and DoCount such that we only have
+    #TODO refactor DoSearch and do_count such that we only have
     # one place where we build most of the querystring
-    my $QueryString = $self->_BuildJoins . " ";
+    my $QueryString = $self->_build_joins . " ";
 
-    $QueryString .= $self->_WhereClause . " "
-      if ( $self->_isLimited > 0 );
+    $QueryString .= $self->_where_clause . " "
+      if ( $self->_is_limited > 0 );
 
 
 
     # DISTINCT query only required for multi-table selects
-    if ($self->_isJoined) {
-        $QueryString = $self->_Handle->DistinctCount(\$QueryString);
+    if ($self->_is_joined) {
+        $QueryString = $self->_handle->distinct_count(\$QueryString);
     } else {
         $QueryString = "SELECT count(main.id) FROM " . $QueryString;
     }
@@ -443,7 +443,7 @@ sub BuildSelectCountQuery {
 
 =head2 Next
 
-Returns the next row from the set as an object of the type defined by sub NewItem.
+Returns the next row from the set as an object of the type defined by sub new_item.
 When the complete set has been iterated through, returns undef and resets the search
 such that the following call to Next will start over with the first item retrieved from the database.
 
@@ -455,24 +455,24 @@ sub Next {
     my $self = shift;
     my @row;
 
-    return (undef) unless ( $self->_isLimited );
+    return (undef) unless ( $self->_is_limited );
 
-    $self->_DoSearch() if $self->{'must_redo_search'};
+    $self->_do_search() if $self->{'must_redo_search'};
 
-    if ( $self->{'itemscount'} < $self->_RecordCount ) {    #return the next item
+    if ( $self->{'itemscount'} < $self->_record_count ) {    #return the next item
         my $item = ( $self->{'items'}[ $self->{'itemscount'} ] );
         $self->{'itemscount'}++;
         return ($item);
     }
     else {    #we've gone through the whole list. reset the count.
-        $self->GotoFirstItem();
+        $self->goto_first_item();
         return (undef);
     }
 }
 
 
 
-=head2 GotoFirstItem
+=head2 goto_first_item
 
 Starts the recordset counter over from the first item. The next time you call Next,
 you'll get the first item returned by the database, as if you'd just started iterating
@@ -481,15 +481,15 @@ through the result set.
 =cut
 
 
-sub GotoFirstItem {
+sub goto_first_item {
     my $self = shift;
-    $self->GotoItem(0);
+    $self->goto_item(0);
 }
 
 
 
 
-=head2 GotoItem
+=head2 goto_item
 
 Takes an integer, n.
 Sets the record counter to n. the next time you call Next,
@@ -497,7 +497,7 @@ you'll get the nth item.
 
 =cut
 
-sub GotoItem {
+sub goto_item {
     my $self = shift;
     my $item = shift;
     $self->{'itemscount'} = $item;
@@ -511,10 +511,10 @@ Returns the first item
 
 =cut
 
-sub First {
+sub first {
     my $self = shift;
-    $self->GotoFirstItem();
-    return ( $self->Next );
+    $self->goto_first_item();
+    return ( $self->next );
 }
 
 
@@ -525,28 +525,28 @@ Returns the last item
 
 =cut
 
-sub Last {
+sub last {
     my $self = shift;
-    $self->GotoItem( ( $self->Count ) - 1 );
-    return ( $self->Next );
+    $self->goto_item( ( $self->count ) - 1 );
+    return ( $self->next );
 }
 
 
 
-=head2 ItemsArrayRef
+=head2 items_array_ref
 
 Return a refernece to an array containing all objects found by this search.
 
 =cut
 
-sub ItemsArrayRef {
+sub items_array_ref {
     my $self = shift;
 
     #If we're not limited, return an empty array
-    return [] unless $self->_isLimited;
+    return [] unless $self->_is_limited;
 
     #Do a search if we need to.
-    $self->_DoSearch() if $self->{'must_redo_search'};
+    $self->_do_search() if $self->{'must_redo_search'};
 
     #If we've got any items in the array, return them.
     # Otherwise, return an empty array
@@ -556,14 +556,14 @@ sub ItemsArrayRef {
 
 
 
-=head2 NewItem
+=head2 new_item
 
-NewItem must be subclassed. It is used by Jifty::DBI to create record 
+new_item must be subclassed. It is used by Jifty::DBI to create record 
 objects for each row returned from the database.
 
 =cut
 
-sub NewItem {
+sub new_item {
     my $self = shift;
 
     die
@@ -572,14 +572,14 @@ sub NewItem {
 
 
 
-=head2 RedoSearch
+=head2 redo_search
 
 Takes no arguments.  Tells Jifty::DBI that the next time it's asked
 for a record, it should requery the database
 
 =cut
 
-sub RedoSearch {
+sub redo_search {
     my $self = shift;
     $self->{'must_redo_search'} = 1;
 }
@@ -587,16 +587,16 @@ sub RedoSearch {
 
 
 
-=head2 UnLimit
+=head2 unlimit
 
-UnLimit clears all restrictions and causes this object to return all
+unlimit clears all restrictions and causes this object to return all
 rows in the primary table.
 
 =cut
 
-sub UnLimit {
+sub unlimit {
     my $self = shift;
-    $self->_isLimited(-1);
+    $self->_is_limited(-1);
 }
 
 
@@ -668,7 +668,7 @@ this search case sensitive
 sub Limit {
     my $self = shift;
     my %args = (
-        TABLE           => $self->Table,
+        TABLE           => $self->table,
         FIELD           => undef,
         VALUE           => undef,
         ALIAS           => undef,
@@ -684,7 +684,7 @@ sub Limit {
     my ($Alias);
 
     #since we're changing the search criteria, we need to redo the search
-    $self->RedoSearch();
+    $self->redo_search();
 
     if ( $args{'FIELD'} ) {
 
@@ -705,7 +705,7 @@ sub Limit {
         # we're doing an IS or IS NOT (null), don't quote the operator.
 
         if ( $args{'QUOTEVALUE'} && $args{'OPERATOR'} !~ /IS/i ) {
-            my $tmp = $self->_Handle->dbh->quote( $args{'VALUE'} );
+            my $tmp = $self->_handle->dbh->quote( $args{'VALUE'} );
 
             # Accomodate DBI drivers that don't understand UTF8
 	    if ($] >= 5.007) {
@@ -718,14 +718,14 @@ sub Limit {
         }
     }
 
-    $Alias = $self->_GenericRestriction(%args);
+    $Alias = $self->_generic_restriction(%args);
 
     warn "No table alias set!"
       unless $Alias;
 
     # We're now limited. people can do searches.
 
-    $self->_isLimited(1);
+    $self->_is_limited(1);
 
     if ( defined($Alias) ) {
         return ($Alias);
@@ -737,7 +737,7 @@ sub Limit {
 
 
 
-=head2 ShowRestrictions
+=head2 show_restrictions
 
 Returns the current object's proposed WHERE clause. 
 
@@ -745,10 +745,10 @@ Deprecated.
 
 =cut
 
-sub ShowRestrictions {
+sub show_restrictions {
     my $self = shift;
-    $self->_CompileGenericRestrictions();
-    $self->_CompileSubClauses();
+    $self->_compile_generic_restrictions();
+    $self->_compile_sub_clauses();
     return ( $self->{'where_clause'} );
 
 }
@@ -771,9 +771,9 @@ sub ImportRestrictions {
 
 
 
-sub _GenericRestriction {
+sub _generic_restriction {
     my $self = shift;
-    my %args = ( TABLE           => $self->Table,
+    my %args = ( TABLE           => $self->table,
                  FIELD           => undef,
                  VALUE           => undef,
                  ALIAS           => undef,
@@ -803,7 +803,7 @@ sub _GenericRestriction {
     unless ( $args{'ALIAS'} ) {
 
         #if the table we're looking at is the same as the main table
-        if ( $args{'TABLE'} eq $self->Table ) {
+        if ( $args{'TABLE'} eq $self->table ) {
 
             # TODO this code assumes no self joins on that table.
             # if someone can name a case where we'd want to do that,
@@ -815,7 +815,7 @@ sub _GenericRestriction {
         # {{{ if we're joining, we need to work out the table alias
 
         else {
-            $args{'ALIAS'} = $self->NewAlias( $args{'TABLE'} );
+            $args{'ALIAS'} = $self->new_alias( $args{'TABLE'} );
         }
 
         # }}}
@@ -835,7 +835,7 @@ sub _GenericRestriction {
         $Clause = $QualifiedField;
     }
 
-    print STDERR "$self->_GenericRestriction QualifiedField=$QualifiedField\n"
+    print STDERR "$self->_generic_restriction QualifiedField=$QualifiedField\n"
       if ( $self->DEBUG );
 
     my ($restriction);
@@ -853,11 +853,11 @@ sub _GenericRestriction {
 
     # If it's a new value or we're overwriting this sort of restriction,
 
-    if ( $self->_Handle->CaseSensitive && defined $args{'VALUE'} && $args{'VALUE'} ne ''  && $args{'VALUE'} ne "''" && ($args{'OPERATOR'} !~/IS/ && $args{'VALUE'} !~ /^null$/i)) {
+    if ( $self->_handle->case_sensitive && defined $args{'VALUE'} && $args{'VALUE'} ne ''  && $args{'VALUE'} ne "''" && ($args{'OPERATOR'} !~/IS/ && $args{'VALUE'} !~ /^null$/i)) {
 
         unless ( $args{'CASESENSITIVE'} || !$args{'QUOTEVALUE'} ) {
                ( $QualifiedField, $args{'OPERATOR'}, $args{'VALUE'} ) =
-                 $self->_Handle->_MakeClauseCaseInsensitive( $QualifiedField,
+                 $self->_handle->_make_clause_case_insensitive( $QualifiedField,
                 $args{'OPERATOR'}, $args{'VALUE'} );
         }
 
@@ -889,13 +889,13 @@ sub _GenericRestriction {
 }
 
 
-sub _OpenParen {
+sub _open_paren {
     my ( $self, $clause ) = @_;
     $self->{_open_parens}{$clause}++;
 }
 
 # Immediate Action
-sub _CloseParen {
+sub _close_paren {
     my ( $self, $clause ) = @_;
     my $restriction = \$self->{'restrictions'}{"$clause"};
     if ( !$$restriction ) {
@@ -907,7 +907,7 @@ sub _CloseParen {
 }
 
 
-sub _AddSubClause {
+sub _add_sub_clause {
     my $self      = shift;
     my $clauseid  = shift;
     my $subclause = shift;
@@ -918,14 +918,14 @@ sub _AddSubClause {
 
 
 
-sub _WhereClause {
+sub _where_clause {
     my $self = shift;
     my ( $subclause, $where_clause );
 
     #Go through all the generic restrictions and build up the "generic_restrictions" subclause
     # That's the only one that SearchBuilder builds itself.
     # Arguably, the abstraction should be better, but I don't really see where to put it.
-    $self->_CompileGenericRestrictions();
+    $self->_compile_generic_restrictions();
 
     #Go through all restriction types. Build the where clause from the
     #Various subclauses.
@@ -950,7 +950,7 @@ sub _WhereClause {
 
 #Compile the restrictions to a WHERE Clause
 
-sub _CompileGenericRestrictions {
+sub _compile_generic_restrictions {
     my $self = shift;
     my ($restriction);
 
@@ -977,26 +977,26 @@ Orders the returned results by ALIAS.FIELD ORDER. (by default 'main.id ASC')
 Takes a paramhash of ALIAS, FIELD and ORDER.  
 ALIAS defaults to main
 FIELD defaults to the primary key of the main table.  Also accepts C<FUNCTION(FIELD)> format
-ORDER defaults to ASC(ending).  DESC(ending) is also a valid value for OrderBy
+ORDER defaults to ASC(ending).  DESC(ending) is also a valid value for order_by
 
 
 =cut
 
-sub OrderBy {
+sub order_by {
     my $self = shift;
     my %args = ( @_ );
 
-    $self->OrderByCols( \%args );
+    $self->order_by_cols( \%args );
 }
 
-=head2 OrderByCols ARRAY
+=head2 order_by_cols ARRAY
 
-OrderByCols takes an array of paramhashes of the form passed to OrderBy.
+order_by_cols takes an array of paramhashes of the form passed to order_by.
 The result set is ordered by the items in the array.
 
 =cut
 
-sub OrderByCols {
+sub order_by_cols {
     my $self = shift;
     my @args = @_;
     my $row;
@@ -1039,18 +1039,18 @@ sub OrderByCols {
     else {
 	$self->{'order_clause'} = "";
     }
-    $self->RedoSearch();
+    $self->redo_search();
 }
 
 
 
-=head2 _OrderClause
+=head2 _order_clause
 
 returns the ORDER BY clause for the search.
 
 =cut
 
-sub _OrderClause {
+sub _order_clause {
     my $self = shift;
 
     return '' unless $self->{'order_clause'};
@@ -1061,23 +1061,23 @@ sub _OrderClause {
 
 
 
-=head2 GroupBy  (DEPRECATED)
+=head2 group_by  (DEPRECATED)
 
-Alias for the GroupByCols method.
+Alias for the group_by_cols method.
 
 =cut
 
-sub GroupBy { (shift)->GroupByCols( @_ ) }
+sub group_by { (shift)->group_by_cols( @_ ) }
 
 
 
-=head2 GroupByCols ARRAY_OF_HASHES
+=head2 group_by_cols ARRAY_OF_HASHES
 
 Each hash contains the keys ALIAS and FIELD. ALIAS defaults to 'main' if ignored.
 
 =cut
 
-sub GroupByCols {
+sub group_by_cols {
     my $self = shift;
     my @args = @_;
     my $row;
@@ -1108,17 +1108,17 @@ sub GroupByCols {
     else {
 	$self->{'group_clause'} = "";
     }
-    $self->RedoSearch();
+    $self->redo_search();
 }
 
 
-=head2 _GroupClause
+=head2 _group_clause
 
 Private function to return the "GROUP BY" clause for this query.
 
 =cut
 
-sub _GroupClause {
+sub _group_clause {
     my $self = shift;
 
     return '' unless $self->{'group_clause'};
@@ -1129,7 +1129,7 @@ sub _GroupClause {
 
 
 
-=head2 NewAlias
+=head2 new_alias
 
 Takes the name of a table.
 Returns the string of a new Alias for that table, which can be used to Join tables
@@ -1137,11 +1137,11 @@ or to Limit what gets found by a search.
 
 =cut
 
-sub NewAlias {
+sub new_alias {
     my $self  = shift;
     my $table = shift || die "Missing parameter";
 
-    my $alias = $self->_GetAlias($table);
+    my $alias = $self->_get_alias($table);
 
     my $subclause = "$table $alias";
 
@@ -1152,12 +1152,12 @@ sub NewAlias {
 
 
 
-# _GetAlias is a private function which takes an tablename and
+# _get_alias is a private function which takes an tablename and
 # returns a new alias for that table without adding something
-# to self->{'aliases'}.  This function is used by NewAlias
+# to self->{'aliases'}.  This function is used by new_alias
 # and the as-yet-unnamed left join code
 
-sub _GetAlias {
+sub _get_alias {
     my $self  = shift;
     my $table = shift;
 
@@ -1175,7 +1175,7 @@ sub _GetAlias {
 Join instructs Jifty::DBI to join two tables.  
 
 The standard form takes a param hash with keys ALIAS1, FIELD1, ALIAS2 and 
-FIELD2. ALIAS1 and ALIAS2 are column aliases obtained from $self->NewAlias or
+FIELD2. ALIAS1 and ALIAS2 are column aliases obtained from $self->new_alias or
 a $self->Limit. FIELD1 and FIELD2 are the fields in ALIAS1 and ALIAS2 that 
 should be linked, respectively.  For this type of join, this method
 has no return value.
@@ -1202,7 +1202,7 @@ sub Join {
         @_
     );
 
-    $self->_Handle->Join( SearchBuilder => $self, %args );
+    $self->_handle->Join( SearchBuilder => $self, %args );
 
 }
 
@@ -1212,45 +1212,45 @@ sub Join {
 
 sub NextPage {
     my $self = shift;
-    $self->FirstRow( $self->FirstRow + $self->RowsPerPage );
+    $self->first_row( $self->first_row + $self->rows_per_page );
 }
 
 
 sub FirstPage {
     my $self = shift;
-    $self->FirstRow(1);
+    $self->first_row(1);
 }
 
 
 
 
 
-sub PrevPage {
+sub prev_page {
     my $self = shift;
-    if ( ( $self->FirstRow - $self->RowsPerPage ) > 1 ) {
-        $self->FirstRow( $self->FirstRow - $self->RowsPerPage );
+    if ( ( $self->first_row - $self->rows_per_page ) > 1 ) {
+        $self->first_row( $self->first_row - $self->rows_per_page );
     }
     else {
-        $self->FirstRow(1);
+        $self->first_row(1);
     }
 }
 
 
 
-sub GotoPage {
+sub goto_page {
     my $self = shift;
     my $page = shift;
 
-    if ( $self->RowsPerPage ) {
-    	$self->FirstRow( 1 + ( $self->RowsPerPage * $page ) );
+    if ( $self->rows_per_page ) {
+    	$self->first_row( 1 + ( $self->rows_per_page * $page ) );
     } else {
-        $self->FirstRow(1);
+        $self->first_row(1);
     }
 }
 
 
 
-=head2 RowsPerPage
+=head2 rows_per_page
 
 Limits the number of rows returned by the database.
 Optionally, takes an integer which restricts the # of rows returned in a result
@@ -1258,7 +1258,7 @@ Returns the number of rows the database should display.
 
 =cut
 
-sub RowsPerPage {
+sub rows_per_page {
     my $self = shift;
     $self->{'show_rows'} = shift if (@_);
 
@@ -1267,7 +1267,7 @@ sub RowsPerPage {
 
 
 
-=head2 FirstRow
+=head2 first_row
 
 Get or set the first row of the result set the database should return.
 Takes an optional single integer argrument. Returns the currently set integer
@@ -1277,7 +1277,7 @@ first row that the database should return.
 =cut
 
 # returns the first row
-sub FirstRow {
+sub first_row {
     my $self = shift;
     if (@_) {
         $self->{'first_row'} = shift;
@@ -1286,7 +1286,7 @@ sub FirstRow {
         $self->{'first_row'}--;
 
         #gotta redo the search if changing pages
-        $self->RedoSearch();
+        $self->redo_search();
     }
     return ( $self->{'first_row'} );
 }
@@ -1295,13 +1295,13 @@ sub FirstRow {
 
 
 
-=head2 _ItemsCounter
+=head2 _items_counter
 
 Returns the current position in the record set.
 
 =cut
 
-sub _ItemsCounter {
+sub _items_counter {
     my $self = shift;
     return $self->{'itemscount'};
 }
@@ -1320,7 +1320,7 @@ sub Count {
     my $self = shift;
 
     # An unlimited search returns no tickets    
-    return 0 unless ($self->_isLimited);
+    return 0 unless ($self->_is_limited);
 
 
     # If we haven't actually got all objects loaded in memory, we
@@ -1328,7 +1328,7 @@ sub Count {
     if ( $self->{'must_redo_search'} ) {
 
         # If we haven't already asked the database for the row count, do that
-        $self->_DoCount unless ( $self->{'raw_rows'} );
+        $self->_do_count unless ( $self->{'raw_rows'} );
 
         #Report back the raw # of rows in the database
         return ( $self->{'raw_rows'} );
@@ -1337,16 +1337,16 @@ sub Count {
     # If we have loaded everything from the DB we have an
     # accurate count already.
     else {
-        return $self->_RecordCount;
+        return $self->_record_count;
     }
 }
 
 
 
-=head2 CountAll
+=head2 count_all
 
 Returns the total number of potential records in the set, ignoring any
-LimitClause.
+limit_clause.
 
 =cut
 
@@ -1361,27 +1361,27 @@ LimitClause.
 # 22:27 [msg(Robrt)] (given that every time we try to explain it, we get it Wrong)
 # 22:27 [Robrt(500@outer.space)] Because Count can return a different number than actual NumberOfResults
 # 22:28 [msg(Robrt)] in what case?
-# 22:28 [Robrt(500@outer.space)] CountAll _always_ used the return value of _DoCount(), as opposed to Count which would return the cached number of 
+# 22:28 [Robrt(500@outer.space)] count_all _always_ used the return value of _do_count(), as opposed to Count which would return the cached number of 
 #           results returned.
 # 22:28 [Robrt(500@outer.space)] IIRC, if you do a search with a Limit, then raw_rows will == Limit.
 # 22:31 [msg(Robrt)] ah.
 # 22:31 [msg(Robrt)] that actually makes sense
-# 22:31 [Robrt(500@outer.space)] You should paste this conversation into the CountAll docs.
+# 22:31 [Robrt(500@outer.space)] You should paste this conversation into the count_all docs.
 # 22:31 [msg(Robrt)] perhaps I'll create a new method that _actually_ do that.
 # 22:32 [msg(Robrt)] since I'm not convinced it's been doing that correctly
 
 
-sub CountAll {
+sub count_all {
     my $self = shift;
 
     # An unlimited search returns no tickets    
-    return 0 unless ($self->_isLimited);
+    return 0 unless ($self->_is_limited);
 
     # If we haven't actually got all objects loaded in memory, we
     # really just want to do a quick count from the database.
     if ( $self->{'must_redo_search'} || !$self->{'count_all'}) {
         # If we haven't already asked the database for the row count, do that
-        $self->_DoCount(1) unless ( $self->{'count_all'} );
+        $self->_do_count(1) unless ( $self->{'count_all'} );
 
         #Report back the raw # of rows in the database
         return ( $self->{'count_all'} );
@@ -1390,7 +1390,7 @@ sub CountAll {
     # If we have loaded everything from the DB we have an
     # accurate count already.
     else {
-        return $self->_RecordCount;
+        return $self->_record_count;
     }
 }
 
@@ -1406,9 +1406,9 @@ Returns true if the current row is the last record in the set.
 sub IsLast {
     my $self = shift;
 
-    return undef unless $self->Count;
+    return undef unless $self->count;
 
-    if ( $self->_ItemsCounter == $self->Count ) {
+    if ( $self->_items_counter == $self->count ) {
         return (1);
     }
     else {
@@ -1456,7 +1456,7 @@ sub Column {
             $alias;
         }
         else {
-            $self->Table;
+            $self->table;
         }
     };
 
@@ -1479,7 +1479,7 @@ sub Column {
     }
 
     my $column = "col" . @{ $self->{columns} ||= [] };
-    $column = $args{FIELD} if $table eq $self->Table and !$args{ALIAS};
+    $column = $args{FIELD} if $table eq $self->table and !$args{ALIAS};
     push @{ $self->{columns} }, "$name AS \L$column";
     return $column;
 }
@@ -1500,7 +1500,7 @@ sub Columns {
 
 
 
-=head2 Fields TABLE
+=head2 fields TABLE
  
 Return a list of fields in TABLE, lowercased.
 
@@ -1508,11 +1508,11 @@ TODO: Why are they lowercased?
 
 =cut
 
-sub Fields {
+sub fields {
     my $self  = shift;
     my $table = shift;
 
-    my $dbh = $self->_Handle->dbh;
+    my $dbh = $self->_handle->dbh;
 
     # TODO: memoize this
 
@@ -1529,14 +1529,14 @@ sub Fields {
 
 
 
-=head2 HasField  { TABLE => undef, FIELD => undef }
+=head2 has_field  { TABLE => undef, FIELD => undef }
 
 Returns true if TABLE has field FIELD.
 Return false otherwise
 
 =cut
 
-sub HasField {
+sub has_field {
     my $self = shift;
     my %args = ( FIELD => undef,
                  TABLE => undef,
@@ -1544,7 +1544,7 @@ sub HasField {
 
     my $table = $args{TABLE} or die;
     my $field = $args{FIELD} or die;
-    return grep { $_ eq $field } $self->Fields($table);
+    return grep { $_ eq $field } $self->fields($table);
 }
 
 
@@ -1557,12 +1557,12 @@ Always returns this collection's table.
 
 =cut
 
-sub SetTable {
+sub set_table {
     my $self = shift;
-    return $self->Table(@_);
+    return $self->table(@_);
 }
 
-sub Table {
+sub table {
     my $self = shift;
     $self->{table} = shift if (@_);
     return $self->{table};

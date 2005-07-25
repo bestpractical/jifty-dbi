@@ -1,4 +1,3 @@
-# $Header: /home/jesse/DBIx-SearchBuilder/history/SearchBuilder/Handle.pm,v 1.21 2002/01/28 06:11:37 jesse Exp $
 package Jifty::DBI::Handle;
 use strict;
 use Carp;
@@ -56,7 +55,7 @@ sub new  {
 
 
 
-=head2 Connect PARAMHASH: Driver, Database, Host, User, Password
+=head2 connect PARAMHASH: Driver, Database, Host, User, Password
 
 Takes a paramhash and connects to your DBI datasource. 
 
@@ -73,7 +72,7 @@ the handle will be automatically "upgraded" into that subclass.
 
 =cut
 
-sub Connect  {
+sub connect  {
   my $self = shift;
   
   my %args = ( Driver => undef,
@@ -88,7 +87,7 @@ sub Connect  {
 	       @_);
 
    if( $args{'Driver'} && !$self->isa( 'Jifty::DBI::Handle::'. $args{'Driver'} ) ) {
-      if ( $self->_UpgradeHandle($args{Driver}) ) {
+      if ( $self->_upgrade_handle($args{Driver}) ) {
           return ($self->Connect( %args ));
       }
    }
@@ -101,7 +100,7 @@ sub Connect  {
     $self->{'DisconnectHandleOnDestroy'} = $args{'DisconnectHandleOnDestroy'};
     
 
-  $self->BuildDSN(%args);
+  $self->build_dsn(%args);
 
     # Only connect if we're not connected to this source already
    if ((! $self->dbh ) || (!$self->dbh->ping) || ($self->DSN ne $dsn) ) { 
@@ -122,14 +121,14 @@ sub Connect  {
 }
 
 
-=head2 _UpgradeHandle DRIVER
+=head2 _upgrade_handle DRIVER
 
 This private internal method turns a plain Jifty::DBI::Handle into one
 of the standard driver-specific subclasses.
 
 =cut
 
-sub _UpgradeHandle {
+sub _upgrade_handle {
     my $self = shift;
     
     my $driver = shift;
@@ -144,7 +143,7 @@ sub _UpgradeHandle {
 
 
 
-=head2 BuildDSN PARAMHASH
+=head2 build_dsn PARAMHASH
 
 Takes a bunch of parameters:  
 
@@ -155,7 +154,7 @@ Builds a DSN suitable for a DBI connection
 
 =cut
 
-sub BuildDSN {
+sub build_dsn {
     my $self = shift;
   my %args = ( Driver => undef,
 	       Database => undef,
@@ -177,25 +176,26 @@ sub BuildDSN {
 
 
 
-=head2 DSN
+=head2 dsn
 
     Returns the DSN for this database connection.
 
 =cut
-sub DSN {
+
+sub dsn {
     my $self = shift;
     return($self->{'dsn'});
 }
 
 
 
-=head2 RaiseError [MODE]
+=head2 raise_error [MODE]
 
 Turns on the Database Handle's RaiseError attribute.
 
 =cut
 
-sub RaiseError {
+sub raise_error {
     my $self = shift;
 
     my $mode = 1; 
@@ -207,13 +207,13 @@ sub RaiseError {
 
 
 
-=head2 PrintError [MODE]
+=head2 print_error [MODE]
 
 Turns on the Database Handle's PrintError attribute.
 
 =cut
 
-sub PrintError {
+sub print_error {
     my $self = shift;
 
     my $mode = 1; 
@@ -224,7 +224,7 @@ sub PrintError {
 
 
 
-=head2 LogSQLStatements BOOL
+=head2 log_sql_statements BOOL
 
 Takes a boolean argument. If the boolean is true, SearchBuilder will log all SQL
 statements, as well as their invocation times and execution times.
@@ -233,7 +233,7 @@ Returns whether we're currently logging or not as a boolean
 
 =cut
 
-sub LogSQLStatements {
+sub log_sql_statements {
     my $self = shift;
     if (@_) {
 
@@ -243,13 +243,13 @@ sub LogSQLStatements {
     }
 }
 
-=head2 _LogSQLStatement STATEMENT DURATION
+=head2 _log_sql_statement STATEMENT DURATION
 
 add an SQL statement to our query log
 
 =cut
 
-sub _LogSQLStatement {
+sub _log_sql_statement {
     my $self = shift;
     my $statement = shift;
     my $duration = shift;
@@ -257,20 +257,20 @@ sub _LogSQLStatement {
 
 }
 
-=head2 ClearSQLStatementLog
+=head2 clear_sql_statement_log
 
 Clears out the SQL statement log. 
 
 
 =cut
 
-sub ClearSQLStatementLog {
+sub clear_sql_statement_log {
     my $self = shift;
     @{$self->{'StatementLog'}} = ();
 }   
 
 
-=head2 SQLStatementLog
+=head2 sql_statement_log
 
 Returns the current SQL statement log as an array of arrays. Each entry is a triple of 
 
@@ -278,7 +278,7 @@ Returns the current SQL statement log as an array of arrays. Each entry is a tri
 
 =cut
 
-sub SQLStatementLog {
+sub sql_statement_log {
     my $self = shift;
     return  (@{$self->{'StatementLog'}});
 
@@ -286,31 +286,31 @@ sub SQLStatementLog {
 
 
 
-=head2 AutoCommit [MODE]
+=head2 auto_commit [MODE]
 
-Turns on the Database Handle's AutoCommit attribute.
+Turns on the Database Handle's Autocommit attribute.
 
 =cut
 
-sub AutoCommit {
+sub auto_commit {
     my $self = shift;
 
     my $mode = 1; 
     $mode = shift if (@_);
 
-    $self->dbh->{AutoCommit}=$mode;
+    $self->dbh->{Autocommit}=$mode;
 }
 
 
 
 
-=head2 Disconnect
+=head2 disconnect
 
-Disconnect from your DBI datasource
+disconnect from your DBI datasource
 
 =cut
 
-sub Disconnect  {
+sub disconnect  {
   my $self = shift;
   if ($self->dbh) {
       return ($self->dbh->disconnect());
@@ -340,13 +340,13 @@ sub dbh {
 }
 
 
-=head2 Insert $TABLE_NAME @KEY_VALUE_PAIRS
+=head2 insert $TABLE_NAME @KEY_VALUE_PAIRS
 
 Takes a table name and a set of key-value pairs in an array. splits the key value pairs, constructs an INSERT statement and performs the insert. Returns the row_id of this row.
 
 =cut
 
-sub Insert {
+sub insert {
   my($self, $table, @pairs) = @_;
   my(@cols, @vals, @bind);
 
@@ -363,12 +363,12 @@ sub Insert {
     "INSERT INTO $table (". join(", ", @cols). ") VALUES ".
     "(". join(", ", @vals). ")";
 
-    my $sth =  $self->SimpleQuery($QueryString, @bind);
+    my $sth =  $self->simple_query($QueryString, @bind);
     return ($sth);
   }
 
 
-=head2 UpdateRecordValue 
+=head2 update_record_value 
 
 Takes a hash with fields: Table, Column, Value PrimaryKeys, and 
 IsSQLFunction.  Table, and Column should be obvious, Value is where you 
@@ -380,7 +380,7 @@ string will be inserted into the query directly rather then as a binding.
 
 =cut
 
-sub UpdateRecordValue {
+sub update_record_value {
     my $self = shift;
     my %args = ( Table         => undef,
                  Column        => undef,
@@ -410,23 +410,23 @@ sub UpdateRecordValue {
      $where =~ s/AND\s$//;
   
   my $query_str = $query . $where;
-  return ($self->SimpleQuery($query_str, @bind));
+  return ($self->simple_query($query_str, @bind));
 }
 
 
 
 
-=head2 UpdateTableValue TABLE COLUMN NEW_VALUE RECORD_ID IS_SQL
+=head2 update_table_value TABLE COLUMN NEW_VALUE RECORD_ID IS_SQL
 
 Update column COLUMN of table TABLE where the record id = RECORD_ID.  if IS_SQL is set,
 don\'t quote the NEW_VALUE
 
 =cut
 
-sub UpdateTableValue  {
+sub update_table_value  {
     my $self = shift;
 
-    ## This is just a wrapper to UpdateRecordValue().     
+    ## This is just a wrapper to update_record_value().     
     my %args = (); 
     $args{'Table'}  = shift;
     $args{'Column'} = shift;
@@ -434,17 +434,17 @@ sub UpdateTableValue  {
     $args{'PrimaryKeys'}   = shift; 
     $args{'IsSQLFunction'} = shift;
 
-    return $self->UpdateRecordValue(%args)
+    return $self->update_record_value(%args)
 }
 
 
-=head2 SimpleQuery QUERY_STRING, [ BIND_VALUE, ... ]
+=head2 simple_query QUERY_STRING, [ BIND_VALUE, ... ]
 
 Execute the SQL string specified in QUERY_STRING
 
 =cut
 
-sub SimpleQuery {
+sub simple_query {
     my $self        = shift;
     my $QueryString = shift;
     my @bind_values;
@@ -484,7 +484,7 @@ sub SimpleQuery {
     }
 
     my $basetime;
-    if ( $self->LogSQLStatements ) {
+    if ( $self->log_sql_statements ) {
         $basetime = Time::HiRes::time();
     }
     my $executed;
@@ -492,8 +492,8 @@ sub SimpleQuery {
         no warnings 'uninitialized' ; # undef in bind_values makes DBI sad
         eval { $executed = $sth->execute(@bind_values) };
     }
-    if ( $self->LogSQLStatements ) {
-        $self->_LogSQLStatement( $QueryString, tv_interval($basetime) );
+    if ( $self->log_sql_statements ) {
+        $self->_log_sql_statement( $QueryString, tv_interval($basetime) );
 
     }
 
@@ -523,7 +523,7 @@ sub SimpleQuery {
 
 
 
-=head2 FetchResult QUERY, [ BIND_VALUE, ... ]
+=head2 fetch_result QUERY, [ BIND_VALUE, ... ]
 
 Takes a SELECT query as a string, along with an array of BIND_VALUEs
 If the select succeeds, returns the first row as an array.
@@ -532,11 +532,11 @@ up.
 
 =cut 
 
-sub FetchResult {
+sub fetch_result {
   my $self = shift;
   my $query = shift;
   my @bind_values = @_;
-  my $sth = $self->SimpleQuery($query, @bind_values);
+  my $sth = $self->simple_query($query, @bind_values);
   if ($sth) {
     return ($sth->fetchrow);
   }
@@ -546,14 +546,14 @@ sub FetchResult {
 }
 
 
-=head2 BinarySafeBLOBs
+=head2 binary_safe_blobs
 
 Returns 1 if the current database supports BLOBs with embedded nulls.
 Returns undef if the current database doesn't support BLOBs with embedded nulls
 
 =cut
 
-sub BinarySafeBLOBs {
+sub binary_safe_blobs {
     my $self = shift;
     return(1);
 }
@@ -589,32 +589,32 @@ sub BLOBParams {
 
 
 
-=head2 DatabaseVersion
+=head2 database_version
 
 Returns the database's version. The base implementation uses a "SELECT VERSION"
 
 =cut
 
-sub DatabaseVersion {
+sub database_version {
     my $self = shift;
 
     unless ($self->{'database_version'}) {
         my $statement  = "SELECT VERSION()";
-        my $sth = $self->SimpleQuery($statement);
+        my $sth = $self->simple_query($statement);
         my @vals = $sth->fetchrow();
         $self->{'database_version'}= $vals[0];
     }
 }
 
 
-=head2 CaseSensitive
+=head2 case_sensitive
 
 Returns 1 if the current database's searches are case sensitive by default
 Returns undef otherwise
 
 =cut
 
-sub CaseSensitive {
+sub case_sensitive {
     my $self = shift;
     return(1);
 }
@@ -623,7 +623,7 @@ sub CaseSensitive {
 
 
 
-=head2 _MakeClauseCaseInsensitive FIELD OPERATOR VALUE
+=head2 _make_clause_case_insensitive FIELD OPERATOR VALUE
 
 Takes a field, operator and value. performs the magic necessary to make
 your database treat this clause as case insensitive.
@@ -632,7 +632,7 @@ Returns a FIELD OPERATOR VALUE triple.
 
 =cut
 
-sub _MakeClauseCaseInsensitive {
+sub _make_clause_case_insensitive {
     my $self = shift;
     my $field = shift;
     my $operator = shift;
@@ -648,7 +648,7 @@ sub _MakeClauseCaseInsensitive {
 
 
 
-=head2 BeginTransaction
+=head2 begin_transaction
 
 Tells Jifty::DBI to begin a new SQL transaction. This will
 temporarily suspend Autocommit mode.
@@ -657,7 +657,7 @@ Emulates nested transactions, by keeping a transaction stack depth.
 
 =cut
 
-sub BeginTransaction {
+sub begin_transaction {
     my $self = shift;
     $TRANSDEPTH++;
     if ($TRANSDEPTH > 1 ) {
@@ -669,14 +669,14 @@ sub BeginTransaction {
 
 
 
-=head2 Commit
+=head2 commit
 
 Tells Jifty::DBI to commit the current SQL transaction. 
 This will turn Autocommit mode back on.
 
 =cut
 
-sub Commit {
+sub commit {
     my $self = shift;
     unless ($TRANSDEPTH) {Carp::confess("Attempted to commit a transaction with none in progress")};
     $TRANSDEPTH--;
@@ -690,7 +690,7 @@ sub Commit {
 
 
 
-=head2 Rollback [FORCE]
+=head2 rollback [FORCE]
 
 Tells Jifty::DBI to abort the current SQL transaction. 
 This will turn Autocommit mode back on.
@@ -699,7 +699,7 @@ If this method is passed a true argument, stack depth is blown away and the oute
 
 =cut
 
-sub Rollback {
+sub rollback {
     my $self = shift;
     my $force = shift || undef;
     #unless ($TRANSDEPTH) {Carp::confess("Attempted to rollback a transaction with none in progress")};
@@ -718,39 +718,39 @@ sub Rollback {
 }
 
 
-=head2 ForceRollback
+=head2 force_rollback
 
 Force the handle to rollback. Whether or not we're deep in nested transactions
 
 =cut
 
-sub ForceRollback {
+sub force_rollback {
     my $self = shift;
-    $self->Rollback(1);
+    $self->rollback(1);
 }
 
 
-=head2 TransactionDepth
+=head2 transaction_depthh
 
 Return the current depth of the faked nested transaction stack.
 
 =cut
 
-sub TransactionDepth {
+sub transaction_depthh {
     my $self = shift;
     return ($TRANSDEPTH); 
 }
 
 
 
-=head2 ApplyLimits STATEMENTREF ROWS_PER_PAGE FIRST_ROW
+=head2 apply_limits STATEMENTREF ROWS_PER_PAGE FIRST_ROW
 
 takes an SQL SELECT statement and massages it to return ROWS_PER_PAGE starting with FIRST_ROW;
 
 
 =cut
 
-sub ApplyLimits {
+sub apply_limits {
     my $self = shift;
     my $statementref = shift;
     my $per_page = shift;
@@ -774,7 +774,7 @@ sub ApplyLimits {
 
 
 
-=head2 Join { Paramhash }
+=head2 join { Paramhash }
 
 Takes a paramhash of everything Searchbuildler::Record does 
 plus a parameter called 'SearchBuilder' that contains a ref 
@@ -786,7 +786,7 @@ This performs the join.
 =cut
 
 
-sub Join {
+sub join {
 
     my $self = shift;
     my %args = (
@@ -851,7 +851,7 @@ sub Join {
         }
 
         if ( !$alias || $args{'ALIAS1'} ) {
-            return ( $self->_NormalJoin(%args) );
+            return ( $self->_Normaljoin(%args) );
         }
 
         $args{'SearchBuilder'}->{'aliases'} = \@new_aliases;
@@ -891,7 +891,7 @@ sub Join {
     return ($alias);
 }
 
-sub _NormalJoin {
+sub _Normaljoin {
 
     my $self = shift;
     my %args = (
@@ -933,7 +933,7 @@ sub _NormalJoin {
 # this code is all hacky and evil. but people desperately want _something_ and I'm 
 # super tired. refactoring gratefully appreciated.
 
-sub _BuildJoins {
+sub _build_joins {
     my $self = shift;
     my $sb   = shift;
     my %seen_aliases;
@@ -967,7 +967,7 @@ sub _BuildJoins {
         }
         else {
             push ( @keys, $join );
-            die "Unsatisfied dependency chain in Joins @keys"
+            die "Unsatisfied dependency chain in joins @keys"
               if $seen{"@keys"}++;
         }
 
@@ -978,14 +978,14 @@ sub _BuildJoins {
 
 
 
-=head2 DistinctQuery STATEMENTREF 
+=head2 distinct_query STATEMENTREF 
 
 takes an incomplete SQL SELECT statement and massages it to return a DISTINCT result set.
 
 
 =cut
 
-sub DistinctQuery {
+sub distinct_query {
     my $self = shift;
     my $statementref = shift;
     #my $table = shift;
@@ -998,14 +998,14 @@ sub DistinctQuery {
 
 
 
-=head2 DistinctCount STATEMENTREF 
+=head2 distinct_count STATEMENTREF 
 
 takes an incomplete SQL SELECT statement and massages it to return a DISTINCT result set.
 
 
 =cut
 
-sub DistinctCount {
+sub distinct_count {
     my $self = shift;
     my $statementref = shift;
 
