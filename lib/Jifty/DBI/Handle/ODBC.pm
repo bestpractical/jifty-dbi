@@ -29,7 +29,7 @@ Returns a false value.
 
 =cut
 
-sub CaseSensitive {
+sub case_sensitive {
     my $self = shift;
     return (undef);
 }
@@ -38,7 +38,7 @@ sub CaseSensitive {
 
 =cut
 
-sub BuildDSN {
+sub build_dsn {
     my $self = shift;
     my %args = (
 	Driver     => undef,
@@ -59,7 +59,7 @@ sub BuildDSN {
 
 =cut
 
-sub ApplyLimits {
+sub apply_limits {
     my $self         = shift;
     my $statementref = shift;
     my $per_page     = shift or return;
@@ -74,14 +74,14 @@ sub ApplyLimits {
 
 =cut
 
-sub DistinctQuery {
+sub distinct_query {
     my $self         = shift;
     my $statementref = shift;
 
     $$statementref = "SELECT main.* FROM $$statementref";
 }
 
-sub Encoding {
+sub encoding {
 }
 
 1;

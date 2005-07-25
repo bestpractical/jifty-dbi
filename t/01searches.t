@@ -55,7 +55,7 @@ SKIP: {
 	is_deeply( $items_ref, [], 'items_array_ref returns [] on not limited obj' );
 
 # unlimit new object and check
-	$users_obj->un_limit;
+	$users_obj->unlimit;
 	is( $users_obj->count, $count_all, 'count returns same number of records as was inserted' );
 	isa_ok( $users_obj->first, 'Jifty::DBI::Record', 'first returns record object' );
 	isa_ok( $users_obj->last, 'Jifty::DBI::Record', 'last returns record object' );
@@ -147,7 +147,7 @@ SKIP: {
 	# ORDER BY / GROUP BY
 	$users_obj->clean_slate;
 	is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
-	$users_obj->un_limit;
+	$users_obj->unlimit;
 	$users_obj->group_by_cols({FIELD => 'login'});
 	$users_obj->order_by(FIELD => 'login', ORDER => 'desc');
 	$users_obj->column(FIELD => 'login');

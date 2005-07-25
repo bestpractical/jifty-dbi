@@ -24,7 +24,7 @@ compensates for some of the idiosyncrasies of Informix.
 =cut
 
 
-=head2 Insert
+=head2 insert
 
 Takes a table name as the first argument and assumes that the rest of the arguments are an array of key-value pairs to be inserted.
 
@@ -33,10 +33,10 @@ a Class::ReturnValue object with the error reported.
 
 =cut
 
-sub Insert  {
+sub insert  {
     my $self = shift;
 
-    my $sth = $self->SUPER::Insert(@_);
+    my $sth = $self->SUPER::insert(@_);
     if (!$sth) {
             print "no sth! (".$self->dbh->{ix_sqlerrd}[1].")\n";
 	    return ($sth);
@@ -49,25 +49,25 @@ sub Insert  {
   }
 
 
-=head2 CaseSensitive 
+=head2 case_sensitive
 
 Returns 1, since Informix's searches are case sensitive by default 
 
 =cut
 
-sub CaseSensitive {
+sub case_sensitive {
     my $self = shift;
     return(1);
 }
 
 
-=head2 BuildDSN
+=head2 build_dsn
 
 Builder for Informix DSNs.
 
 =cut
 
-sub BuildDSN {
+sub build_dsn {
     my $self = shift;
   my %args = ( Driver => undef,
                Database => undef,
@@ -85,14 +85,14 @@ sub BuildDSN {
 }
 
 
-=head2 ApplyLimits STATEMENTREF ROWS_PER_PAGE FIRST_ROW
+=head2 apply_limits STATEMENTREF ROWS_PER_PAGE FIRST_ROW
 
 takes an SQL SELECT statement and massages it to return ROWS_PER_PAGE starting with FIRST_ROW;
 
 
 =cut
 
-sub ApplyLimits {
+sub apply_limits {
     my $self = shift;
     my $statementref = shift;
     my $per_page = shift;
@@ -105,7 +105,7 @@ sub ApplyLimits {
 }
 
 
-sub Disconnect  {
+sub disconnect  {
   my $self = shift;
   if ($self->dbh) {
       my $status = $self->dbh->disconnect();
@@ -124,7 +124,7 @@ takes an incomplete SQL SELECT statement and massages it to return a DISTINCT re
 
 =cut
 
-sub DistinctQuery {
+sub distinct_query {
     my $self = shift;
     my $statementref = shift;
     my $table = shift;

@@ -30,15 +30,15 @@ SKIP: {
 	isa_ok($ret,'DBI::st', "Inserted the schema. got a statement handle back");
 
 	my $rec = TestApp::Address->new($handle);
-	isa_ok($rec, 'Jifty::DBI::record');
+	isa_ok($rec, 'Jifty::DBI::Record');
 
 # _Accessible testings
 	is( $rec->_accessible('id' => 'read'), 1, 'id is accessible for read' );
 	is( $rec->_accessible('id' => 'write'), undef, 'id is not accessible for write' );
 	is( $rec->_accessible('id'), undef, "any field is not accessible in undefined mode" );
 	is( $rec->_accessible('unexpected_field' => 'read'), undef, "field doesn't exist and can't be accessible for read" );
-	is_deeply( [sort($rec->readable_attributes)], [qw(employee_id name phone id)], 'readable attributes' );
-	is_deeply( [sort($rec->writable_attributes)], [qw(employee_id name phone)], 'writable attributes' );
+	is_deeply( [sort($rec->readable_attributes)], [sort qw(employee_id id name phone)], 'readable attributes' );
+	is_deeply( [sort($rec->writable_attributes)], [sort qw(employee_id name phone)], 'writable attributes' );
 
 	can_ok($rec,'create');
 
@@ -65,7 +65,7 @@ SKIP: {
 	{
 		# test produce DBI warning
 		local $SIG{__WARN__} = sub {return};
-		is( $rec->_Value( 'some_unexpected_field' ), undef, "The record has no 'some_unexpected_field'");
+		is( $rec->_value( 'some_unexpected_field' ), undef, "The record has no 'some_unexpected_field'");
 	}
 	($val, $msg) = $rec->set_some_unexpected_field( 'foo' );
 	ok(!$val, $msg);
@@ -181,7 +181,7 @@ SKIP: {
 	is( $rec->name, 'Obra', "old value is still there");
 	$val = $rec->set_name( 'invalid' );
 	isa_ok( $val, 'Class::ReturnValue', "couldn't set invalid value, error returned");
-	is( ($val->as_array)[1], 'Illegal value for Name', "correct error message" );
+	is( ($val->as_array)[1], 'Illegal value for name', "correct error message" );
 	is( $rec->name, 'Obra', "old value is still there");
 # XXX TODO FIXME: this test cover current implementation that is broken //RUZ
 	$val = $rec->set_name( );
@@ -211,7 +211,7 @@ use base qw/Jifty::DBI::Record/;
 sub _init {
     my $self = shift;
     my $handle = shift;
-    $welf->table('address');
+    $self->table('address');
     $self->_handle($handle);
 }
 

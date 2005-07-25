@@ -113,7 +113,7 @@ $VERSION=0.01;
 sub _init {
     my $self = shift;
     my $handle = shift;
-    $self->Table('employees');
+    $self->table('employees');
     $self->_handle($handle);
 }
 

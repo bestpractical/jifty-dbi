@@ -46,50 +46,49 @@ sub new () {
     return ($self);
 }
 
-sub _SetupCache {
+sub _setup_cache {
     my $self  = shift;
     my $cache = shift;
     $_CACHES{$cache} = Cache::Simple::TimedExpiry->new();
-    $_CACHES{$cache}->expire_after( $self->_CacheConfig->{'cache_for_sec'} );
+    $_CACHES{$cache}->expire_after( $self->_cache_config->{'cache_for_sec'} );
 }
 
-=head2 FlushCache 
+=head2 flush_cache 
 
 This class method flushes the _global_ Jifty::DBI::Record::Cachable 
 cache.  All caches are immediately expired.
 
 =cut
 
-sub FlushCache {
+sub flush_cache {
     %_CACHES = ();
 }
 
 
-sub _KeyCache {
+sub _key_cache {
     my $self = shift;
-    my $cache = $self->_Handle->DSN . "-KEYS--" . ($self->{'_Class'} ||= ref($self));
-    $self->_SetupCache($cache) unless exists ($_CACHES{$cache});
+    my $cache = $self->_handle->DSN . "-KEYS--" . ($self->{'_Class'} ||= ref($self));
+    $self->_setup_cache($cache) unless exists ($_CACHES{$cache});
     return ($_CACHES{$cache});
 
 }
 
-=head2 _FlushKeyCache
+=head2 _flush_key_cache
 
 Blow away this record type's key cache
 
 =cut
 
-
-sub _FlushKeyCache {
+sub _flush_key_cache {
     my $self = shift;
-    my $cache = $self->_Handle->DSN . "-KEYS--" . ($self->{'_Class'} ||= ref($self));
-    $self->_SetupCache($cache);
+    my $cache = $self->_handle->DSN . "-KEYS--" . ($self->{'_Class'} ||= ref($self));
+    $self->_setup_cache($cache);
 }
 
-sub _RecordCache {
+sub _record_cache {
     my $self = shift;
-    my $cache = $self->_Handle->DSN . "--" . ($self->{'_Class'} ||= ref($self));
-    $self->_SetupCache($cache) unless exists ($_CACHES{$cache});
+    my $cache = $self->_handle->DSN . "--" . ($self->{'_Class'} ||= ref($self));
+    $self->_setup_cache($cache) unless exists ($_CACHES{$cache});
     return ($_CACHES{$cache});
 
 }
@@ -99,12 +98,12 @@ sub _RecordCache {
 # Args    : See Jifty::DBI::Record::LoadFromHash
 # Lvalue  : array(boolean, message)
 
-sub LoadFromHash {
+sub load_from_hash {
     my $self = shift;
 
     # Blow away the primary cache key since we're loading.
     $self->{'_SB_Record_Primary_RecordCache_key'} = undef;
-    my ( $rvalue, $msg ) = $self->SUPER::LoadFromHash(@_);
+    my ( $rvalue, $msg ) = $self->SUPER::load_from_hash(@_);
 
     my $cache_key = $self->_primary_RecordCache_key();
 
@@ -121,7 +120,7 @@ sub LoadFromHash {
 # Args    : see Jifty::DBI::Record::LoadByCols
 # Lvalue  : array(boolean, message)
 
-sub LoadByCols {
+sub load_by_cols {
     my ( $self, %attr ) = @_;
 
     ## Generate the cache key
@@ -134,12 +133,12 @@ sub LoadByCols {
     $self->{'_SB_Record_Primary_RecordCache_key'} = undef;
 
     ## Fetch from the DB!
-    my ( $rvalue, $msg ) = $self->SUPER::LoadByCols(%attr);
+    my ( $rvalue, $msg ) = $self->SUPER::load_by_cols(%attr);
     ## Check the return value, if its good, cache it!
     if ($rvalue) {
         ## Only cache the object if its okay to do so.
         $self->_store();
-        $self->_KeyCache->set( $alt_key, $self->_primary_RecordCache_key);
+        $self->_key_cache->set( $alt_key, $self->_primary_RecordCache_key);
 
     }
     return ( $rvalue, $msg );
@@ -151,11 +150,11 @@ sub LoadByCols {
 # Args    : see Jifty::DBI::Record::_Set
 # Lvalue  : ?
 
-sub __Set () {
+sub __set () {
     my ( $self, %attr ) = @_;
 
     $self->_expire();
-    return $self->SUPER::__Set(%attr);
+    return $self->SUPER::__set(%attr);
 
 }
 
@@ -164,12 +163,12 @@ sub __Set () {
 # Args    : nil
 # Lvalue  : ?
 
-sub __Delete () {
+sub __delete () {
     my ($self) = @_;
 
     $self->_expire();
 
-    return $self->SUPER::__Delete();
+    return $self->SUPER::__delete();
 
 }
 
@@ -181,9 +180,9 @@ sub __Delete () {
 
 sub _expire (\$) {
     my $self = shift;
-    $self->_RecordCache->set( $self->_primary_RecordCache_key , undef, time-1);
+    $self->_record_cache->set( $self->_primary_RecordCache_key , undef, time-1);
     # We should be doing something more surgical to clean out the key cache. but we do need to expire it
-    $self->_FlushKeyCache;
+    $self->_flush_key_cache;
    
 }
 
@@ -195,7 +194,7 @@ sub _expire (\$) {
 
 sub _fetch () {
     my ( $self, $cache_key ) = @_;
-    my $data = $self->_RecordCache->fetch($cache_key) or return;
+    my $data = $self->_record_cache->fetch($cache_key) or return;
 
     @{$self}{keys %$data} = values %$data; # deserialize
     return 1;
@@ -206,7 +205,7 @@ sub _fetch () {
 sub __Value {
     my $self  = shift;
     my $field = shift;
-    return ( $self->SUPER::__Value($field) );
+    return ( $self->SUPER::__value($field) );
 }
 
 # Function: _store
@@ -217,7 +216,7 @@ sub __Value {
 
 sub _store (\$) {
     my $self = shift;
-    $self->_RecordCache->set( $self->_primary_RecordCache_key, $self->_serialize);
+    $self->_record_cache->set( $self->_primary_RecordCache_key, $self->_serialize);
     return (1);
 }
 
@@ -226,7 +225,7 @@ sub _serialize {
     return (
         {
             values  => $self->{'values'},
-            table   => $self->Table,
+            table   => $self->table,
             fetched => $self->{'fetched'}
         }
     );
@@ -265,7 +264,7 @@ sub _gen_alternate_RecordCache_key {
 
 sub _fetch_RecordCache_key {
     my ($self) = @_;
-    my $cache_key = $self->_CacheConfig->{'cache_key'};
+    my $cache_key = $self->_cache_config->{'cache_key'};
     return ($cache_key);
 }
 
@@ -279,14 +278,14 @@ sub _fetch_RecordCache_key {
 sub _primary_RecordCache_key {
     my ($self) = @_;
 
-    return undef unless ( $self->Id );
+    return undef unless ( $self->id );
 
     unless ( $self->{'_SB_Record_Primary_RecordCache_key'} ) {
 
-        my $primary_RecordCache_key = $self->Table() . ':';
+        my $primary_RecordCache_key = $self->table() . ':';
         my @attributes;
-        foreach my $key ( @{ $self->_PrimaryKeys } ) {
-            push @attributes, $key . '=' . $self->SUPER::__Value($key);
+        foreach my $key ( @{ $self->_primary_keys } ) {
+            push @attributes, $key . '=' . $self->SUPER::__value($key);
         }
 
         $primary_RecordCache_key .= join( ',', @attributes );
@@ -306,13 +305,13 @@ sub _lookup_primary_RecordCache_key {
     my $alternate_key = shift;
     return undef unless ($alternate_key);
 
-    my $primary_key   = $self->_KeyCache->fetch($alternate_key);
+    my $primary_key   = $self->_key_cache->fetch($alternate_key);
     if ($primary_key) {
         return ($primary_key);
     }
 
     # If the alternate key is really the primary one
-    elsif ( $self->_RecordCache->fetch($alternate_key) ) {
+    elsif ( $self->_record_cache->fetch($alternate_key) ) {
         return ($alternate_key);
     }
     else {    # empty!
@@ -333,7 +332,7 @@ For example, to cache records for up to 30 seconds, add the following method to 
 
 =cut
 
-sub _CacheConfig {
+sub _cache_config {
     {
         'cache_p'       => 1,
         'cache_for_sec' => 5,

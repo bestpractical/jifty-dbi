@@ -22,7 +22,7 @@ Jifty::DBI::Handle - Perl extension which is a generic DBI handle
   use Jifty::DBI::Handle;
 
   my $handle = Jifty::DBI::Handle->new();
-  $handle->Connect( Driver => 'mysql',
+  $handle->connect( Driver => 'mysql',
                     Database => 'dbname',
                     Host => 'hostname',
                     User => 'dbuser',
@@ -59,12 +59,6 @@ sub new  {
 
 Takes a paramhash and connects to your DBI datasource. 
 
-You should _always_ set
-
-     DisconnectHandleOnDestroy => 1 
-
-unless you have a legacy app like RT2 or RT 3.0.{0,1,2} that depends on the broken behaviour.
-
 If you created the handle with 
      Jifty::DBI::Handle->new
 and there is a Jifty::DBI::Handle::(Driver) subclass for the driver you have chosen,
@@ -73,47 +67,42 @@ the handle will be automatically "upgraded" into that subclass.
 =cut
 
 sub connect  {
-  my $self = shift;
+    my $self = shift;
   
-  my %args = ( Driver => undef,
-	       Database => undef,
-	       Host => undef,
-           SID => undef,
-	       Port => undef,
-	       User => undef,
-	       Password => undef,
-	       RequireSSL => undef,
-           DisconnectHandleOnDestroy => undef,
-	       @_);
+    my %args = ( driver => undef,
+	         database => undef,
+	         host => undef,
+                 sid => undef,
+	         port => undef,
+	         user => undef,
+	         password => undef,
+	         requiressl => undef,
+	         @_);
 
-   if( $args{'Driver'} && !$self->isa( 'Jifty::DBI::Handle::'. $args{'Driver'} ) ) {
-      if ( $self->_upgrade_handle($args{Driver}) ) {
-          return ($self->Connect( %args ));
-      }
-   }
-
+    if( $args{'driver'} && !$self->isa( 'Jifty::DBI::Handle::'. $args{'driver'} ) ) {
+        if ( $self->_upgrade_handle($args{'driver'}) ) {
+            return ($self->connect( %args ));
+        }
+    }
 
     my $dsn = $self->DSN || '';
 
     # Setting this actually breaks old RT versions in subtle ways. So we need to explicitly call it
 
-    $self->{'DisconnectHandleOnDestroy'} = $args{'DisconnectHandleOnDestroy'};
-    
-
-  $self->build_dsn(%args);
+    $self->build_dsn(%args);
 
     # Only connect if we're not connected to this source already
-   if ((! $self->dbh ) || (!$self->dbh->ping) || ($self->DSN ne $dsn) ) { 
-     my $handle = DBI->connect($self->DSN, $args{'User'}, $args{'Password'}) || croak "Connect Failed $DBI::errstr\n" ;
+    if ((! $self->dbh ) || (!$self->dbh->ping) || ($self->DSN ne $dsn) ) { 
+        my $handle = DBI->connect($self->DSN, $args{'user'}, $args{'password'}) || croak "Connect Failed $DBI::errstr\n" ;
  
-  #databases do case conversion on the name of columns returned. 
-  #actually, some databases just ignore case. this smashes it to something consistent 
-  $handle->{FetchHashKeyName} ='NAME_lc';
+        #databases do case conversion on the name of columns returned. 
+        #actually, some databases just ignore case. this smashes it to something consistent 
+        $handle->{FetchHashKeyName} ='NAME_lc';
 
-  #Set the handle 
-  $self->dbh($handle);
+        #Set the handle 
+        $self->dbh($handle);
   
-  return (1); 
+        return (1); 
     }
 
     return(undef);
@@ -155,34 +144,34 @@ Builds a DSN suitable for a DBI connection
 =cut
 
 sub build_dsn {
-    my $self = shift;
-  my %args = ( Driver => undef,
-	       Database => undef,
-	       Host => undef,
-	       Port => undef,
-           SID => undef,
-	       RequireSSL => undef,
+  my $self = shift;
+  my %args = ( driver => undef,
+	       database => undef,
+	       host => undef,
+	       port => undef,
+               sid => undef,
+	       requiressl => undef,
 	       @_);
   
   
-  my $dsn = "dbi:$args{'Driver'}:dbname=$args{'Database'}";
-  $dsn .= ";sid=$args{'SID'}" if ( defined $args{'SID'} && $args{'SID'});
-  $dsn .= ";host=$args{'Host'}" if (defined$args{'Host'} && $args{'Host'});
-  $dsn .= ";port=$args{'Port'}" if (defined $args{'Port'} && $args{'Port'});
-  $dsn .= ";requiressl=1" if (defined $args{'RequireSSL'} && $args{'RequireSSL'});
+  my $dsn = "dbi:$args{'driver'}:dbname=$args{'database'}";
+  $dsn .= ";sid=$args{'sid'}" if ( defined $args{'sid'} && $args{'sid'});
+  $dsn .= ";host=$args{'host'}" if (defined$args{'host'} && $args{'host'});
+  $dsn .= ";port=$args{'port'}" if (defined $args{'port'} && $args{'port'});
+  $dsn .= ";requiressl=1" if (defined $args{'requiressl'} && $args{'requiressl'});
 
   $self->{'dsn'}= $dsn;
 }
 
 
 
-=head2 dsn
+=head2 DSN
 
-    Returns the DSN for this database connection.
+Returns the DSN for this database connection.
 
 =cut
 
-sub dsn {
+sub DSN {
     my $self = shift;
     return($self->{'dsn'});
 }
@@ -236,10 +225,9 @@ Returns whether we're currently logging or not as a boolean
 sub log_sql_statements {
     my $self = shift;
     if (@_) {
-
         require Time::HiRes;
-    $self->{'_DoLogSQL'} = shift;
-    return ($self->{'_DoLogSQL'});
+        $self->{'_dologsql'} = shift;
+        return ($self->{'_dologsql'});
     }
 }
 
@@ -327,9 +315,6 @@ Return the current DBI handle. If we're handed a parameter, make the database ha
 
 =cut
 
-# allow use of Handle as a synonym for DBH
-*Handle=\&dbh;
-
 sub dbh {
   my $self=shift;
   
@@ -360,8 +345,8 @@ sub insert {
   }
 
   my $QueryString =
-    "INSERT INTO $table (". join(", ", @cols). ") VALUES ".
-    "(". join(", ", @vals). ")";
+    "INSERT INTO $table (". CORE::join(", ", @cols). ") VALUES ".
+    "(". CORE::join(", ", @vals). ")";
 
     my $sth =  $self->simple_query($QueryString, @bind);
     return ($sth);
@@ -382,30 +367,30 @@ string will be inserted into the query directly rather then as a binding.
 
 sub update_record_value {
     my $self = shift;
-    my %args = ( Table         => undef,
-                 Column        => undef,
-                 IsSQLFunction => undef,
-                 PrimaryKeys   => undef,
+    my %args = ( table           => undef,
+                 column          => undef,
+                 is_sql_function => undef,
+                 primary_keys    => undef,
                  @_ );
 
     my @bind  = ();
-    my $query = 'UPDATE ' . $args{'Table'} . ' ';
-     $query .= 'SET '    . $args{'Column'} . '=';
+    my $query = 'UPDATE ' . $args{'table'} . ' ';
+     $query .= 'SET '    . $args{'column'} . '=';
 
   ## Look and see if the field is being updated via a SQL function. 
-  if ($args{'IsSQLFunction'}) {
-     $query .= $args{'Value'} . ' ';
+  if ($args{'is_sql_function'}) {
+     $query .= $args{'value'} . ' ';
   }
   else {
      $query .= '? ';
-     push (@bind, $args{'Value'});
+     push (@bind, $args{'value'});
   }
 
   ## Constructs the where clause.
   my $where  = 'WHERE ';
-  foreach my $key (keys %{$args{'PrimaryKeys'}}) {
+  foreach my $key (keys %{$args{'primary_keys'}}) {
      $where .= $key . "=?" . " AND ";
-     push (@bind, $args{'PrimaryKeys'}{$key});
+     push (@bind, $args{'primary_keys'}{$key});
   }
      $where =~ s/AND\s$//;
   
@@ -428,11 +413,11 @@ sub update_table_value  {
 
     ## This is just a wrapper to update_record_value().     
     my %args = (); 
-    $args{'Table'}  = shift;
-    $args{'Column'} = shift;
-    $args{'Value'}  = shift;
-    $args{'PrimaryKeys'}   = shift; 
-    $args{'IsSQLFunction'} = shift;
+    $args{'table'}  = shift;
+    $args{'column'} = shift;
+    $args{'value'}  = shift;
+    $args{'primary_keys'}    = shift; 
+    $args{'is_sql_function'} = shift;
 
     return $self->update_record_value(%args)
 }
@@ -560,28 +545,28 @@ sub binary_safe_blobs {
 
 
 
-=head2 KnowsBLOBs
+=head2 knows_blobs
 
 Returns 1 if the current database supports inserts of BLOBs automatically.
 Returns undef if the current database must be informed of BLOBs for inserts.
 
 =cut
 
-sub KnowsBLOBs {
+sub knows_blobs {
     my $self = shift;
     return(1);
 }
 
 
 
-=head2 BLOBParams FIELD_NAME FIELD_TYPE
+=head2 blob_params FIELD_NAME FIELD_TYPE
 
 Returns a hash ref for the bind_param call to identify BLOB types used by 
 the current database for a particular column type.                 
 
 =cut
 
-sub BLOBParams {
+sub blob_params {
     my $self = shift;
     # Don't assign to key 'value' as it is defined later. 
     return ( {} );
@@ -947,7 +932,7 @@ sub _build_joins {
           }
     }
 
-    my $join_clause = $sb->Table . " main ";
+    my $join_clause = $sb->table . " main ";
 
 	
     my @keys = ( keys %{ $sb->{'left_joins'} } );
@@ -959,7 +944,7 @@ sub _build_joins {
             $join_clause .=
               $sb->{'left_joins'}{$join}{'alias_string'} . " ON (";
             $join_clause .=
-              join ( ') AND( ',
+              CORE::join ( ') AND( ',
                 values %{ $sb->{'left_joins'}{$join}{'criteria'} } );
             $join_clause .= ")) ";
 
@@ -972,7 +957,7 @@ sub _build_joins {
         }
 
     }
-    return ( join ( ", ", ( $join_clause, @{ $sb->{'aliases'} } ) ) );
+    return ( CORE::join ( ", ", ( $join_clause, @{ $sb->{'aliases'} } ) ) );
 
 }
 
@@ -1041,7 +1026,7 @@ When we get rid of the Searchbuilder::Handle, we need to disconnect from the dat
   
 sub DESTROY {
   my $self = shift;
-  $self->Disconnect if $self->{'DisconnectHandleOnDestroy'};
+  $self->disconnect;
   delete $DBIHandle{$self};
 }
 

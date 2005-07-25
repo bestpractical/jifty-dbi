@@ -23,12 +23,12 @@ Jifty::DBI::Record - Superclass for records loaded by SearchBuilder
       my $DBIxHandle =
 	shift;    # A Jifty::DBI::Handle::foo object for your database
   
-      $self->_Handle($DBIxHandle);
-      $self->Table("Users");
+      $self->_handle($DBIxHandle);
+      $self->table("Users");
   }
   
   # Tell Record what the primary keys are
-  sub _PrimaryKeys {
+  sub _primary_keys {
       return ['id'];
   }
   
@@ -38,7 +38,7 @@ Jifty::DBI::Record - Superclass for records loaded by SearchBuilder
   # read: calling $Object->Foo will return the value of this record's Foo column  
   # write: calling $Object->SetFoo with a single value will set Foo's value in
   #        both the loaded object and the database  
-  sub _ClassAccessible {
+  sub _class_accessible {
       {
 	  Tofu => { 'read' => 1, 'write' => 1 },
 	  Maz  => { 'auto' => 1, },
@@ -52,10 +52,10 @@ Jifty::DBI::Record - Superclass for records loaded by SearchBuilder
       my $self = shift;
       my $try  = shift;
   
-      # note two __s in __Value.  Subclasses may muck with _Value, but
-      # they should never touch __Value
+      # note two __s in __value.  Subclasses may muck with _value, but
+      # they should never touch __value
   
-      if ( $try eq $self->__Value('Password') ) {
+      if ( $try eq $self->__value('Password') ) {
 	  return (1);
       }
       else {
@@ -118,7 +118,7 @@ simple, and incredibly powerful.  For more complex cases, you can, gasp,
 do more complicated things by overriding certain methods.  Lets stick with
 the simple case for now. 
 
-The two methods in question are '_Init' and '_ClassAccessible', all they 
+The two methods in question are '_Init' and '_class_accessible', all they 
 really do are define some values and send you on your way.  As you might 
 have guessed the '_' suggests that these are private methods, they are. 
 They will get called by your record objects constructor.  
@@ -130,7 +130,7 @@ They will get called by your record objects constructor.
 Defines what table we are talking about, and set a variable to store 
 the database handle. 
 
-=item '_ClassAccessible
+=item '_class_accessible
 
 Defines what operations may be performed on various data selected 
 from the database.  For example you can define fields to be mutable,
@@ -191,8 +191,8 @@ define ourself as a subclass of ::Record.
   005:   my $this   = shift; 
   006:   my $handle = shift;
   007: 
-  008:   $this->_Handle($handle); 
-  009:   $this->Table("Simple"); 
+  008:   $this->_handle($handle); 
+  009:   $this->table("Simple"); 
   010:   
   011:   return ($this);
   012: }
@@ -203,7 +203,7 @@ new instance is created.  Thats actually an important concept, the DB handle
 is not bound to a single object but rather, its shared across objects. 
 
   013: 
-  014: sub _ClassAccessible {
+  014: sub _class_accessible {
   015:   {  
   016:     Foo => { 'read'  => 1 },
   017:     Bar => { 'read'  => 1, 'write' => 1  },
@@ -245,24 +245,24 @@ it to be more clear to define it.
   009: 
   010: my $s = Simple->new($handle);
   011: 
-  012: $s->LoadById(1); 
+  012: $s->load_by_id(1); 
 
-LoadById is one of four 'LoadBy' methods,  as the name suggests it searches
+load_by_id is one of four 'LoadBy' methods,  as the name suggests it searches
 for an row in the database that has id='0'.  ::SearchBuilder has, what I 
 think is a bug, in that it current requires there to be an id field. More 
-reasonably it also assumes that the id field is unique. LoadById($id) will 
+reasonably it also assumes that the id field is unique. load_by_id($id) will 
 do undefined things if there is >1 row with the same id.  
 
-In addition to LoadById, we also have:
+In addition to load_by_id, we also have:
 
 =over 4
 
-=item LoadByCol 
+=item load_by_col 
 
 Takes two arguments, a column name and a value.  Again, it will do 
 undefined things if you use non-unique things.  
 
-=item LoadByCols
+=item load_by_cols
 
 Takes a hash of columns=>values and returns the *first* to match. 
 First is probably lossy across databases vendors. 
@@ -326,7 +326,7 @@ object!
   028:
   029: $s1 = undef;
   030: $s1 = Simple->new($handle);
-  031: $s1->LoadById(4);
+  031: $s1->load_by_id(4);
   032: $s1->Delete();
 
 And its gone. 
@@ -338,7 +338,7 @@ ever else I think of.
 =head1 METHOD NAMING
  
 Each method has a lower case alias; '_' is used to separate words.
-For example, the method C<_PrimaryKeys> has the alias C<_primary_keys>.
+For example, the method C<_primary_keys> has the alias C<_primary_keys>.
 
 =head1 METHODS
 
@@ -359,17 +359,17 @@ sub new  {
     my $class = ref($proto) || $proto;
     my $self  = {};
     bless ($self, $class);
-    $self->_Init(@_);
+    $self->_init(@_);
 
     return $self;
   }
 
 
 # Not yet documented here.  Should almost certainly be overloaded.
-sub _Init {
+sub _init {
     my $self = shift;
     my $handle = shift;
-    $self->_Handle($handle);
+    $self->_handle($handle);
 }
 
 
@@ -379,12 +379,8 @@ Returns this row's primary key.
 
 =cut
 
-
-
-*id = \&Id;
-
-sub Id  {
-    my $pkey = $_[0]->_PrimaryKey();
+sub id  {
+    my $pkey = $_[0]->_primary_key();
     my $ret = $_[0]->{'values'}->{$pkey};
     return $ret;
 }
@@ -392,18 +388,13 @@ sub Id  {
 
 =head2 primary_keys
 
-=head2 PrimaryKeys
-
 Return a hash of the values of our primary keys for this function.
 
 =cut
 
-
-
-
-sub PrimaryKeys { 
+sub primary_keys { 
     my $self = shift; 
-    my %hash = map { $_ => $self->{'values'}->{$_} } @{$self->_PrimaryKeys};
+    my %hash = map { $_ => $self->{'values'}->{$_} } @{$self->_primary_keys};
     return (%hash);
 }
 
@@ -421,37 +412,37 @@ sub AUTOLOAD {
     no strict 'refs';
     my ($Attrib) = ( $AUTOLOAD =~ /::(\w+)$/o );
 
-    if ( $self->_Accessible( $Attrib, 'read' ) ) {
-        *{$AUTOLOAD} = sub { return ( $_[0]->_Value($Attrib) ) };
+    if ( $self->_accessible( $Attrib, 'read' ) ) {
+        *{$AUTOLOAD} = sub { return ( $_[0]->_value($Attrib) ) };
         goto &$AUTOLOAD;
     }
-    elsif ( $self->_Accessible( $Attrib, 'record-read') ) {
-        *{$AUTOLOAD} = sub { $_[0]->_ToRecord( $Attrib, $_[0]->_Value($Attrib) ) };
+    elsif ( $self->_accessible( $Attrib, 'record-read') ) {
+        *{$AUTOLOAD} = sub { $_[0]->_to_record( $Attrib, $_[0]->_value($Attrib) ) };
         goto &$AUTOLOAD;        
     }
-    elsif ( $self->_Accessible( $Attrib, 'foreign-collection') ) {
-        *{$AUTOLOAD} = sub { $_[0]->_CollectionValue( $Attrib ) };
+    elsif ( $self->_accessible( $Attrib, 'foreign-collection') ) {
+        *{$AUTOLOAD} = sub { $_[0]->_collection_value( $Attrib ) };
         goto &$AUTOLOAD;
     }
-    elsif ( $AUTOLOAD =~ /.*::[sS]et_?(\w+)/o ) {
+    elsif ( $AUTOLOAD =~ /.*::set_(\w+)/o ) {
         $Attrib = $1;
 
-        if ( $self->_Accessible( $Attrib, 'write' ) ) {
+        if ( $self->_accessible( $Attrib, 'write' ) ) {
             *{$AUTOLOAD} = sub {
-                return ( $_[0]->_Set( Field => $Attrib, Value => $_[1] ) );
+                return ( $_[0]->_set( field => $Attrib, value => $_[1] ) );
             };
             goto &$AUTOLOAD;
-        } elsif ( $self->_Accessible( $Attrib, 'record-write') ) {
+        } elsif ( $self->_accessible( $Attrib, 'record-write') ) {
             *{$AUTOLOAD} = sub {
                 my $self = shift;
                 my $val = shift;
 
                 $val = $val->id if UNIVERSAL::isa($val, 'Jifty::DBI::Record');
-                return ( $self->_Set( Field => $Attrib, Value => $val ) );
+                return ( $self->_set( field => $Attrib, value => $val ) );
             };
             goto &$AUTOLOAD;            
         }
-        elsif ( $self->_Accessible( $Attrib, 'read' ) ) {
+        elsif ( $self->_accessible( $Attrib, 'read' ) ) {
             *{$AUTOLOAD} = sub { return ( 0, 'Immutable field' ) };
             goto &$AUTOLOAD;
         }
@@ -459,13 +450,13 @@ sub AUTOLOAD {
             return ( 0, 'Nonexistant field?' );
         }
     }
-    elsif ( $AUTOLOAD =~ /.*::(\w+?)_?[oO]bj$/o ) {
+    elsif ( $AUTOLOAD =~ /.*::(\w+?)_obj$/o ) {
         $Attrib = $1;
-        if ( $self->_Accessible( $Attrib, 'object' ) ) {
+        if ( $self->_accessible( $Attrib, 'object' ) ) {
             *{$AUTOLOAD} = sub {
-                return (shift)->_Object(
-                    Field => $Attrib,
-                    Args  => [@_],
+                return (shift)->_object(
+                    field => $Attrib,
+                    args  => [@_],
                 );
             };
             goto &$AUTOLOAD;
@@ -479,10 +470,10 @@ sub AUTOLOAD {
     #right idea. it breaks the ability to do ValidateQueue for a ticket
     #on creation.
 
-    elsif ( $AUTOLOAD =~ /.*::[vV]alidate_?(\w+)/o ) {
+    elsif ( $AUTOLOAD =~ /.*::validate_(\w+)/o ) {
         $Attrib = $1;
 
-        *{$AUTOLOAD} = sub { return ( $_[0]->_Validate( $Attrib, $_[1] ) ) };
+        *{$AUTOLOAD} = sub { return ( $_[0]->_validate( $Attrib, $_[1] ) ) };
         goto &$AUTOLOAD;
     }
 
@@ -500,7 +491,7 @@ sub AUTOLOAD {
 
 
 
-=head2 _Accessible KEY MODE
+=head2 _accessible  KEY MODE
 
 Private method.
 
@@ -509,49 +500,49 @@ Returns undef unless C<KEY> is accessible in C<MODE> otherwise returns C<MODE> v
 =cut
 
 
-sub _Accessible {
+sub _accessible {
     my $self = shift;
     my $attr = shift;
     my $mode = lc(shift || '');
 
-    my $attribute = $self->_ClassAccessible(@_)->{$attr};
+    my $attribute = $self->_class_accessible(@_)->{$attr};
     return unless defined $attribute;
     return $attribute->{$mode};
 }
 
 
 
-=head2 _PrimaryKeys
+=head2 _primary_keys
 
 Return our primary keys. (Subclasses should override this, but our default is that we have one primary key, named 'id'.)
 
 =cut
 
-sub _PrimaryKeys {
+sub _primary_keys {
     my $self = shift;
     return ['id'];
 }
 
 
-sub _PrimaryKey {
+sub _primary_key {
     my $self = shift;
-    my $pkeys = $self->_PrimaryKeys();
+    my $pkeys = $self->_primary_keys();
     die "No primary key" unless ( ref($pkeys) eq 'ARRAY' and $pkeys->[0] );
     die "Too many primary keys" unless ( scalar(@$pkeys) == 1 );
     return $pkeys->[0];
 }
 
 
-=head2 _ClassAccessible 
+=head2 _class_accessible 
 
 An older way to specify fields attributes in a derived class.
-(The current preferred method is by overriding C<Schema>; if you do
-this and don't override C<_ClassAccessible>, the module will generate
-an appropriate C<_ClassAccessible> based on your C<Schema>.)
+(The current preferred method is by overriding C<schema>; if you do
+this and don't override C<_class_accessible>, the module will generate
+an appropriate C<_class_accessible> based on your C<schema>.)
 
 Here's an example declaration:
 
-  sub _ClassAccessible {
+  sub _class_accessible {
     { 
 	 Tofu  => { 'read'=>1, 'write'=>1 },
          Maz   => { 'auto'=>1, },
@@ -562,58 +553,58 @@ Here's an example declaration:
 =cut
 
 
-sub _ClassAccessible {
-  my $self = shift;
-  
-  return $self->_ClassAccessibleFromSchema if $self->can('Schema');
-  
-  # XXX This is stub code to deal with the old way we used to do _Accessible
+sub _class_accessible {
+    my $self = shift;
+
+    return $self->_class_accessible_from_schema if $self->can('schema');
+
+  # XXX This is stub code to deal with the old way we used to do _accessible
   # It should never be called by modern code
-  
-  my %accessible;
-  while ( my $col = shift ) {
-    $accessible{$col}->{lc($_)} = 1
-      foreach split(/[\/,]/, shift);
-  }
-  return(\%accessible);
+
+    my %accessible;
+    while ( my $col = shift ) {
+        $accessible{$col}->{lc($_)} = 1
+          foreach split(/[\/,]/, shift);
+    }
+    return(\%accessible);
 }
 
-sub _ClassAccessibleFromSchema {
-  my $self = shift;
+sub _class_accessible_from_schema {
+    my $self = shift;
   
-  my $accessible = {};
-  foreach my $key ($self->_PrimaryKeys) {
-   $accessible->{$key} = { 'read' => 1 };
-  };
+    my $accessible = {};
+    foreach my $key ($self->_primary_keys) {
+        $accessible->{$key} = { 'read' => 1 };
+    };
   
-  my $schema = $self->Schema;
+    my $schema = $self->schema;
   
-  for my $field (keys %$schema) {
-    if ($schema->{$field}{'TYPE'}) {
-        $accessible->{$field} = { 'read' => 1, 'write' => 1 };
-    } elsif (my $refclass = $schema->{$field}{'REFERENCES'}) {
-        if (UNIVERSAL::isa($refclass, 'Jifty::DBI::Record')) {
-            $accessible->{$field} = { 'record-read' => 1, 'record-write' => 1 };
-        } elsif (UNIVERSAL::isa($refclass, 'Jifty::DBI::Collection')) {
-            $accessible->{$field} = { 'foreign-collection' => 1 };
-        } else {
-            warn "Error: $refclass neither Record nor Collection";
+    for my $field (keys %$schema) {
+        if ($schema->{$field}{'TYPE'}) {
+            $accessible->{$field} = { 'read' => 1, 'write' => 1 };
+        } elsif (my $refclass = $schema->{$field}{'REFERENCES'}) {
+            if (UNIVERSAL::isa($refclass, 'Jifty::DBI::Record')) {
+                $accessible->{$field} = { 'record-read' => 1, 'record-write' => 1 };
+            } elsif (UNIVERSAL::isa($refclass, 'Jifty::DBI::Collection')) {
+                $accessible->{$field} = { 'foreign-collection' => 1 };
+            } else {
+                warn "Error: $refclass neither Record nor Collection";
+            }
         }
     }
-  }
   
-  return $accessible;  
+    return $accessible;  
 }
 
 
-sub _ToRecord {
+sub _to_record {
     my $self = shift;
     my $field = shift;
     my $value = shift;
 
     return unless defined $value;
     
-    my $schema = $self->Schema;
+    my $schema = $self->schema;
     my $description = $schema->{$field};
     
     return unless $description;
@@ -625,18 +616,19 @@ sub _ToRecord {
     return unless UNIVERSAL::isa($classname, 'Jifty::DBI::Record');
     
     # XXX TODO FIXME perhaps this is not what should be passed to new, but it needs it
-    my $object = $classname->new( $self->_Handle );
-    $object->LoadById( $value );
+    my $object = $classname->new( $self->_handle );
+    $object->load_by_id( $value );
     return $object;
 }
 
-sub _CollectionValue {
+
+sub _collection_value {
     my $self = shift;
     
     my $method_name =  shift;
     return unless defined $method_name;
     
-    my $schema = $self->Schema;
+    my $schema = $self->schema;
     my $description = $schema->{$method_name};
     return unless $description;
     
@@ -644,39 +636,42 @@ sub _CollectionValue {
 
     return unless UNIVERSAL::isa($classname, 'Jifty::DBI::Collection');
     
-    my $coll = $classname->new( Handle => $self->_Handle );
+    my $coll = $classname->new( handle => $self->_handle );
     
     $coll->Limit( FIELD => $description->{'KEY'}, VALUE => $self->id);
     
     return $coll;
 }
 
-# sub {{{ ReadableAttributes
 
-=head2 ReadableAttributes
+# sub {{{ readable_attributes
 
-Returns an array of the attributes of this class defined as "read" => 1 in this class' _ClassAccessible datastructure
+=head2 readable_attributes
+
+Returns an array of the attributes of this class defined as "read" =>
+1 in this class' _class_accessible datastructure
 
 =cut
 
-sub ReadableAttributes {
+sub readable_attributes {
     my $self = shift;
-    my $ca = $self->_ClassAccessible();
+    my $ca = $self->_class_accessible();
     my @readable = grep { $ca->{$_}->{'read'} or $ca->{$_}->{'record-read'} } keys %{$ca};
     return (@readable);
 }
 
 
 
-=head2 WritableAttributes
+=head2 writable_attributes
 
-Returns an array of the attributes of this class defined as "write" => 1 in this class' _ClassAccessible datastructure
+Returns an array of the attributes of this class defined as "write" =>
+1 in this class' _class_accessible datastructure
 
 =cut
 
-sub WritableAttributes {
+sub writable_attributes {
     my $self = shift;
-    my $ca = $self->_ClassAccessible();
+    my $ca = $self->_class_accessible();
     my @writable = grep { $ca->{$_}->{'write'} || $ca->{$_}->{'record-write'} } keys %{$ca};
     return @writable;
 }
@@ -684,82 +679,83 @@ sub WritableAttributes {
 
 
 
-=head2 __Value
+=head2 __value
 
-Takes a field name and returns that field's value. Subclasses should never 
-override __Value.
-
-=cut
-
-
-sub __Value {
-  my $self = shift;
-  my $field = lc shift;
-
-  if (!$self->{'fetched'}{$field} and my $id = $self->id() ) {
-    my $pkey = $self->_PrimaryKey();
-    my $QueryString = "SELECT $field FROM " . $self->Table . " WHERE $pkey = ?";
-    my $sth = $self->_Handle->SimpleQuery( $QueryString, $id );
-    my ($value) = eval { $sth->fetchrow_array() };
-    warn $@ if $@;
-
-    $self->{'values'}{$field} = $value;
-    $self->{'fetched'}{$field} = 1;
-  }
-
-  my $value = $self->{'values'}{$field};
-    
-  return $value;
-}
-
-=head2 _Value
-
-_Value takes a single column name and returns that column's value for this row.
-Subclasses can override _Value to insert custom access control.
+Takes a field name and returns that field's value. Subclasses should
+never override __value.
 
 =cut
 
 
-sub _Value  {
-  my $self = shift;
-  return ($self->__Value(@_));
-}
-
-
-
-=head2 _Set
-
-_Set takes a single column name and a single unquoted value.
-It updates both the in-memory value of this column and the in-database copy.
-Subclasses can override _Set to insert custom access control.
-
-=cut
-
-
-sub _Set {
+sub __value {
     my $self = shift;
-    return ($self->__Set(@_));
+    my $field = lc shift;
+
+    if (!$self->{'fetched'}{$field} and my $id = $self->id() ) {
+        my $pkey = $self->_primary_key();
+        my $QueryString = "SELECT $field FROM " . $self->table . " WHERE $pkey = ?";
+        my $sth = $self->_handle->simple_query( $QueryString, $id );
+        my ($value) = eval { $sth->fetchrow_array() };
+        warn $@ if $@;
+
+        $self->{'values'}{$field} = $value;
+        $self->{'fetched'}{$field} = 1;
+    }
+
+    my $value = $self->{'values'}{$field};
+
+    return $value;
+}
+
+=head2 _value
+
+_value takes a single column name and returns that column's value for
+this row.  Subclasses can override _value to insert custom access
+control.
+
+=cut
+
+
+sub _value  {
+  my $self = shift;
+  return ($self->__value(@_));
+}
+
+
+
+=head2 _set
+
+_set takes a single column name and a single unquoted value.
+It updates both the in-memory value of this column and the in-database copy.
+Subclasses can override _set to insert custom access control.
+
+=cut
+
+
+sub _set {
+    my $self = shift;
+    return ($self->__set(@_));
 }
 
 
 
 
-sub __Set {
+sub __set {
     my $self = shift;
 
     my %args = (
-        'Field' => undef,
-        'Value' => undef,
-        'IsSQL' => undef,
+        'field' => undef,
+        'value' => undef,
+        'is_sql' => undef,
         @_
     );
 
-    $args{'Column'}        = delete $args{'Field'};
-    $args{'IsSQLFunction'} = delete $args{'IsSQL'};
+    $args{'column'}          = delete $args{'field'};
+    $args{'is_sql_function'} = delete $args{'is_sql'};
 
     my $ret = Class::ReturnValue->new();
 
-    unless ( $args{'Column'} ) {
+    unless ( $args{'column'} ) {
         $ret->as_array( 0, 'No column specified' );
         $ret->as_error(
             errno        => 5,
@@ -768,18 +764,18 @@ sub __Set {
         );
         return ( $ret->return_value );
     }
-    my $column = lc $args{'Column'};
-    if ( !defined( $args{'Value'} ) ) {
-        $ret->as_array( 0, "No value passed to _Set" );
+    my $column = lc $args{'column'};
+    if ( !defined( $args{'value'} ) ) {
+        $ret->as_array( 0, "No value passed to _set" );
         $ret->as_error(
             errno        => 2,
             do_backtrace => 0,
-            message      => "No value passed to _Set"
+            message      => "No value passed to _set"
         );
         return ( $ret->return_value );
     }
-    elsif (    ( defined $self->__Value($column) )
-        and ( $args{'Value'} eq $self->__Value($column) ) )
+    elsif (    ( defined $self->__value($column) )
+        and ( $args{'value'} eq $self->__value($column) ) )
     {
         $ret->as_array( 0, "That is already the current value" );
         $ret->as_error(
@@ -796,43 +792,43 @@ sub __Set {
     #
     
 
-    $args{'Value'} = $self->TruncateValue ( $args{'Column'}, $args{'Value'});
+    $args{'value'} = $self->truncate_value ( $args{'column'}, $args{'value'});
 
 
-    my $method = "Validate" . $args{'Column'};
-    unless ( $self->$method( $args{'Value'} ) ) {
-        $ret->as_array( 0, 'Illegal value for ' . $args{'Column'} );
+    my $method = "validate_" . $args{'column'};
+    unless ( $self->$method( $args{'value'} ) ) {
+        $ret->as_array( 0, 'Illegal value for ' . $args{'column'} );
         $ret->as_error(
             errno        => 3,
             do_backtrace => 0,
-            message      => "Illegal value for " . $args{'Column'}
+            message      => "Illegal value for " . $args{'column'}
         );
         return ( $ret->return_value );
     }
 
-    $args{'Table'}       = $self->Table();
-    $args{'PrimaryKeys'} = { $self->PrimaryKeys() };
+    $args{'table'}        = $self->table();
+    $args{'primary_keys'} = { $self->primary_keys() };
 
     # The blob handling will destroy $args{'Value'}. But we assign
     # that back to the object at the end. this works around that
-    my $unmunged_value = $args{'Value'};
+    my $unmunged_value = $args{'value'};
 
-    unless ( $self->_Handle->KnowsBLOBs ) {
+    unless ( $self->_handle->knows_blobs ) {
         # Support for databases which don't deal with LOBs automatically
-        my $ca = $self->_ClassAccessible();
-        my $key = $args{'Column'};
+        my $ca = $self->_class_accessible();
+        my $key = $args{'column'};
             if ( $ca->{$key}->{'type'} =~ /^(text|longtext|clob|blob|lob)$/i ) {
-                my $bhash = $self->_Handle->BLOBParams( $key, $ca->{$key}->{'type'} );
-                $bhash->{'value'} = $args{'Value'};
-                $args{'Value'} = $bhash;
+                my $bhash = $self->_handle->blob_params( $key, $ca->{$key}->{'type'} );
+                $bhash->{'value'} = $args{'value'};
+                $args{'value'} = $bhash;
             }
         }
 
 
-    my $val = $self->_Handle->UpdateRecordValue(%args);
+    my $val = $self->_handle->update_record_value(%args);
     unless ($val) {
         my $message = 
-            $args{'Column'} . " could not be set to " . $args{'Value'} . "." ;
+            $args{'column'} . " could not be set to " . $args{'value'} . "." ;
         $ret->as_array( 0, $message);
         $ret->as_error(
             errno        => 4,
@@ -844,7 +840,7 @@ sub __Set {
     # If we've performed some sort of "functional update"
     # then we need to reload the object from the DB to know what's
     # really going on. (ex SET Cost = Cost+5)
-    if ( $args{'IsSQLFunction'} ) {
+    if ( $args{'is_sql_function'} ) {
         $self->Load( $self->Id );
     }
     else {
@@ -854,7 +850,7 @@ sub __Set {
     return ( $ret->return_value );
 }
 
-=head2 _Canonicalize PARAMHASH
+=head2 _canonicalize PARAMHASH
 
 This routine massages an input value (VALUE) for FIELD into something that's 
 going to be acceptable.
@@ -888,7 +884,7 @@ Returns a replacement VALUE.
 
 =cut
 
-sub _Canonicalize {
+sub _canonicalize {
     my $self = shift;
     my $field = shift;
     
@@ -910,7 +906,7 @@ If it succeeds (which is always the case right now), returns true. Otherwise ret
 
 
 
-sub _Validate  {
+sub _validate  {
     my $self = shift;
     my $field = shift;
     my $value = shift;
@@ -928,7 +924,7 @@ sub _Validate  {
 
 
 
-=head2 TruncateValue  KEY VALUE
+=head2 truncate_value  KEY VALUE
 
 Truncate a value that's about to be set so that it will fit inside the database'
 s idea of how big the column is. 
@@ -937,7 +933,7 @@ s idea of how big the column is.
 
 =cut
 
-sub TruncateValue {
+sub truncate_value {
     my $self  = shift;
     my $key   = shift;
     my $value = shift;
@@ -945,7 +941,7 @@ sub TruncateValue {
     # We don't need to truncate empty things.
     return undef unless (defined ($value));
 
-    my $metadata = $self->_ClassAccessible->{$key};
+    my $metadata = $self->_class_accessible->{$key};
 
     my $truncate_to;
     if ( $metadata->{'length'} && !$metadata->{'is_numeric'} ) {
@@ -981,33 +977,32 @@ sub TruncateValue {
 }
 
 
-=head2 _Object
+=head2 _object
 
-_Object takes a single column name and an array reference.
-It creates new object instance of class specified in _ClassAccessable
-structure and calls LoadById on recently created object with the
-current column value as argument. It uses the array reference as
-the object constructor's arguments.
-Subclasses can override _Object to insert custom access control or
-define default contructor arguments.
+_object takes a single column name and an array reference.  It creates
+new object instance of class specified in _class_accessable structure
+and calls load_by_id on recently created object with the current
+column value as argument. It uses the array reference as the object
+constructor's arguments.  Subclasses can override _object to insert
+custom access control or define default contructor arguments.
 
-Note that if you are using a C<Schema> with a C<REFERENCES> field, 
+Note that if you are using a C<schema> with a C<REFERENCES> field, 
 this is unnecessary: the method to access the column's value will
 automatically turn it into the appropriate object.
 
 =cut
 
-sub _Object {
+sub _object {
     my $self = shift;
-    return $self->__Object(@_);
+    return $self->__object(@_);
 }
 
-sub __Object {
+sub __object {
     my $self = shift;
-    my %args = ( Field => '', Args => [], @_ );
+    my %args = ( field => '', args => [], @_ );
 
-    my $field = $args{'Field'};
-    my $class = $self->_Accessible( $field, 'object' );
+    my $field = $args{'field'};
+    my $class = $self->_accessible( $field, 'object' );
 
     # Globs magic to be sure that we call 'eval "require $class"' only once
     # because eval is quite slow -- cubic@acronis.ru
@@ -1021,8 +1016,8 @@ sub __Object {
         }
     }
 
-    my $object = $class->new( @{ $args{'Args'} } );
-    $object->LoadById( $self->__Value($field) );
+    my $object = $class->new( @{ $args{'args'} } );
+    $object->load_by_id( $self->__value($field) );
     return $object;
 }
 
@@ -1035,23 +1030,21 @@ sub __Object {
 # The latter is primarily important when we've got a whole set of record that we're
 # reading in with a recordset class and want to instantiate objefcts for each record.
 
-=head2 Load
+=head2 load
 
-Takes a single argument, $id. Calls LoadById to retrieve the row whose primary key
+Takes a single argument, $id. Calls load_by_id to retrieve the row whose primary key
 is $id
 
 =cut
 
-
-
-sub Load  {
+sub load  {
     my $self = shift;
     # my ($package, $filename, $line) = caller;
-    return $self->LoadById(@_);
+    return $self->load_by_id(@_);
 }
 
 
-=head2 LoadByCol
+=head2 load_by_col
 
 Takes two arguments, a column and a value. The column can be any table column
 which contains unique values.  Behavior when using a non-unique value is
@@ -1061,17 +1054,17 @@ undefined
 
 
 
-sub LoadByCol  {
+sub load_by_col  {
     my $self = shift;
     my $col = shift;
     my $val = shift;
     
-    return($self->LoadByCols($col => $val));
+    return($self->load_by_cols($col => $val));
 }
 
 
 
-=head2 LoadByCols
+=head2 loadbycols
 
 Takes a hash of columns and values. Loads the first record that matches all
 keys.
@@ -1083,8 +1076,7 @@ OR has references which contain 'operator' and 'value'
 
 =cut
 
-
-sub LoadByCols  {
+sub load_by_cols  {
     my $self = shift;
     my %hash  = (@_);
     my (@bind, @phrases);
@@ -1107,7 +1099,7 @@ sub LoadByCols  {
 	}
 	else {
        push @phrases, "($key IS NULL OR $key = ?)";
-       my $meta = $self->_ClassAccessible->{$key};
+       my $meta = $self->_class_accessible->{$key};
        $meta->{'type'} ||= '';
        # TODO: type checking should be done in generic way
        if ( $meta->{'is_numeric'} || $meta->{'type'} =~ /INT|NUMERIC|DECIMAL|REAL|DOUBLE|FLOAT/i  ) {
@@ -1119,66 +1111,62 @@ sub LoadByCols  {
 	}
     }
     
-    my $QueryString = "SELECT  * FROM ".$self->Table." WHERE ". 
+    my $QueryString = "SELECT  * FROM ".$self->table." WHERE ". 
     join(' AND ', @phrases) ;
-    return ($self->_LoadFromSQL($QueryString, @bind));
+    return ($self->_load_from_sql($QueryString, @bind));
 }
 
 
 
 
-=head2 LoadById
+=head2 loadbyid
 
 Loads a record by its primary key. Your record class must define a single primary key column.
 
 =cut
 
 
-sub LoadById  {
+sub load_by_id  {
     my $self = shift;
     my $id = shift;
 
     $id = 0 if (!defined($id));
-    my $pkey = $self->_PrimaryKey();
-    return ($self->LoadByCols($pkey => $id));
+    my $pkey = $self->_primary_key();
+    return ($self->load_by_cols($pkey => $id));
 }
 
 
 
 
-=head2 LoadByPrimaryKeys 
+=head2 load_by_primary_keys 
 
-Like LoadById with basic support for compound primary keys.
+Like load_by_id with basic support for compound primary keys.
 
 =cut
 
-
-
-sub LoadByPrimaryKeys {
+sub load_by_primary_keys {
     my $self = shift;
     my $data = (ref $_[0] eq 'HASH')? $_[0]: {@_};
 
     my %cols=();
-    foreach (@{$self->_PrimaryKeys}) {
+    foreach (@{$self->_primary_keys}) {
 	return (0, "Missing PK field: '$_'") unless defined $data->{$_};
 	$cols{$_}=$data->{$_};
     }
-    return ($self->LoadByCols(%cols));
+    return ($self->load_by_cols(%cols));
 }
 
 
 
 
-=head2 LoadFromHash
+=head2 load_from_hash
 
 Takes a hashref, such as created by Jifty::DBI and populates this record's
 loaded values hash.
 
 =cut
 
-
-
-sub LoadFromHash {
+sub load_from_hash {
   my $self = shift;
   my $hashref = shift;
 
@@ -1192,7 +1180,7 @@ sub LoadFromHash {
 
 
 
-=head2 _LoadFromSQL QUERYSTRING @BIND_VALUES
+=head2 _load_from_sql QUERYSTRING @BIND_VALUES
 
 Load a record as the result of an SQL statement
 
@@ -1201,12 +1189,12 @@ Load a record as the result of an SQL statement
 
 
 
-sub _LoadFromSQL {
+sub _load_from_sql {
     my $self        = shift;
     my $QueryString = shift;
     my @bind_values = (@_);
 
-    my $sth = $self->_Handle->SimpleQuery( $QueryString, @bind_values );
+    my $sth = $self->_handle->simple_query( $QueryString, @bind_values );
 
     #TODO this only gets the first row. we should check if there are more.
 
@@ -1225,7 +1213,7 @@ sub _LoadFromSQL {
     ## I guess to be consistant with the old code, make sure the primary  
     ## keys exist.
 
-    if( grep { not defined } $self->PrimaryKeys ) {
+    if( grep { not defined } $self->primary_keys ) {
         return ( 0, "Missing a primary key?" );
     }
     
@@ -1240,62 +1228,59 @@ sub _LoadFromSQL {
 
 
 
-=head2 Create
+=head2 create
 
 Takes an array of key-value pairs and drops any keys that aren't known
 as columns for this recordtype
 
 =cut 
 
-
-
-sub Create {
+sub create {
     my $self    = shift;
     my %attribs = @_;
 
     my ($key);
     foreach $key ( keys %attribs ) {
 
-        if ( $self->_Accessible( $key, 'record-write' ) ) {
+        if ( $self->_accessible( $key, 'record-write' ) ) {
             $attribs{$key} = $attribs{$key}->id
               if UNIVERSAL::isa( $attribs{$key},
                 'Jifty::DBI::Record' );
         }
 
         #Truncate things that are too long for their datatypes
-        $attribs{$key} = $self->TruncateValue( $key => $attribs{$key} );
+        $attribs{$key} = $self->truncate_value( $key => $attribs{$key} );
 
     }
-    unless ( $self->_Handle->KnowsBLOBs ) {
+    unless ( $self->_handle->knows_blobs ) {
 
         # Support for databases which don't deal with LOBs automatically
-        my $ca = $self->_ClassAccessible();
+        my $ca = $self->_class_accessible();
         foreach $key ( keys %attribs ) {
             if ( $ca->{$key}->{'type'} =~ /^(text|longtext|clob|blob|lob)$/i ) {
                 my $bhash =
-                  $self->_Handle->BLOBParams( $key, $ca->{$key}->{'type'} );
+                  $self->_handle->blob_params( $key, $ca->{$key}->{'type'} );
                 $bhash->{'value'} = $attribs{$key};
                 $attribs{$key} = $bhash;
             }
         }
     }
-    return ( $self->_Handle->Insert( $self->Table, %attribs ) );
+    return ( $self->_handle->insert( $self->table, %attribs ) );
 }
 
 
-=head2 Delete
+=head2 delete
 
-Delete this record from the database. On failure return a Class::ReturnValue with the error. On success, return 1;
+Delete this record from the database. On failure return a
+Class::ReturnValue with the error. On success, return 1;
 
 =cut
 
-*delete =  \&Delete;
-
-sub Delete {
-    $_[0]->__Delete;
+sub delete {
+    $_[0]->__delete;
 }
 
-sub __Delete {
+sub __delete {
     my $self = shift;
     
     #TODO Check to make sure the key's not already listed.
@@ -1303,7 +1288,7 @@ sub __Delete {
 
     ## Constructs the where clause.
     my @bind=();
-    my %pkeys=$self->PrimaryKeys();
+    my %pkeys=$self->primary_keys();
     my $where  = 'WHERE ';
     foreach my $key (keys %pkeys) {
        $where .= $key . "=?" . " AND ";
@@ -1311,8 +1296,8 @@ sub __Delete {
     }
 
     $where =~ s/AND\s$//;
-    my $QueryString = "DELETE FROM ". $self->Table . ' ' . $where;
-   my $return = $self->_Handle->SimpleQuery($QueryString, @bind);
+    my $QueryString = "DELETE FROM ". $self->table . ' ' . $where;
+    my $return = $self->_handle->simple_query($QueryString, @bind);
 
     if (UNIVERSAL::isa('Class::ReturnValue', $return)) {
         return ($return);
@@ -1325,15 +1310,13 @@ sub __Delete {
 
 
 
-=head2 Table
+=head2 table
 
-Returns or sets the name of the current Table
+Returns or sets the name of the current table
 
 =cut
 
-
-
-sub Table {
+sub table {
     my $self = shift;
     if (@_) {
           $self->{'table'} = shift;
@@ -1343,24 +1326,19 @@ sub Table {
 
 
 
-=head2 _Handle
+=head2 _handle
 
 Returns or sets the current Jifty::DBI::Handle object
 
 =cut
 
 
-sub _Handle  {
+sub _handle  {
     my $self = shift;
     if (@_) {
-      $self->{'DBIxHandle'} = shift;
+        $self->{'DBIxHandle'} = shift;
     }
     return ($self->{'DBIxHandle'});
-  }
-
-
-if( eval { require capitalization } ) {
-	capitalization->unimport( __PACKAGE__ );
 }
 
 1;

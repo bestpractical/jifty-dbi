@@ -4,7 +4,7 @@ use base qw/Jifty::DBI::Record/;
 
 # Class and instance method
 
-sub Table { "addresses" }
+sub table { "addresses" }
 
 # Class and instance method
 

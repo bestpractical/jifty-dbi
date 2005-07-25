@@ -24,7 +24,7 @@ compensates for some of the idiosyncrasies of Sybase.
 =cut
 
 
-=head2 Insert
+=head2 insert
 
 Takes a table name as the first argument and assumes that the rest of the arguments
 are an array of key-value pairs to be inserted.
@@ -34,19 +34,19 @@ a Class::ReturnValue object with the error reported.
 
 =cut
 
-sub Insert {
+sub insert {
     my $self  = shift;
 
     my $table = shift;
     my %pairs = @_;
-    my $sth   = $self->SUPER::Insert( $table, %pairs );
+    my $sth   = $self->SUPER::insert( $table, %pairs );
     if ( !$sth ) {
         return ($sth);
     }
     
     # Can't select identity column if we're inserting the id by hand.
     unless ($pairs{'id'}) {
-        my @row = $self->FetchResult('SELECT @@identity');
+        my @row = $self->fetch_result('SELECT @@identity');
 
         # TODO: Propagate Class::ReturnValue up here.
         unless ( $row[0] ) {
@@ -61,28 +61,28 @@ sub Insert {
 
 
 
-=head2 DatabaseVersion
+=head2 database_version
 
 return the database version, trimming off any -foo identifier
 
 =cut
 
-sub DatabaseVersion {
+sub database_version {
     my $self = shift;
-    my $v = $self->SUPER::DatabaseVersion();
+    my $v = $self->SUPER::database_version();
 
    $v =~ s/\-(.*)$//;
    return ($v);
 
 }
 
-=head2 CaseSensitive 
+=head2 case_sensitive 
 
 Returns undef, since Sybase's searches are not case sensitive by default 
 
 =cut
 
-sub CaseSensitive {
+sub case_sensitive {
     my $self = shift;
     return(1);
 }
@@ -90,7 +90,7 @@ sub CaseSensitive {
 
 
 
-sub ApplyLimits {
+sub apply_limits {
     my $self = shift;
     my $statementref = shift;
     my $per_page = shift;
@@ -99,12 +99,12 @@ sub ApplyLimits {
 }
 
 
-=head2 DistinctQuery STATEMENTREFtakes an incomplete SQL SELECT statement and massages it to return a DISTINCT result set.
+=head2 distinct_query STATEMENTREFtakes an incomplete SQL SELECT statement and massages it to return a DISTINCT result set.
 
 
 =cut
 
-sub DistinctQuery {
+sub distinct_query {
     my $self = shift;
     my $statementref = shift;
     my $table = shift;
@@ -116,14 +116,14 @@ sub DistinctQuery {
 }
 
 
-=head2 BinarySafeBLOBs
+=head2 binary_safe_blobs
 
 Return undef, as Oracle doesn't support binary-safe CLOBS
 
 
 =cut
 
-sub BinarySafeBLOBs {
+sub binary_safe_blobs {
     my $self = shift;
     return(undef);
 }

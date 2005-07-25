@@ -110,8 +110,8 @@ sub _DBSchemaTableFromModel {
   my $self = shift;
   my $model = shift;
   
-  my $table_name = $model->Table;
-  my $schema     = $model->Schema;
+  my $table_name = $model->table;
+  my $schema     = $model->schema;
   
   my $primary = "id"; # TODO allow override
   my $primary_col = DBIx::DBSchema::Column->new({

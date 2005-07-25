@@ -4,15 +4,13 @@ package Jifty::DBI::Collection;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "1.30_03";
-
 =head1 NAME
 
-Jifty::DBI - Encapsulate SQL queries and rows in simple perl objects
+Jifty::DBI::Collection - Encapsulate SQL queries and rows in simple perl objects
 
 =head1 SYNOPSIS
 
-  use Jifty::DBI;
+  use Jifty::DBI::Collection;
   
   package My::Things;
   use base qw/Jifty::DBI::Collection/;
@@ -47,11 +45,11 @@ Jifty::DBI - Encapsulate SQL queries and rows in simple perl objects
 
 This module provides an object-oriented mechanism for retrieving and updating data in a DBI-accesible database. 
 
-In order to use this module, you should create a subclass of C<Jifty::DBI> and a 
+In order to use this module, you should create a subclass of C<Jifty::DBI::Collection> and a 
 subclass of C<Jifty::DBI::Record> for each table that you wish to access.  (See
 the documentation of C<Jifty::DBI::Record> for more information on subclassing it.)
 
-Your C<Jifty::DBI> subclass must override C<new_item>, and probably should override
+Your C<Jifty::DBI::Collection> subclass must override C<new_item>, and probably should override
 at least C<_init> also; at the very least, C<_init> should probably call C<_handle> and C<_Table>
 to set the database handle (a C<Jifty::DBI::Handle> object) and table name for the class.
 You can try to override just about every other method here, as long as you think you know what you
@@ -558,7 +556,7 @@ sub items_array_ref {
 
 =head2 new_item
 
-new_item must be subclassed. It is used by Jifty::DBI to create record 
+new_item must be subclassed. It is used by Jifty::DBI::Collection to create record 
 objects for each row returned from the database.
 
 =cut
@@ -567,14 +565,14 @@ sub new_item {
     my $self = shift;
 
     die
-"Jifty::DBI needs to be subclassed. you can't use it directly.\n";
+"Jifty::DBI::Collection needs to be subclassed. you can't use it directly.\n";
 }
 
 
 
 =head2 redo_search
 
-Takes no arguments.  Tells Jifty::DBI that the next time it's asked
+Takes no arguments.  Tells Jifty::DBI::Collection that the next time it's asked
 for a record, it should requery the database
 
 =cut
@@ -1172,7 +1170,7 @@ sub _get_alias {
 
 =head2 Join
 
-Join instructs Jifty::DBI to join two tables.  
+Join instructs Jifty::DBI::Collection to join two tables.  
 
 The standard form takes a param hash with keys ALIAS1, FIELD1, ALIAS2 and 
 FIELD2. ALIAS1 and ALIAS2 are column aliases obtained from $self->new_alias or
@@ -1580,7 +1578,7 @@ __END__
 
 =head1 TESTING
 
-In order to test most of the features of C<Jifty::DBI>, you need
+In order to test most of the features of C<Jifty::DBI::Collection>, you need
 to provide C<make test> with a test database.  For each DBI driver that you
 would like to test, set the environment variables C<SB_TEST_FOO>, C<SB_TEST_FOO_USER>,
 and C<SB_TEST_FOO_PASS> to a database name, database username, and database password,

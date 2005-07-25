@@ -62,7 +62,7 @@ sub case_sensitive {
     return(1);
 }
 
-sub BinarySafeBLOBs { 
+sub binary_safe_blobs { 
     return undef;
 }
 
@@ -112,7 +112,7 @@ sub _build_joins {
           }
     }
 
-    my $join_clause = $sb->Table . " main ";
+    my $join_clause = $sb->table . " main ";
     
     my @keys = ( keys %{ $sb->{'left_joins'} } );
     my %seen;
