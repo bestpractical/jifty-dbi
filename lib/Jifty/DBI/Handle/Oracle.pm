@@ -1,8 +1,8 @@
 # $Header: /home/jesse/DBIx-SearchBuilder/history/SearchBuilder/Handle/Oracle.pm,v 1.14 2002/01/28 06:11:37 jesse Exp $
 
 use strict;
-package DBIx::SearchBuilder::Handle::Oracle;
-use base qw/DBIx::SearchBuilder::Handle/;
+package Jifty::DBI::Handle::Oracle;
+use base qw/Jifty::DBI::Handle/;
 use DBD::Oracle qw(:ora_types);
          
 use vars qw($VERSION $DBIHandle $DEBUG);
@@ -10,14 +10,14 @@ use vars qw($VERSION $DBIHandle $DEBUG);
 
 =head1 NAME
 
-  DBIx::SearchBuilder::Handle::Oracle - An oracle specific Handle object
+  Jifty::DBI::Handle::Oracle - An oracle specific Handle object
 
 =head1 SYNOPSIS
 
 
 =head1 DESCRIPTION
 
-This module provides a subclass of DBIx::SearchBuilder::Handle that 
+This module provides a subclass of Jifty::DBI::Handle that 
 compensates for some of the idiosyncrasies of Oracle.
 
 =head1 METHODS
@@ -278,6 +278,6 @@ Jesse Vincent, jesse@fsck.com
 
 =head1 SEE ALSO
 
-perl(1), DBIx::SearchBuilder
+perl(1), Jifty::DBI
 
 =cut

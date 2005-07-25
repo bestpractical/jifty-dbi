@@ -1,5 +1,5 @@
 # $Header: /home/jesse/DBIx-SearchBuilder/history/SearchBuilder/Handle.pm,v 1.21 2002/01/28 06:11:37 jesse Exp $
-package DBIx::SearchBuilder::Handle;
+package Jifty::DBI::Handle;
 use strict;
 use Carp;
 use DBI;
@@ -16,19 +16,19 @@ $VERSION = '$Version$';
 
 =head1 NAME
 
-DBIx::SearchBuilder::Handle - Perl extension which is a generic DBI handle
+Jifty::DBI::Handle - Perl extension which is a generic DBI handle
 
 =head1 SYNOPSIS
 
-  use DBIx::SearchBuilder::Handle;
+  use Jifty::DBI::Handle;
 
-  my $handle = DBIx::SearchBuilder::Handle->new();
+  my $handle = Jifty::DBI::Handle->new();
   $handle->Connect( Driver => 'mysql',
                     Database => 'dbname',
                     Host => 'hostname',
                     User => 'dbuser',
                     Password => 'dbpassword');
-  # now $handle isa DBIx::SearchBuilder::Handle::mysql                    
+  # now $handle isa Jifty::DBI::Handle::mysql                    
  
 =head1 DESCRIPTION
 
@@ -67,8 +67,8 @@ You should _always_ set
 unless you have a legacy app like RT2 or RT 3.0.{0,1,2} that depends on the broken behaviour.
 
 If you created the handle with 
-     DBIx::SearchBuilder::Handle->new
-and there is a DBIx::SearchBuilder::Handle::(Driver) subclass for the driver you have chosen,
+     Jifty::DBI::Handle->new
+and there is a Jifty::DBI::Handle::(Driver) subclass for the driver you have chosen,
 the handle will be automatically "upgraded" into that subclass.
 
 =cut
@@ -87,7 +87,7 @@ sub Connect  {
            DisconnectHandleOnDestroy => undef,
 	       @_);
 
-   if( $args{'Driver'} && !$self->isa( 'DBIx::SearchBuilder::Handle::'. $args{'Driver'} ) ) {
+   if( $args{'Driver'} && !$self->isa( 'Jifty::DBI::Handle::'. $args{'Driver'} ) ) {
       if ( $self->_UpgradeHandle($args{Driver}) ) {
           return ($self->Connect( %args ));
       }
@@ -124,7 +124,7 @@ sub Connect  {
 
 =head2 _UpgradeHandle DRIVER
 
-This private internal method turns a plain DBIx::SearchBuilder::Handle into one
+This private internal method turns a plain Jifty::DBI::Handle into one
 of the standard driver-specific subclasses.
 
 =cut
@@ -133,7 +133,7 @@ sub _UpgradeHandle {
     my $self = shift;
     
     my $driver = shift;
-    my $class = 'DBIx::SearchBuilder::Handle::' . $driver;
+    my $class = 'Jifty::DBI::Handle::' . $driver;
     eval "require $class";
     return if $@;
     
@@ -373,7 +373,7 @@ sub Insert {
 Takes a hash with fields: Table, Column, Value PrimaryKeys, and 
 IsSQLFunction.  Table, and Column should be obvious, Value is where you 
 set the new value you want the column to have. The primary_keys field should 
-be the lvalue of DBIx::SearchBuilder::Record::PrimaryKeys().  Finally 
+be the lvalue of Jifty::DBI::Record::PrimaryKeys().  Finally 
 IsSQLFunction is set when the Value is a SQL function.  For example, you 
 might have ('Value'=>'PASSWORD(string)'), by setting IsSQLFunction that 
 string will be inserted into the query directly rather then as a binding. 
@@ -650,7 +650,7 @@ sub _MakeClauseCaseInsensitive {
 
 =head2 BeginTransaction
 
-Tells DBIx::SearchBuilder to begin a new SQL transaction. This will
+Tells Jifty::DBI to begin a new SQL transaction. This will
 temporarily suspend Autocommit mode.
 
 Emulates nested transactions, by keeping a transaction stack depth.
@@ -671,7 +671,7 @@ sub BeginTransaction {
 
 =head2 Commit
 
-Tells DBIx::SearchBuilder to commit the current SQL transaction. 
+Tells Jifty::DBI to commit the current SQL transaction. 
 This will turn Autocommit mode back on.
 
 =cut
@@ -692,7 +692,7 @@ sub Commit {
 
 =head2 Rollback [FORCE]
 
-Tells DBIx::SearchBuilder to abort the current SQL transaction. 
+Tells Jifty::DBI to abort the current SQL transaction. 
 This will turn Autocommit mode back on.
 
 If this method is passed a true argument, stack depth is blown away and the outermost transaction is rolled back
@@ -919,7 +919,7 @@ sub _NormalJoin {
         return ($alias);
     }
     else {
-        $sb->DBIx::SearchBuilder::Limit(
+        $sb->Jifty::DBI::Limit(
             ENTRYAGGREGATOR => 'AND',
             QUOTEVALUE      => 0,
             ALIAS           => $args{'ALIAS1'},
@@ -1056,7 +1056,7 @@ Jesse Vincent, jesse@fsck.com
 
 =head1 SEE ALSO
 
-perl(1), L<DBIx::SearchBuilder>
+perl(1), L<Jifty::DBI>
 
 =cut
 

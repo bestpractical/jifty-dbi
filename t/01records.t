@@ -30,7 +30,7 @@ SKIP: {
 	isa_ok($ret,'DBI::st', "Inserted the schema. got a statement handle back");
 
 	my $rec = TestApp::Address->new($handle);
-	isa_ok($rec, 'DBIx::SearchBuilder::Record');
+	isa_ok($rec, 'Jifty::DBI::Record');
 
 # _Accessible testings
 	is( $rec->_Accessible('id' => 'read'), 1, 'id is accessible for read' );
@@ -206,7 +206,7 @@ SKIP: {
 
 package TestApp::Address;
 
-use base qw/DBIx::SearchBuilder::Record/;
+use base qw/Jifty::DBI::Record/;
 
 sub _Init {
     my $self = shift;

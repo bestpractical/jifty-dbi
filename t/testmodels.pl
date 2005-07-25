@@ -1,6 +1,6 @@
 package Sample::Address;
 
-use base qw/DBIx::SearchBuilder::Record/;
+use base qw/Jifty::DBI::Record/;
 
 # Class and instance method
 
@@ -18,7 +18,7 @@ sub Schema {
 
 package Sample::Employee;
 
-use base qw/DBIx::SearchBuilder::Record/;
+use base qw/Jifty::DBI::Record/;
 
 sub Table { "Employees" }
 

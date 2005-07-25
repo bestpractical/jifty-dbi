@@ -1,25 +1,25 @@
 #$Header: /home/jesse/DBIx-SearchBuilder/history/SearchBuilder/Handle/Pg.pm,v 1.8 2001/07/27 05:23:29 jesse Exp $
 # Copyright 1999-2001 Jesse Vincent <jesse@fsck.com>
 
-package DBIx::SearchBuilder::Handle::Pg;
+package Jifty::DBI::Handle::Pg;
 use strict;
 
 use vars qw($VERSION @ISA $DBIHandle $DEBUG);
-use base qw(DBIx::SearchBuilder::Handle);
+use base qw(Jifty::DBI::Handle);
 use Want qw(want howmany);
 
 use strict;
 
 =head1 NAME
 
-  DBIx::SearchBuilder::Handle::Pg - A Postgres specific Handle object
+  Jifty::DBI::Handle::Pg - A Postgres specific Handle object
 
 =head1 SYNOPSIS
 
 
 =head1 DESCRIPTION
 
-This module provides a subclass of DBIx::SearchBuilder::Handle that 
+This module provides a subclass of Jifty::DBI::Handle that 
 compensates for some of the idiosyncrasies of Postgres.
 
 =head1 METHODS
@@ -170,7 +170,7 @@ __END__
 
 =head1 SEE ALSO
 
-DBIx::SearchBuilder, DBIx::SearchBuilder::Handle
+Jifty::DBI, Jifty::DBI::Handle
 
 =cut
 

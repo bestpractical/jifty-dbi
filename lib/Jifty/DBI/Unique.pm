@@ -1,4 +1,4 @@
-package DBIx::SearchBuilder::Unique;
+package Jifty::DBI::Unique;
 use base 'Exporter';
 our @EXPORT = qw(AddRecord);
 our $VERSION = "0.01";
@@ -23,14 +23,14 @@ sub AddRecord {
 
 =head1 NAME
 
-DBIx::SearchBuilder::Unique - Ensure uniqueness of records in a collection
+Jifty::DBI::Unique - Ensure uniqueness of records in a collection
 
 =head1 SYNOPSIS
 
     package Foo::Collection;
-    use base 'DBIx::SearchBuilder';
+    use base 'Jifty::DBI::Collection';
 
-    use DBIx::SearchBuilder::Unique; # mixin
+    use Jifty::DBI::Unique; # mixin
 
     my $collection = Foo::Collection->New();
     $collection->SetupComplicatedJoins;
@@ -42,7 +42,7 @@ DBIx::SearchBuilder::Unique - Ensure uniqueness of records in a collection
 
 =head1 DESCRIPTION
 
-Currently, DBIx::SearchBuilder makes exceptions for databases which
+Currently, Jifty::DBI makes exceptions for databases which
 cannot handle both C<SELECT DISTINCT> and ordering in the same
 statement; it drops the C<DISTINCT> requirement. This, of course, means
 that you can get the same row twice, which you might not want. If that's

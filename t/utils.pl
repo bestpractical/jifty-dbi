@@ -42,7 +42,7 @@ Other arguments uses to construct handle.
 sub get_handle
 {
 	my $type = shift;
-	my $class = 'DBIx::SearchBuilder::Handle::'. $type;
+	my $class = 'Jifty::DBI::Handle::'. $type;
 	eval "require $class";
 	die $@ if $@;
 	my $handle;
@@ -79,7 +79,7 @@ sub connect_handle
 =head2 connect_handle_with_driver($handle, $driver)
 
 Connects C<$handle> using driver C<$driver>; can use this to test the
-magic that turns a C<DBIx::SearchBuilder::Handle> into a C<DBIx::SearchBuilder::Handle::Foo>
+magic that turns a C<Jifty::DBI::Handle> into a C<Jifty::DBI::Handle::Foo>
 on C<Connect>.
 
 =cut

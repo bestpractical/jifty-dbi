@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-package DBIx::SearchBuilder::SchemaGenerator;
+package Jifty::DBI::SchemaGenerator;
 
 use base qw(Class::Accessor);
 use DBIx::DBSchema;
@@ -14,8 +14,8 @@ __PACKAGE__->mk_accessors(qw(_db_schema));
 
 =head2 new HANDLE
 
-Creates a new C<DBIx::SearchBuilder::SchemaGenerator> object.  The single
-required argument is a C<DBIx::SearchBuilder::Handle>.
+Creates a new C<Jifty::DBI::SchemaGenerator> object.  The single
+required argument is a C<Jifty::DBI::Handle>.
 
 =cut
 
@@ -35,7 +35,7 @@ sub new {
 =for public_doc AddModel MODEL
 
 Adds a new model class to the SchemaGenerator.  Model should either be an object 
-of a subclass of C<DBIx::SearchBuilder::Record>, or the name of such a subclass; in the
+of a subclass of C<Jifty::DBI::Record>, or the name of such a subclass; in the
 latter case, C<AddModel> will instantiate an object of the subclass.
 
 The model must define the instance methods C<Schema> and C<Table>.
@@ -50,9 +50,9 @@ sub AddModel {
   my $model = shift;
   
   # $model could either be a (presumably unfilled) object of a subclass of
-  # DBIx::SearchBuilder::Record, or it could be the name of such a subclass.
+  # Jifty::DBI::Record, or it could be the name of such a subclass.
   
-  unless (ref $model and UNIVERSAL::isa($model, 'DBIx::SearchBuilder::Record')) {
+  unless (ref $model and UNIVERSAL::isa($model, 'Jifty::DBI::Record')) {
     my $new_model;
     eval { $new_model = $model->new; };
     
@@ -60,8 +60,8 @@ sub AddModel {
       return $self->_error("Error making new object from $model: $@");
     }
     
-    return $self->_error("Didn't get a DBIx::SearchBuilder::Record from $model, got $new_model")
-      unless UNIVERSAL::isa($new_model, 'DBIx::SearchBuilder::Record');
+    return $self->_error("Didn't get a Jifty::DBI::Record from $model, got $new_model")
+      unless UNIVERSAL::isa($new_model, 'Jifty::DBI::Record');
       
     $model = $new_model;
   }
@@ -101,7 +101,7 @@ sub CreateTableSQLText {
 
 =for private_doc _DBSchemaTableFromModel MODEL
 
-Takes an object of a subclass of DBIx::SearchBuilder::Record; returns a new
+Takes an object of a subclass of Jifty::DBI::Record; returns a new
 C<DBIx::DBSchema::Table> object corresponding to the model.
 
 =cut
@@ -170,11 +170,11 @@ __END__
 
 =head1 NAME
 
-DBIx::SearchBuilder::SchemaGenerator - Generate table schemas from DBIx::SearchBuilder records
+Jifty::DBI::SchemaGenerator - Generate table schemas from Jifty::DBI records
 
 =head1 SYNOPSIS
 
-    use DBIx::SearchBuilder::SchemaGenerator;
+    use Jifty::DBI::SchemaGenerator;
 
 
 =head1 DESCRIPTION

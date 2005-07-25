@@ -1,6 +1,6 @@
 package Example::Model::Employee;
 
-use base qw/DBIx::SearchBuilder::Record/;
+use base qw/Jifty::DBI::Record/;
 
 sub Table { "Employees" }
 

@@ -1,21 +1,21 @@
 
-package DBIx::SearchBuilder::Handle::SQLite;
-use DBIx::SearchBuilder::Handle;
-@ISA = qw(DBIx::SearchBuilder::Handle);
+package Jifty::DBI::Handle::SQLite;
+use Jifty::DBI::Handle;
+@ISA = qw(Jifty::DBI::Handle);
 
 use vars qw($VERSION @ISA $DBIHandle $DEBUG);
 use strict;
 
 =head1 NAME
 
-  DBIx::SearchBuilder::Handle::SQLite -- A SQLite specific Handle object
+  Jifty::DBI::Handle::SQLite -- A SQLite specific Handle object
 
 =head1 SYNOPSIS
 
 
 =head1 DESCRIPTION
 
-This module provides a subclass of DBIx::SearchBuilder::Handle that 
+This module provides a subclass of Jifty::DBI::Handle that 
 compensates for some of the idiosyncrasies of SQLite.
 
 =head1 METHODS
@@ -150,6 +150,6 @@ Jesse Vincent, jesse@fsck.com
 
 =head1 SEE ALSO
 
-perl(1), DBIx::SearchBuilder
+perl(1), Jifty::DBI
 
 =cut

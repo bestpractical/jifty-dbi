@@ -1,5 +1,5 @@
 #$Header/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Record.pm,v 1.21 2001/02/28 21:36:27 jesse Exp $
-package DBIx::SearchBuilder::Record;
+package Jifty::DBI::Record;
 
 use strict;
 use warnings;
@@ -11,17 +11,17 @@ use Class::ReturnValue;
 
 =head1 NAME
 
-DBIx::SearchBuilder::Record - Superclass for records loaded by SearchBuilder
+Jifty::DBI::Record - Superclass for records loaded by SearchBuilder
 
 =head1 SYNOPSIS
 
   package MyRecord;
-  use base qw/DBIx::SearchBuilder::Record/;
+  use base qw/Jifty::DBI::Record/;
   
   sub _Init {
       my $self       = shift;
       my $DBIxHandle =
-	shift;    # A DBIx::SearchBuilder::Handle::foo object for your database
+	shift;    # A Jifty::DBI::Handle::foo object for your database
   
       $self->_Handle($DBIxHandle);
       $self->Table("Users");
@@ -63,7 +63,7 @@ DBIx::SearchBuilder::Record - Superclass for records loaded by SearchBuilder
       }
   }
   
-  # Override DBIx::SearchBuilder::Create to do some checking on create
+  # Override Jifty::DBI::Create to do some checking on create
   sub Create {
       my $self   = shift;
       my %fields = (
@@ -77,7 +77,7 @@ DBIx::SearchBuilder::Record - Superclass for records loaded by SearchBuilder
 	  die "No userid specified.";
       }
   
-      # Get DBIx::SearchBuilder::Record->Create to do the real work
+      # Get Jifty::DBI::Record->Create to do the real work
       return (
 	  $self->SUPER::Create(
 	      UserId   => $fields{'UserId'},
@@ -89,12 +89,12 @@ DBIx::SearchBuilder::Record - Superclass for records loaded by SearchBuilder
 
 =head1 DESCRIPTION
 
-DBIx::SearchBuilder::Record is designed to work with DBIx::SearchBuilder.
+Jifty::DBI::Record is designed to work with Jifty::DBI.
 
 
 =head2 What is it trying to do. 
 
-DBIx::SearchBuilder::Record abstracts the agony of writing the common and generally 
+Jifty::DBI::Record abstracts the agony of writing the common and generally 
 simple SQL statements needed to serialize and De-serialize an object to the
 database.  In a traditional system, you would define various methods on 
 your object 'create', 'find', 'modify', and 'delete' being the most common. 
@@ -110,7 +110,7 @@ basically the same.
 
 <trumpets>
 
-Enter, DBIx::SearchBuilder::Record. 
+Enter, Jifty::DBI::Record. 
 
 With::Record, you can in the simple case, remove all of that code and 
 replace it by defining two methods and inheriting some code.  Its pretty 
@@ -180,8 +180,8 @@ The table looks like so:
 First, let's define our record class in a new module named "Simple.pm".
 
   000: package Simple; 
-  001: use DBIx::SearchBuilder::Record;
-  002: @ISA = (DBIx::SearchBuilder::Record);
+  001: use Jifty::DBI::Record;
+  002: @ISA = (Jifty::DBI::Record);
 
 This should be pretty obvious, name the package, import ::Record and then 
 define ourself as a subclass of ::Record. 
@@ -223,21 +223,21 @@ Like all perl modules, this needs to end with a true value.
 Now, on to the code that will actually *do* something with this object. 
 This code would be placed in your Perl script.
 
-  000: use DBIx::SearchBuilder::Handle;
+  000: use Jifty::DBI::Handle;
   001: use Simple;
 
 Use two packages, the first is where I get the DB handle from, the latter 
 is the object I just created. 
 
   002: 
-  003: my $handle = DBIx::SearchBuilder::Handle->new();
+  003: my $handle = Jifty::DBI::Handle->new();
   004:    $handle->Connect( 'Driver'   => 'Pg',
   005: 		          'Database' => 'test', 
   006: 		          'Host'     => 'reason',
   007: 		          'User'     => 'mhat',
   008: 		          'Password' => '');
 
-Creates a new DBIx::SearchBuilder::Handle, and then connects to the database using 
+Creates a new Jifty::DBI::Handle, and then connects to the database using 
 that handle.  Pretty straight forward, the password '' is what I use 
 when there is no password.  I could probably leave it blank, but I find 
 it to be more clear to define it.
@@ -269,8 +269,8 @@ First is probably lossy across databases vendors.
 
 =item LoadFromHash
 
-Populates this record with data from a DBIx::SearchBuilder.  I'm 
-currently assuming that DBIx::SearchBuilder is what we use in 
+Populates this record with data from a Jifty::DBI.  I'm 
+currently assuming that Jifty::DBI is what we use in 
 cases where we expect > 1 record.  More on this later.
 
 =back
@@ -446,7 +446,7 @@ sub AUTOLOAD {
                 my $self = shift;
                 my $val = shift;
 
-                $val = $val->id if UNIVERSAL::isa($val, 'DBIx::SearchBuilder::Record');
+                $val = $val->id if UNIVERSAL::isa($val, 'Jifty::DBI::Record');
                 return ( $self->_Set( Field => $Attrib, Value => $val ) );
             };
             goto &$AUTOLOAD;            
@@ -592,9 +592,9 @@ sub _ClassAccessibleFromSchema {
     if ($schema->{$field}{'TYPE'}) {
         $accessible->{$field} = { 'read' => 1, 'write' => 1 };
     } elsif (my $refclass = $schema->{$field}{'REFERENCES'}) {
-        if (UNIVERSAL::isa($refclass, 'DBIx::SearchBuilder::Record')) {
+        if (UNIVERSAL::isa($refclass, 'Jifty::DBI::Record')) {
             $accessible->{$field} = { 'record-read' => 1, 'record-write' => 1 };
-        } elsif (UNIVERSAL::isa($refclass, 'DBIx::SearchBuilder')) {
+        } elsif (UNIVERSAL::isa($refclass, 'Jifty::DBI::Collection')) {
             $accessible->{$field} = { 'foreign-collection' => 1 };
         } else {
             warn "Error: $refclass neither Record nor Collection";
@@ -622,7 +622,7 @@ sub _ToRecord {
     
     my $classname = $description->{'REFERENCES'};
 
-    return unless UNIVERSAL::isa($classname, 'DBIx::SearchBuilder::Record');
+    return unless UNIVERSAL::isa($classname, 'Jifty::DBI::Record');
     
     # XXX TODO FIXME perhaps this is not what should be passed to new, but it needs it
     my $object = $classname->new( $self->_Handle );
@@ -642,7 +642,7 @@ sub _CollectionValue {
     
     my $classname = $description->{'REFERENCES'};
 
-    return unless UNIVERSAL::isa($classname, 'DBIx::SearchBuilder');
+    return unless UNIVERSAL::isa($classname, 'Jifty::DBI::Collection');
     
     my $coll = $classname->new( Handle => $self->_Handle );
     
@@ -1171,7 +1171,7 @@ sub LoadByPrimaryKeys {
 
 =head2 LoadFromHash
 
-Takes a hashref, such as created by DBIx::SearchBuilder and populates this record's
+Takes a hashref, such as created by Jifty::DBI and populates this record's
 loaded values hash.
 
 =cut
@@ -1259,7 +1259,7 @@ sub Create {
         if ( $self->_Accessible( $key, 'record-write' ) ) {
             $attribs{$key} = $attribs{$key}->id
               if UNIVERSAL::isa( $attribs{$key},
-                'DBIx::SearchBuilder::Record' );
+                'Jifty::DBI::Record' );
         }
 
         #Truncate things that are too long for their datatypes
@@ -1345,7 +1345,7 @@ sub Table {
 
 =head2 _Handle
 
-Returns or sets the current DBIx::SearchBuilder::Handle object
+Returns or sets the current Jifty::DBI::Handle object
 
 =cut
 
@@ -1379,7 +1379,7 @@ Docs by Matt Knopp <mhat@netlag.com>
 
 =head1 SEE ALSO
 
-L<DBIx::SearchBuilder>
+L<Jifty::DBI>
 
 =cut
 

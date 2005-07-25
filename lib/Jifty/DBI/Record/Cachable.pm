@@ -1,11 +1,11 @@
 # $Header: /home/jesse/DBIx-SearchBuilder/history/SearchBuilder/Record/Cachable.pm,v 1.6 2001/06/19 04:22:32 jesse Exp $
 # by Matt Knopp <mhat@netlag.com>
 
-package DBIx::SearchBuilder::Record::Cachable;
+package Jifty::DBI::Record::Cachable;
 
-use DBIx::SearchBuilder::Record;
-use DBIx::SearchBuilder::Handle;
-@ISA = qw (DBIx::SearchBuilder::Record);
+use Jifty::DBI::Record;
+use Jifty::DBI::Handle;
+@ISA = qw (Jifty::DBI::Record);
 
 use Cache::Simple::TimedExpiry;
 
@@ -14,16 +14,16 @@ use strict;
 
 =head1 NAME
 
-DBIx::SearchBuilder::Record::Cachable - Records with caching behavior
+Jifty::DBI::Record::Cachable - Records with caching behavior
 
 =head1 SYNOPSIS
 
   package MyRecord;
-  use base qw/DBIx::SearchBuilder::Record::Cachable/;
+  use base qw/Jifty::DBI::Record::Cachable/;
 
 =head1 DESCRIPTION
 
-This module subclasses the main DBIx::SearchBuilder::Record package to add a caching layer. 
+This module subclasses the main Jifty::DBI::Record package to add a caching layer. 
 
 The public interface remains the same, except that records which have been loaded in the last few seconds may be reused by subsequent fetch or load methods without retrieving them from the database.
 
@@ -36,8 +36,8 @@ my %_CACHES = ();
 
 # Function: new
 # Type    : class ctor
-# Args    : see DBIx::SearchBuilder::Record::new
-# Lvalue  : DBIx::SearchBuilder::Record::Cachable
+# Args    : see Jifty::DBI::Record::new
+# Lvalue  : Jifty::DBI::Record::Cachable
 
 sub new () {
     my ( $class, @args ) = @_;
@@ -55,7 +55,7 @@ sub _SetupCache {
 
 =head2 FlushCache 
 
-This class method flushes the _global_ DBIx::SearchBuilder::Record::Cachable 
+This class method flushes the _global_ Jifty::DBI::Record::Cachable 
 cache.  All caches are immediately expired.
 
 =cut
@@ -96,7 +96,7 @@ sub _RecordCache {
 
 # Function: LoadFromHash
 # Type    : (overloaded) public instance
-# Args    : See DBIx::SearchBuilder::Record::LoadFromHash
+# Args    : See Jifty::DBI::Record::LoadFromHash
 # Lvalue  : array(boolean, message)
 
 sub LoadFromHash {
@@ -118,7 +118,7 @@ sub LoadFromHash {
 
 # Function: LoadByCols
 # Type    : (overloaded) public instance
-# Args    : see DBIx::SearchBuilder::Record::LoadByCols
+# Args    : see Jifty::DBI::Record::LoadByCols
 # Lvalue  : array(boolean, message)
 
 sub LoadByCols {
@@ -148,7 +148,7 @@ sub LoadByCols {
 
 # Function: __Set
 # Type    : (overloaded) public instance
-# Args    : see DBIx::SearchBuilder::Record::_Set
+# Args    : see Jifty::DBI::Record::_Set
 # Lvalue  : ?
 
 sub __Set () {
@@ -351,7 +351,7 @@ Matt Knopp <mhat@netlag.com>
 
 =head1 SEE ALSO
 
-L<DBIx::SearchBuilder>, L<DBIx::SearchBuilder::Record>
+L<Jifty::DBI>, L<Jifty::DBI::Record>
 
 =cut
 

@@ -1,5 +1,5 @@
 
-package DBIx::SearchBuilder;
+package Jifty::DBI::Collection;
 
 use strict;
 use vars qw($VERSION);
@@ -8,14 +8,14 @@ $VERSION = "1.30_03";
 
 =head1 NAME
 
-DBIx::SearchBuilder - Encapsulate SQL queries and rows in simple perl objects
+Jifty::DBI - Encapsulate SQL queries and rows in simple perl objects
 
 =head1 SYNOPSIS
 
-  use DBIx::SearchBuilder;
+  use Jifty::DBI;
   
   package My::Things;
-  use base qw/DBIx::SearchBuilder/;
+  use base qw/Jifty::DBI::Collection/;
   
   sub _Init {
       my $self = shift;
@@ -25,14 +25,14 @@ DBIx::SearchBuilder - Encapsulate SQL queries and rows in simple perl objects
   
   sub NewItem {
       my $self = shift;
-      # MyThing is a subclass of DBIx::SearchBuilder::Record
+      # MyThing is a subclass of Jifty::DBI::Record
       return(MyThing->new);
   }
   
   package main;
 
-  use DBIx::SearchBuilder::Handle;
-  my $handle = DBIx::SearchBuilder::Handle->new();
+  use Jifty::DBI::Handle;
+  my $handle = Jifty::DBI::Handle->new();
   $handle->Connect( Driver => 'SQLite', Database => "my_test_db" );
 
   my $sb = My::Things->new( Handle => $handle );
@@ -47,13 +47,13 @@ DBIx::SearchBuilder - Encapsulate SQL queries and rows in simple perl objects
 
 This module provides an object-oriented mechanism for retrieving and updating data in a DBI-accesible database. 
 
-In order to use this module, you should create a subclass of C<DBIx::SearchBuilder> and a 
-subclass of C<DBIx::SearchBuilder::Record> for each table that you wish to access.  (See
-the documentation of C<DBIx::SearchBuilder::Record> for more information on subclassing it.)
+In order to use this module, you should create a subclass of C<Jifty::DBI> and a 
+subclass of C<Jifty::DBI::Record> for each table that you wish to access.  (See
+the documentation of C<Jifty::DBI::Record> for more information on subclassing it.)
 
-Your C<DBIx::SearchBuilder> subclass must override C<NewItem>, and probably should override
+Your C<Jifty::DBI> subclass must override C<NewItem>, and probably should override
 at least C<_Init> also; at the very least, C<_Init> should probably call C<_Handle> and C<_Table>
-to set the database handle (a C<DBIx::SearchBuilder::Handle> object) and table name for the class.
+to set the database handle (a C<Jifty::DBI::Handle> object) and table name for the class.
 You can try to override just about every other method here, as long as you think you know what you
 are doing.
 
@@ -71,9 +71,9 @@ For example, the method C<RedoSearch> has the alias C<redo_search>.
 
 Creates a new SearchBuilder object and immediately calls C<_Init> with the same parameters
 that were passed to C<new>.  If you haven't overridden C<_Init> in your subclass, this means
-that you should pass in a C<DBIx::SearchBuilder::Handle> (or one of its subclasses) like this:
+that you should pass in a C<Jifty::DBI::Handle> (or one of its subclasses) like this:
 
-   my $sb = My::DBIx::SearchBuilder::Subclass->new( Handle => $handle );
+   my $sb = My::Jifty::DBI::Subclass->new( Handle => $handle );
 
 However, if your subclass overrides _Init you do not need to take a Handle argument, as long
 as your subclass returns an appropriate handle object from the C<_Handle> method.  This is
@@ -96,7 +96,7 @@ sub new {
 =head2 _Init
 
 This method is called by C<new> with whatever arguments were passed to C<new>.  
-By default, it takes a C<DBIx::SearchBuilder::Handle> object as a C<Handle>
+By default, it takes a C<Jifty::DBI::Handle> object as a C<Handle>
 argument, although this is not necessary if your subclass overrides C<_Handle>.
 
 =cut
@@ -156,7 +156,7 @@ sub CleanSlate {
 
 =head2 _Handle  [DBH]
 
-Get or set this object's DBIx::SearchBuilder::Handle object.
+Get or set this object's Jifty::DBI::Handle object.
 
 =cut
 
@@ -558,7 +558,7 @@ sub ItemsArrayRef {
 
 =head2 NewItem
 
-NewItem must be subclassed. It is used by DBIx::SearchBuilder to create record 
+NewItem must be subclassed. It is used by Jifty::DBI to create record 
 objects for each row returned from the database.
 
 =cut
@@ -567,14 +567,14 @@ sub NewItem {
     my $self = shift;
 
     die
-"DBIx::SearchBuilder needs to be subclassed. you can't use it directly.\n";
+"Jifty::DBI needs to be subclassed. you can't use it directly.\n";
 }
 
 
 
 =head2 RedoSearch
 
-Takes no arguments.  Tells DBIx::SearchBuilder that the next time it's asked
+Takes no arguments.  Tells Jifty::DBI that the next time it's asked
 for a record, it should requery the database
 
 =cut
@@ -1172,7 +1172,7 @@ sub _GetAlias {
 
 =head2 Join
 
-Join instructs DBIx::SearchBuilder to join two tables.  
+Join instructs Jifty::DBI to join two tables.  
 
 The standard form takes a param hash with keys ALIAS1, FIELD1, ALIAS2 and 
 FIELD2. ALIAS1 and ALIAS2 are column aliases obtained from $self->NewAlias or
@@ -1580,7 +1580,7 @@ __END__
 
 =head1 TESTING
 
-In order to test most of the features of C<DBIx::SearchBuilder>, you need
+In order to test most of the features of C<Jifty::DBI>, you need
 to provide C<make test> with a test database.  For each DBI driver that you
 would like to test, set the environment variables C<SB_TEST_FOO>, C<SB_TEST_FOO_USER>,
 and C<SB_TEST_FOO_PASS> to a database name, database username, and database password,
@@ -1605,7 +1605,7 @@ and/or modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-DBIx::SearchBuilder::Handle, DBIx::SearchBuilder::Record.
+Jifty::DBI::Handle, Jifty::DBI::Record.
 
 =cut
 

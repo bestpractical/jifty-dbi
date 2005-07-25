@@ -7,7 +7,7 @@ BEGIN { require "t/utils.pl" }
 
 use vars qw(@SPEC_METHODS @MODULES);
 my @SPEC_METHODS = qw(AUTOLOAD DESTROY CLONE);
-my @MODULES = qw(DBIx::SearchBuilder DBIx::SearchBuilder::Record);
+my @MODULES = qw(Jifty::DBI Jifty::DBI::Record);
 
 if( not eval { require Devel::Symdump } ) {
 	plan skip_all => 'Devel::Symdump is not installed';

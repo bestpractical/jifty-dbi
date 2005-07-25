@@ -1,22 +1,22 @@
 # $Header: /home/jesse/DBIx-SearchBuilder/history/SearchBuilder/Handle/Sybase.pm,v 1.8 2001/10/12 05:27:05 jesse Exp $
 
-package DBIx::SearchBuilder::Handle::Sybase;
-use DBIx::SearchBuilder::Handle;
-@ISA = qw(DBIx::SearchBuilder::Handle);
+package Jifty::DBI::Handle::Sybase;
+use Jifty::DBI::Handle;
+@ISA = qw(Jifty::DBI::Handle);
 
 use vars qw($VERSION @ISA $DBIHandle $DEBUG);
 use strict;
 
 =head1 NAME
 
-  DBIx::SearchBuilder::Handle::Sybase -- a Sybase specific Handle object
+  Jifty::DBI::Handle::Sybase -- a Sybase specific Handle object
 
 =head1 SYNOPSIS
 
 
 =head1 DESCRIPTION
 
-This module provides a subclass of DBIx::SearchBuilder::Handle that 
+This module provides a subclass of Jifty::DBI::Handle that 
 compensates for some of the idiosyncrasies of Sybase.
 
 =head1 METHODS
@@ -140,6 +140,6 @@ Jesse Vincent, jesse@fsck.com
 
 =head1 SEE ALSO
 
-DBIx::SearchBuilder, DBIx::SearchBuilder::Handle
+Jifty::DBI, Jifty::DBI::Handle
 
 =cut

@@ -1,22 +1,22 @@
 # $Header:  $
 
-package DBIx::SearchBuilder::Handle::Informix;
-use DBIx::SearchBuilder::Handle;
-@ISA = qw(DBIx::SearchBuilder::Handle);
+package Jifty::DBI::Handle::Informix;
+use Jifty::DBI::Handle;
+@ISA = qw(Jifty::DBI::Handle);
 
 use vars qw($VERSION @ISA $DBIHandle $DEBUG);
 use strict;
 
 =head1 NAME
 
-  DBIx::SearchBuilder::Handle::Informix - An Informix specific Handle object
+  Jifty::DBI::Handle::Informix - An Informix specific Handle object
 
 =head1 SYNOPSIS
 
 
 =head1 DESCRIPTION
 
-This module provides a subclass of DBIx::SearchBuilder::Handle that 
+This module provides a subclass of Jifty::DBI::Handle that 
 compensates for some of the idiosyncrasies of Informix.
 
 =head1 METHODS
@@ -146,6 +146,6 @@ Oliver Tappe, oliver@akso.de
 
 =head1 SEE ALSO
 
-perl(1), DBIx::SearchBuilder
+perl(1), Jifty::DBI
 
 =cut

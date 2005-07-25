@@ -18,8 +18,8 @@ BEGIN {
 }
 
 BEGIN { 
-  use_ok("DBIx::SearchBuilder::SchemaGenerator");
-  use_ok("DBIx::SearchBuilder::Handle");
+  use_ok("Jifty::DBI::SchemaGenerator");
+  use_ok("Jifty::DBI::Handle");
 }
 
 require_ok("t/testmodels.pl");
@@ -36,12 +36,12 @@ foreach my $d ( @AvailableDrivers ) {
   
     my $handle = get_handle( $d );
     connect_handle( $handle );
-    isa_ok($handle, "DBIx::SearchBuilder::Handle::$d");
+    isa_ok($handle, "Jifty::DBI::Handle::$d");
     isa_ok($handle->dbh, 'DBI::db');
 
-    my $SG = DBIx::SearchBuilder::SchemaGenerator->new($handle);
+    my $SG = Jifty::DBI::SchemaGenerator->new($handle);
 
-    isa_ok($SG, 'DBIx::SearchBuilder::SchemaGenerator');
+    isa_ok($SG, 'Jifty::DBI::SchemaGenerator');
 
     isa_ok($SG->_db_schema, 'DBIx::DBSchema');
 

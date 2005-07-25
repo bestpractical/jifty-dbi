@@ -1,4 +1,4 @@
-package DBIx::SearchBuilder::Union;
+package Jifty::DBI::Union;
 use strict;
 use warnings;
 
@@ -6,20 +6,20 @@ use warnings;
 
 our $VERSION = '0';
 
-# This could inherit from DBIx::SearchBuilder, but there are _a lot_
-# of things in DBIx::SearchBuilder that we don't want, like Limit and
+# This could inherit from Jifty::DBI, but there are _a lot_
+# of things in Jifty::DBI that we don't want, like Limit and
 # stuff.  It probably makes sense to (eventually) split out
-# DBIx::SearchBuilder::Collection to contain all the iterator logic.
+# Jifty::DBI::Collection to contain all the iterator logic.
 # This could inherit from that.
 
 =head1 NAME
 
-DBIx::SearchBuilder::Union - Deal with multiple SearchBuilder result sets as one
+Jifty::DBI::Union - Deal with multiple SearchBuilder result sets as one
 
 =head1 SYNOPSIS
 
-  use DBIx::SearchBuilder::Union;
-  my $U = new DBIx::SearchBuilder::Union;
+  use Jifty::DBI::Union;
+  my $U = new Jifty::DBI::Union;
   $U->add( $tickets1 );
   $U->add( $tickets2 );
 
@@ -34,7 +34,7 @@ This module is still experimental.
 
 =head1 DESCRIPTION
 
-Implements a subset of the DBIx::SearchBuilder collection methods, but
+Implements a subset of the Jifty::DBI collection methods, but
 enough to do iteration over a bunch of results.  Useful for displaying
 the results of two unrelated searches (for the same kind of objects)
 in a single list.
@@ -43,7 +43,7 @@ in a single list.
 
 =head2 new
 
-Create a new DBIx::SearchBuilder::Union object.  No arguments.
+Create a new Jifty::DBI::Union object.  No arguments.
 
 =cut
 
@@ -70,7 +70,7 @@ sub add {
 
 	unless ( @{$self->{data}} == 0
 			 || ref($newobj) eq ref($self->{data}[0]) ) {
-	  die "All elements of a DBIx::SearchBuilder::Union must be of the same type.  Looking for a " . ref($self->{data}[0]) .".";
+	  die "All elements of a Jifty::DBI::Union must be of the same type.  Looking for a " . ref($self->{data}[0]) .".";
 	}
 
 	$self->{count} = undef;
@@ -88,7 +88,7 @@ element.
 sub First {
     my $self = shift;
 
-	die "No elements in DBIx::SearchBuilder::Union"
+	die "No elements in Jifty::DBI::Union"
 	  unless @{$self->{data}};
 
     $self->{curp} = 0;
@@ -225,7 +225,7 @@ and/or modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-DBIx::SearchBuilder
+Jifty::DBI
 
 =cut
 

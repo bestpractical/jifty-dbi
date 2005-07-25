@@ -15,8 +15,8 @@ my @CONNECT_ARGS = (
   Password => '',
 );
 
-use DBIx::SearchBuilder::Handle;
-use DBIx::SearchBuilder::SchemaGenerator;
+use Jifty::DBI::Handle;
+use Jifty::DBI::SchemaGenerator;
 
 my $BaseClass;
 
@@ -26,7 +26,7 @@ BEGIN {
 usage: $0 Base::Class [libpath ...]
   This script will search \@INC (with the given paths added
   to its beginning) for all classes beginning with Base::Class::,
-  which should be subclasses of DBIx::SearchBuilder::Record implementing
+  which should be subclasses of Jifty::DBI::Record implementing
   Schema and Table.  It prints SQL to generate tables standard output.
   
   While it does not actually create the tables, it needs to connect to your
@@ -42,11 +42,11 @@ USAGE
 
 use Module::Pluggable search_path => $BaseClass, sub_name => 'models', instantiate => 'new';
 
-my $handle = DBIx::SearchBuilder::Handle->new;
+my $handle = Jifty::DBI::Handle->new;
 
 $handle->Connect( @CONNECT_ARGS );
 	
-my $SG = DBIx::SearchBuilder::SchemaGenerator->new($handle);
+my $SG = Jifty::DBI::SchemaGenerator->new($handle);
 
 die "Couldn't make SchemaGenerator" unless $SG;
 

@@ -33,7 +33,7 @@ SKIP: {
 	ok( $count_all,  "init users data" );
 
 	my $users_obj = TestApp::Users->new( $handle );
-	isa_ok( $users_obj, 'DBIx::SearchBuilder' );
+	isa_ok( $users_obj, 'Jifty::DBI::Collection' );
 	is( $users_obj->_Handle, $handle, "same handle as we used in constructor");
 
 # check that new object returns 0 records in any case
@@ -57,10 +57,10 @@ SKIP: {
 # unlimit new object and check
 	$users_obj->UnLimit;
 	is( $users_obj->Count, $count_all, 'Count returns same number of records as was inserted' );
-	isa_ok( $users_obj->First, 'DBIx::SearchBuilder::Record', 'First returns record object' );
-	isa_ok( $users_obj->Last, 'DBIx::SearchBuilder::Record', 'Last returns record object' );
+	isa_ok( $users_obj->First, 'Jifty::DBI::Record', 'First returns record object' );
+	isa_ok( $users_obj->Last, 'Jifty::DBI::Record', 'Last returns record object' );
 	$users_obj->GotoFirstItem;
-	isa_ok( $users_obj->Next, 'DBIx::SearchBuilder::Record', 'Next returns record object' );
+	isa_ok( $users_obj->Next, 'Jifty::DBI::Record', 'Next returns record object' );
 	$items_ref = $users_obj->ItemsArrayRef;
 	isa_ok( $items_ref, 'ARRAY', 'ItemsArrayRef always returns array reference' );
 	is( scalar @{$items_ref}, $count_all, 'ItemsArrayRef returns same number of records as was inserted' );
@@ -72,7 +72,7 @@ SKIP: {
 # try to use $users_obj for all tests, after each call to CleanSlate it should look like new obj.
 # and test $obj->new syntax
 	my $clean_obj = $users_obj->new( $handle );
-	isa_ok( $clean_obj, 'DBIx::SearchBuilder' );
+	isa_ok( $clean_obj, 'Jifty::DBI::Collection' );
 
 # basic limits
 	$users_obj->CleanSlate;
@@ -84,7 +84,7 @@ SKIP: {
 		is( $users_obj->IsLast, undef, 'IsLast returns undef before we fetch any record' );
 	}
 	my $first_rec = $users_obj->First;
-	isa_ok( $first_rec, 'DBIx::SearchBuilder::Record', 'First returns record object' );
+	isa_ok( $first_rec, 'Jifty::DBI::Record', 'First returns record object' );
 	is( $users_obj->IsLast, 1, '1 record in the collection then first rec is last');
 	is( $first_rec->Login, 'obra', 'login is correct' );
 	my $last_rec = $users_obj->Last;
@@ -110,7 +110,7 @@ SKIP: {
 	$users_obj->Limit( FIELD => 'Name', OPERATOR => 'LIKE', VALUE => 'Glass' );
 	is( $users_obj->Count, 1, "found one user with 'Glass' in the name" );
 	$first_rec = $users_obj->First;
-	isa_ok( $first_rec, 'DBIx::SearchBuilder::Record', 'First returns record object' );
+	isa_ok( $first_rec, 'Jifty::DBI::Record', 'First returns record object' );
 	is( $first_rec->Login, 'glasser', 'login is correct' );
 
 	# STARTSWITH
@@ -119,7 +119,7 @@ SKIP: {
 	$users_obj->Limit( FIELD => 'Name', OPERATOR => 'STARTSWITH', VALUE => 'Ruslan' );
 	is( $users_obj->Count, 1, "found one user who name starts with 'Ruslan'" );
 	$first_rec = $users_obj->First;
-	isa_ok( $first_rec, 'DBIx::SearchBuilder::Record', 'First returns record object' );
+	isa_ok( $first_rec, 'Jifty::DBI::Record', 'First returns record object' );
 	is( $first_rec->Login, 'cubic', 'login is correct' );
 
 	# ENDSWITH
@@ -128,7 +128,7 @@ SKIP: {
 	$users_obj->Limit( FIELD => 'Name', OPERATOR => 'ENDSWITH', VALUE => 'Tang' );
 	is( $users_obj->Count, 1, "found one user who name ends with 'Tang'" );
 	$first_rec = $users_obj->First;
-	isa_ok( $first_rec, 'DBIx::SearchBuilder::Record', 'First returns record object' );
+	isa_ok( $first_rec, 'Jifty::DBI::Record', 'First returns record object' );
 	is( $first_rec->Login, 'autrijus', 'login is correct' );
 
 	# IS NULL
@@ -153,7 +153,7 @@ SKIP: {
 	$users_obj->Column(FIELD => 'Login');
 	is( $users_obj->Count, $count_all, "group by / order by finds right amount");
 	$first_rec = $users_obj->First;
-	isa_ok( $first_rec, 'DBIx::SearchBuilder::Record', 'First returns record object' );
+	isa_ok( $first_rec, 'Jifty::DBI::Record', 'First returns record object' );
 	is( $first_rec->Login, 'obra', 'login is correct' );
 
 	cleanup_schema( 'TestApp', $handle );
@@ -204,7 +204,7 @@ EOF
 
 package TestApp::User;
 
-use base qw/DBIx::SearchBuilder::Record/;
+use base qw/Jifty::DBI::Record/;
 
 sub _Init {
     my $self = shift;
@@ -241,7 +241,7 @@ sub init_data {
 package TestApp::Users;
 
 # use TestApp::User;
-use base qw/DBIx::SearchBuilder/;
+use base qw/Jifty::DBI::Collection/;
 
 sub _Init {
     my $self = shift;

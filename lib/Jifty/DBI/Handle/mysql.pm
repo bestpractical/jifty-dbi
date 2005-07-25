@@ -1,22 +1,22 @@
 # $Header: /home/jesse/DBIx-SearchBuilder/history/SearchBuilder/Handle/mysql.pm,v 1.8 2001/10/12 05:27:05 jesse Exp $
 
-package DBIx::SearchBuilder::Handle::mysql;
-use DBIx::SearchBuilder::Handle;
-@ISA = qw(DBIx::SearchBuilder::Handle);
+package Jifty::DBI::Handle::mysql;
+use Jifty::DBI::Handle;
+@ISA = qw(Jifty::DBI::Handle);
 
 use vars qw($VERSION @ISA $DBIHandle $DEBUG);
 use strict;
 
 =head1 NAME
 
-  DBIx::SearchBuilder::Handle::mysql - A mysql specific Handle object
+  Jifty::DBI::Handle::mysql - A mysql specific Handle object
 
 =head1 SYNOPSIS
 
 
 =head1 DESCRIPTION
 
-This module provides a subclass of DBIx::SearchBuilder::Handle that 
+This module provides a subclass of Jifty::DBI::Handle that 
 compensates for some of the idiosyncrasies of MySQL.
 
 =head1 METHODS
@@ -90,7 +90,7 @@ Jesse Vincent, jesse@fsck.com
 
 =head1 SEE ALSO
 
-DBIx::SearchBuilder, DBIx::SearchBuilder::Handle
+Jifty::DBI, Jifty::DBI::Handle
 
 =cut
 

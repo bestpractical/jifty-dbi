@@ -238,7 +238,7 @@ CREATE TEMPORARY TABLE Phones (
 
 package TestApp::Employee;
 
-use base qw/DBIx::SearchBuilder::Record/;
+use base qw/Jifty::DBI::Record/;
 
 sub Table { 'Employees' }
 
@@ -260,7 +260,7 @@ sub _Value  {
 
 package TestApp::Phone;
 
-use base qw/DBIx::SearchBuilder::Record/;
+use base qw/Jifty::DBI::Record/;
 
 sub Table { 'Phones' }
 
@@ -273,7 +273,7 @@ sub Schema {
 
 package TestApp::PhoneCollection;
 
-use base qw/DBIx::SearchBuilder/;
+use base qw/Jifty::DBI::Collection/;
 
 sub Table {
     my $self = shift;

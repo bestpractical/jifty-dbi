@@ -13,10 +13,10 @@ plan tests => $total;
 
 foreach my $d ( @AvailableDrivers ) {
 SKIP: {
-	use_ok('DBIx::SearchBuilder::Handle::'. $d);
+	use_ok('Jifty::DBI::Handle::'. $d);
 	my $handle = get_handle( $d );
-	isa_ok($handle, 'DBIx::SearchBuilder::Handle');
-	isa_ok($handle, 'DBIx::SearchBuilder::Handle::'. $d);
+	isa_ok($handle, 'Jifty::DBI::Handle');
+	isa_ok($handle, 'Jifty::DBI::Handle::'. $d);
 	can_ok($handle, 'dbh');
 }
 }

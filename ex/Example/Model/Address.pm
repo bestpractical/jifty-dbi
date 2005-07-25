@@ -1,6 +1,6 @@
 package Example::Model::Address;
 
-use base qw/DBIx::SearchBuilder::Record/;
+use base qw/Jifty::DBI::Record/;
 
 # Class and instance method
 
