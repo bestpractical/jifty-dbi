@@ -7,14 +7,14 @@ use File::Spec;
 use Test::More;
 
 BEGIN { require "t/utils.pl" }
-our (@AvailableDrivers);
+our (@available_drivers);
 
 use constant TESTS_PER_DRIVER => 63;
 
-my $total = scalar(@AvailableDrivers) * TESTS_PER_DRIVER;
+my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
 
-foreach my $d ( @AvailableDrivers ) {
+foreach my $d ( @available_drivers ) {
 SKIP: {
 	unless( has_schema( 'TestApp', $d ) ) {
 		skip "No schema for '$d' driver", TESTS_PER_DRIVER;
@@ -31,12 +31,12 @@ SKIP: {
 	isa_ok($ret,'DBI::st', "Inserted the schema. got a statement handle back");
 
 	my $emp = TestApp::Employee->new($handle);
-	my $e_id = $emp->Create( Name => 'RUZ' );
+	my $e_id = $emp->create( Name => 'RUZ' );
 	ok($e_id, "Got an id for the new employee: $e_id");
-	$emp->Load($e_id);
+	$emp->load($e_id);
 	is($emp->id, $e_id);
 	
-	my $phone_collection = $emp->Phones;
+	my $phone_collection = $emp->phones;
 	isa_ok($phone_collection, 'TestApp::PhoneCollection');
 	
 	{
@@ -46,139 +46,139 @@ SKIP: {
 	
 	my $phone = TestApp::Phone->new($handle);
 	isa_ok( $phone, 'TestApp::Phone');
-	my $p_id = $phone->Create( Employee => $e_id, Phone => '+7(903)264-03-51');
+	my $p_id = $phone->create( employee => $e_id, phone => '+7(903)264-03-51');
 	is($p_id, 1, "Loaded phone $p_id");
-	$phone->Load( $p_id );
+	$phone->load( $p_id );
 
-	my $obj = $phone->Employee;
+	my $obj = $phone->employee;
 
 	ok($obj, "Employee #$e_id has phone #$p_id");
 	isa_ok( $obj, 'TestApp::Employee');
 	is($obj->id, $e_id);
-	is($obj->Name, 'RUZ');
+	is($obj->name, 'RUZ');
 	
 	{
-	    $phone_collection->RedoSearch;
-	    my $ph = $phone_collection->Next;
+	    $phone_collection->redo_search;
+	    my $ph = $phone_collection->next;
 	    isa_ok($ph, 'TestApp::Phone');
 	    is($ph->id, $p_id, 'found first phone');
-	    is($ph->Phone, '+7(903)264-03-51');
-	    is($phone_collection->Next, undef);
+	    is($ph->phone, '+7(903)264-03-51');
+	    is($phone_collection->next, undef);
 	}
 
 	# tests for no object mapping
-	my $val = $phone->Phone;
+	my $val = $phone->phone;
 	is( $val, '+7(903)264-03-51', 'Non-object things still work');
 	
 	my $emp2 = TestApp::Employee->new($handle);
 	isa_ok($emp2, 'TestApp::Employee');
-	my $e2_id = $emp2->Create( Name => 'Dave' );
+	my $e2_id = $emp2->create( name => 'Dave' );
 	ok($e2_id, "Got an id for the new employee: $e2_id");
-	$emp2->Load($e2_id);
+	$emp2->load($e2_id);
 	is($emp2->id, $e2_id);
 
-	my $phone2_collection = $emp2->Phones;
+	my $phone2_collection = $emp2->phones;
 	isa_ok($phone2_collection, 'TestApp::PhoneCollection');
 
 	{
-	    my $ph = $phone2_collection->Next;
+	    my $ph = $phone2_collection->next;
 	    is($ph, undef, "new emp has no phones");
 	}
 	
 	{
-	    $phone_collection->RedoSearch;
-	    my $ph = $phone_collection->Next;
+	    $phone_collection->redo_search;
+	    my $ph = $phone_collection->next;
 	    isa_ok($ph, 'TestApp::Phone');
 	    is($ph->id, $p_id, 'first emp still has phone');
-	    is($ph->Phone, '+7(903)264-03-51');
-	    is($phone_collection->Next, undef);
+	    is($ph->phone, '+7(903)264-03-51');
+	    is($phone_collection->next, undef);
 	}
 
-	$phone->SetEmployee($e2_id);
+	$phone->set_employee($e2_id);
 	
 		
-	my $emp3 = $phone->Employee;
+	my $emp3 = $phone->employee;
 	isa_ok($emp3, 'TestApp::Employee');
-	is($emp3->Name, 'Dave', 'changed employees by ID');
+	is($emp3->name, 'Dave', 'changed employees by ID');
 	is($emp3->id, $emp2->id);
 
 	{
-	    $phone_collection->RedoSearch;
-	    is($phone_collection->Next, undef, "first emp lost phone");
+	    $phone_collection->redo_search;
+	    is($phone_collection->next, undef, "first emp lost phone");
 	}
 
 	{
-	    $phone2_collection->RedoSearch;
-	    my $ph = $phone2_collection->Next;
+	    $phone2_collection->redo_search;
+	    my $ph = $phone2_collection->next;
 	    isa_ok($ph, 'TestApp::Phone');
 	    is($ph->id, $p_id, 'new emp stole the phone');
-	    is($ph->Phone, '+7(903)264-03-51');
-	    is($phone2_collection->Next, undef);
+	    is($ph->phone, '+7(903)264-03-51');
+	    is($phone2_collection->next, undef);
 	}
 
 
-	$phone->SetEmployee($emp);
+	$phone->set_employee($emp);
 
-	my $emp4 = $phone->Employee;
+	my $emp4 = $phone->employee;
 	isa_ok($emp4, 'TestApp::Employee');
-	is($emp4->Name, 'RUZ', 'changed employees by obj');
+	is($emp4->name, 'RUZ', 'changed employees by obj');
 	is($emp4->id, $emp->id);
 
 	{
-	    $phone2_collection->RedoSearch;
-	    is($phone2_collection->Next, undef, "second emp lost phone");
+	    $phone2_collection->redo_search;
+	    is($phone2_collection->next, undef, "second emp lost phone");
 	}
 
 	{
-	    $phone_collection->RedoSearch;
-	    my $ph = $phone_collection->Next;
+	    $phone_collection->redo_search;
+	    my $ph = $phone_collection->next;
 	    isa_ok($ph, 'TestApp::Phone');
 	    is($ph->id, $p_id, 'first emp stole the phone');
-	    is($ph->Phone, '+7(903)264-03-51');
-	    is($phone_collection->Next, undef);
+	    is($ph->phone, '+7(903)264-03-51');
+	    is($phone_collection->next, undef);
 	}
 	
 	my $phone2 = TestApp::Phone->new($handle);
 	isa_ok( $phone2, 'TestApp::Phone');
-	my $p2_id = $phone2->Create( Employee => $e_id, Phone => '123456');
+	my $p2_id = $phone2->create( employee => $e_id, phone => '123456');
 	ok($p2_id, "Loaded phone $p2_id");
-	$phone2->Load( $p2_id );
+	$phone2->load( $p2_id );
 	
 	{
-	    $phone_collection->RedoSearch;
-	    my $ph = $phone_collection->Next;
+	    $phone_collection->redo_search;
+	    my $ph = $phone_collection->next;
 	    isa_ok($ph, 'TestApp::Phone');
 	    is($ph->id, $p_id, 'still has this phone');
-	    is($ph->Phone, '+7(903)264-03-51');
-	    $ph = $phone_collection->Next;
+	    is($ph->phone, '+7(903)264-03-51');
+	    $ph = $phone_collection->next;
 	    isa_ok($ph, 'TestApp::Phone');
 	    is($ph->id, $p2_id, 'now has that phone');
-	    is($ph->Phone, '123456');
-	    is($phone_collection->Next, undef);
+	    is($ph->phone, '123456');
+	    is($phone_collection->next, undef);
 	}
 	
 	# Test Create with obj as argument
 	my $phone3 = TestApp::Phone->new($handle);
 	isa_ok( $phone3, 'TestApp::Phone');
-	my $p3_id = $phone3->Create( Employee => $emp, Phone => '7890');
+	my $p3_id = $phone3->create( employee => $emp, phone => '7890');
 	ok($p3_id, "Loaded phone $p3_id");
-	$phone3->Load( $p3_id );
+	$phone3->load( $p3_id );
 	
 	{
-	    $phone_collection->RedoSearch;
-	    my $ph = $phone_collection->Next;
+	    $phone_collection->redo_search;
+	    my $ph = $phone_collection->next;
 	    isa_ok($ph, 'TestApp::Phone');
 	    is($ph->id, $p_id, 'still has this phone');
-	    is($ph->Phone, '+7(903)264-03-51');
-	    $ph = $phone_collection->Next;
+	    is($ph->phone, '+7(903)264-03-51');
+	    $ph = $phone_collection->next;
 	    isa_ok($ph, 'TestApp::Phone');
 	    is($ph->id, $p2_id, 'still has that phone');
-	    is($ph->Phone, '123456');
-	    $ph = $phone_collection->Next;
+	    is($ph->phone, '123456');
+	    $ph = $phone_collection->next;
 	    isa_ok($ph, 'TestApp::Phone');
 	    is($ph->id, $p3_id, 'even has this other phone');
-	    is($ph->Phone, '7890');
-	    is($phone_collection->Next, undef);
+	    is($ph->phone, '7890');
+	    is($phone_collection->next, undef);
 	}
 	
 	
@@ -193,45 +193,45 @@ package TestApp;
 sub schema_sqlite {
 [
 q{
-CREATE TABLE Employees (
+CREATE TABLE employees (
 	id integer primary key,
-	Name varchar(36)
+	name varchar(36)
 )
 }, q{
-CREATE TABLE Phones (
+CREATE TABLE phones (
 	id integer primary key,
-	Employee integer NOT NULL,
-	Phone varchar(18)
+	employee integer NOT NULL,
+	phone varchar(18)
 ) }
 ]
 }
 
 sub schema_mysql {
 [ q{
-CREATE TEMPORARY TABLE Employees (
+CREATE TEMPORARY TABLE employees (
 	id integer AUTO_INCREMENT primary key,
-	Name varchar(36)
+	name varchar(36)
 )
 }, q{
-CREATE TEMPORARY TABLE Phones (
+CREATE TEMPORARY TABLE phones (
 	id integer AUTO_INCREMENT primary key,
-	Employee integer NOT NULL,
-	Phone varchar(18)
+	employee integer NOT NULL,
+	phone varchar(18)
 )
 } ]
 }
 
 sub schema_pg {
 [ q{
-CREATE TEMPORARY TABLE Employees (
+CREATE TEMPORARY TABLE employees (
 	id serial PRIMARY KEY,
-	Name varchar
+	name varchar
 )
 }, q{
-CREATE TEMPORARY TABLE Phones (
+CREATE TEMPORARY TABLE phones (
 	id serial PRIMARY KEY,
-	Employee integer references Employees(id),
-	Phone varchar
+	employee integer references employees(id),
+	phone varchar
 )
 } ]
 }
@@ -240,18 +240,18 @@ package TestApp::Employee;
 
 use base qw/Jifty::DBI::Record/;
 
-sub Table { 'Employees' }
+sub Table { 'employees' }
 
-sub Schema {
+sub schema {
     return {
-        Name => { TYPE => 'varchar' },
-        Phones => { REFERENCES => 'TestApp::PhoneCollection', KEY => 'Employee' }
+        name => { TYPE => 'varchar' },
+        phones => { REFERENCES => 'TestApp::PhoneCollection', KEY => 'employee' }
     };
 }
 
-sub _Value  {
+sub _value  {
   my $self = shift;
-  my $x =  ($self->__Value(@_));
+  my $x =  ($self->__value(@_));
   return $x;
 }
 
@@ -262,12 +262,12 @@ package TestApp::Phone;
 
 use base qw/Jifty::DBI::Record/;
 
-sub Table { 'Phones' }
+sub Table { 'phones' }
 
-sub Schema {
+sub schema {
     return {   
-        Employee => { REFERENCES => 'TestApp::Employee' },
-        Phone => { TYPE => 'varchar' }, 
+        employee => { REFERENCES => 'TestApp::Employee' },
+        phone => { TYPE => 'varchar' }, 
     }
 }
 
@@ -275,16 +275,16 @@ package TestApp::PhoneCollection;
 
 use base qw/Jifty::DBI::Collection/;
 
-sub Table {
+sub table {
     my $self = shift;
-    my $tab = $self->NewItem->Table();
+    my $tab = $self->new_item->table();
     return $tab;
 }
 
-sub NewItem {
+sub new_item {
     my $self = shift;
     my $class = 'TestApp::Phone';
-    return $class->new( $self->_Handle );
+    return $class->new( $self->_handle );
 
 }
 

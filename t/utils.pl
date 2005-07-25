@@ -4,13 +4,13 @@ use strict;
 
 =head1 VARIABLES
 
-=head2 @SupportedDrivers
+=head2 @supported_drivers
 
 Array of all supported DBD drivers.
 
 =cut
 
-our @SupportedDrivers = qw(
+our @supported_drivers = qw(
 	Informix
 	mysql
 	mysqlPP
@@ -21,14 +21,14 @@ our @SupportedDrivers = qw(
 	Sybase
 );
 
-=head2 @AvailableDrivers
+=head2 @available_drivers
 
 Array that lists only drivers from supported list
 that user has installed.
 
 =cut
 
-our @AvailableDrivers = grep { eval "require DBD::". $_ } @SupportedDrivers;
+our @available_drivers = grep { eval "require DBD::". $_ } @supported_drivers;
 
 =head1 FUNCTIONS
 
@@ -95,31 +95,31 @@ sub connect_handle_with_driver
 sub connect_sqlite
 {
 	my $handle = shift;
-	return $handle->Connect(
-		Driver => 'SQLite',
-		Database => File::Spec->catfile(File::Spec->tmpdir(), "sb-test.$$")
+	return $handle->connect(
+		driver => 'SQLite',
+		database => File::Spec->catfile(File::Spec->tmpdir(), "sb-test.$$")
 	);
 }
 
 sub connect_mysql
 {
 	my $handle = shift;
-	return $handle->Connect(
-		Driver => 'mysql',
-		Database => $ENV{'SB_TEST_MYSQL'},
-		User => $ENV{'SB_TEST_MYSQL_USER'} || 'root',
-		Password => $ENV{'SB_TEST_MYSQL_PASS'} || '',
+	return $handle->connect(
+		driver => 'mysql',
+		database => $ENV{'SB_TEST_MYSQL'},
+		user => $ENV{'SB_TEST_MYSQL_USER'} || 'root',
+		password => $ENV{'SB_TEST_MYSQL_PASS'} || '',
 	);
 }
 
 sub connect_pg
 {
 	my $handle = shift;
-	return $handle->Connect(
-		Driver => 'Pg',
-		Database => $ENV{'SB_TEST_PG'},
-		User => $ENV{'SB_TEST_PG_USER'} || 'postgres',
-		Password => $ENV{'SB_TEST_PG_PASS'} || '',
+	return $handle->connect(
+		driver => 'Pg',
+		database => $ENV{'SB_TEST_PG'},
+		user => $ENV{'SB_TEST_PG_USER'} || 'postgres',
+		password => $ENV{'SB_TEST_PG_PASS'} || '',
 	);
 }
 
@@ -169,7 +169,7 @@ sub init_schema
 	$schema = ref( $schema )? $schema : [$schema];
 	my $ret;
 	foreach my $query( @$schema ) {
-		$ret = $handle->SimpleQuery( $query );
+		$ret = $handle->simple_query( $query );
 		return $ret unless UNIVERSAL::isa( $ret, 'DBI::st' );
 	}
 	return $ret;
@@ -191,7 +191,7 @@ sub cleanup_schema
 	my $schema = $class->$call();
 	$schema = ref( $schema )? $schema : [$schema];
 	foreach my $query( @$schema ) {
-		eval { $handle->SimpleQuery( $query ) };
+		eval { $handle->simple_query( $query ) };
 	}
 }
 
@@ -211,7 +211,7 @@ sub init_data
 			$args{ $columns[$i] } = $values->[$i];
 		}
 		my $rec = $class->new( $handle );
-		my $id = $rec->Create( %args );
+		my $id = $rec->create( %args );
 		die "Couldn't create record" unless $id;
 		$count++;
 	}

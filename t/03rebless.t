@@ -8,14 +8,14 @@ use Test::More;
 use Jifty::DBI::Handle;
 
 BEGIN { require "t/utils.pl" }
-our (@AvailableDrivers);
+our (@available_drivers);
 
 use constant TESTS_PER_DRIVER => 4;
 
-my $total = scalar(@AvailableDrivers) * TESTS_PER_DRIVER;
+my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
 
-foreach my $d ( @AvailableDrivers ) {
+foreach my $d ( @available_drivers ) {
 SKIP: {
 	unless( should_test( $d ) ) {
 		skip "ENV is not defined for driver '$d'", TESTS_PER_DRIVER;

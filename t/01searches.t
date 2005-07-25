@@ -6,14 +6,14 @@ use warnings;
 use File::Spec;
 use Test::More;
 BEGIN { require "t/utils.pl" }
-our (@AvailableDrivers);
+our (@available_drivers);
 
 use constant TESTS_PER_DRIVER => 59;
 
-my $total = scalar(@AvailableDrivers) * TESTS_PER_DRIVER;
+my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
 
-foreach my $d ( @AvailableDrivers ) {
+foreach my $d ( @available_drivers ) {
 SKIP: {
 	unless( has_schema( 'TestApp', $d ) ) {
 		skip "No schema for '$d' driver", TESTS_PER_DRIVER;
@@ -34,40 +34,40 @@ SKIP: {
 
 	my $users_obj = TestApp::Users->new( $handle );
 	isa_ok( $users_obj, 'Jifty::DBI::Collection' );
-	is( $users_obj->_Handle, $handle, "same handle as we used in constructor");
+	is( $users_obj->_handle, $handle, "same handle as we used in constructor");
 
 # check that new object returns 0 records in any case
-	is( $users_obj->_RecordCount, 0, '_RecordCount returns 0 on not limited obj' );
-	is( $users_obj->Count, 0, 'Count returns 0 on not limited obj' );
-	is( $users_obj->IsLast, undef, 'IsLast returns undef on not limited obj after Count' );
-	is( $users_obj->First, undef, 'First returns undef on not limited obj' );
-	is( $users_obj->IsLast, undef, 'IsLast returns undef on not limited obj after First' );
-	is( $users_obj->Last, undef, 'Last returns undef on not limited obj' );
-	is( $users_obj->IsLast, undef, 'IsLast returns undef on not limited obj after Last' );
-	$users_obj->GotoFirstItem;
-	is( $users_obj->Next, undef, 'Next returns undef on not limited obj' );
-	is( $users_obj->IsLast, undef, 'IsLast returns undef on not limited obj after Next' );
+	is( $users_obj->_record_count, 0, '_record_count returns 0 on not limited obj' );
+	is( $users_obj->count, 0, 'count returns 0 on not limited obj' );
+	is( $users_obj->is_last, undef, 'is_last returns undef on not limited obj after count' );
+	is( $users_obj->first, undef, 'first returns undef on not limited obj' );
+	is( $users_obj->is_last, undef, 'is_last returns undef on not limited obj after First' );
+	is( $users_obj->last, undef, 'last returns undef on not limited obj' );
+	is( $users_obj->is_last, undef, 'is_last returns undef on not limited obj after Last' );
+	$users_obj->goto_first_item;
+	is( $users_obj->next, undef, 'next returns undef on not limited obj' );
+	is( $users_obj->is_last, undef, 'is_last returns undef on not limited obj after Next' );
 	# XXX TODO FIXME: may be this methods should be implemented
-	# $users_obj->GotoLastItem;
-	# is( $users_obj->Prev, undef, 'Prev returns undef on not limited obj' );
-	my $items_ref = $users_obj->ItemsArrayRef;
-	isa_ok( $items_ref, 'ARRAY', 'ItemsArrayRef always returns array reference' );
-	is_deeply( $items_ref, [], 'ItemsArrayRef returns [] on not limited obj' );
+	# $users_obj->goto_last_item;
+	# is( $users_obj->prev, undef, 'prev returns undef on not limited obj' );
+	my $items_ref = $users_obj->items_array_ref;
+	isa_ok( $items_ref, 'ARRAY', 'items_array_ref always returns array reference' );
+	is_deeply( $items_ref, [], 'items_array_ref returns [] on not limited obj' );
 
 # unlimit new object and check
-	$users_obj->UnLimit;
-	is( $users_obj->Count, $count_all, 'Count returns same number of records as was inserted' );
-	isa_ok( $users_obj->First, 'Jifty::DBI::Record', 'First returns record object' );
-	isa_ok( $users_obj->Last, 'Jifty::DBI::Record', 'Last returns record object' );
-	$users_obj->GotoFirstItem;
-	isa_ok( $users_obj->Next, 'Jifty::DBI::Record', 'Next returns record object' );
-	$items_ref = $users_obj->ItemsArrayRef;
-	isa_ok( $items_ref, 'ARRAY', 'ItemsArrayRef always returns array reference' );
-	is( scalar @{$items_ref}, $count_all, 'ItemsArrayRef returns same number of records as was inserted' );
-	$users_obj->RedoSearch;
-	$items_ref = $users_obj->ItemsArrayRef;
-	isa_ok( $items_ref, 'ARRAY', 'ItemsArrayRef always returns array reference' );
-	is( scalar @{$items_ref}, $count_all, 'ItemsArrayRef returns same number of records as was inserted' );
+	$users_obj->un_limit;
+	is( $users_obj->count, $count_all, 'count returns same number of records as was inserted' );
+	isa_ok( $users_obj->first, 'Jifty::DBI::Record', 'first returns record object' );
+	isa_ok( $users_obj->last, 'Jifty::DBI::Record', 'last returns record object' );
+	$users_obj->goto_first_item;
+	isa_ok( $users_obj->next, 'Jifty::DBI::Record', 'next returns record object' );
+	$items_ref = $users_obj->items_array_ref;
+	isa_ok( $items_ref, 'ARRAY', 'items_array_ref always returns array reference' );
+	is( scalar @{$items_ref}, $count_all, 'items_array_ref returns same number of records as was inserted' );
+	$users_obj->redo_search;
+	$items_ref = $users_obj->items_array_ref;
+	isa_ok( $items_ref, 'ARRAY', 'items_array_ref always returns array reference' );
+	is( scalar @{$items_ref}, $count_all, 'items_array_ref returns same number of records as was inserted' );
 
 # try to use $users_obj for all tests, after each call to CleanSlate it should look like new obj.
 # and test $obj->new syntax
@@ -75,86 +75,86 @@ SKIP: {
 	isa_ok( $clean_obj, 'Jifty::DBI::Collection' );
 
 # basic limits
-	$users_obj->CleanSlate;
-	is_deeply( $users_obj, $clean_obj, 'after CleanSlate looks like new object');
-	$users_obj->Limit( FIELD => 'Login', VALUE => 'obra' );
-	is( $users_obj->Count, 1, 'found one user with login obra' );
+	$users_obj->clean_slate;
+	is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
+	$users_obj->limit( FIELD => 'login', VALUE => 'obra' );
+	is( $users_obj->count, 1, 'found one user with login obra' );
 	TODO: {
 		local $TODO = 'require discussion';
-		is( $users_obj->IsLast, undef, 'IsLast returns undef before we fetch any record' );
+		is( $users_obj->is_last, undef, 'is_last returns undef before we fetch any record' );
 	}
-	my $first_rec = $users_obj->First;
+	my $first_rec = $users_obj->first;
 	isa_ok( $first_rec, 'Jifty::DBI::Record', 'First returns record object' );
-	is( $users_obj->IsLast, 1, '1 record in the collection then first rec is last');
-	is( $first_rec->Login, 'obra', 'login is correct' );
-	my $last_rec = $users_obj->Last;
-	is( $last_rec, $first_rec, 'Last returns same object as First' );
-	is( $users_obj->IsLast, 1, 'IsLast always returns 1 after Last call');
-	$users_obj->GotoFirstItem;
-	my $next_rec = $users_obj->Next;
-	is( $next_rec, $first_rec, 'Next returns same object as First' );
-	is( $users_obj->IsLast, 1, 'IsLast returns 1 after fetch first record with Next method');
-	is( $users_obj->Next, undef, 'only one record in the collection' );
+	is( $users_obj->is_last, 1, '1 record in the collection then first rec is last');
+	is( $first_rec->login, 'obra', 'login is correct' );
+	my $last_rec = $users_obj->last;
+	is( $last_rec, $first_rec, 'last returns same object as first' );
+	is( $users_obj->is_last, 1, 'is_last always returns 1 after last call');
+	$users_obj->goto_first_item;
+	my $next_rec = $users_obj->next;
+	is( $next_rec, $first_rec, 'next returns same object as first' );
+	is( $users_obj->is_last, 1, 'is_last returns 1 after fetch first record with next method');
+	is( $users_obj->next, undef, 'only one record in the collection' );
 	TODO: {
 		local $TODO = 'require discussion';
-		is( $users_obj->IsLast, undef, 'Next returns undef, IsLast returns undef too');
+		is( $users_obj->is_last, undef, 'next returns undef, is_last returns undef too');
 	}
-	$items_ref = $users_obj->ItemsArrayRef;
-	isa_ok( $items_ref, 'ARRAY', 'ItemsArrayRef always returns array reference' );
-	is( scalar @{$items_ref}, 1, 'ItemsArrayRef has only 1 record' );
+	$items_ref = $users_obj->items_array_ref;
+	isa_ok( $items_ref, 'ARRAY', 'items_array_ref always returns array reference' );
+	is( scalar @{$items_ref}, 1, 'items_array_ref has only 1 record' );
 
-# similar basic limit, but with different OPERATORS and less Firs/Next/Last tests
+# similar basic limit, but with different OPERATORS and less first/next/last tests
 	# LIKE
-	$users_obj->CleanSlate;
-	is_deeply( $users_obj, $clean_obj, 'after CleanSlate looks like new object');
-	$users_obj->Limit( FIELD => 'Name', OPERATOR => 'LIKE', VALUE => 'Glass' );
-	is( $users_obj->Count, 1, "found one user with 'Glass' in the name" );
-	$first_rec = $users_obj->First;
+	$users_obj->clean_slate;
+	is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
+	$users_obj->limit( FIELD => 'name', OPERATOR => 'LIKE', VALUE => 'Glass' );
+	is( $users_obj->count, 1, "found one user with 'Glass' in the name" );
+	$first_rec = $users_obj->first;
 	isa_ok( $first_rec, 'Jifty::DBI::Record', 'First returns record object' );
-	is( $first_rec->Login, 'glasser', 'login is correct' );
+	is( $first_rec->login, 'glasser', 'login is correct' );
 
 	# STARTSWITH
-	$users_obj->CleanSlate;
-	is_deeply( $users_obj, $clean_obj, 'after CleanSlate looks like new object');
-	$users_obj->Limit( FIELD => 'Name', OPERATOR => 'STARTSWITH', VALUE => 'Ruslan' );
-	is( $users_obj->Count, 1, "found one user who name starts with 'Ruslan'" );
-	$first_rec = $users_obj->First;
+	$users_obj->clean_slate;
+	is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
+	$users_obj->limit( FIELD => 'name', OPERATOR => 'STARTSWITH', VALUE => 'Ruslan' );
+	is( $users_obj->count, 1, "found one user who name starts with 'Ruslan'" );
+	$first_rec = $users_obj->first;
 	isa_ok( $first_rec, 'Jifty::DBI::Record', 'First returns record object' );
-	is( $first_rec->Login, 'cubic', 'login is correct' );
+	is( $first_rec->login, 'cubic', 'login is correct' );
 
 	# ENDSWITH
-	$users_obj->CleanSlate;
-	is_deeply( $users_obj, $clean_obj, 'after CleanSlate looks like new object');
-	$users_obj->Limit( FIELD => 'Name', OPERATOR => 'ENDSWITH', VALUE => 'Tang' );
-	is( $users_obj->Count, 1, "found one user who name ends with 'Tang'" );
-	$first_rec = $users_obj->First;
+	$users_obj->clean_slate;
+	is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
+	$users_obj->limit( FIELD => 'name', OPERATOR => 'ENDSWITH', VALUE => 'Tang' );
+	is( $users_obj->count, 1, "found one user who name ends with 'Tang'" );
+	$first_rec = $users_obj->first;
 	isa_ok( $first_rec, 'Jifty::DBI::Record', 'First returns record object' );
-	is( $first_rec->Login, 'autrijus', 'login is correct' );
+	is( $first_rec->login, 'autrijus', 'login is correct' );
 
 	# IS NULL
 	# XXX TODO FIXME: FIELD => undef should be handled as NULL
-	$users_obj->CleanSlate;
-	is_deeply( $users_obj, $clean_obj, 'after CleanSlate looks like new object');
-	$users_obj->Limit( FIELD => 'Phone', OPERATOR => 'IS', VALUE => 'NULL' );
-	is( $users_obj->Count, 2, "found 2 users who has unknown phone number" );
+	$users_obj->clean_slate;
+	is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
+	$users_obj->limit( FIELD => 'phone', OPERATOR => 'IS', VALUE => 'NULL' );
+	is( $users_obj->count, 2, "found 2 users who has unknown phone number" );
 	
 	# IS NOT NULL
-	$users_obj->CleanSlate;
-	is_deeply( $users_obj, $clean_obj, 'after CleanSlate looks like new object');
-	$users_obj->Limit( FIELD => 'Phone', OPERATOR => 'IS NOT', VALUE => 'NULL', QOUTEVALUE => 0 );
-	is( $users_obj->Count, $count_all - 2, "found users who has phone number filled" );
+	$users_obj->clean_slate;
+	is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
+	$users_obj->limit( FIELD => 'phone', OPERATOR => 'IS NOT', VALUE => 'NULL', QOUTEVALUE => 0 );
+	is( $users_obj->count, $count_all - 2, "found users who has phone number filled" );
 	
 	# ORDER BY / GROUP BY
-	$users_obj->CleanSlate;
-	is_deeply( $users_obj, $clean_obj, 'after CleanSlate looks like new object');
-	$users_obj->UnLimit;
-	$users_obj->GroupByCols({FIELD => 'Login'});
-	$users_obj->OrderBy(FIELD => 'Login', ORDER => 'desc');
-	$users_obj->Column(FIELD => 'Login');
-	is( $users_obj->Count, $count_all, "group by / order by finds right amount");
-	$first_rec = $users_obj->First;
+	$users_obj->clean_slate;
+	is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
+	$users_obj->un_limit;
+	$users_obj->group_by_cols({FIELD => 'login'});
+	$users_obj->order_by(FIELD => 'login', ORDER => 'desc');
+	$users_obj->column(FIELD => 'login');
+	is( $users_obj->count, $count_all, "group by / order by finds right amount");
+	$first_rec = $users_obj->first;
 	isa_ok( $first_rec, 'Jifty::DBI::Record', 'First returns record object' );
-	is( $first_rec->Login, 'obra', 'login is correct' );
+	is( $first_rec->login, 'obra', 'login is correct' );
 
 	cleanup_schema( 'TestApp', $handle );
 }} # SKIP, foreach blocks
@@ -165,11 +165,11 @@ package TestApp;
 
 sub schema_mysql {
 <<EOF;
-CREATE TEMPORARY TABLE Users (
+CREATE TEMPORARY TABLE users (
         id integer AUTO_INCREMENT,
-        Login varchar(18) NOT NULL,
-        Name varchar(36),
-	Phone varchar(18),
+        login varchar(18) NOT NULL,
+        name varchar(36),
+	phone varchar(18),
   	PRIMARY KEY (id))
 EOF
 
@@ -177,11 +177,11 @@ EOF
 
 sub schema_pg {
 <<EOF;
-CREATE TEMPORARY TABLE Users (
+CREATE TEMPORARY TABLE users (
         id serial PRIMARY KEY,
-        Login varchar(18) NOT NULL,
-        Name varchar(36),
-        Phone varchar(18)
+        login varchar(18) NOT NULL,
+        name varchar(36),
+        phone varchar(18)
 )
 EOF
 
@@ -190,11 +190,11 @@ EOF
 sub schema_sqlite {
 
 <<EOF;
-CREATE TABLE Users (
+CREATE TABLE users (
 	id integer primary key,
-	Login varchar(18) NOT NULL,
-	Name varchar(36),
-	Phone varchar(18))
+	login varchar(18) NOT NULL,
+	name varchar(36),
+	phone varchar(18))
 EOF
 
 }
@@ -206,29 +206,29 @@ package TestApp::User;
 
 use base qw/Jifty::DBI::Record/;
 
-sub _Init {
+sub _init {
     my $self = shift;
     my $handle = shift;
-    $self->Table('Users');
-    $self->_Handle($handle);
+    $self->table('users');
+    $self->_handle($handle);
 }
 
-sub _ClassAccessible {
+sub _class_accessible {
     {   
         id =>
         {read => 1, type => 'int(11)' }, 
-        Login =>
+        login =>
         {read => 1, write => 1, type => 'varchar(18)' },
-        Name =>
+        name =>
         {read => 1, write => 1, type => 'varchar(36)' },
-        Phone =>
+        phone =>
         {read => 1, write => 1, type => 'varchar(18)', default => ''},
     }
 }
 
 sub init_data {
     return (
-	[ 'Login',	'Name',			'Phone' ],
+	[ 'login',	'name',			'phone' ],
 	[ 'cubic',	'Ruslan U. Zakirov',	'+7-903-264-XX-XX' ],
 	[ 'obra',	'Jesse Vincent',	undef ],
 	[ 'glasser',	'David Glasser',	undef ],
@@ -243,16 +243,16 @@ package TestApp::Users;
 # use TestApp::User;
 use base qw/Jifty::DBI::Collection/;
 
-sub _Init {
+sub _init {
     my $self = shift;
-    $self->SUPER::_Init( Handle => shift );
-    $self->Table('Users');
+    $self->SUPER::_init( handle => shift );
+    $self->table('users');
 }
 
-sub NewItem
+sub new_item
 {
 	my $self = shift;
-	return TestApp::User->new( $self->_Handle );
+	return TestApp::User->new( $self->_handle );
 }
 
 1;

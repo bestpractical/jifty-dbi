@@ -7,14 +7,14 @@ use File::Spec;
 use Test::More;
 
 BEGIN { require "t/utils.pl" }
-our (@AvailableDrivers);
+our (@available_drivers);
 
 use constant TESTS_PER_DRIVER => 11;
 
-my $total = scalar(@AvailableDrivers) * TESTS_PER_DRIVER;
+my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
 
-foreach my $d ( @AvailableDrivers ) {
+foreach my $d ( @available_drivers ) {
 SKIP: {
 	unless( has_schema( 'TestApp', $d ) ) {
 		skip "No schema for '$d' driver", TESTS_PER_DRIVER;
@@ -31,23 +31,23 @@ SKIP: {
 	isa_ok($ret,'DBI::st', "Inserted the schema. got a statement handle back");
 
 	my $emp = TestApp::Employee->new($handle);
-	my $e_id = $emp->Create( Name => 'RUZ' );
+	my $e_id = $emp->create( Name => 'RUZ' );
 	ok($e_id, "Got an ide for the new emplyee");
 	my $phone = TestApp::Phone->new($handle);
-	isa_ok( $phone, 'TestApp::Phone', "it's atestapp::phone");
-	my $p_id = $phone->Create( Employee => $e_id, Phone => '+7(903)264-03-51');
+	isa_ok( $phone, 'TestApp::Phone', "it's a TestApp::Phone");
+	my $p_id = $phone->create( employee => $e_id, phone => '+7(903)264-03-51');
 	# XXX: test fails if next string is commented
 	is($p_id, 1, "Loaded record $p_id");
-	$phone->Load( $p_id );
+	$phone->load( $p_id );
 
-	my $obj = $phone->EmployeeObj($handle);
+	my $obj = $phone->employee_obj($handle);
 	ok($obj, "Employee #$e_id has phone #$p_id");
 	isa_ok( $obj, 'TestApp::Employee');
 	is($obj->id, $e_id);
-	is($obj->Name, 'RUZ');
+	is($obj->name, 'RUZ');
 
 	# tests for no object mapping
-	my ($state, $msg) = $phone->ValueObj($handle);
+	my ($state, $msg) = $phone->value_obj($handle);
 	ok(!$state, "State is false");
 	is( $msg, 'No object mapping for field', 'Error message is correct');
 
@@ -61,45 +61,45 @@ package TestApp;
 sub schema_sqlite {
 [
 q{
-CREATE TABLE Employees (
+CREATE TABLE employees (
 	id integer primary key,
-	Name varchar(36)
+	name varchar(36)
 )
 }, q{
-CREATE TABLE Phones (
+CREATE TABLE phones (
 	id integer primary key,
-	Employee integer NOT NULL,
-	Phone varchar(18)
+	employee integer NOT NULL,
+	phone varchar(18)
 ) }
 ]
 }
 
 sub schema_mysql {
 [ q{
-CREATE TEMPORARY TABLE Employees (
+CREATE TEMPORARY TABLE employees (
 	id integer AUTO_INCREMENT primary key,
-	Name varchar(36)
+	name varchar(36)
 )
 }, q{
-CREATE TEMPORARY TABLE Phones (
+CREATE TEMPORARY TABLE phones (
 	id integer AUTO_INCREMENT primary key,
-	Employee integer NOT NULL,
-	Phone varchar(18)
+	employee integer NOT NULL,
+	phone varchar(18)
 )
 } ]
 }
 
 sub schema_pg {
 [ q{
-CREATE TEMPORARY TABLE Employees (
+CREATE TEMPORARY TABLE employees (
 	id serial PRIMARY KEY,
-	Name varchar
+	name varchar
 )
 }, q{
-CREATE TEMPORARY TABLE Phones (
+CREATE TEMPORARY TABLE phones (
 	id serial PRIMARY KEY,
-	Employee integer references Employees(id),
-	Phone varchar
+	employee integer references employees(id),
+	phone varchar
 )
 } ]
 }
@@ -110,19 +110,19 @@ use base qw/Jifty::DBI::Record/;
 use vars qw/$VERSION/;
 $VERSION=0.01;
 
-sub _Init {
+sub _init {
     my $self = shift;
     my $handle = shift;
-    $self->Table('Employees');
-    $self->_Handle($handle);
+    $self->Table('employees');
+    $self->_handle($handle);
 }
 
-sub _ClassAccessible {
+sub _class_accessible {
     {   
         
         id =>
         {read => 1, type => 'int(11)'}, 
-        Name => 
+        name => 
         {read => 1, write => 1, type => 'varchar(18)'},
 
     }
@@ -137,21 +137,21 @@ $VERSION=0.01;
 
 use base qw/Jifty::DBI::Record/;
 
-sub _Init {
+sub _init {
     my $self = shift;
     my $handle = shift;
-    $self->Table('Phones');
-    $self->_Handle($handle);
+    $self->table('phones');
+    $self->_handle($handle);
 }
 
-sub _ClassAccessible {
+sub _class_accessible {
     {   
         
         id =>
         {read => 1, type => 'int(11)'}, 
-        Employee => 
+        employee => 
         {read => 1, write => 1, type => 'int(11)', object => 'TestApp::Employee' },
-        Value => 
+        value => 
         {read => 1, write => 1, type => 'varchar(18)'},
 
     }
