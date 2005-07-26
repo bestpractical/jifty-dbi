@@ -1,4 +1,3 @@
-#$Header/cvsroot/DBIx/DBIx-SearchBuilder/SearchBuilder/Record.pm,v 1.21 2001/02/28 21:36:27 jesse Exp $
 package Jifty::DBI::Record;
 
 use strict;
@@ -9,7 +8,7 @@ use Class::ReturnValue;
 
 =head1 NAME
 
-Jifty::DBI::Record - Superclass for records loaded by SearchBuilder
+Jifty::DBI::Record - Superclass for records loaded by Jifty::DBI::Collection
 
 =head1 SYNOPSIS
 
@@ -245,11 +244,12 @@ it to be more clear to define it.
   011: 
   012: $s->load_by_id(1); 
 
-load_by_id is one of four 'LoadBy' methods,  as the name suggests it searches
-for an row in the database that has id='0'.  ::SearchBuilder has, what I 
-think is a bug, in that it current requires there to be an id field. More 
-reasonably it also assumes that the id field is unique. load_by_id($id) will 
-do undefined things if there is >1 row with the same id.  
+load_by_id is one of four 'load_by_*' methods, as the name suggests it
+searches for an row in the database that has id='0'.  This causes,
+what I think is a bug, in that it current requires there to be an id
+field. More reasonably it also assumes that the id field is
+unique. load_by_id($id) will do undefined things if there is >1 row
+with the same id.
 
 In addition to load_by_id, we also have:
 
@@ -333,14 +333,7 @@ For simple use, thats more or less all there is to it.  In the future, I hope to
 this HowTo to discuss using container classes,  overloading, and what 
 ever else I think of.
 
-=head1 METHOD NAMING
- 
-Each method has a lower case alias; '_' is used to separate words.
-For example, the method C<_primary_keys> has the alias C<_primary_keys>.
-
 =head1 METHODS
-
-=cut
 
 =head2  new 
 
@@ -892,10 +885,11 @@ sub _validate {
 
 =head2 truncate_value  KEY VALUE
 
-Truncate a value that's about to be set so that it will fit inside the database'
-s idea of how big the column is. 
+Truncate a value that's about to be set so that it will fit inside the
+database' s idea of how big the column is.
 
-(Actually, it looks at SearchBuilder's concept of the database, not directly into the db).
+(Actually, it looks at L<Jifty::DBI>'s concept of the database, not
+directly into the db).
 
 =cut
 

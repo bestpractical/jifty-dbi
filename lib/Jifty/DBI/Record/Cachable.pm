@@ -1,6 +1,3 @@
-# $Header: /home/jesse/DBIx-SearchBuilder/history/SearchBuilder/Record/Cachable.pm,v 1.6 2001/06/19 04:22:32 jesse Exp $
-# by Matt Knopp <mhat@netlag.com>
-
 package Jifty::DBI::Record::Cachable;
 
 use Jifty::DBI::Record;
@@ -22,9 +19,12 @@ Jifty::DBI::Record::Cachable - Records with caching behavior
 
 =head1 DESCRIPTION
 
-This module subclasses the main Jifty::DBI::Record package to add a caching layer. 
+This module subclasses the main L<Jifty::DBI::Record> package to add a
+caching layer.
 
-The public interface remains the same, except that records which have been loaded in the last few seconds may be reused by subsequent fetch or load methods without retrieving them from the database.
+The public interface remains the same, except that records which have
+been loaded in the last few seconds may be reused by subsequent fetch
+or load methods without retrieving them from the database.
 
 =head1 METHODS
 
@@ -95,11 +95,6 @@ sub _record_cache {
 
 }
 
-# Function: LoadFromHash
-# Type    : (overloaded) public instance
-# Args    : See Jifty::DBI::Record::LoadFromHash
-# Lvalue  : array(boolean, message)
-
 sub load_from_hash {
     my $self = shift;
 
@@ -116,11 +111,6 @@ sub load_from_hash {
 
     return ( $rvalue, $msg );
 }
-
-# Function: LoadByCols
-# Type    : (overloaded) public instance
-# Args    : see Jifty::DBI::Record::LoadByCols
-# Lvalue  : array(boolean, message)
 
 sub load_by_cols {
     my ( $self, %attr ) = @_;
@@ -325,13 +315,15 @@ sub _lookup_primary_RecordCache_key {
 
 }
 
-=head2 _CacheConfig 
+=head2 _cache_config 
 
-You can override this method to change the duration of the caching from the default of 5 seconds. 
+You can override this method to change the duration of the caching
+from the default of 5 seconds.
 
-For example, to cache records for up to 30 seconds, add the following method to your class:
+For example, to cache records for up to 30 seconds, add the following
+method to your class:
 
-  sub _CacheConfig {
+  sub _cache_config {
       { 'cache_for_sec' => 30 }
   }
 

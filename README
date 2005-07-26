@@ -13,7 +13,7 @@ INSTALLATION
     # make install
 
 TESTING
-    In order to test most of the features of "Jifty::DBI::Collection", you need
+    In order to test most of the features of Jifty::DBI, you need
     to provide "make test" with a test database. For each DBI driver that
     you would like to test, set the environment variables "SB_TEST_FOO",
     "SB_TEST_FOO_USER", and "SB_TEST_FOO_PASS" to a database name, database

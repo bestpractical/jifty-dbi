@@ -40,7 +40,7 @@ SKIP: {
 	isa_ok($phone_collection, 'TestApp::PhoneCollection');
 	
 	{
-	    my $ph = $phone_collection->Next;
+	    my $ph = $phone_collection->next;
 	    is($ph, undef, "No phones yet");
 	}
 	

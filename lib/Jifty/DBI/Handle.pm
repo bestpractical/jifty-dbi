@@ -207,7 +207,7 @@ sub print_error {
 
 =head2 log_sql_statements BOOL
 
-Takes a boolean argument. If the boolean is true, SearchBuilder will log all SQL
+Takes a boolean argument. If the boolean is true, it will log all SQL
 statements, as well as their invocation times and execution times.
 
 Returns whether we're currently logging or not as a boolean
@@ -725,9 +725,9 @@ sub apply_limits {
 
 =head2 join { Paramhash }
 
-Takes a paramhash of everything Searchbuildler::Record does 
-plus a parameter called 'SearchBuilder' that contains a ref 
-to a SearchBuilder object'.
+Takes a paramhash of everything Searchbuildler::Record does plus a
+parameter called 'collection' that contains a ref to a
+L<Jifty::DBI::Collection> object'.
 
 This performs the join.
 
@@ -738,14 +738,14 @@ sub join {
 
     my $self = shift;
     my %args = (
-        SearchBuilder => undef,
-        TYPE          => 'normal',
-        FIELD1        => 'main',
-        ALIAS1        => undef,
-        TABLE2        => undef,
-        FIELD2        => undef,
-        ALIAS2        => undef,
-        EXPRESSION    => undef,
+        collection => undef,
+        TYPE       => 'normal',
+        FIELD1     => 'main',
+        ALIAS1     => undef,
+        TABLE2     => undef,
+        FIELD2     => undef,
+        ALIAS2     => undef,
+        EXPRESSION => undef,
         @_
     );
 
@@ -753,13 +753,15 @@ sub join {
 
     my $alias;
 
-#If we're handed in an ALIAS2, we need to go remove it from the Aliases array.
-# Basically, if anyone generates an alias and then tries to use it in a join later, we want to be smart about
-# creating joins, so we need to go rip it out of the old aliases table and drop it in as an explicit join
+#If we're handed in an ALIAS2, we need to go remove it from the
+# Aliases array.  Basically, if anyone generates an alias and then
+# tries to use it in a join later, we want to be smart about creating
+# joins, so we need to go rip it out of the old aliases table and drop
+# it in as an explicit join
     if ( $args{'ALIAS2'} ) {
 
         # this code is slow and wasteful, but it's clear.
-        my @aliases = @{ $args{'SearchBuilder'}->{'aliases'} };
+        my @aliases = @{ $args{'collection'}->{'aliases'} };
         my @new_aliases;
         foreach my $old_alias (@aliases) {
             if ( $old_alias =~ /^(.*?) ($args{'ALIAS2'})$/ ) {
@@ -783,7 +785,7 @@ sub join {
             $args{'ALIAS2'} = $a1;
             $args{'FIELD2'} = $f1;
 
-            @aliases     = @{ $args{'SearchBuilder'}->{'aliases'} };
+            @aliases     = @{ $args{'collection'}->{'aliases'} };
             @new_aliases = ();
             foreach my $old_alias (@aliases) {
                 if ( $old_alias =~ /^(.*?) ($args{'ALIAS2'})$/ ) {
@@ -802,11 +804,11 @@ sub join {
             return ( $self->_Normaljoin(%args) );
         }
 
-        $args{'SearchBuilder'}->{'aliases'} = \@new_aliases;
+        $args{'collection'}->{'aliases'} = \@new_aliases;
     }
 
     else {
-        $alias = $args{'SearchBuilder'}->_GetAlias( $args{'TABLE2'} );
+        $alias = $args{'collection'}->_GetAlias( $args{'TABLE2'} );
 
     }
 
@@ -829,12 +831,12 @@ sub join {
         $criterion = $args{'ALIAS1'} . "." . $args{'FIELD1'};
     }
 
-    $args{'SearchBuilder'}->{'left_joins'}{"$alias"}{'alias_string'}
+    $args{'collection'}->{'left_joins'}{"$alias"}{'alias_string'}
         = $string;
-    $args{'SearchBuilder'}->{'left_joins'}{"$alias"}{'depends_on'}
+    $args{'collection'}->{'left_joins'}{"$alias"}{'depends_on'}
         = $args{'ALIAS1'};
-    $args{'SearchBuilder'}->{'left_joins'}{"$alias"}{'criteria'}
-        { 'criterion' . $args{'SearchBuilder'}->{'criteria_count'}++ }
+    $args{'collection'}->{'left_joins'}{"$alias"}{'criteria'}
+        { 'criterion' . $args{'collection'}->{'criteria_count'}++ }
         = " $alias.$args{'FIELD2'} = $criterion";
 
     return ($alias);
@@ -844,17 +846,17 @@ sub _Normaljoin {
 
     my $self = shift;
     my %args = (
-        SearchBuilder => undef,
-        TYPE          => 'normal',
-        FIELD1        => undef,
-        ALIAS1        => undef,
-        TABLE2        => undef,
-        FIELD2        => undef,
-        ALIAS2        => undef,
+        collection => undef,
+        TYPE       => 'normal',
+        FIELD1     => undef,
+        ALIAS1     => undef,
+        TABLE2     => undef,
+        FIELD2     => undef,
+        ALIAS2     => undef,
         @_
     );
 
-    my $sb = $args{'SearchBuilder'};
+    my $sb = $args{'collection'};
 
     if ( $args{'TYPE'} =~ /LEFT/i ) {
         my $alias = $sb->_GetAlias( $args{'TABLE2'} );
@@ -967,7 +969,7 @@ Currently prints that message to STDERR
 
 =cut
 
-sub Log {
+sub log {
     my $self = shift;
     my $msg  = shift;
     warn $msg . "\n";
@@ -976,7 +978,8 @@ sub Log {
 
 =head2 DESTROY
 
-When we get rid of the Searchbuilder::Handle, we need to disconnect from the database
+When we get rid of the L<Jifty::DBI::Handle>, we need to disconnect
+from the database
 
 =cut
 

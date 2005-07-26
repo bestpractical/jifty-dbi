@@ -41,12 +41,12 @@ SKIP: {
 	is( $users_obj->count, 0, 'count returns 0 on not limited obj' );
 	is( $users_obj->is_last, undef, 'is_last returns undef on not limited obj after count' );
 	is( $users_obj->first, undef, 'first returns undef on not limited obj' );
-	is( $users_obj->is_last, undef, 'is_last returns undef on not limited obj after First' );
+	is( $users_obj->is_last, undef, 'is_last returns undef on not limited obj after first' );
 	is( $users_obj->last, undef, 'last returns undef on not limited obj' );
-	is( $users_obj->is_last, undef, 'is_last returns undef on not limited obj after Last' );
+	is( $users_obj->is_last, undef, 'is_last returns undef on not limited obj after last' );
 	$users_obj->goto_first_item;
 	is( $users_obj->next, undef, 'next returns undef on not limited obj' );
-	is( $users_obj->is_last, undef, 'is_last returns undef on not limited obj after Next' );
+	is( $users_obj->is_last, undef, 'is_last returns undef on not limited obj after next' );
 	# XXX TODO FIXME: may be this methods should be implemented
 	# $users_obj->goto_last_item;
 	# is( $users_obj->prev, undef, 'prev returns undef on not limited obj' );

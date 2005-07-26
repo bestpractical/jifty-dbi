@@ -1,13 +1,15 @@
 Revision history for Perl extension Jifty::DBI.
 
+==> Forked into Jifty::DBI
+
 *  Removed {{{ and  }}} fold markers. Patch from Ruslan
 
 1.30_03 Thu Jun  9 01:35:49 EDT 2005
 * Significant new tests from Ruslan Zakirov and Dave Glasser
 
-* You no longer need to explicitly bless a Jifty::DBI::Handle subclass 
+* You no longer need to explicitly bless a DBIx::SearchBuilder::Handle subclass 
   
-* Start of a major overhaul of the subclass API for Jifty::DBI::Record objects.
+* Start of a major overhaul of the subclass API for DBIx::SearchBuilder::Record objects.
   A new "schema" method will define the data in _ClassAccessible and also generate database
   schema using DBIx::DBSchema. 
 
@@ -126,9 +128,9 @@ Fixes from Ruslan:
       into the database.
     - Started adding lowercase method name aliases
     - Minor refactoring of 'id' method for a stupid, tiny perf improvement
-    - Refactoring of Jifty::DBI::Record::Cachable for performance
+    - Refactoring of DBIx::SearchBuilder::Record::Cachable for performance
       improvement
-    - Added a FlushCache method to Jifty::DBI::Record::Cachable.
+    - Added a FlushCache method to DBIx::SearchBuilder::Record::Cachable.
     - Started to flesh out a...test suite
     - SearchBuilder now truncates strings before inserting them into character
       types in the database as mysql generally does. Additionally, it truncates
@@ -157,7 +159,7 @@ Fixes from Ruslan:
 
 1.10_05
 
-    -   Reworked the _Accessible mechanism in Jifty::DBI::Record to
+    -   Reworked the _Accessible mechanism in DBIx::SearchBuilder::Record to
         remove a horribly crufty old caching mechanism that created a copy
         of the accessible hash for each and every object instantiated,
         sometimes quite slowly.
@@ -183,7 +185,7 @@ Stack:
 1.10_02 Thu Aug 26 13:31:13 EDT 2004
 
 1.10_01 Thu Aug 26 00:08:31 EDT 2004
-        - Reimplemented Jifty::DBI:::Record::Cachable
+        - Reimplemented DBIx::SearchBuilder:::Record::Cachable
           to use Cache::Simple::TimedExpiry. This should make it faster and more
           memory efficient.
 
@@ -343,7 +345,7 @@ Stack:
         - No longer attempt to cache (and fail) objects that haven't been database-loaded
 
 0.76 Dec 30 2002
-        - Extra checking for cache misses in Jifty::DBI::Record::Cachable
+        - Extra checking for cache misses in DBIx::SearchBuilder::Record::Cachable
         - The start of support for checking database version, so that we can do
           version-specific SQL
         - A patch from Autrijus Tang that allows utf-8 safe searching
@@ -382,7 +384,7 @@ Stack:
 
 
 0.30  Fri May 11 14:59:17 EDT 2001
-        - Added Jifty::DBI::Record::Cachable from <mhat@netlag.com>
+        - Added DBIx::SearchBuilder::Record::Cachable from <mhat@netlag.com>
         - Changed SearchBuilder->Count to do the right thing if no
           query has been performed
         - No longer specify a sort order if no sort order was specified ;)

@@ -1,5 +1,3 @@
-# $Header: /home/jesse/DBIx-SearchBuilder/history/SearchBuilder/Handle/ODBC.pm,v 1.8 2001/10/12 05:27:05 jesse Exp $
-
 package Jifty::DBI::Handle::ODBC;
 use Jifty::DBI::Handle;
 @ISA = qw(Jifty::DBI::Handle);
@@ -16,7 +14,7 @@ use strict;
 
 =head1 DESCRIPTION
 
-This module provides a subclass of Jifty::DBI::Handle that 
+This module provides a subclass of L<Jifty::DBI::Handle> that
 compensates for some of the idiosyncrasies of ODBC.
 
 =head1 METHODS
@@ -96,6 +94,6 @@ Autrijus Tang
 
 =head1 SEE ALSO
 
-Jifty::DBI, Jifty::DBI::Handle
+L<Jifty::DBI>, L<Jifty::DBI::Handle>, L<DBD::ODBC>
 
 =cut

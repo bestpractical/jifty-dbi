@@ -32,7 +32,7 @@ SKIP: {
 	my $rec = TestApp::Address->new($handle);
 	isa_ok($rec, 'Jifty::DBI::Record');
 
-# _Accessible testings
+# _accessible testings
 	is( $rec->_accessible('id' => 'read'), 1, 'id is accessible for read' );
 	is( $rec->_accessible('id' => 'write'), undef, 'id is not accessible for write' );
 	is( $rec->_accessible('id'), undef, "any field is not accessible in undefined mode" );
@@ -107,20 +107,20 @@ SKIP: {
 	is($newrec->name, '12345678901234', "Truncated on create");
 	is($newrec->employee_id, '1234567890', "Did not truncate id on create");
 
-# no prefetch feature and _LoadFromSQL sub checks
+# no prefetch feature and _load_from_sql sub checks
 	$newrec = TestApp::Address->new($handle);
 	($val, $msg) = $newrec->_load_from_sql('SELECT id FROM address WHERE id = ?', $newid);
 	is($val, 1, 'found object');
 	is($newrec->name, '12345678901234', "autoloaded not prefetched field");
 	is($newrec->employee_id, '1234567890', "autoloaded not prefetched field");
 
-# _LoadFromSQL and missing PK
+# _load_from_sql and missing PK
 	$newrec = TestApp::Address->new($handle);
 	($val, $msg) = $newrec->_load_from_sql('SELECT name FROM address WHERE name = ?', '12345678901234');
 	is($val, 0, "didn't find object");
 	is($msg, "Missing a primary key?", "reason is missing PK");
 
-# _LoadFromSQL and not existant row
+# _load_from_sql and not existant row
 	$newrec = TestApp::Address->new($handle);
 	($val, $msg) = $newrec->_load_from_sql('SELECT id FROM address WHERE id = ?', 0);
 	is($val, 0, "didn't find object");
@@ -135,7 +135,7 @@ SKIP: {
 	is($val, 0, "didn't find object");
 	is($msg, "Couldn't execute query", "reason is bad SQL");
 
-# test Load* methods
+# test load_* methods
 	$newrec = TestApp::Address->new($handle);
 	$newrec->load();
 	is( $newrec->id, undef, "can't load record with undef id");
@@ -144,13 +144,13 @@ SKIP: {
 	$newrec->load_by_col( name => '12345678901234' );
 	is( $newrec->id, $newid, "load record by 'name' column value");
 
-# LoadByCol with operator
+# load_by_col with operator
 	$newrec = TestApp::Address->new($handle);
 	$newrec->load_by_col( name => { value => '%45678%',
 				      operator => 'LIKE' } );
 	is( $newrec->id, $newid, "load record by 'name' with LIKE");
 
-# LoadByPrimaryKeys
+# load_by_primary_keys
 	$newrec = TestApp::Address->new($handle);
 	($val, $msg) = $newrec->load_by_primary_keys( id => $newid );
 	ok( $val, "load record by PK");
@@ -164,7 +164,7 @@ SKIP: {
 	ok( !$val, "couldn't load, missing PK field");
 	is( $msg, "Missing PK field: 'id'", "right error message" );
 
-# LoadByCols and empty or NULL values
+# load_by_cols and empty or NULL values
 	$rec = TestApp::Address->new($handle);
 	$id = $rec->create( name => 'Obra', phone => undef );
 	ok( $id, "new record");
@@ -172,7 +172,7 @@ SKIP: {
 	$rec->load_by_cols( name => 'Obra', phone => undef, employee_id => '' );
     is( $rec->id, $id, "loaded record by empty value" );
 
-# __Set error paths
+# __set error paths
 	$rec = TestApp::Address->new($handle);
 	$rec->load( $id );
 	$val = $rec->set_name( 'Obra' );

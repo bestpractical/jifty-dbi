@@ -1,5 +1,3 @@
-# $Header: /home/jesse/DBIx-SearchBuilder/history/SearchBuilder/Handle/mysql.pm,v 1.8 2001/10/12 05:27:05 jesse Exp $
-
 package Jifty::DBI::Handle::mysql;
 use Jifty::DBI::Handle;
 @ISA = qw(Jifty::DBI::Handle);
@@ -16,7 +14,7 @@ use strict;
 
 =head1 DESCRIPTION
 
-This module provides a subclass of Jifty::DBI::Handle that 
+This module provides a subclass of L<Jifty::DBI::Handle> that
 compensates for some of the idiosyncrasies of MySQL.
 
 =head1 METHODS
@@ -25,10 +23,11 @@ compensates for some of the idiosyncrasies of MySQL.
 
 =head2 insert
 
-Takes a table name as the first argument and assumes that the rest of the arguments are an array of key-value pairs to be inserted.
+Takes a table name as the first argument and assumes that the rest of
+the arguments are an array of key-value pairs to be inserted.
 
-If the insert succeeds, returns the id of the insert, otherwise, returns
-a Class::ReturnValue object with the error reported.
+If the insert succeeds, returns the id of the insert, otherwise,
+returns a L<Class::ReturnValue> object with the error reported.
 
 =cut
 
@@ -86,7 +85,7 @@ Jesse Vincent, jesse@fsck.com
 
 =head1 SEE ALSO
 
-Jifty::DBI, Jifty::DBI::Handle
+L<Jifty::DBI>, L<Jifty::DBI::Handle>, L<DBD::mysql>
 
 =cut
 

@@ -14,7 +14,8 @@ our $VERSION = '0';
 
 =head1 NAME
 
-Jifty::DBI::Union - Deal with multiple SearchBuilder result sets as one
+Jifty::DBI::Union - Deal with multiple L<Jifty::DBI::Collection>
+result sets as one
 
 =head1 SYNOPSIS
 
@@ -34,7 +35,7 @@ This module is still experimental.
 
 =head1 DESCRIPTION
 
-Implements a subset of the Jifty::DBI collection methods, but
+Implements a subset of the L<Jifty::DBI::Collection> methods, but
 enough to do iteration over a bunch of results.  Useful for displaying
 the results of two unrelated searches (for the same kind of objects)
 in a single list.
@@ -43,7 +44,7 @@ in a single list.
 
 =head2 new
 
-Create a new Jifty::DBI::Union object.  No arguments.
+Create a new L<Jifty::DBI::Union> object.  No arguments.
 
 =cut
 
@@ -57,9 +58,10 @@ sub new {
         shift;
 }
 
-=head2 add $sb
+=head2 add COLLECTION
 
-Add a searchbuilder result (collection) to the Union object.
+Add L<Jifty::DBI::Collection> object I<COLLECTION> to the Union
+object.
 
 It must be the same type as the first object added.
 
@@ -81,7 +83,7 @@ sub add {
     push @{ $self->{data} }, $newobj;
 }
 
-=head2 First
+=head2 first
 
 Return the very first element of the Union (which is the first element
 of the first Collection).  Also reset the current pointer to that
@@ -89,7 +91,7 @@ element.
 
 =cut
 
-sub First {
+sub first {
     my $self = shift;
 
     die "No elements in Jifty::DBI::Union"
@@ -100,77 +102,77 @@ sub First {
     $self->{data}[0]->First;
 }
 
-=head2 Next
+=head2 next
 
 Return the next element in the Union.
 
 =cut
 
-sub Next {
+sub next {
     my $self = shift;
 
     return undef unless defined $self->{data}[ $self->{curp} ];
 
     my $cur = $self->{data}[ $self->{curp} ];
-    if ( $cur->_ItemsCounter == $cur->Count ) {
+    if ( $cur->_items_counter == $cur->count ) {
 
         # move to the next element
         $self->{curp}++;
         return undef unless defined $self->{data}[ $self->{curp} ];
         $cur = $self->{data}[ $self->{curp} ];
-        $self->{data}[ $self->{curp} ]->GotoFirstItem;
+        $self->{data}[ $self->{curp} ]->goto_first_item;
     }
     $self->{item}++;
-    $cur->Next;
+    $cur->next;
 }
 
-=head2 Last
+=head2 last
 
 Returns the last item
 
 =cut
 
-sub Last {
+sub last {
     die "Last doesn't work right now";
     my $self = shift;
-    $self->GotoItem( ( $self->Count ) - 1 );
-    return ( $self->Next );
+    $self->goto_item( ( $self->count ) - 1 );
+    return ( $self->next );
 }
 
-=head2 Count
+=head2 count
 
 Returns the total number of elements in the Union'ed Collection
 
 =cut
 
-sub Count {
+sub count {
     my $self = shift;
     my $sum  = 0;
 
     # cache the results
     return $self->{count} if defined $self->{count};
 
-    $sum += $_->Count for ( @{ $self->{data} } );
+    $sum += $_->count for ( @{ $self->{data} } );
 
     $self->{count} = $sum;
 
     return $sum;
 }
 
-=head2 GotoFirstItem
+=head2 goto_first_item
 
 Starts the recordset counter over from the first item. the next time
-you call Next, you'll get the first item returned by the database, as
-if you'd just started iterating through the result set.
+you call L</next>, you'll get the first item returned by the database,
+as if you'd just started iterating through the result set.
 
 =cut
 
-sub GotoFirstItem {
+sub goto_first_item {
     my $self = shift;
-    $self->GotoItem(0);
+    $self->goto_item(0);
 }
 
-sub GotoItem {
+sub goto_item {
     my $self = shift;
     my $item = shift;
 
@@ -179,24 +181,24 @@ sub GotoItem {
 
     $self->{curp} = 0;
     $self->{item} = 0;
-    $self->{data}[0]->GotoItem(0);
+    $self->{data}[0]->goto_item(0);
 
     return $item;
 }
 
-=head2 IsLast
+=head2 is_last
 
 Returns true if the current row is the last record in the set.
 
 =cut
 
-sub IsLast {
+sub is_last {
     my $self = shift;
 
-    $self->{item} == $self->Count ? 1 : undef;
+    $self->{item} == $self->count ? 1 : undef;
 }
 
-=head2 ItemsArrayRef
+=head2 items_array_ref
 
 Return a refernece to an array containing all objects found by this search.
 
@@ -204,14 +206,14 @@ Will destroy any positional state.
 
 =cut
 
-sub ItemsArrayRef {
+sub items_array_ref {
     my $self = shift;
 
-    return [] unless $self->Count;
+    return [] unless $self->count;
 
-    $self->GotoFirstItem();
+    $self->goto_first_item();
     my @ret;
-    while ( my $r = $self->Next ) {
+    while ( my $r = $self->next ) {
         push @ret, $r;
     }
 
@@ -229,7 +231,7 @@ and/or modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-Jifty::DBI
+L<Jifty::DBI>, L<Jifty::DBI::Collection>
 
 =cut
 

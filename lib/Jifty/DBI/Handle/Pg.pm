@@ -1,6 +1,3 @@
-#$Header: /home/jesse/DBIx-SearchBuilder/history/SearchBuilder/Handle/Pg.pm,v 1.8 2001/07/27 05:23:29 jesse Exp $
-# Copyright 1999-2001 Jesse Vincent <jesse@fsck.com>
-
 package Jifty::DBI::Handle::Pg;
 use strict;
 
@@ -19,7 +16,7 @@ use strict;
 
 =head1 DESCRIPTION
 
-This module provides a subclass of Jifty::DBI::Handle that 
+This module provides a subclass of L<Jifty::DBI::Handle> that
 compensates for some of the idiosyncrasies of Postgres.
 
 =head1 METHODS
@@ -28,9 +25,8 @@ compensates for some of the idiosyncrasies of Postgres.
 
 =head2 connect
 
-connect takes a hashref and passes it off to SUPER::connect;
-Forces the timezone to GMT
-it returns a database handle.
+connect takes a hashref and passes it off to SUPER::connect; Forces
+the timezone to GMT, returns a database handle.
 
 =cut
 
@@ -46,11 +42,11 @@ sub connect {
 
 =head2 insert
 
-Takes a table name as the first argument and assumes that the rest of the arguments
-are an array of key-value pairs to be inserted.
+Takes a table name as the first argument and assumes that the rest of
+the arguments are an array of key-value pairs to be inserted.
 
-In case of isnert failure, returns a Class::ReturnValue object preloaded
-with error info
+In case of isnert failure, returns a L<Class::ReturnValue> object
+preloaded with error info
 
 =cut
 
@@ -81,7 +77,8 @@ sub insert {
 
 =head2 binary_safe_blobs
 
-Return undef, as no current version of postgres supports binary-safe blobs
+Return undef, as no current version of postgres supports binary-safe
+blobs
 
 =cut
 
@@ -92,8 +89,8 @@ sub binary_safe_blobs {
 
 =head2 apply_limits STATEMENTREF ROWS_PER_PAGE FIRST_ROW
 
-takes an SQL SELECT statement and massages it to return ROWS_PER_PAGE starting with FIRST_ROW;
-
+takes an SQL SELECT statement and massages it to return ROWS_PER_PAGE
+starting with FIRST_ROW;
 
 =cut
 
@@ -166,7 +163,7 @@ __END__
 
 =head1 SEE ALSO
 
-Jifty::DBI, Jifty::DBI::Handle
+L<Jifty::DBI>, L<Jifty::DBI::Handle>, L<DBD::Pg>
 
 =cut
 

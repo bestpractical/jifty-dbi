@@ -1,7 +1,3 @@
-# $Header: /home/jesse/DBIx-SearchBuilder/history/SearchBuilder/Handle/Oracle.pm,v 1.14 2002/01/28 06:11:37 jesse Exp $
-
-use strict;
-
 package Jifty::DBI::Handle::Oracle;
 use base qw/Jifty::DBI::Handle/;
 use DBD::Oracle qw(:ora_types);
@@ -14,15 +10,12 @@ use vars qw($VERSION $DBIHandle $DEBUG);
 
 =head1 SYNOPSIS
 
-
 =head1 DESCRIPTION
 
-This module provides a subclass of Jifty::DBI::Handle that 
+This module provides a subclass of L<Jifty::DBI::Handle> that
 compensates for some of the idiosyncrasies of Oracle.
 
 =head1 METHODS
-
-=cut
 
 =head2 connect PARAMHASH: Driver, Database, Host, User, Password
 
@@ -56,8 +49,8 @@ sub connect {
 
 =head2 insert
 
-Takes a table name as the first argument and assumes that the rest of the arguments
-are an array of key-value pairs to be inserted.
+Takes a table name as the first argument and assumes that the rest of
+the arguments are an array of key-value pairs to be inserted.
 
 =cut
 
@@ -161,8 +154,9 @@ sub build_dsn {
 
 =head2 knows_blobs     
 
-Returns 1 if the current database supports inserts of BLOBs automatically.      
-Returns undef if the current database must be informed of BLOBs for inserts.    
+Returns 1 if the current database supports inserts of BLOBs
+automatically.  Returns undef if the current database must be informed
+of BLOBs for inserts.
 
 =cut
 
@@ -173,9 +167,9 @@ sub knows_blobs {
 
 =head2 blob_params FIELD_NAME FIELD_TYPE
 
-Returns a hash ref for the bind_param call to identify BLOB types used by 
-the current database for a particular column type.
-The current Oracle implementation only supports ORA_CLOB types (112).
+Returns a hash ref for the bind_param call to identify BLOB types used
+by the current database for a particular column type.  The current
+Oracle implementation only supports ORA_CLOB types (112).
 
 =cut
 
@@ -194,8 +188,8 @@ sub blob_params {
 
 =head2 apply_limits STATEMENTREF ROWS_PER_PAGE FIRST_ROW
 
-takes an SQL SELECT statement and massages it to return ROWS_PER_PAGE starting with FIRST_ROW;
-
+takes an SQL SELECT statement and massages it to return ROWS_PER_PAGE
+starting with FIRST_ROW;
 
 =cut
 
@@ -244,8 +238,8 @@ sub apply_limits {
 
 =head2 distinct_query STATEMENTREF
 
-takes an incomplete SQL SELECT statement and massages it to return a DISTINCT result set.
-
+takes an incomplete SQL SELECT statement and massages it to return a
+DISTINCT result set.
 
 =cut
 
@@ -265,7 +259,6 @@ sub distinct_query {
 
 Return undef, as Oracle doesn't support binary-safe CLOBS
 
-
 =cut
 
 sub binary_safe_blobs {
@@ -283,6 +276,6 @@ Jesse Vincent, jesse@fsck.com
 
 =head1 SEE ALSO
 
-perl(1), Jifty::DBI
+L<Jifty::DBI>, L<Jifty::DBI::Handle>, L<DBD::Oracle>
 
 =cut
