@@ -23,7 +23,6 @@ compensates for some of the idiosyncrasies of Sybase.
 
 =cut
 
-
 =head2 insert
 
 Takes a table name as the first argument and assumes that the rest of the arguments
@@ -35,7 +34,7 @@ a Class::ReturnValue object with the error reported.
 =cut
 
 sub insert {
-    my $self  = shift;
+    my $self = shift;
 
     my $table = shift;
     my %pairs = @_;
@@ -43,9 +42,9 @@ sub insert {
     if ( !$sth ) {
         return ($sth);
     }
-    
+
     # Can't select identity column if we're inserting the id by hand.
-    unless ($pairs{'id'}) {
+    unless ( $pairs{'id'} ) {
         my @row = $self->fetch_result('SELECT @@identity');
 
         # TODO: Propagate Class::ReturnValue up here.
@@ -57,10 +56,6 @@ sub insert {
     return ( $self->{'id'} );
 }
 
-
-
-
-
 =head2 database_version
 
 return the database version, trimming off any -foo identifier
@@ -69,10 +64,10 @@ return the database version, trimming off any -foo identifier
 
 sub database_version {
     my $self = shift;
-    my $v = $self->SUPER::database_version();
+    my $v    = $self->SUPER::database_version();
 
-   $v =~ s/\-(.*)$//;
-   return ($v);
+    $v =~ s/\-(.*)$//;
+    return ($v);
 
 }
 
@@ -84,20 +79,16 @@ Returns undef, since Sybase's searches are not case sensitive by default
 
 sub case_sensitive {
     my $self = shift;
-    return(1);
+    return (1);
 }
-
-
-
 
 sub apply_limits {
-    my $self = shift;
+    my $self         = shift;
     my $statementref = shift;
-    my $per_page = shift;
-    my $first = shift;
+    my $per_page     = shift;
+    my $first        = shift;
 
 }
-
 
 =head2 distinct_query STATEMENTREFtakes an incomplete SQL SELECT statement and massages it to return a DISTINCT result set.
 
@@ -105,16 +96,16 @@ sub apply_limits {
 =cut
 
 sub distinct_query {
-    my $self = shift;
+    my $self         = shift;
     my $statementref = shift;
-    my $table = shift;
+    my $table        = shift;
 
     # Wrapper select query in a subselect as Oracle doesn't allow
     # DISTINCT against CLOB/BLOB column types.
-    $$statementref = "SELECT main.* FROM ( SELECT DISTINCT main.id FROM $$statementref ) distinctquery, $table main WHERE (main.id = distinctquery.id) ";
+    $$statementref
+        = "SELECT main.* FROM ( SELECT DISTINCT main.id FROM $$statementref ) distinctquery, $table main WHERE (main.id = distinctquery.id) ";
 
 }
-
 
 =head2 binary_safe_blobs
 
@@ -125,10 +116,8 @@ Return undef, as Oracle doesn't support binary-safe CLOBS
 
 sub binary_safe_blobs {
     my $self = shift;
-    return(undef);
+    return (undef);
 }
-
-
 
 1;
 

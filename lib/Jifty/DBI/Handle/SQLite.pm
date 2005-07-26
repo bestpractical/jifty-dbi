@@ -22,7 +22,6 @@ compensates for some of the idiosyncrasies of SQLite.
 
 =cut
 
-
 =head2 insert
 
 Takes a table name as the first argument and assumes that the rest of the arguments
@@ -33,23 +32,22 @@ a Class::ReturnValue object with the error reported.
 
 =cut
 
-sub insert  {
-    my $self = shift;
+sub insert {
+    my $self  = shift;
     my $table = shift;
-    my %args = ( id => undef, @_);
+    my %args  = ( id => undef, @_ );
+
     # We really don't want an empty id
-    
-    my $sth = $self->SUPER::insert($table, %args);
+
+    my $sth = $self->SUPER::insert( $table, %args );
     return unless $sth;
 
-    # If we have set an id, then we want to use that, otherwise, we want to lookup the last _new_ rowid
-    $self->{'id'}= $args{'id'} || $self->dbh->func('last_insert_rowid');
+# If we have set an id, then we want to use that, otherwise, we want to lookup the last _new_ rowid
+    $self->{'id'} = $args{'id'} || $self->dbh->func('last_insert_rowid');
 
-    warn "$self no row id returned on row creation" unless ($self->{'id'});
-    return( $self->{'id'}); #Add Succeded. return the id
-  }
-
-
+    warn "$self no row id returned on row creation" unless ( $self->{'id'} );
+    return ( $self->{'id'} );    #Add Succeded. return the id
+}
 
 =head2 case_sensitive 
 
@@ -59,13 +57,12 @@ Returns undef, since SQLite's searches are not case sensitive by default
 
 sub case_sensitive {
     my $self = shift;
-    return(1);
+    return (1);
 }
 
-sub binary_safe_blobs { 
+sub binary_safe_blobs {
     return undef;
 }
-
 
 =head2 distinct_count STATEMENTREF
 
@@ -75,16 +72,15 @@ takes an incomplete SQL SELECT statement and massages it to return a DISTINCT re
 =cut
 
 sub distinct_count {
-    my $self = shift;
+    my $self         = shift;
     my $statementref = shift;
 
     # Wrapper select query in a subselect as Oracle doesn't allow
     # DISTINCT against CLOB/BLOB column types.
-    $$statementref = "SELECT count(*) FROM (SELECT DISTINCT main.id FROM $$statementref )";
+    $$statementref
+        = "SELECT count(*) FROM (SELECT DISTINCT main.id FROM $$statementref )";
 
 }
-
-
 
 =head2 _build_joins
 
@@ -92,8 +88,8 @@ Adjusts syntax of join queries for SQLite.
 
 =cut
 
-#SQLite can't handle 
-# SELECT DISTINCT main.*     FROM (Groups main          LEFT JOIN Principals Principals_2  ON ( main.id = Principals_2.id)) ,     GroupMembers GroupMembers_1      WHERE ((GroupMembers_1.MemberId = '70'))     AND ((Principals_2.Disabled = '0'))     AND ((main.Domain = 'UserDefined'))     AND ((main.id = GroupMembers_1.GroupId)) 
+#SQLite can't handle
+# SELECT DISTINCT main.*     FROM (Groups main          LEFT JOIN Principals Principals_2  ON ( main.id = Principals_2.id)) ,     GroupMembers GroupMembers_1      WHERE ((GroupMembers_1.MemberId = '70'))     AND ((Principals_2.Disabled = '0'))     AND ((main.Domain = 'UserDefined'))     AND ((main.id = GroupMembers_1.GroupId))
 #     ORDER BY main.Name ASC
 #     It needs
 # SELECT DISTINCT main.*     FROM Groups main           LEFT JOIN Principals Principals_2  ON ( main.id = Principals_2.id) ,      GroupMembers GroupMembers_1      WHERE ((GroupMembers_1.MemberId = '70'))     AND ((Principals_2.Disabled = '0'))     AND ((main.Domain = 'UserDefined'))     AND ((main.id = GroupMembers_1.GroupId)) ORDER BY main.Name ASC
@@ -102,42 +98,44 @@ sub _build_joins {
     my $self = shift;
     my $sb   = shift;
     my %seen_aliases;
-    
+
     $seen_aliases{'main'} = 1;
 
-    # We don't want to get tripped up on a dependency on a simple alias. 
-        foreach my $alias ( @{ $sb->{'aliases'}} ) {
-          if ( $alias =~ /^(.*?)\s+(.*?)$/ ) {
-              $seen_aliases{$2} = 1;
-          }
+    # We don't want to get tripped up on a dependency on a simple alias.
+    foreach my $alias ( @{ $sb->{'aliases'} } ) {
+        if ( $alias =~ /^(.*?)\s+(.*?)$/ ) {
+            $seen_aliases{$2} = 1;
+        }
     }
 
     my $join_clause = $sb->table . " main ";
-    
+
     my @keys = ( keys %{ $sb->{'left_joins'} } );
     my %seen;
-    
+
     while ( my $join = shift @keys ) {
-        if ( ! $sb->{'left_joins'}{$join}{'depends_on'} || $seen_aliases{ $sb->{'left_joins'}{$join}{'depends_on'} } ) {
-           #$join_clause = "(" . $join_clause;
-            $join_clause .=
-              $sb->{'left_joins'}{$join}{'alias_string'} . " ON (";
-            $join_clause .=
-              join ( ') AND( ',
+        if ( !$sb->{'left_joins'}{$join}{'depends_on'}
+            || $seen_aliases{ $sb->{'left_joins'}{$join}{'depends_on'} } )
+        {
+
+            #$join_clause = "(" . $join_clause;
+            $join_clause
+                .= $sb->{'left_joins'}{$join}{'alias_string'} . " ON (";
+            $join_clause .= join( ') AND( ',
                 values %{ $sb->{'left_joins'}{$join}{'criteria'} } );
             $join_clause .= ") ";
-            
+
             $seen_aliases{$join} = 1;
-        }   
+        }
         else {
-            push ( @keys, $join );
+            push( @keys, $join );
             die "Unsatisfied dependency chain in Joins @keys"
-              if $seen{"@keys"}++;
-        }     
-        
+                if $seen{"@keys"}++;
+        }
+
     }
-    return ( join ( ", ", ( $join_clause, @{ $sb->{'aliases'} } ) ) );
-    
+    return ( join( ", ", ( $join_clause, @{ $sb->{'aliases'} } ) ) );
+
 }
 
 1;

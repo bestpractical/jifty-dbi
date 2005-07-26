@@ -41,16 +41,18 @@ sub case_sensitive {
 sub build_dsn {
     my $self = shift;
     my %args = (
-	Driver     => undef,
-	Database   => undef,
-	Host       => undef,
-	Port       => undef,
-	@_
+        Driver   => undef,
+        Database => undef,
+        Host     => undef,
+        Port     => undef,
+        @_
     );
 
     my $dsn = "dbi:$args{'Driver'}:$args{'Database'}";
-    $dsn .= ";host=$args{'Host'}" if (defined $args{'Host'} && $args{'Host'});
-    $dsn .= ";port=$args{'Port'}" if (defined $args{'Port'} && $args{'Port'});
+    $dsn .= ";host=$args{'Host'}"
+        if ( defined $args{'Host'} && $args{'Host'} );
+    $dsn .= ";port=$args{'Port'}"
+        if ( defined $args{'Port'} && $args{'Port'} );
 
     $self->{'dsn'} = $dsn;
 }

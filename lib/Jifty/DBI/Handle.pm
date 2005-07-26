@@ -11,8 +11,6 @@ $TRANSDEPTH = 0;
 
 $VERSION = '$Version$';
 
-
-
 =head1 NAME
 
 Jifty::DBI::Handle - Perl extension which is a generic DBI handle
@@ -35,25 +33,21 @@ This class provides a wrapper for DBI handles that can also perform a number of 
  
 =cut
 
-
-
 =head2 new
 
 Generic constructor
 
 =cut
 
-sub new  {
+sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
     my $self  = {};
-    bless ($self, $class);
+    bless( $self, $class );
 
-    @{$self->{'StatementLog'}} = ();
+    @{ $self->{'StatementLog'} } = ();
     return $self;
 }
-
-
 
 =head2 connect PARAMHASH: Driver, Database, Host, User, Password
 
@@ -66,49 +60,55 @@ the handle will be automatically "upgraded" into that subclass.
 
 =cut
 
-sub connect  {
+sub connect {
     my $self = shift;
-  
-    my %args = ( driver => undef,
-	         database => undef,
-	         host => undef,
-                 sid => undef,
-	         port => undef,
-	         user => undef,
-	         password => undef,
-	         requiressl => undef,
-	         @_);
 
-    if( $args{'driver'} && !$self->isa( 'Jifty::DBI::Handle::'. $args{'driver'} ) ) {
-        if ( $self->_upgrade_handle($args{'driver'}) ) {
-            return ($self->connect( %args ));
+    my %args = (
+        driver     => undef,
+        database   => undef,
+        host       => undef,
+        sid        => undef,
+        port       => undef,
+        user       => undef,
+        password   => undef,
+        requiressl => undef,
+        @_
+    );
+
+    if ( $args{'driver'}
+        && !$self->isa( 'Jifty::DBI::Handle::' . $args{'driver'} ) )
+    {
+        if ( $self->_upgrade_handle( $args{'driver'} ) ) {
+            return ( $self->connect(%args) );
         }
     }
 
     my $dsn = $self->DSN || '';
 
-    # Setting this actually breaks old RT versions in subtle ways. So we need to explicitly call it
+# Setting this actually breaks old RT versions in subtle ways. So we need to explicitly call it
 
     $self->build_dsn(%args);
 
     # Only connect if we're not connected to this source already
-    if ((! $self->dbh ) || (!$self->dbh->ping) || ($self->DSN ne $dsn) ) { 
-        my $handle = DBI->connect($self->DSN, $args{'user'}, $args{'password'}) || croak "Connect Failed $DBI::errstr\n" ;
- 
-        #databases do case conversion on the name of columns returned. 
-        #actually, some databases just ignore case. this smashes it to something consistent 
-        $handle->{FetchHashKeyName} ='NAME_lc';
+    if ( ( !$self->dbh ) || ( !$self->dbh->ping ) || ( $self->DSN ne $dsn ) )
+    {
+        my $handle
+            = DBI->connect( $self->DSN, $args{'user'}, $args{'password'} )
+            || croak "Connect Failed $DBI::errstr\n";
 
-        #Set the handle 
+#databases do case conversion on the name of columns returned.
+#actually, some databases just ignore case. this smashes it to something consistent
+        $handle->{FetchHashKeyName} = 'NAME_lc';
+
+        #Set the handle
         $self->dbh($handle);
-  
-        return (1); 
+
+        return (1);
     }
 
-    return(undef);
+    return (undef);
 
 }
-
 
 =head2 _upgrade_handle DRIVER
 
@@ -119,18 +119,15 @@ of the standard driver-specific subclasses.
 
 sub _upgrade_handle {
     my $self = shift;
-    
+
     my $driver = shift;
-    my $class = 'Jifty::DBI::Handle::' . $driver;
+    my $class  = 'Jifty::DBI::Handle::' . $driver;
     eval "require $class";
     return if $@;
-    
+
     bless $self, $class;
     return 1;
 }
-
-
-
 
 =head2 build_dsn PARAMHASH
 
@@ -144,26 +141,28 @@ Builds a DSN suitable for a DBI connection
 =cut
 
 sub build_dsn {
-  my $self = shift;
-  my %args = ( driver => undef,
-	       database => undef,
-	       host => undef,
-	       port => undef,
-               sid => undef,
-	       requiressl => undef,
-	       @_);
-  
-  
-  my $dsn = "dbi:$args{'driver'}:dbname=$args{'database'}";
-  $dsn .= ";sid=$args{'sid'}" if ( defined $args{'sid'} && $args{'sid'});
-  $dsn .= ";host=$args{'host'}" if (defined$args{'host'} && $args{'host'});
-  $dsn .= ";port=$args{'port'}" if (defined $args{'port'} && $args{'port'});
-  $dsn .= ";requiressl=1" if (defined $args{'requiressl'} && $args{'requiressl'});
+    my $self = shift;
+    my %args = (
+        driver     => undef,
+        database   => undef,
+        host       => undef,
+        port       => undef,
+        sid        => undef,
+        requiressl => undef,
+        @_
+    );
 
-  $self->{'dsn'}= $dsn;
+    my $dsn = "dbi:$args{'driver'}:dbname=$args{'database'}";
+    $dsn .= ";sid=$args{'sid'}" if ( defined $args{'sid'} && $args{'sid'} );
+    $dsn .= ";host=$args{'host'}"
+        if ( defined $args{'host'} && $args{'host'} );
+    $dsn .= ";port=$args{'port'}"
+        if ( defined $args{'port'} && $args{'port'} );
+    $dsn .= ";requiressl=1"
+        if ( defined $args{'requiressl'} && $args{'requiressl'} );
+
+    $self->{'dsn'} = $dsn;
 }
-
-
 
 =head2 DSN
 
@@ -173,10 +172,8 @@ Returns the DSN for this database connection.
 
 sub DSN {
     my $self = shift;
-    return($self->{'dsn'});
+    return ( $self->{'dsn'} );
 }
-
-
 
 =head2 raise_error [MODE]
 
@@ -187,14 +184,11 @@ Turns on the Database Handle's RaiseError attribute.
 sub raise_error {
     my $self = shift;
 
-    my $mode = 1; 
+    my $mode = 1;
     $mode = shift if (@_);
 
-    $self->dbh->{RaiseError}=$mode;
+    $self->dbh->{RaiseError} = $mode;
 }
-
-
-
 
 =head2 print_error [MODE]
 
@@ -205,13 +199,11 @@ Turns on the Database Handle's PrintError attribute.
 sub print_error {
     my $self = shift;
 
-    my $mode = 1; 
+    my $mode = 1;
     $mode = shift if (@_);
 
-    $self->dbh->{PrintError}=$mode;
+    $self->dbh->{PrintError} = $mode;
 }
-
-
 
 =head2 log_sql_statements BOOL
 
@@ -227,7 +219,7 @@ sub log_sql_statements {
     if (@_) {
         require Time::HiRes;
         $self->{'_dologsql'} = shift;
-        return ($self->{'_dologsql'});
+        return ( $self->{'_dologsql'} );
     }
 }
 
@@ -238,10 +230,11 @@ add an SQL statement to our query log
 =cut
 
 sub _log_sql_statement {
-    my $self = shift;
+    my $self      = shift;
     my $statement = shift;
-    my $duration = shift;
-    push @{$self->{'StatementLog'}} , ([Time::Hires::time(), $statement, $duration]);
+    my $duration  = shift;
+    push @{ $self->{'StatementLog'} },
+        ( [ Time::Hires::time(), $statement, $duration ] );
 
 }
 
@@ -254,9 +247,8 @@ Clears out the SQL statement log.
 
 sub clear_sql_statement_log {
     my $self = shift;
-    @{$self->{'StatementLog'}} = ();
-}   
-
+    @{ $self->{'StatementLog'} } = ();
+}
 
 =head2 sql_statement_log
 
@@ -268,11 +260,9 @@ Returns the current SQL statement log as an array of arrays. Each entry is a tri
 
 sub sql_statement_log {
     my $self = shift;
-    return  (@{$self->{'StatementLog'}});
+    return ( @{ $self->{'StatementLog'} } );
 
 }
-
-
 
 =head2 auto_commit [MODE]
 
@@ -283,14 +273,11 @@ Turns on the Database Handle's Autocommit attribute.
 sub auto_commit {
     my $self = shift;
 
-    my $mode = 1; 
+    my $mode = 1;
     $mode = shift if (@_);
 
-    $self->dbh->{Autocommit}=$mode;
+    $self->dbh->{Autocommit} = $mode;
 }
-
-
-
 
 =head2 disconnect
 
@@ -298,16 +285,15 @@ disconnect from your DBI datasource
 
 =cut
 
-sub disconnect  {
-  my $self = shift;
-  if ($self->dbh) {
-      return ($self->dbh->disconnect());
-  } else {
-      return;
-  }
+sub disconnect {
+    my $self = shift;
+    if ( $self->dbh ) {
+        return ( $self->dbh->disconnect() );
+    }
+    else {
+        return;
+    }
 }
-
-
 
 =head2 dbh [HANDLE]
 
@@ -316,14 +302,13 @@ Return the current DBI handle. If we're handed a parameter, make the database ha
 =cut
 
 sub dbh {
-  my $self=shift;
-  
-  #If we are setting the database handle, set it.
-  $DBIHandle{$self} = $PrevHandle = shift if (@_);
+    my $self = shift;
 
-  return($DBIHandle{$self} ||= $PrevHandle);
+    #If we are setting the database handle, set it.
+    $DBIHandle{$self} = $PrevHandle = shift if (@_);
+
+    return ( $DBIHandle{$self} ||= $PrevHandle );
 }
-
 
 =head2 insert $TABLE_NAME @KEY_VALUE_PAIRS
 
@@ -332,26 +317,27 @@ Takes a table name and a set of key-value pairs in an array. splits the key valu
 =cut
 
 sub insert {
-  my($self, $table, @pairs) = @_;
-  my(@cols, @vals, @bind);
+    my ( $self, $table, @pairs ) = @_;
+    my ( @cols, @vals,  @bind );
 
-  #my %seen; #only the *first* value is used - allows drivers to specify default
-  while ( my $key = shift @pairs ) {
-    my $value = shift @pairs;
-    # next if $seen{$key}++;
-    push @cols, $key;
-    push @vals, '?';
-    push @bind, $value;  
-  }
+#my %seen; #only the *first* value is used - allows drivers to specify default
+    while ( my $key = shift @pairs ) {
+        my $value = shift @pairs;
 
-  my $QueryString =
-    "INSERT INTO $table (". CORE::join(", ", @cols). ") VALUES ".
-    "(". CORE::join(", ", @vals). ")";
+        # next if $seen{$key}++;
+        push @cols, $key;
+        push @vals, '?';
+        push @bind, $value;
+    }
 
-    my $sth =  $self->simple_query($QueryString, @bind);
+    my $QueryString = "INSERT INTO $table ("
+        . CORE::join( ", ", @cols )
+        . ") VALUES " . "("
+        . CORE::join( ", ", @vals ) . ")";
+
+    my $sth = $self->simple_query( $QueryString, @bind );
     return ($sth);
-  }
-
+}
 
 =head2 update_record_value 
 
@@ -367,39 +353,38 @@ string will be inserted into the query directly rather then as a binding.
 
 sub update_record_value {
     my $self = shift;
-    my %args = ( table           => undef,
-                 column          => undef,
-                 is_sql_function => undef,
-                 primary_keys    => undef,
-                 @_ );
+    my %args = (
+        table           => undef,
+        column          => undef,
+        is_sql_function => undef,
+        primary_keys    => undef,
+        @_
+    );
 
     my @bind  = ();
     my $query = 'UPDATE ' . $args{'table'} . ' ';
-     $query .= 'SET '    . $args{'column'} . '=';
+    $query .= 'SET ' . $args{'column'} . '=';
 
-  ## Look and see if the field is being updated via a SQL function. 
-  if ($args{'is_sql_function'}) {
-     $query .= $args{'value'} . ' ';
-  }
-  else {
-     $query .= '? ';
-     push (@bind, $args{'value'});
-  }
+    ## Look and see if the field is being updated via a SQL function.
+    if ( $args{'is_sql_function'} ) {
+        $query .= $args{'value'} . ' ';
+    }
+    else {
+        $query .= '? ';
+        push( @bind, $args{'value'} );
+    }
 
-  ## Constructs the where clause.
-  my $where  = 'WHERE ';
-  foreach my $key (keys %{$args{'primary_keys'}}) {
-     $where .= $key . "=?" . " AND ";
-     push (@bind, $args{'primary_keys'}{$key});
-  }
-     $where =~ s/AND\s$//;
-  
-  my $query_str = $query . $where;
-  return ($self->simple_query($query_str, @bind));
+    ## Constructs the where clause.
+    my $where = 'WHERE ';
+    foreach my $key ( keys %{ $args{'primary_keys'} } ) {
+        $where .= $key . "=?" . " AND ";
+        push( @bind, $args{'primary_keys'}{$key} );
+    }
+    $where =~ s/AND\s$//;
+
+    my $query_str = $query . $where;
+    return ( $self->simple_query( $query_str, @bind ) );
 }
-
-
-
 
 =head2 update_table_value TABLE COLUMN NEW_VALUE RECORD_ID IS_SQL
 
@@ -408,20 +393,19 @@ don\'t quote the NEW_VALUE
 
 =cut
 
-sub update_table_value  {
+sub update_table_value {
     my $self = shift;
 
-    ## This is just a wrapper to update_record_value().     
-    my %args = (); 
-    $args{'table'}  = shift;
-    $args{'column'} = shift;
-    $args{'value'}  = shift;
-    $args{'primary_keys'}    = shift; 
+    ## This is just a wrapper to update_record_value().
+    my %args = ();
+    $args{'table'}           = shift;
+    $args{'column'}          = shift;
+    $args{'value'}           = shift;
+    $args{'primary_keys'}    = shift;
     $args{'is_sql_function'} = shift;
 
-    return $self->update_record_value(%args)
+    return $self->update_record_value(%args);
 }
-
 
 =head2 simple_query QUERY_STRING, [ BIND_VALUE, ... ]
 
@@ -439,16 +423,16 @@ sub simple_query {
     unless ($sth) {
         if ($DEBUG) {
             die "$self couldn't prepare the query '$QueryString'"
-              . $self->dbh->errstr . "\n";
+                . $self->dbh->errstr . "\n";
         }
         else {
             warn "$self couldn't prepare the query '$QueryString'"
-              . $self->dbh->errstr . "\n";
+                . $self->dbh->errstr . "\n";
             my $ret = Class::ReturnValue->new();
             $ret->as_error(
                 errno   => '-1',
                 message => "Couldn't prepare the query '$QueryString'."
-                  . $self->dbh->errstr,
+                    . $self->dbh->errstr,
                 do_backtrace => undef
             );
             return ( $ret->return_value );
@@ -456,16 +440,17 @@ sub simple_query {
     }
 
     # Check @bind_values for HASH refs
-    for ( my $bind_idx = 0 ; $bind_idx < scalar @bind_values ; $bind_idx++ ) {
+    for ( my $bind_idx = 0; $bind_idx < scalar @bind_values; $bind_idx++ ) {
         if ( ref( $bind_values[$bind_idx] ) eq "HASH" ) {
             my $bhash = $bind_values[$bind_idx];
             $bind_values[$bind_idx] = $bhash->{'value'};
             delete $bhash->{'value'};
             $sth->bind_param( $bind_idx + 1, undef, $bhash );
         }
+
         # Some databases, such as Oracle fail to cope if it's a perl utf8
         # string. they desperately want bytes.
-         Encode::_utf8_off($bind_values[$bind_idx]);
+        Encode::_utf8_off( $bind_values[$bind_idx] );
     }
 
     my $basetime;
@@ -474,7 +459,7 @@ sub simple_query {
     }
     my $executed;
     {
-        no warnings 'uninitialized' ; # undef in bind_values makes DBI sad
+        no warnings 'uninitialized';    # undef in bind_values makes DBI sad
         eval { $executed = $sth->execute(@bind_values) };
     }
     if ( $self->log_sql_statements ) {
@@ -485,7 +470,7 @@ sub simple_query {
     if ( $@ or !$executed ) {
         if ($DEBUG) {
             die "$self couldn't execute the query '$QueryString'"
-              . $self->dbh->errstr . "\n";
+                . $self->dbh->errstr . "\n";
 
         }
         else {
@@ -495,7 +480,7 @@ sub simple_query {
             $ret->as_error(
                 errno   => '-1',
                 message => "Couldn't execute the query '$QueryString'"
-                  . $self->dbh->errstr,
+                    . $self->dbh->errstr,
                 do_backtrace => undef
             );
             return ( $ret->return_value );
@@ -505,8 +490,6 @@ sub simple_query {
     return ($sth);
 
 }
-
-
 
 =head2 fetch_result QUERY, [ BIND_VALUE, ... ]
 
@@ -518,18 +501,17 @@ up.
 =cut 
 
 sub fetch_result {
-  my $self = shift;
-  my $query = shift;
-  my @bind_values = @_;
-  my $sth = $self->simple_query($query, @bind_values);
-  if ($sth) {
-    return ($sth->fetchrow);
-  }
-  else {
-   return($sth);
-  }
+    my $self        = shift;
+    my $query       = shift;
+    my @bind_values = @_;
+    my $sth         = $self->simple_query( $query, @bind_values );
+    if ($sth) {
+        return ( $sth->fetchrow );
+    }
+    else {
+        return ($sth);
+    }
 }
-
 
 =head2 binary_safe_blobs
 
@@ -540,10 +522,8 @@ Returns undef if the current database doesn't support BLOBs with embedded nulls
 
 sub binary_safe_blobs {
     my $self = shift;
-    return(1);
+    return (1);
 }
-
-
 
 =head2 knows_blobs
 
@@ -554,10 +534,8 @@ Returns undef if the current database must be informed of BLOBs for inserts.
 
 sub knows_blobs {
     my $self = shift;
-    return(1);
+    return (1);
 }
-
-
 
 =head2 blob_params FIELD_NAME FIELD_TYPE
 
@@ -568,11 +546,10 @@ the current database for a particular column type.
 
 sub blob_params {
     my $self = shift;
-    # Don't assign to key 'value' as it is defined later. 
+
+    # Don't assign to key 'value' as it is defined later.
     return ( {} );
 }
-
-
 
 =head2 database_version
 
@@ -583,14 +560,13 @@ Returns the database's version. The base implementation uses a "SELECT VERSION"
 sub database_version {
     my $self = shift;
 
-    unless ($self->{'database_version'}) {
-        my $statement  = "SELECT VERSION()";
-        my $sth = $self->simple_query($statement);
-        my @vals = $sth->fetchrow();
-        $self->{'database_version'}= $vals[0];
+    unless ( $self->{'database_version'} ) {
+        my $statement = "SELECT VERSION()";
+        my $sth       = $self->simple_query($statement);
+        my @vals      = $sth->fetchrow();
+        $self->{'database_version'} = $vals[0];
     }
 }
-
 
 =head2 case_sensitive
 
@@ -601,12 +577,8 @@ Returns undef otherwise
 
 sub case_sensitive {
     my $self = shift;
-    return(1);
+    return (1);
 }
-
-
-
-
 
 =head2 _make_clause_case_insensitive FIELD OPERATOR VALUE
 
@@ -618,20 +590,17 @@ Returns a FIELD OPERATOR VALUE triple.
 =cut
 
 sub _make_clause_case_insensitive {
-    my $self = shift;
-    my $field = shift;
+    my $self     = shift;
+    my $field    = shift;
     my $operator = shift;
-    my $value = shift;
+    my $value    = shift;
 
-    if ($value !~ /^\d+$/) { # don't downcase integer values
+    if ( $value !~ /^\d+$/ ) {    # don't downcase integer values
         $field = "lower($field)";
         $value = lc($value);
     }
-    return ($field, $operator, $value,undef);
+    return ( $field, $operator, $value, undef );
 }
-
-
-
 
 =head2 begin_transaction
 
@@ -645,14 +614,13 @@ Emulates nested transactions, by keeping a transaction stack depth.
 sub begin_transaction {
     my $self = shift;
     $TRANSDEPTH++;
-    if ($TRANSDEPTH > 1 ) {
+    if ( $TRANSDEPTH > 1 ) {
         return ($TRANSDEPTH);
-    } else {
-       return($self->dbh->begin_work);
+    }
+    else {
+        return ( $self->dbh->begin_work );
     }
 }
-
-
 
 =head2 commit
 
@@ -663,17 +631,19 @@ This will turn Autocommit mode back on.
 
 sub commit {
     my $self = shift;
-    unless ($TRANSDEPTH) {Carp::confess("Attempted to commit a transaction with none in progress")};
+    unless ($TRANSDEPTH) {
+        Carp::confess(
+            "Attempted to commit a transaction with none in progress");
+    }
     $TRANSDEPTH--;
 
-    if ($TRANSDEPTH == 0 ) {
-        return($self->dbh->commit);
-    } else { #we're inside a transaction
-        return($TRANSDEPTH);
+    if ( $TRANSDEPTH == 0 ) {
+        return ( $self->dbh->commit );
+    }
+    else {    #we're inside a transaction
+        return ($TRANSDEPTH);
     }
 }
-
-
 
 =head2 rollback [FORCE]
 
@@ -685,23 +655,24 @@ If this method is passed a true argument, stack depth is blown away and the oute
 =cut
 
 sub rollback {
-    my $self = shift;
+    my $self  = shift;
     my $force = shift || undef;
-    #unless ($TRANSDEPTH) {Carp::confess("Attempted to rollback a transaction with none in progress")};
+
+#unless ($TRANSDEPTH) {Carp::confess("Attempted to rollback a transaction with none in progress")};
     $TRANSDEPTH--;
 
     if ($force) {
         $TRANSDEPTH = 0;
-       return($self->dbh->rollback);
+        return ( $self->dbh->rollback );
     }
 
-    if ($TRANSDEPTH == 0 ) {
-       return($self->dbh->rollback);
-    } else { #we're inside a transaction
-        return($TRANSDEPTH);
+    if ( $TRANSDEPTH == 0 ) {
+        return ( $self->dbh->rollback );
+    }
+    else {    #we're inside a transaction
+        return ($TRANSDEPTH);
     }
 }
-
 
 =head2 force_rollback
 
@@ -714,7 +685,6 @@ sub force_rollback {
     $self->rollback(1);
 }
 
-
 =head2 transaction_depthh
 
 Return the current depth of the faked nested transaction stack.
@@ -723,10 +693,8 @@ Return the current depth of the faked nested transaction stack.
 
 sub transaction_depthh {
     my $self = shift;
-    return ($TRANSDEPTH); 
+    return ($TRANSDEPTH);
 }
-
-
 
 =head2 apply_limits STATEMENTREF ROWS_PER_PAGE FIRST_ROW
 
@@ -736,28 +704,24 @@ takes an SQL SELECT statement and massages it to return ROWS_PER_PAGE starting w
 =cut
 
 sub apply_limits {
-    my $self = shift;
+    my $self         = shift;
     my $statementref = shift;
-    my $per_page = shift;
-    my $first = shift;
+    my $per_page     = shift;
+    my $first        = shift;
 
     my $limit_clause = '';
 
-    if ( $per_page) {
+    if ($per_page) {
         $limit_clause = " LIMIT ";
-        if ( $first ) {
+        if ($first) {
             $limit_clause .= $first . ", ";
         }
         $limit_clause .= $per_page;
     }
 
-   $$statementref .= $limit_clause; 
+    $$statementref .= $limit_clause;
 
 }
-
-
-
-
 
 =head2 join { Paramhash }
 
@@ -769,7 +733,6 @@ This performs the join.
 
 
 =cut
-
 
 sub join {
 
@@ -858,20 +821,21 @@ sub join {
 
     }
 
-
     my $criterion;
-    if ($args{'EXPRESSION'}) {
+    if ( $args{'EXPRESSION'} ) {
         $criterion = $args{'EXPRESSION'};
-    } else {
-        $criterion = $args{'ALIAS1'}.".".$args{'FIELD1'};
+    }
+    else {
+        $criterion = $args{'ALIAS1'} . "." . $args{'FIELD1'};
     }
 
-    $args{'SearchBuilder'}->{'left_joins'}{"$alias"}{'alias_string'} = $string;
-    $args{'SearchBuilder'}->{'left_joins'}{"$alias"}{'depends_on'}   =
-      $args{'ALIAS1'};
+    $args{'SearchBuilder'}->{'left_joins'}{"$alias"}{'alias_string'}
+        = $string;
+    $args{'SearchBuilder'}->{'left_joins'}{"$alias"}{'depends_on'}
+        = $args{'ALIAS1'};
     $args{'SearchBuilder'}->{'left_joins'}{"$alias"}{'criteria'}
-      { 'criterion' . $args{'SearchBuilder'}->{'criteria_count'}++ } =
-      " $alias.$args{'FIELD2'} = $criterion";
+        { 'criterion' . $args{'SearchBuilder'}->{'criteria_count'}++ }
+        = " $alias.$args{'FIELD2'} = $criterion";
 
     return ($alias);
 }
@@ -895,11 +859,11 @@ sub _Normaljoin {
     if ( $args{'TYPE'} =~ /LEFT/i ) {
         my $alias = $sb->_GetAlias( $args{'TABLE2'} );
 
-        $sb->{'left_joins'}{"$alias"}{'alias_string'} =
-          " LEFT JOIN $args{'TABLE2'} $alias ";
+        $sb->{'left_joins'}{"$alias"}{'alias_string'}
+            = " LEFT JOIN $args{'TABLE2'} $alias ";
 
-        $sb->{'left_joins'}{"$alias"}{'criteria'}{'base_criterion'} =
-          " $args{'ALIAS1'}.$args{'FIELD1'} = $alias.$args{'FIELD2'}";
+        $sb->{'left_joins'}{"$alias"}{'criteria'}{'base_criterion'}
+            = " $args{'ALIAS1'}.$args{'FIELD1'} = $alias.$args{'FIELD2'}";
 
         return ($alias);
     }
@@ -915,7 +879,7 @@ sub _Normaljoin {
     }
 }
 
-# this code is all hacky and evil. but people desperately want _something_ and I'm 
+# this code is all hacky and evil. but people desperately want _something_ and I'm
 # super tired. refactoring gratefully appreciated.
 
 sub _build_joins {
@@ -925,43 +889,41 @@ sub _build_joins {
 
     $seen_aliases{'main'} = 1;
 
-   	# We don't want to get tripped up on a dependency on a simple alias. 
-    	foreach my $alias ( @{ $sb->{'aliases'}} ) {
-          if ( $alias =~ /^(.*?)\s+(.*?)$/ ) {
-              $seen_aliases{$2} = 1;
-          }
+    # We don't want to get tripped up on a dependency on a simple alias.
+    foreach my $alias ( @{ $sb->{'aliases'} } ) {
+        if ( $alias =~ /^(.*?)\s+(.*?)$/ ) {
+            $seen_aliases{$2} = 1;
+        }
     }
 
     my $join_clause = $sb->table . " main ";
 
-	
     my @keys = ( keys %{ $sb->{'left_joins'} } );
     my %seen;
 
     while ( my $join = shift @keys ) {
-        if ( ! $sb->{'left_joins'}{$join}{'depends_on'} || $seen_aliases{ $sb->{'left_joins'}{$join}{'depends_on'} } ) {
+        if ( !$sb->{'left_joins'}{$join}{'depends_on'}
+            || $seen_aliases{ $sb->{'left_joins'}{$join}{'depends_on'} } )
+        {
             $join_clause = "(" . $join_clause;
-            $join_clause .=
-              $sb->{'left_joins'}{$join}{'alias_string'} . " ON (";
-            $join_clause .=
-              CORE::join ( ') AND( ',
+            $join_clause
+                .= $sb->{'left_joins'}{$join}{'alias_string'} . " ON (";
+            $join_clause .= CORE::join( ') AND( ',
                 values %{ $sb->{'left_joins'}{$join}{'criteria'} } );
             $join_clause .= ")) ";
 
             $seen_aliases{$join} = 1;
         }
         else {
-            push ( @keys, $join );
+            push( @keys, $join );
             die "Unsatisfied dependency chain in joins @keys"
-              if $seen{"@keys"}++;
+                if $seen{"@keys"}++;
         }
 
     }
-    return ( CORE::join ( ", ", ( $join_clause, @{ $sb->{'aliases'} } ) ) );
+    return ( CORE::join( ", ", ( $join_clause, @{ $sb->{'aliases'} } ) ) );
 
 }
-
-
 
 =head2 distinct_query STATEMENTREF 
 
@@ -971,17 +933,15 @@ takes an incomplete SQL SELECT statement and massages it to return a DISTINCT re
 =cut
 
 sub distinct_query {
-    my $self = shift;
+    my $self         = shift;
     my $statementref = shift;
+
     #my $table = shift;
 
     # Prepend select query for DBs which allow DISTINCT on all column types.
     $$statementref = "SELECT DISTINCT main.* FROM $$statementref";
 
 }
-
-
-
 
 =head2 distinct_count STATEMENTREF 
 
@@ -991,14 +951,13 @@ takes an incomplete SQL SELECT statement and massages it to return a DISTINCT re
 =cut
 
 sub distinct_count {
-    my $self = shift;
+    my $self         = shift;
     my $statementref = shift;
 
     # Prepend select query for DBs which allow DISTINCT on all column types.
     $$statementref = "SELECT COUNT(DISTINCT main.id) FROM $$statementref";
 
 }
-
 
 =head2 Log MESSAGE
 
@@ -1009,13 +968,11 @@ Currently prints that message to STDERR
 =cut
 
 sub Log {
-	my $self = shift;
-	my $msg = shift;
-	warn $msg."\n";
+    my $self = shift;
+    my $msg  = shift;
+    warn $msg . "\n";
 
 }
-
-
 
 =head2 DESTROY
 
@@ -1023,13 +980,11 @@ When we get rid of the Searchbuilder::Handle, we need to disconnect from the dat
 
 =cut
 
-  
 sub DESTROY {
-  my $self = shift;
-  $self->disconnect;
-  delete $DBIHandle{$self};
+    my $self = shift;
+    $self->disconnect;
+    delete $DBIHandle{$self};
 }
-
 
 1;
 __END__

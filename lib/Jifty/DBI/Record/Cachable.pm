@@ -11,7 +11,6 @@ use Cache::Simple::TimedExpiry;
 
 use strict;
 
-
 =head1 NAME
 
 Jifty::DBI::Record::Cachable - Records with caching behavior
@@ -30,7 +29,6 @@ The public interface remains the same, except that records which have been loade
 =head1 METHODS
 
 =cut
-
 
 my %_CACHES = ();
 
@@ -64,12 +62,13 @@ sub flush_cache {
     %_CACHES = ();
 }
 
-
 sub _key_cache {
-    my $self = shift;
-    my $cache = $self->_handle->DSN . "-KEYS--" . ($self->{'_Class'} ||= ref($self));
-    $self->_setup_cache($cache) unless exists ($_CACHES{$cache});
-    return ($_CACHES{$cache});
+    my $self  = shift;
+    my $cache = $self->_handle->DSN
+        . "-KEYS--"
+        . ( $self->{'_Class'} ||= ref($self) );
+    $self->_setup_cache($cache) unless exists( $_CACHES{$cache} );
+    return ( $_CACHES{$cache} );
 
 }
 
@@ -80,16 +79,19 @@ Blow away this record type's key cache
 =cut
 
 sub _flush_key_cache {
-    my $self = shift;
-    my $cache = $self->_handle->DSN . "-KEYS--" . ($self->{'_Class'} ||= ref($self));
+    my $self  = shift;
+    my $cache = $self->_handle->DSN
+        . "-KEYS--"
+        . ( $self->{'_Class'} ||= ref($self) );
     $self->_setup_cache($cache);
 }
 
 sub _record_cache {
     my $self = shift;
-    my $cache = $self->_handle->DSN . "--" . ($self->{'_Class'} ||= ref($self));
-    $self->_setup_cache($cache) unless exists ($_CACHES{$cache});
-    return ($_CACHES{$cache});
+    my $cache
+        = $self->_handle->DSN . "--" . ( $self->{'_Class'} ||= ref($self) );
+    $self->_setup_cache($cache) unless exists( $_CACHES{$cache} );
+    return ( $_CACHES{$cache} );
 
 }
 
@@ -138,7 +140,7 @@ sub load_by_cols {
     if ($rvalue) {
         ## Only cache the object if its okay to do so.
         $self->_store();
-        $self->_key_cache->set( $alt_key, $self->_primary_RecordCache_key);
+        $self->_key_cache->set( $alt_key, $self->_primary_RecordCache_key );
 
     }
     return ( $rvalue, $msg );
@@ -180,10 +182,12 @@ sub __delete () {
 
 sub _expire (\$) {
     my $self = shift;
-    $self->_record_cache->set( $self->_primary_RecordCache_key , undef, time-1);
-    # We should be doing something more surgical to clean out the key cache. but we do need to expire it
+    $self->_record_cache->set( $self->_primary_RecordCache_key,
+        undef, time - 1 );
+
+# We should be doing something more surgical to clean out the key cache. but we do need to expire it
     $self->_flush_key_cache;
-   
+
 }
 
 # Function: _fetch
@@ -196,11 +200,10 @@ sub _fetch () {
     my ( $self, $cache_key ) = @_;
     my $data = $self->_record_cache->fetch($cache_key) or return;
 
-    @{$self}{keys %$data} = values %$data; # deserialize
+    @{$self}{ keys %$data } = values %$data;    # deserialize
     return 1;
 
 }
-
 
 sub __Value {
     my $self  = shift;
@@ -216,15 +219,15 @@ sub __Value {
 
 sub _store (\$) {
     my $self = shift;
-    $self->_record_cache->set( $self->_primary_RecordCache_key, $self->_serialize);
+    $self->_record_cache->set( $self->_primary_RecordCache_key,
+        $self->_serialize );
     return (1);
 }
 
 sub _serialize {
     my $self = shift;
     return (
-        {
-            values  => $self->{'values'},
+        {   values  => $self->{'values'},
             table   => $self->table,
             fetched => $self->{'fetched'}
         }
@@ -239,8 +242,9 @@ sub _serialize {
 
 sub _gen_alternate_RecordCache_key {
     my ( $self, %attr ) = @_;
+
     #return( Storable::nfreeze( %attr));
-   my $cache_key;
+    my $cache_key;
     while ( my ( $key, $value ) = each %attr ) {
         $key   ||= '__undef';
         $value ||= '__undef';
@@ -290,7 +294,8 @@ sub _primary_RecordCache_key {
 
         $primary_RecordCache_key .= join( ',', @attributes );
 
-        $self->{'_SB_Record_Primary_RecordCache_key'} = $primary_RecordCache_key;
+        $self->{'_SB_Record_Primary_RecordCache_key'}
+            = $primary_RecordCache_key;
     }
     return ( $self->{'_SB_Record_Primary_RecordCache_key'} );
 
@@ -305,7 +310,7 @@ sub _lookup_primary_RecordCache_key {
     my $alternate_key = shift;
     return undef unless ($alternate_key);
 
-    my $primary_key   = $self->_key_cache->fetch($alternate_key);
+    my $primary_key = $self->_key_cache->fetch($alternate_key);
     if ($primary_key) {
         return ($primary_key);
     }
@@ -333,8 +338,7 @@ For example, to cache records for up to 30 seconds, add the following method to 
 =cut
 
 sub _cache_config {
-    {
-        'cache_p'       => 1,
+    {   'cache_p'       => 1,
         'cache_for_sec' => 5,
     };
 }

@@ -23,7 +23,6 @@ compensates for some of the idiosyncrasies of MySQL.
 
 =cut
 
-
 =head2 insert
 
 Takes a table name as the first argument and assumes that the rest of the arguments are an array of key-value pairs to be inserted.
@@ -33,26 +32,24 @@ a Class::ReturnValue object with the error reported.
 
 =cut
 
-sub insert  {
+sub insert {
     my $self = shift;
 
     my $sth = $self->SUPER::insert(@_);
-    if (!$sth) {
-	    return ($sth);
-     }
-
-    $self->{'id'}=$self->dbh->{'mysql_insertid'};
- 
-    # Yay. we get to work around mysql_insertid being null some of the time :/
-    unless ($self->{'id'}) {
-	$self->{'id'} =  $self->fetch_result('SELECT LAST_INSERT_ID()');
+    if ( !$sth ) {
+        return ($sth);
     }
-    warn "$self no row id returned on row creation" unless ($self->{'id'});
-    
-    return( $self->{'id'}); #Add Succeded. return the id
-  }
 
+    $self->{'id'} = $self->dbh->{'mysql_insertid'};
 
+    # Yay. we get to work around mysql_insertid being null some of the time :/
+    unless ( $self->{'id'} ) {
+        $self->{'id'} = $self->fetch_result('SELECT LAST_INSERT_ID()');
+    }
+    warn "$self no row id returned on row creation" unless ( $self->{'id'} );
+
+    return ( $self->{'id'} );    #Add Succeded. return the id
+}
 
 =head2 database_version
 
@@ -62,10 +59,10 @@ Returns the mysql version, trimming off any -foo identifier
 
 sub database_version {
     my $self = shift;
-    my $v = $self->SUPER::database_version();
+    my $v    = $self->SUPER::database_version();
 
-   $v =~ s/\-.*$//;
-   return ($v);
+    $v =~ s/\-.*$//;
+    return ($v);
 }
 
 =head2 case_sensitive 
@@ -76,9 +73,8 @@ Returns undef, since mysql's searches are not case sensitive by default
 
 sub case_sensitive {
     my $self = shift;
-    return(undef);
+    return (undef);
 }
-
 
 1;
 

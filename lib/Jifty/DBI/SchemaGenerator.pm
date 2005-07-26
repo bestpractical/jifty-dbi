@@ -9,6 +9,7 @@ use Class::ReturnValue;
 
 # Public accessors
 __PACKAGE__->mk_accessors(qw(handle));
+
 # Internal accessors: do not use from outside class
 __PACKAGE__->mk_accessors(qw(_db_schema));
 
@@ -20,16 +21,16 @@ required argument is a C<Jifty::DBI::Handle>.
 =cut
 
 sub new {
-  my $class = shift;
-  my $handle = shift;
-  my $self = $class->SUPER::new();
-  
-  $self->handle($handle);
-  
-  my $schema = DBIx::DBSchema->new;
-  $self->_db_schema($schema);
-  
-  return $self;
+    my $class  = shift;
+    my $handle = shift;
+    my $self   = $class->SUPER::new();
+
+    $self->handle($handle);
+
+    my $schema = DBIx::DBSchema->new;
+    $self->_db_schema($schema);
+
+    return $self;
 }
 
 =for public_doc AddModel MODEL
@@ -46,31 +47,32 @@ otherwise.
 =cut
 
 sub AddModel {
-  my $self = shift;
-  my $model = shift;
-  
-  # $model could either be a (presumably unfilled) object of a subclass of
-  # Jifty::DBI::Record, or it could be the name of such a subclass.
-  
-  unless (ref $model and UNIVERSAL::isa($model, 'Jifty::DBI::Record')) {
-    my $new_model;
-    eval { $new_model = $model->new; };
-    
-    if ($@) {
-      return $self->_error("Error making new object from $model: $@");
+    my $self  = shift;
+    my $model = shift;
+
+    # $model could either be a (presumably unfilled) object of a subclass of
+    # Jifty::DBI::Record, or it could be the name of such a subclass.
+
+    unless ( ref $model and UNIVERSAL::isa( $model, 'Jifty::DBI::Record' ) ) {
+        my $new_model;
+        eval { $new_model = $model->new; };
+
+        if ($@) {
+            return $self->_error("Error making new object from $model: $@");
+        }
+
+        return $self->_error(
+            "Didn't get a Jifty::DBI::Record from $model, got $new_model")
+            unless UNIVERSAL::isa( $new_model, 'Jifty::DBI::Record' );
+
+        $model = $new_model;
     }
-    
-    return $self->_error("Didn't get a Jifty::DBI::Record from $model, got $new_model")
-      unless UNIVERSAL::isa($new_model, 'Jifty::DBI::Record');
-      
-    $model = $new_model;
-  }
-  
-  my $table_obj = $self->_DBSchemaTableFromModel($model);
-  
-  $self->_db_schema->addtable($table_obj);
-  
-  1;
+
+    my $table_obj = $self->_DBSchemaTableFromModel($model);
+
+    $self->_db_schema->addtable($table_obj);
+
+    1;
 }
 
 =for public_doc CreateTableSQLStatements
@@ -81,9 +83,10 @@ the models added to the SchemaGenerator.
 =cut
 
 sub CreateTableSQLStatements {
-  my $self = shift;
-  # The sort here is to make it predictable, so that we can write tests.
-  return sort $self->_db_schema->sql($self->handle->dbh);
+    my $self = shift;
+
+    # The sort here is to make it predictable, so that we can write tests.
+    return sort $self->_db_schema->sql( $self->handle->dbh );
 }
 
 =for public_doc CreateTableSQLText
@@ -94,9 +97,9 @@ the models added to the SchemaGenerator.
 =cut
 
 sub CreateTableSQLText {
-  my $self = shift;
+    my $self = shift;
 
-  return join "\n", map { "$_ ;\n" } $self->CreateTableSQLStatements;
+    return join "\n", map {"$_ ;\n"} $self->CreateTableSQLStatements;
 }
 
 =for private_doc _DBSchemaTableFromModel MODEL
@@ -107,46 +110,54 @@ C<DBIx::DBSchema::Table> object corresponding to the model.
 =cut
 
 sub _DBSchemaTableFromModel {
-  my $self = shift;
-  my $model = shift;
-  
-  my $table_name = $model->table;
-  my $schema     = $model->schema;
-  
-  my $primary = "id"; # TODO allow override
-  my $primary_col = DBIx::DBSchema::Column->new({
-    name => $primary,
-    type => 'serial',
-    null => 'NOT NULL',
-  });
-  
-  my @cols = ($primary_col);
-  
-  # The sort here is to make it predictable, so that we can write tests.
-  for my $field (sort keys %$schema) {
-    # Skip foreign keys
-    
-    next if defined $schema->{$field}->{'REFERENCES'} and defined $schema->{$field}->{'KEY'};
-    
-    # TODO XXX FIXME
-    # In lieu of real reference support, make references just integers
-    $schema->{$field}{'TYPE'} = 'integer' if $schema->{$field}{'REFERENCES'};
-    
-    push @cols, DBIx::DBSchema::Column->new({
-      name    => $field,
-      type    => $schema->{$field}{'TYPE'},
-      null    => 'NULL',
-      default => $schema->{$field}{'DEFAULT'},
-    });
-  }
-  
-  my $table = DBIx::DBSchema::Table->new({
-    name => $table_name,
-    primary_key => $primary,
-    columns => \@cols,
-  });
-  
-  return $table;
+    my $self  = shift;
+    my $model = shift;
+
+    my $table_name = $model->table;
+    my $schema     = $model->schema;
+
+    my $primary     = "id";                          # TODO allow override
+    my $primary_col = DBIx::DBSchema::Column->new(
+        {   name => $primary,
+            type => 'serial',
+            null => 'NOT NULL',
+        }
+    );
+
+    my @cols = ($primary_col);
+
+    # The sort here is to make it predictable, so that we can write tests.
+    for my $field ( sort keys %$schema ) {
+
+        # Skip foreign keys
+
+        next
+            if defined $schema->{$field}->{'REFERENCES'}
+            and defined $schema->{$field}->{'KEY'};
+
+        # TODO XXX FIXME
+        # In lieu of real reference support, make references just integers
+        $schema->{$field}{'TYPE'} = 'integer'
+            if $schema->{$field}{'REFERENCES'};
+
+        push @cols,
+            DBIx::DBSchema::Column->new(
+            {   name    => $field,
+                type    => $schema->{$field}{'TYPE'},
+                null    => 'NULL',
+                default => $schema->{$field}{'DEFAULT'},
+            }
+            );
+    }
+
+    my $table = DBIx::DBSchema::Table->new(
+        {   name        => $table_name,
+            primary_key => $primary,
+            columns     => \@cols,
+        }
+    );
+
+    return $table;
 }
 
 =for private_doc _error STRING
@@ -156,16 +167,15 @@ Takes in a string and returns it as a Class::ReturnValue error object.
 =cut
 
 sub _error {
-  my $self = shift;
-  my $message = shift;
-  
-  my $ret = Class::ReturnValue->new;
-  $ret->as_error(errno => 1, message => $message);
-  return $ret->return_value;
+    my $self    = shift;
+    my $message = shift;
+
+    my $ret = Class::ReturnValue->new;
+    $ret->as_error( errno => 1, message => $message );
+    return $ret->return_value;
 }
 
-
-1; # Magic true value required at end of module
+1;    # Magic true value required at end of module
 __END__
 
 =head1 NAME

@@ -26,7 +26,6 @@ compensates for some of the idiosyncrasies of Postgres.
 
 =cut
 
-
 =head2 connect
 
 connect takes a hashref and passes it off to SUPER::connect;
@@ -34,17 +33,16 @@ Forces the timezone to GMT
 it returns a database handle.
 
 =cut
-  
+
 sub connect {
     my $self = shift;
-    
+
     $self->SUPER::connect(@_);
     $self->simple_query("SET TIME ZONE 'GMT'");
     $self->simple_query("SET DATESTYLE TO 'ISO'");
     $self->auto_commit(1);
-    return ($DBIHandle); 
+    return ($DBIHandle);
 }
-
 
 =head2 insert
 
@@ -56,32 +54,30 @@ with error info
 
 =cut
 
-
 sub insert {
-    my $self = shift;
+    my $self  = shift;
     my $table = shift;
-    
-    my $sth = $self->SUPER::insert($table, @_ );
-    
+
+    my $sth = $self->SUPER::insert( $table, @_ );
+
     unless ($sth) {
-	    return ($sth);
+        return ($sth);
     }
 
-    #Lets get the id of that row we just inserted    
+    #Lets get the id of that row we just inserted
     my $oid = $sth->{'pg_oid_status'};
     my $sql = "SELECT id FROM $table WHERE oid = ?";
-    my @row = $self->fetch_result($sql, $oid);
+    my @row = $self->fetch_result( $sql, $oid );
+
     # TODO: Propagate Class::ReturnValue up here.
-    unless ($row[0]) {
-	    print STDERR "Can't find $table.id  for OID $oid";
-	    return(undef);
-    }	
+    unless ( $row[0] ) {
+        print STDERR "Can't find $table.id  for OID $oid";
+        return (undef);
+    }
     $self->{'id'} = $row[0];
-    
-    return ($self->{'id'});
+
+    return ( $self->{'id'} );
 }
-
-
 
 =head2 binary_safe_blobs
 
@@ -91,9 +87,8 @@ Return undef, as no current version of postgres supports binary-safe blobs
 
 sub binary_safe_blobs {
     my $self = shift;
-    return(undef);
+    return (undef);
 }
-
 
 =head2 apply_limits STATEMENTREF ROWS_PER_PAGE FIRST_ROW
 
@@ -103,14 +98,14 @@ takes an SQL SELECT statement and massages it to return ROWS_PER_PAGE starting w
 =cut
 
 sub apply_limits {
-    my $self = shift;
+    my $self         = shift;
     my $statementref = shift;
-    my $per_page = shift;
-    my $first = shift;
+    my $per_page     = shift;
+    my $first        = shift;
 
     my $limit_clause = '';
 
-    if ( $per_page) {
+    if ($per_page) {
         $limit_clause = " LIMIT ";
         $limit_clause .= $per_page;
         if ( $first && $first != 0 ) {
@@ -118,10 +113,9 @@ sub apply_limits {
         }
     }
 
-   $$statementref .= $limit_clause; 
+    $$statementref .= $limit_clause;
 
 }
-
 
 =head2 _make_clause_case_insensitive FIELD OPERATOR VALUE
 
@@ -138,9 +132,9 @@ sub _make_clause_case_insensitive {
     my $operator = shift;
     my $value    = shift;
 
-
-    if ($value =~ /^['"]?\d+['"]?$/) { # we don't need to downcase numeric values
-        	return ( $field, $operator, $value);
+    if ( $value =~ /^['"]?\d+['"]?$/ )
+    {    # we don't need to downcase numeric values
+        return ( $field, $operator, $value );
     }
 
     if ( $operator =~ /LIKE/i ) {
@@ -148,19 +142,21 @@ sub _make_clause_case_insensitive {
         return ( $field, $operator, $value );
     }
     elsif ( $operator =~ /=/ ) {
-	if (howmany() >= 4) {
-        	return ( "LOWER($field)", $operator, $value, "LOWER(?)"); 
-	} 
-	# RT 3.0.x and earlier  don't know how to cope with a "LOWER" function 
-	# on the value. they only expect field, operator, value.
-	# 
-	else {
-		return ( "LOWER($field)", $operator, lc($value));
+        if ( howmany() >= 4 ) {
+            return ( "LOWER($field)", $operator, $value, "LOWER(?)" );
+        }
 
-	}
+        # RT 3.0.x and earlier  don't know how to cope with a "LOWER" function
+        # on the value. they only expect field, operator, value.
+        #
+        else {
+            return ( "LOWER($field)", $operator, lc($value) );
+
+        }
     }
     else {
-        $self->SUPER::_make_clause_case_insensitive( $field, $operator, $value );
+        $self->SUPER::_make_clause_case_insensitive( $field, $operator,
+            $value );
     }
 }
 

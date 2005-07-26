@@ -1,12 +1,12 @@
 # $Header: /home/jesse/DBIx-SearchBuilder/history/SearchBuilder/Handle/Oracle.pm,v 1.14 2002/01/28 06:11:37 jesse Exp $
 
 use strict;
+
 package Jifty::DBI::Handle::Oracle;
 use base qw/Jifty::DBI::Handle/;
 use DBD::Oracle qw(:ora_types);
-         
-use vars qw($VERSION $DBIHandle $DEBUG);
 
+use vars qw($VERSION $DBIHandle $DEBUG);
 
 =head1 NAME
 
@@ -24,34 +24,35 @@ compensates for some of the idiosyncrasies of Oracle.
 
 =cut
 
-
 =head2 connect PARAMHASH: Driver, Database, Host, User, Password
 
 Takes a paramhash and connects to your DBI datasource. 
 
 =cut
 
-sub connect  {
-  my $self = shift;
-  
-  my %args = ( Driver => undef,
-	       Database => undef,
-	       User => undef,
-	       Password => undef, 
-	       SID => undef,
-	       Host => undef,
-	       @_);
-  
-    $self->SUPER::connect(%args);
-    
-    $self->dbh->{LongTruncOk}=1;
-    $self->dbh->{LongReadLen}=8000;
-    
-    $self->simple_query("ALTER SESSION set NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS'");
-    
-    return ($DBIHandle); 
-}
+sub connect {
+    my $self = shift;
 
+    my %args = (
+        Driver   => undef,
+        Database => undef,
+        User     => undef,
+        Password => undef,
+        SID      => undef,
+        Host     => undef,
+        @_
+    );
+
+    $self->SUPER::connect(%args);
+
+    $self->dbh->{LongTruncOk} = 1;
+    $self->dbh->{LongReadLen} = 8000;
+
+    $self->simple_query(
+        "ALTER SESSION set NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS'");
+
+    return ($DBIHandle);
+}
 
 =head2 insert
 
@@ -60,39 +61,37 @@ are an array of key-value pairs to be inserted.
 
 =cut
 
-sub insert  {
-	my $self = shift;
-	my $table = shift;
+sub insert {
+    my $self  = shift;
+    my $table = shift;
     my ($sth);
 
-
-
-  # Oracle Hack to replace non-supported mysql_rowid call
+    # Oracle Hack to replace non-supported mysql_rowid call
 
     my %attribs = @_;
-    my ($unique_id, $QueryString);
+    my ( $unique_id, $QueryString );
 
-    if ($attribs{'Id'} || $attribs{'id'}) {
-        $unique_id = ($attribs{'Id'} ? $attribs{'Id'} : $attribs{'id'} );
+    if ( $attribs{'Id'} || $attribs{'id'} ) {
+        $unique_id = ( $attribs{'Id'} ? $attribs{'Id'} : $attribs{'id'} );
     }
     else {
- 
-    $QueryString = "SELECT ".$table."_seq.nextval FROM DUAL";
- 
-    $sth = $self->simple_query($QueryString);
-    if (!$sth) {
-       if ($main::debug) {
-    	die "Error with $QueryString";
-      }
-       else {
-	 return (undef);
-       }
-     }
 
-     #needs error checking
-    my @row = $sth->fetchrow_array;
+        $QueryString = "SELECT " . $table . "_seq.nextval FROM DUAL";
 
-    $unique_id = $row[0];
+        $sth = $self->simple_query($QueryString);
+        if ( !$sth ) {
+            if ($main::debug) {
+                die "Error with $QueryString";
+            }
+            else {
+                return (undef);
+            }
+        }
+
+        #needs error checking
+        my @row = $sth->fetchrow_array;
+
+        $unique_id = $row[0];
 
     }
 
@@ -101,22 +100,20 @@ sub insert  {
 
     $attribs{'id'} = $unique_id;
     delete $attribs{'Id'};
-    $sth =  $self->SUPER::insert( $table, %attribs);
+    $sth = $self->SUPER::insert( $table, %attribs );
 
-   unless ($sth) {
-     if ($main::debug) {
-        die "Error with $QueryString: ". $self->dbh->errstr;
+    unless ($sth) {
+        if ($main::debug) {
+            die "Error with $QueryString: " . $self->dbh->errstr;
+        }
+        else {
+            return (undef);
+        }
     }
-     else {
-         return (undef);
-     }
-   }
 
     $self->{'id'} = $unique_id;
-    return( $self->{'id'}); #Add Succeded. return the id
-  }
-
-
+    return ( $self->{'id'} );    #Add Succeded. return the id
+}
 
 =head2  build_dsn PARAMHASH
 
@@ -131,29 +128,36 @@ Builds a DSN suitable for an Oracle DBI connection
 
 sub build_dsn {
     my $self = shift;
-  my %args = ( Driver => undef,
-	       Database => undef,
-	       Host => undef,
-	       Port => undef,
-           SID => undef,
-	       RequireSSL => undef,
-	       @_);
-  
-  my $dsn = "dbi:$args{'Driver'}:";
+    my %args = (
+        Driver     => undef,
+        Database   => undef,
+        Host       => undef,
+        Port       => undef,
+        SID        => undef,
+        RequireSSL => undef,
+        @_
+    );
 
-  if (defined $args{'Host'} && $args{'Host'} 
-   && defined $args{'SID'}  && $args{'SID'} ) {
-      $dsn .= "host=$args{'Host'};sid=$args{'SID'}";
-  } else {
-      $dsn .= "$args{'Database'}" if (defined $args{'Database'} && $args{'Database'});
-  }
-  $dsn .= ";port=$args{'Port'}" if (defined $args{'Port'} && $args{'Port'});
-  $dsn .= ";requiressl=1" if (defined $args{'RequireSSL'} && $args{'RequireSSL'});
+    my $dsn = "dbi:$args{'Driver'}:";
 
-  $self->{'dsn'}= $dsn;
+    if (   defined $args{'Host'}
+        && $args{'Host'}
+        && defined $args{'SID'}
+        && $args{'SID'} )
+    {
+        $dsn .= "host=$args{'Host'};sid=$args{'SID'}";
+    }
+    else {
+        $dsn .= "$args{'Database'}"
+            if ( defined $args{'Database'} && $args{'Database'} );
+    }
+    $dsn .= ";port=$args{'Port'}"
+        if ( defined $args{'Port'} && $args{'Port'} );
+    $dsn .= ";requiressl=1"
+        if ( defined $args{'RequireSSL'} && $args{'RequireSSL'} );
+
+    $self->{'dsn'} = $dsn;
 }
-
-
 
 =head2 knows_blobs     
 
@@ -162,12 +166,10 @@ Returns undef if the current database must be informed of BLOBs for inserts.
 
 =cut
 
-sub knows_blobs {     
+sub knows_blobs {
     my $self = shift;
-    return(undef);
+    return (undef);
 }
-
-
 
 =head2 blob_params FIELD_NAME FIELD_TYPE
 
@@ -177,16 +179,18 @@ The current Oracle implementation only supports ORA_CLOB types (112).
 
 =cut
 
-sub blob_params { 
-    my $self = shift;
+sub blob_params {
+    my $self  = shift;
     my $field = shift;
+
     #my $type = shift;
     # Don't assign to key 'value' as it is defined later.
-    return ( { ora_field => $field, ora_type => ORA_CLOB,
-});    
+    return (
+        {   ora_field => $field,
+            ora_type  => ORA_CLOB,
+        }
+    );
 }
-
-
 
 =head2 apply_limits STATEMENTREF ROWS_PER_PAGE FIRST_ROW
 
@@ -196,43 +200,47 @@ takes an SQL SELECT statement and massages it to return ROWS_PER_PAGE starting w
 =cut
 
 sub apply_limits {
-    my $self = shift;
+    my $self         = shift;
     my $statementref = shift;
-    my $per_page = shift;
-    my $first = shift;
+    my $per_page     = shift;
+    my $first        = shift;
 
     # Transform an SQL query from:
     #
-    # SELECT main.* 
-    #   FROM Tickets main   
-    #  WHERE ((main.EffectiveId = main.id)) 
-    #    AND ((main.Type = 'ticket')) 
-    #    AND ( ( (main.Status = 'new')OR(main.Status = 'open') ) 
-    #    AND ( (main.Queue = '1') ) )  
+    # SELECT main.*
+    #   FROM Tickets main
+    #  WHERE ((main.EffectiveId = main.id))
+    #    AND ((main.Type = 'ticket'))
+    #    AND ( ( (main.Status = 'new')OR(main.Status = 'open') )
+    #    AND ( (main.Queue = '1') ) )
     #
-    # to: 
+    # to:
     #
     # SELECT * FROM (
     #     SELECT limitquery.*,rownum limitrownum FROM (
-    #             SELECT main.* 
-    #               FROM Tickets main   
-    #              WHERE ((main.EffectiveId = main.id)) 
-    #                AND ((main.Type = 'ticket')) 
-    #                AND ( ( (main.Status = 'new')OR(main.Status = 'open') ) 
-    #                AND ( (main.Queue = '1') ) )  
+    #             SELECT main.*
+    #               FROM Tickets main
+    #              WHERE ((main.EffectiveId = main.id))
+    #                AND ((main.Type = 'ticket'))
+    #                AND ( ( (main.Status = 'new')OR(main.Status = 'open') )
+    #                AND ( (main.Queue = '1') ) )
     #     ) limitquery WHERE rownum <= 50
     # ) WHERE limitrownum >= 1
     #
 
     if ($per_page) {
+
         # Oracle orders from 1 not zero
-        $first++; 
+        $first++;
+
         # Make current query a sub select
-        $$statementref = "SELECT * FROM ( SELECT limitquery.*,rownum limitrownum FROM ( $$statementref ) limitquery WHERE rownum <= " . ($first + $per_page - 1) . " ) WHERE limitrownum >= " . $first;
+        $$statementref
+            = "SELECT * FROM ( SELECT limitquery.*,rownum limitrownum FROM ( $$statementref ) limitquery WHERE rownum <= "
+            . ( $first + $per_page - 1 )
+            . " ) WHERE limitrownum >= "
+            . $first;
     }
 }
-
-
 
 =head2 distinct_query STATEMENTREF
 
@@ -242,18 +250,16 @@ takes an incomplete SQL SELECT statement and massages it to return a DISTINCT re
 =cut
 
 sub distinct_query {
-    my $self = shift;
+    my $self         = shift;
     my $statementref = shift;
-    my $table = shift;
+    my $table        = shift;
 
     # Wrapper select query in a subselect as Oracle doesn't allow
     # DISTINCT against CLOB/BLOB column types.
-    $$statementref = "SELECT main.* FROM ( SELECT DISTINCT main.id FROM $$statementref ) distinctquery, $table main WHERE (main.id = distinctquery.id) ";
+    $$statementref
+        = "SELECT main.* FROM ( SELECT DISTINCT main.id FROM $$statementref ) distinctquery, $table main WHERE (main.id = distinctquery.id) ";
 
 }
-
-
-
 
 =head2 binary_safe_blobs
 
@@ -264,9 +270,8 @@ Return undef, as Oracle doesn't support binary-safe CLOBS
 
 sub binary_safe_blobs {
     my $self = shift;
-    return(undef);
+    return (undef);
 }
-
 
 1;
 

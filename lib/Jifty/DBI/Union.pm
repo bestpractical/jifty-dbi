@@ -48,12 +48,13 @@ Create a new Jifty::DBI::Union object.  No arguments.
 =cut
 
 sub new {
-  bless {
-		 data => [],
-		 curp => 0,				# current offset in data
-		 item => 0,				# number of indiv items from First
-		 count => undef,
-		}, shift;
+    bless {
+        data  => [],
+        curp  => 0,       # current offset in data
+        item  => 0,       # number of indiv items from First
+        count => undef,
+        },
+        shift;
 }
 
 =head2 add $sb
@@ -66,15 +67,18 @@ It must be the same type as the first object added.
 
 sub add {
     my $self   = shift;
-	my $newobj = shift;
+    my $newobj = shift;
 
-	unless ( @{$self->{data}} == 0
-			 || ref($newobj) eq ref($self->{data}[0]) ) {
-	  die "All elements of a Jifty::DBI::Union must be of the same type.  Looking for a " . ref($self->{data}[0]) .".";
-	}
+    unless ( @{ $self->{data} } == 0
+        || ref($newobj) eq ref( $self->{data}[0] ) )
+    {
+        die
+            "All elements of a Jifty::DBI::Union must be of the same type.  Looking for a "
+            . ref( $self->{data}[0] ) . ".";
+    }
 
-	$self->{count} = undef;
-    push @{$self->{data}}, $newobj;
+    $self->{count} = undef;
+    push @{ $self->{data} }, $newobj;
 }
 
 =head2 First
@@ -88,11 +92,11 @@ element.
 sub First {
     my $self = shift;
 
-	die "No elements in Jifty::DBI::Union"
-	  unless @{$self->{data}};
+    die "No elements in Jifty::DBI::Union"
+        unless @{ $self->{data} };
 
     $self->{curp} = 0;
-	$self->{item} = 0;
+    $self->{item} = 0;
     $self->{data}[0]->First;
 }
 
@@ -103,20 +107,21 @@ Return the next element in the Union.
 =cut
 
 sub Next {
-  my $self=shift;
+    my $self = shift;
 
-  return undef unless defined  $self->{data}[ $self->{curp} ];
+    return undef unless defined $self->{data}[ $self->{curp} ];
 
-  my $cur =  $self->{data}[ $self->{curp} ];
-  if ( $cur->_ItemsCounter == $cur->Count ) {
-	# move to the next element
-	$self->{curp}++;
-	return undef unless defined   $self->{data}[ $self->{curp} ];
-	$cur =  $self->{data}[ $self->{curp} ];
-	$self->{data}[ $self->{curp} ]->GotoFirstItem;
-  }
-  $self->{item}++;
-  $cur->Next;
+    my $cur = $self->{data}[ $self->{curp} ];
+    if ( $cur->_ItemsCounter == $cur->Count ) {
+
+        # move to the next element
+        $self->{curp}++;
+        return undef unless defined $self->{data}[ $self->{curp} ];
+        $cur = $self->{data}[ $self->{curp} ];
+        $self->{data}[ $self->{curp} ]->GotoFirstItem;
+    }
+    $self->{item}++;
+    $cur->Next;
 }
 
 =head2 Last
@@ -126,10 +131,10 @@ Returns the last item
 =cut
 
 sub Last {
-  die "Last doesn't work right now";
-  my $self = shift;
-  $self->GotoItem( ( $self->Count ) - 1 );
-  return ( $self->Next );
+    die "Last doesn't work right now";
+    my $self = shift;
+    $self->GotoItem( ( $self->Count ) - 1 );
+    return ( $self->Next );
 }
 
 =head2 Count
@@ -139,19 +144,18 @@ Returns the total number of elements in the Union'ed Collection
 =cut
 
 sub Count {
-  my $self = shift;
-  my $sum = 0;
+    my $self = shift;
+    my $sum  = 0;
 
-  # cache the results
-  return $self->{count} if defined $self->{count};
+    # cache the results
+    return $self->{count} if defined $self->{count};
 
-  $sum += $_->Count for (@{$self->{data}});
+    $sum += $_->Count for ( @{ $self->{data} } );
 
-  $self->{count} = $sum;
+    $self->{count} = $sum;
 
-  return $sum;
+    return $sum;
 }
-
 
 =head2 GotoFirstItem
 
@@ -162,22 +166,22 @@ if you'd just started iterating through the result set.
 =cut
 
 sub GotoFirstItem {
-  my $self = shift;
-  $self->GotoItem(0);
+    my $self = shift;
+    $self->GotoItem(0);
 }
 
 sub GotoItem {
-  my $self = shift;
-  my $item = shift;
+    my $self = shift;
+    my $item = shift;
 
-  die "We currently only support going to the First item"
-	unless $item == 0;
+    die "We currently only support going to the First item"
+        unless $item == 0;
 
-  $self->{curp} = 0;
-  $self->{item} = 0;
-  $self->{data}[0]->GotoItem(0);
+    $self->{curp} = 0;
+    $self->{item} = 0;
+    $self->{data}[0]->GotoItem(0);
 
-  return $item;
+    return $item;
 }
 
 =head2 IsLast
@@ -189,7 +193,7 @@ Returns true if the current row is the last record in the set.
 sub IsLast {
     my $self = shift;
 
-	$self->{item} == $self->Count ? 1 : undef;
+    $self->{item} == $self->Count ? 1 : undef;
 }
 
 =head2 ItemsArrayRef
@@ -205,13 +209,13 @@ sub ItemsArrayRef {
 
     return [] unless $self->Count;
 
-	$self->GotoFirstItem();
-	my @ret;
-	while( my $r = $self->Next ) {
-	  push @ret, $r;
-	}
+    $self->GotoFirstItem();
+    my @ret;
+    while ( my $r = $self->Next ) {
+        push @ret, $r;
+    }
 
-	return \@ret;
+    return \@ret;
 }
 
 =head1 AUTHOR

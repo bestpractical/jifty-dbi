@@ -1,22 +1,20 @@
 package Jifty::DBI::Unique;
 use base 'Exporter';
-our @EXPORT = qw(AddRecord);
+our @EXPORT  = qw(AddRecord);
 our $VERSION = "0.01";
 use strict;
 use warnings;
 
-
-
 sub AddRecord {
-    my $self = shift;
+    my $self   = shift;
     my $record = shift;
 
     # We're a mixin, so we can't override _CleanSlate, but if an object
     # gets reused, we need to clean ourselves out.  If there are no items,
     # we're clearly doing a new search
-    $self->{"dbix_sb_unique_cache"} = {} unless (@{$self->{'items'}}[0]);
-    return if $self->{"dbix_sb_unique_cache"}->{$record->id}++;
-    push @{$self->{'items'}}, $record;
+    $self->{"dbix_sb_unique_cache"} = {} unless ( @{ $self->{'items'} }[0] );
+    return if $self->{"dbix_sb_unique_cache"}->{ $record->id }++;
+    push @{ $self->{'items'} }, $record;
 }
 
 1;

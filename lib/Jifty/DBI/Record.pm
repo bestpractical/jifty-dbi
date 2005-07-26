@@ -7,8 +7,6 @@ use warnings;
 use vars qw($AUTOLOAD);
 use Class::ReturnValue;
 
-
-
 =head1 NAME
 
 Jifty::DBI::Record - Superclass for records loaded by SearchBuilder
@@ -344,34 +342,29 @@ For example, the method C<_primary_keys> has the alias C<_primary_keys>.
 
 =cut
 
-
-
 =head2  new 
 
 Instantiate a new record object.
 
 =cut
 
-
-sub new  {
+sub new {
     my $proto = shift;
-   
+
     my $class = ref($proto) || $proto;
-    my $self  = {};
-    bless ($self, $class);
+    my $self = {};
+    bless( $self, $class );
     $self->_init(@_);
 
     return $self;
-  }
-
+}
 
 # Not yet documented here.  Should almost certainly be overloaded.
 sub _init {
-    my $self = shift;
+    my $self   = shift;
     my $handle = shift;
     $self->_handle($handle);
 }
-
 
 =head2 id
 
@@ -379,12 +372,11 @@ Returns this row's primary key.
 
 =cut
 
-sub id  {
+sub id {
     my $pkey = $_[0]->_primary_key();
-    my $ret = $_[0]->{'values'}->{$pkey};
+    my $ret  = $_[0]->{'values'}->{$pkey};
     return $ret;
 }
-
 
 =head2 primary_keys
 
@@ -392,19 +384,16 @@ Return a hash of the values of our primary keys for this function.
 
 =cut
 
-sub primary_keys { 
-    my $self = shift; 
-    my %hash = map { $_ => $self->{'values'}->{$_} } @{$self->_primary_keys};
+sub primary_keys {
+    my $self = shift;
+    my %hash
+        = map { $_ => $self->{'values'}->{$_} } @{ $self->_primary_keys };
     return (%hash);
 }
-
-
-
 
 sub DESTROY {
     return 1;
 }
-
 
 sub AUTOLOAD {
     my $self = $_[0];
@@ -416,12 +405,13 @@ sub AUTOLOAD {
         *{$AUTOLOAD} = sub { return ( $_[0]->_value($Attrib) ) };
         goto &$AUTOLOAD;
     }
-    elsif ( $self->_accessible( $Attrib, 'record-read') ) {
-        *{$AUTOLOAD} = sub { $_[0]->_to_record( $Attrib, $_[0]->_value($Attrib) ) };
-        goto &$AUTOLOAD;        
+    elsif ( $self->_accessible( $Attrib, 'record-read' ) ) {
+        *{$AUTOLOAD}
+            = sub { $_[0]->_to_record( $Attrib, $_[0]->_value($Attrib) ) };
+        goto &$AUTOLOAD;
     }
-    elsif ( $self->_accessible( $Attrib, 'foreign-collection') ) {
-        *{$AUTOLOAD} = sub { $_[0]->_collection_value( $Attrib ) };
+    elsif ( $self->_accessible( $Attrib, 'foreign-collection' ) ) {
+        *{$AUTOLOAD} = sub { $_[0]->_collection_value($Attrib) };
         goto &$AUTOLOAD;
     }
     elsif ( $AUTOLOAD =~ /.*::set_(\w+)/o ) {
@@ -432,15 +422,17 @@ sub AUTOLOAD {
                 return ( $_[0]->_set( field => $Attrib, value => $_[1] ) );
             };
             goto &$AUTOLOAD;
-        } elsif ( $self->_accessible( $Attrib, 'record-write') ) {
+        }
+        elsif ( $self->_accessible( $Attrib, 'record-write' ) ) {
             *{$AUTOLOAD} = sub {
                 my $self = shift;
-                my $val = shift;
+                my $val  = shift;
 
-                $val = $val->id if UNIVERSAL::isa($val, 'Jifty::DBI::Record');
+                $val = $val->id
+                    if UNIVERSAL::isa( $val, 'Jifty::DBI::Record' );
                 return ( $self->_set( field => $Attrib, value => $val ) );
             };
-            goto &$AUTOLOAD;            
+            goto &$AUTOLOAD;
         }
         elsif ( $self->_accessible( $Attrib, 'read' ) ) {
             *{$AUTOLOAD} = sub { return ( 0, 'Immutable field' ) };
@@ -477,8 +469,8 @@ sub AUTOLOAD {
         goto &$AUTOLOAD;
     }
 
-    # TODO: if autoload = 0 or 1 _ then a combination of lowercase and _ chars,
-    # turn them into studlycapped phrases
+   # TODO: if autoload = 0 or 1 _ then a combination of lowercase and _ chars,
+   # turn them into studlycapped phrases
 
     else {
         my ( $package, $filename, $line );
@@ -489,8 +481,6 @@ sub AUTOLOAD {
 
 }
 
-
-
 =head2 _accessible  KEY MODE
 
 Private method.
@@ -499,18 +489,15 @@ Returns undef unless C<KEY> is accessible in C<MODE> otherwise returns C<MODE> v
 
 =cut
 
-
 sub _accessible {
     my $self = shift;
     my $attr = shift;
-    my $mode = lc(shift || '');
+    my $mode = lc( shift || '' );
 
     my $attribute = $self->_class_accessible(@_)->{$attr};
     return unless defined $attribute;
     return $attribute->{$mode};
 }
-
-
 
 =head2 _primary_keys
 
@@ -523,15 +510,13 @@ sub _primary_keys {
     return ['id'];
 }
 
-
 sub _primary_key {
-    my $self = shift;
+    my $self  = shift;
     my $pkeys = $self->_primary_keys();
     die "No primary key" unless ( ref($pkeys) eq 'ARRAY' and $pkeys->[0] );
     die "Too many primary keys" unless ( scalar(@$pkeys) == 1 );
     return $pkeys->[0];
 }
-
 
 =head2 _class_accessible 
 
@@ -552,97 +537,96 @@ Here's an example declaration:
 
 =cut
 
-
 sub _class_accessible {
     my $self = shift;
 
     return $self->_class_accessible_from_schema if $self->can('schema');
 
-  # XXX This is stub code to deal with the old way we used to do _accessible
-  # It should never be called by modern code
+    # XXX This is stub code to deal with the old way we used to do _accessible
+    # It should never be called by modern code
 
     my %accessible;
     while ( my $col = shift ) {
-        $accessible{$col}->{lc($_)} = 1
-          foreach split(/[\/,]/, shift);
+        $accessible{$col}->{ lc($_) } = 1 foreach split( /[\/,]/, shift );
     }
-    return(\%accessible);
+    return ( \%accessible );
 }
 
 sub _class_accessible_from_schema {
     my $self = shift;
-  
+
     my $accessible = {};
-    foreach my $key ($self->_primary_keys) {
+    foreach my $key ( $self->_primary_keys ) {
         $accessible->{$key} = { 'read' => 1 };
-    };
-  
+    }
+
     my $schema = $self->schema;
-  
-    for my $field (keys %$schema) {
-        if ($schema->{$field}{'TYPE'}) {
+
+    for my $field ( keys %$schema ) {
+        if ( $schema->{$field}{'TYPE'} ) {
             $accessible->{$field} = { 'read' => 1, 'write' => 1 };
-        } elsif (my $refclass = $schema->{$field}{'REFERENCES'}) {
-            if (UNIVERSAL::isa($refclass, 'Jifty::DBI::Record')) {
-                $accessible->{$field} = { 'record-read' => 1, 'record-write' => 1 };
-            } elsif (UNIVERSAL::isa($refclass, 'Jifty::DBI::Collection')) {
+        }
+        elsif ( my $refclass = $schema->{$field}{'REFERENCES'} ) {
+            if ( UNIVERSAL::isa( $refclass, 'Jifty::DBI::Record' ) ) {
+                $accessible->{$field}
+                    = { 'record-read' => 1, 'record-write' => 1 };
+            }
+            elsif ( UNIVERSAL::isa( $refclass, 'Jifty::DBI::Collection' ) ) {
                 $accessible->{$field} = { 'foreign-collection' => 1 };
-            } else {
+            }
+            else {
                 warn "Error: $refclass neither Record nor Collection";
             }
         }
     }
-  
-    return $accessible;  
+
+    return $accessible;
 }
 
-
 sub _to_record {
-    my $self = shift;
+    my $self  = shift;
     my $field = shift;
     my $value = shift;
 
     return unless defined $value;
-    
-    my $schema = $self->schema;
+
+    my $schema      = $self->schema;
     my $description = $schema->{$field};
-    
+
     return unless $description;
-    
+
     return $value unless $description->{'REFERENCES'};
-    
+
     my $classname = $description->{'REFERENCES'};
 
-    return unless UNIVERSAL::isa($classname, 'Jifty::DBI::Record');
-    
-    # XXX TODO FIXME perhaps this is not what should be passed to new, but it needs it
+    return unless UNIVERSAL::isa( $classname, 'Jifty::DBI::Record' );
+
+# XXX TODO FIXME perhaps this is not what should be passed to new, but it needs it
     my $object = $classname->new( $self->_handle );
-    $object->load_by_id( $value );
+    $object->load_by_id($value);
     return $object;
 }
 
-
 sub _collection_value {
     my $self = shift;
-    
-    my $method_name =  shift;
+
+    my $method_name = shift;
     return unless defined $method_name;
-    
-    my $schema = $self->schema;
+
+    my $schema      = $self->schema;
     my $description = $schema->{$method_name};
     return unless $description;
-    
+
     my $classname = $description->{'REFERENCES'};
 
-    return unless UNIVERSAL::isa($classname, 'Jifty::DBI::Collection');
-    
+    return unless UNIVERSAL::isa( $classname, 'Jifty::DBI::Collection' );
+
     my $coll = $classname->new( handle => $self->_handle );
-    
-    $coll->Limit( FIELD => $description->{'KEY'}, VALUE => $self->id);
-    
+
+    $coll->Limit( FIELD => $description->{'KEY'}, VALUE => $self->id );
+
     return $coll;
 }
-
 
 # sub {{{ readable_attributes
 
@@ -654,13 +638,12 @@ Returns an array of the attributes of this class defined as "read" =>
 =cut
 
 sub readable_attributes {
-    my $self = shift;
-    my $ca = $self->_class_accessible();
-    my @readable = grep { $ca->{$_}->{'read'} or $ca->{$_}->{'record-read'} } keys %{$ca};
+    my $self     = shift;
+    my $ca       = $self->_class_accessible();
+    my @readable = grep { $ca->{$_}->{'read'} or $ca->{$_}->{'record-read'} }
+        keys %{$ca};
     return (@readable);
 }
-
-
 
 =head2 writable_attributes
 
@@ -671,13 +654,12 @@ Returns an array of the attributes of this class defined as "write" =>
 
 sub writable_attributes {
     my $self = shift;
-    my $ca = $self->_class_accessible();
-    my @writable = grep { $ca->{$_}->{'write'} || $ca->{$_}->{'record-write'} } keys %{$ca};
+    my $ca   = $self->_class_accessible();
+    my @writable
+        = grep { $ca->{$_}->{'write'} || $ca->{$_}->{'record-write'} }
+        keys %{$ca};
     return @writable;
 }
-
-
-
 
 =head2 __value
 
@@ -686,19 +668,19 @@ never override __value.
 
 =cut
 
-
 sub __value {
-    my $self = shift;
+    my $self  = shift;
     my $field = lc shift;
 
-    if (!$self->{'fetched'}{$field} and my $id = $self->id() ) {
+    if ( !$self->{'fetched'}{$field} and my $id = $self->id() ) {
         my $pkey = $self->_primary_key();
-        my $QueryString = "SELECT $field FROM " . $self->table . " WHERE $pkey = ?";
+        my $QueryString
+            = "SELECT $field FROM " . $self->table . " WHERE $pkey = ?";
         my $sth = $self->_handle->simple_query( $QueryString, $id );
         my ($value) = eval { $sth->fetchrow_array() };
         warn $@ if $@;
 
-        $self->{'values'}{$field} = $value;
+        $self->{'values'}{$field}  = $value;
         $self->{'fetched'}{$field} = 1;
     }
 
@@ -715,13 +697,10 @@ control.
 
 =cut
 
-
-sub _value  {
-  my $self = shift;
-  return ($self->__value(@_));
+sub _value {
+    my $self = shift;
+    return ( $self->__value(@_) );
 }
-
-
 
 =head2 _set
 
@@ -731,21 +710,17 @@ Subclasses can override _set to insert custom access control.
 
 =cut
 
-
 sub _set {
     my $self = shift;
-    return ($self->__set(@_));
+    return ( $self->__set(@_) );
 }
-
-
-
 
 sub __set {
     my $self = shift;
 
     my %args = (
-        'field' => undef,
-        'value' => undef,
+        'field'  => undef,
+        'value'  => undef,
         'is_sql' => undef,
         @_
     );
@@ -774,7 +749,7 @@ sub __set {
         );
         return ( $ret->return_value );
     }
-    elsif (    ( defined $self->__value($column) )
+    elsif ( ( defined $self->__value($column) )
         and ( $args{'value'} eq $self->__value($column) ) )
     {
         $ret->as_array( 0, "That is already the current value" );
@@ -786,14 +761,10 @@ sub __set {
         return ( $ret->return_value );
     }
 
-
-
     # First, we truncate the value, if we need to.
     #
-    
 
-    $args{'value'} = $self->truncate_value ( $args{'column'}, $args{'value'});
-
+    $args{'value'} = $self->truncate_value( $args{'column'}, $args{'value'} );
 
     my $method = "validate_" . $args{'column'};
     unless ( $self->$method( $args{'value'} ) ) {
@@ -814,22 +785,24 @@ sub __set {
     my $unmunged_value = $args{'value'};
 
     unless ( $self->_handle->knows_blobs ) {
-        # Support for databases which don't deal with LOBs automatically
-        my $ca = $self->_class_accessible();
-        my $key = $args{'column'};
-            if ( $ca->{$key}->{'type'} =~ /^(text|longtext|clob|blob|lob)$/i ) {
-                my $bhash = $self->_handle->blob_params( $key, $ca->{$key}->{'type'} );
-                $bhash->{'value'} = $args{'value'};
-                $args{'value'} = $bhash;
-            }
-        }
 
+        # Support for databases which don't deal with LOBs automatically
+        my $ca  = $self->_class_accessible();
+        my $key = $args{'column'};
+        if ( $ca->{$key}->{'type'} =~ /^(text|longtext|clob|blob|lob)$/i ) {
+            my $bhash
+                = $self->_handle->blob_params( $key, $ca->{$key}->{'type'} );
+            $bhash->{'value'} = $args{'value'};
+            $args{'value'} = $bhash;
+        }
+    }
 
     my $val = $self->_handle->update_record_value(%args);
     unless ($val) {
-        my $message = 
-            $args{'column'} . " could not be set to " . $args{'value'} . "." ;
-        $ret->as_array( 0, $message);
+        my $message = $args{'column'}
+            . " could not be set to "
+            . $args{'value'} . ".";
+        $ret->as_array( 0, $message );
         $ret->as_error(
             errno        => 4,
             do_backtrace => 0,
@@ -837,6 +810,7 @@ sub __set {
         );
         return ( $ret->return_value );
     }
+
     # If we've performed some sort of "functional update"
     # then we need to reload the object from the DB to know what's
     # really going on. (ex SET Cost = Cost+5)
@@ -885,13 +859,10 @@ Returns a replacement VALUE.
 =cut
 
 sub _canonicalize {
-    my $self = shift;
+    my $self  = shift;
     my $field = shift;
-    
-
 
 }
-
 
 =head2 _Validate FIELD VALUE
 
@@ -903,26 +874,21 @@ If it succeeds (which is always the case right now), returns true. Otherwise ret
 
 =cut
 
-
-
-
-sub _validate  {
-    my $self = shift;
+sub _validate {
+    my $self  = shift;
     my $field = shift;
     my $value = shift;
-        
-    #Check type of input
-    #If it's null, are nulls permitted?
-    #If it's an int, check the # of bits
-    #If it's a string, 
-    #check length
-    #check for nonprintables
-    #If it's a blob, check for length
-    #In an ideal world, if this is a link to another table, check the dependency.
-   return(1); 
-  }	
 
-
+ #Check type of input
+ #If it's null, are nulls permitted?
+ #If it's an int, check the # of bits
+ #If it's a string,
+ #check length
+ #check for nonprintables
+ #If it's a blob, check for length
+ #In an ideal world, if this is a link to another table, check the dependency.
+    return (1);
+}
 
 =head2 truncate_value  KEY VALUE
 
@@ -939,7 +905,7 @@ sub truncate_value {
     my $value = shift;
 
     # We don't need to truncate empty things.
-    return undef unless (defined ($value));
+    return undef unless ( defined($value) );
 
     my $metadata = $self->_class_accessible->{$key};
 
@@ -947,7 +913,7 @@ sub truncate_value {
     if ( $metadata->{'length'} && !$metadata->{'is_numeric'} ) {
         $truncate_to = $metadata->{'length'};
     }
-    elsif ($metadata->{'type'} &&  $metadata->{'type'} =~ /char\((\d+)\)/ ) {
+    elsif ( $metadata->{'type'} && $metadata->{'type'} =~ /char\((\d+)\)/ ) {
         $truncate_to = $1;
     }
 
@@ -960,7 +926,8 @@ sub truncate_value {
 
     if ( Encode::is_utf8($value) ) {
         return Encode::decode(
-            utf8 => substr( Encode::encode( utf8 => $value ), 0, $truncate_to ),
+            utf8 =>
+                substr( Encode::encode( utf8 => $value ), 0, $truncate_to ),
             Encode::FB_QUIET(),
         );
     }
@@ -975,7 +942,6 @@ sub truncate_value {
     }
 
 }
-
 
 =head2 _object
 
@@ -1021,9 +987,6 @@ sub __object {
     return $object;
 }
 
-  
-
-
 # load should do a bit of overloading
 # if we call it with only one argument, we're trying to load by reference.
 # if we call it with a passel of arguments, we're trying to load by value
@@ -1037,12 +1000,12 @@ is $id
 
 =cut
 
-sub load  {
+sub load {
     my $self = shift;
+
     # my ($package, $filename, $line) = caller;
     return $self->load_by_id(@_);
 }
-
 
 =head2 load_by_col
 
@@ -1052,17 +1015,13 @@ undefined
 
 =cut
 
-
-
-sub load_by_col  {
+sub load_by_col {
     my $self = shift;
-    my $col = shift;
-    my $val = shift;
-    
-    return($self->load_by_cols($col => $val));
+    my $col  = shift;
+    my $val  = shift;
+
+    return ( $self->load_by_cols( $col => $val ) );
 }
-
-
 
 =head2 loadbycols
 
@@ -1076,48 +1035,53 @@ OR has references which contain 'operator' and 'value'
 
 =cut
 
-sub load_by_cols  {
+sub load_by_cols {
     my $self = shift;
-    my %hash  = (@_);
-    my (@bind, @phrases);
-    foreach my $key (keys %hash) {  
-	if (defined $hash{$key} &&  $hash{$key} ne '') {
-        my $op;
-        my $value;
-	my $function = "?";
-        if (ref $hash{$key} eq 'HASH') {
-            $op = $hash{$key}->{operator};
-            $value = $hash{$key}->{value};
-            $function = $hash{$key}->{function} || "?";
-       } else {
-            $op = '=';
-            $value = $hash{$key};
+    my %hash = (@_);
+    my ( @bind, @phrases );
+    foreach my $key ( keys %hash ) {
+        if ( defined $hash{$key} && $hash{$key} ne '' ) {
+            my $op;
+            my $value;
+            my $function = "?";
+            if ( ref $hash{$key} eq 'HASH' ) {
+                $op       = $hash{$key}->{operator};
+                $value    = $hash{$key}->{value};
+                $function = $hash{$key}->{function} || "?";
+            }
+            else {
+                $op    = '=';
+                $value = $hash{$key};
+            }
+
+            push @phrases, "$key $op $function";
+            push @bind,    $value;
         }
+        else {
+            push @phrases, "($key IS NULL OR $key = ?)";
+            my $meta = $self->_class_accessible->{$key};
+            $meta->{'type'} ||= '';
 
-		push @phrases, "$key $op $function"; 
-		push @bind, $value;
-	}
-	else {
-       push @phrases, "($key IS NULL OR $key = ?)";
-       my $meta = $self->_class_accessible->{$key};
-       $meta->{'type'} ||= '';
-       # TODO: type checking should be done in generic way
-       if ( $meta->{'is_numeric'} || $meta->{'type'} =~ /INT|NUMERIC|DECIMAL|REAL|DOUBLE|FLOAT/i  ) {
-            push @bind, 0;
-       } else {
-            push @bind, '';
-       }
+            # TODO: type checking should be done in generic way
+            if (   $meta->{'is_numeric'}
+                || $meta->{'type'}
+                =~ /INT|NUMERIC|DECIMAL|REAL|DOUBLE|FLOAT/i )
+            {
+                push @bind, 0;
+            }
+            else {
+                push @bind, '';
+            }
 
-	}
+        }
     }
-    
-    my $QueryString = "SELECT  * FROM ".$self->table." WHERE ". 
-    join(' AND ', @phrases) ;
-    return ($self->_load_from_sql($QueryString, @bind));
+
+    my $QueryString = "SELECT  * FROM "
+        . $self->table
+        . " WHERE "
+        . join( ' AND ', @phrases );
+    return ( $self->_load_from_sql( $QueryString, @bind ) );
 }
-
-
-
 
 =head2 loadbyid
 
@@ -1125,18 +1089,14 @@ Loads a record by its primary key. Your record class must define a single primar
 
 =cut
 
-
-sub load_by_id  {
+sub load_by_id {
     my $self = shift;
-    my $id = shift;
+    my $id   = shift;
 
-    $id = 0 if (!defined($id));
+    $id = 0 if ( !defined($id) );
     my $pkey = $self->_primary_key();
-    return ($self->load_by_cols($pkey => $id));
+    return ( $self->load_by_cols( $pkey => $id ) );
 }
-
-
-
 
 =head2 load_by_primary_keys 
 
@@ -1146,18 +1106,15 @@ Like load_by_id with basic support for compound primary keys.
 
 sub load_by_primary_keys {
     my $self = shift;
-    my $data = (ref $_[0] eq 'HASH')? $_[0]: {@_};
+    my $data = ( ref $_[0] eq 'HASH' ) ? $_[0] : {@_};
 
-    my %cols=();
-    foreach (@{$self->_primary_keys}) {
-	return (0, "Missing PK field: '$_'") unless defined $data->{$_};
-	$cols{$_}=$data->{$_};
+    my %cols = ();
+    foreach ( @{ $self->_primary_keys } ) {
+        return ( 0, "Missing PK field: '$_'" ) unless defined $data->{$_};
+        $cols{$_} = $data->{$_};
     }
-    return ($self->load_by_cols(%cols));
+    return ( $self->load_by_cols(%cols) );
 }
-
-
-
 
 =head2 load_from_hash
 
@@ -1167,27 +1124,22 @@ loaded values hash.
 =cut
 
 sub load_from_hash {
-  my $self = shift;
-  my $hashref = shift;
+    my $self    = shift;
+    my $hashref = shift;
 
-  foreach my $f ( keys %$hashref ) {
-      $self->{'fetched'}{lc $f} = 1;
-  }
+    foreach my $f ( keys %$hashref ) {
+        $self->{'fetched'}{ lc $f } = 1;
+    }
 
-  $self->{'values'} = $hashref;
-  return $self->id();
+    $self->{'values'} = $hashref;
+    return $self->id();
 }
-
-
 
 =head2 _load_from_sql QUERYSTRING @BIND_VALUES
 
 Load a record as the result of an SQL statement
 
 =cut
-
-
-
 
 sub _load_from_sql {
     my $self        = shift;
@@ -1200,33 +1152,29 @@ sub _load_from_sql {
 
     return ( 0, "Couldn't execute query" ) unless $sth;
 
-    $self->{'values'} = $sth->fetchrow_hashref;
+    $self->{'values'}  = $sth->fetchrow_hashref;
     $self->{'fetched'} = {};
     if ( !$self->{'values'} && $sth->err ) {
-        return ( 0, "Couldn't fetch row: ". $sth->err );
+        return ( 0, "Couldn't fetch row: " . $sth->err );
     }
 
     unless ( $self->{'values'} ) {
         return ( 0, "Couldn't find row" );
     }
 
-    ## I guess to be consistant with the old code, make sure the primary  
+    ## I guess to be consistant with the old code, make sure the primary
     ## keys exist.
 
-    if( grep { not defined } $self->primary_keys ) {
+    if ( grep { not defined } $self->primary_keys ) {
         return ( 0, "Missing a primary key?" );
     }
-    
-    foreach my $f ( keys %{$self->{'values'}} ) {
-        $self->{'fetched'}{lc $f} = 1;
+
+    foreach my $f ( keys %{ $self->{'values'} } ) {
+        $self->{'fetched'}{ lc $f } = 1;
     }
     return ( 1, "Found Object" );
 
 }
-
-
-
-
 
 =head2 create
 
@@ -1244,8 +1192,7 @@ sub create {
 
         if ( $self->_accessible( $key, 'record-write' ) ) {
             $attribs{$key} = $attribs{$key}->id
-              if UNIVERSAL::isa( $attribs{$key},
-                'Jifty::DBI::Record' );
+                if UNIVERSAL::isa( $attribs{$key}, 'Jifty::DBI::Record' );
         }
 
         #Truncate things that are too long for their datatypes
@@ -1257,9 +1204,10 @@ sub create {
         # Support for databases which don't deal with LOBs automatically
         my $ca = $self->_class_accessible();
         foreach $key ( keys %attribs ) {
-            if ( $ca->{$key}->{'type'} =~ /^(text|longtext|clob|blob|lob)$/i ) {
-                my $bhash =
-                  $self->_handle->blob_params( $key, $ca->{$key}->{'type'} );
+            if ( $ca->{$key}->{'type'} =~ /^(text|longtext|clob|blob|lob)$/i )
+            {
+                my $bhash = $self->_handle->blob_params( $key,
+                    $ca->{$key}->{'type'} );
                 $bhash->{'value'} = $attribs{$key};
                 $attribs{$key} = $bhash;
             }
@@ -1267,7 +1215,6 @@ sub create {
     }
     return ( $self->_handle->insert( $self->table, %attribs ) );
 }
-
 
 =head2 delete
 
@@ -1282,33 +1229,30 @@ sub delete {
 
 sub __delete {
     my $self = shift;
-    
+
     #TODO Check to make sure the key's not already listed.
     #TODO Update internal data structure
 
     ## Constructs the where clause.
-    my @bind=();
-    my %pkeys=$self->primary_keys();
-    my $where  = 'WHERE ';
-    foreach my $key (keys %pkeys) {
-       $where .= $key . "=?" . " AND ";
-       push (@bind, $pkeys{$key});
+    my @bind  = ();
+    my %pkeys = $self->primary_keys();
+    my $where = 'WHERE ';
+    foreach my $key ( keys %pkeys ) {
+        $where .= $key . "=?" . " AND ";
+        push( @bind, $pkeys{$key} );
     }
 
     $where =~ s/AND\s$//;
-    my $QueryString = "DELETE FROM ". $self->table . ' ' . $where;
-    my $return = $self->_handle->simple_query($QueryString, @bind);
+    my $QueryString = "DELETE FROM " . $self->table . ' ' . $where;
+    my $return      = $self->_handle->simple_query( $QueryString, @bind );
 
-    if (UNIVERSAL::isa('Class::ReturnValue', $return)) {
+    if ( UNIVERSAL::isa( 'Class::ReturnValue', $return ) ) {
         return ($return);
-    } else {
-        return(1); 
-    } 
+    }
+    else {
+        return (1);
+    }
 }
-
-
-
-
 
 =head2 table
 
@@ -1319,12 +1263,10 @@ Returns or sets the name of the current table
 sub table {
     my $self = shift;
     if (@_) {
-          $self->{'table'} = shift;
+        $self->{'table'} = shift;
     }
-    return ($self->{'table'});
+    return ( $self->{'table'} );
 }
-
-
 
 =head2 _handle
 
@@ -1332,13 +1274,12 @@ Returns or sets the current Jifty::DBI::Handle object
 
 =cut
 
-
-sub _handle  {
+sub _handle {
     my $self = shift;
     if (@_) {
         $self->{'DBIxHandle'} = shift;
     }
-    return ($self->{'DBIxHandle'});
+    return ( $self->{'DBIxHandle'} );
 }
 
 1;
