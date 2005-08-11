@@ -1,3 +1,4 @@
+
 Things should/could be done in 1.x releases:
     * cover as much as possible code with tests
     * IsLast is not consistent(see t/01records.t)
@@ -56,4 +57,17 @@ Things should be done in 2 release:
            returns undef.
         ** Prev walks backward and works like Next, but if Current is undef
            it starts from Last record.
+
+
+Parameter naming:
+
+
+    Inside the object relational mapper (Jifty::DBI),
+    when refering to a column, the parameter is called:
+    
+    'column'.
+
+    It is NOT called:
+
+    'field', 'key', 'col', etc .
 
