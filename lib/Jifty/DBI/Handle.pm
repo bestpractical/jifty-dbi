@@ -801,14 +801,14 @@ sub join {
         }
 
         if ( !$alias || $args{'ALIAS1'} ) {
-            return ( $self->_Normaljoin(%args) );
+            return ( $self->_normal_join(%args) );
         }
 
         $args{'collection'}->{'aliases'} = \@new_aliases;
     }
 
     else {
-        $alias = $args{'collection'}->_GetAlias( $args{'TABLE2'} );
+        $alias = $args{'collection'}->_get_alias( $args{'TABLE2'} );
 
     }
 
@@ -842,7 +842,7 @@ sub join {
     return ($alias);
 }
 
-sub _Normaljoin {
+sub _normal_join {
 
     my $self = shift;
     my %args = (
@@ -859,7 +859,7 @@ sub _Normaljoin {
     my $sb = $args{'collection'};
 
     if ( $args{'TYPE'} =~ /LEFT/i ) {
-        my $alias = $sb->_GetAlias( $args{'TABLE2'} );
+        my $alias = $sb->_get_alias( $args{'TABLE2'} );
 
         $sb->{'left_joins'}{"$alias"}{'alias_string'}
             = " LEFT JOIN $args{'TABLE2'} $alias ";
@@ -870,7 +870,7 @@ sub _Normaljoin {
         return ($alias);
     }
     else {
-        $sb->Jifty::DBI::Limit(
+        $sb->Jifty::DBI::limit(
             ENTRYAGGREGATOR => 'AND',
             QUOTEVALUE      => 0,
             ALIAS           => $args{'ALIAS1'},
