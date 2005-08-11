@@ -29,60 +29,7 @@ Jifty::DBI::Record - Superclass for records loaded by Jifty::DBI::Collection
       return ['id'];
   }
   
-  # Preferred and most efficient way to specify fields attributes in a derived
-  # class, used by the autoloader to construct Attrib and SetAttrib methods.
-
-  # read: calling $Object->Foo will return the value of this record's Foo column  
-  # write: calling $Object->SetFoo with a single value will set Foo's value in
-  #        both the loaded object and the database  
-  sub _class_accessible {
-      {
-	  Tofu => { 'read' => 1, 'write' => 1 },
-	  Maz  => { 'auto' => 1, },
-	  Roo => { 'read' => 1, 'auto' => 1, 'public' => 1, },
-      };
-  }
   
-  # A subroutine to check a user's password without returning the current value
-  # For security purposes, we didn't expose the Password method above
-  sub IsPassword {
-      my $self = shift;
-      my $try  = shift;
-  
-      # note two __s in __value.  Subclasses may muck with _value, but
-      # they should never touch __value
-  
-      if ( $try eq $self->__value('Password') ) {
-	  return (1);
-      }
-      else {
-	  return (undef);
-      }
-  }
-  
-  # Override Jifty::DBI::Create to do some checking on create
-  sub Create {
-      my $self   = shift;
-      my %fields = (
-	  UserId   => undef,
-	  Password => 'default',    #Set a default password
-	  @_
-      );
-  
-      # Make sure a userid is specified
-      unless ( $fields{'UserId'} ) {
-	  die "No userid specified.";
-      }
-  
-      # Get Jifty::DBI::Record->Create to do the real work
-      return (
-	  $self->SUPER::Create(
-	      UserId   => $fields{'UserId'},
-	      Password => $fields{'Password'},
-	      Created  => time
-	  )
-      );
-  }
 
 =head1 DESCRIPTION
 
@@ -275,7 +222,7 @@ cases where we expect > 1 record.  More on this later.
 
 Now that we have a populated object, we should do something with it! ::Record
 automagically generates accessos and mutators for us, so all we need to do 
-is call the methods.  Accessors are named <Field>(), and Mutators are named 
+is call the methods.  accessors are named <Field>(), and Mutators are named 
 Set<Field>($).  On to the example, just appending this to the code from 
 the last example.
 
@@ -400,7 +347,7 @@ sub AUTOLOAD {
     }
     elsif ( $self->_accessible( $Attrib, 'record-read' ) ) {
         *{$AUTOLOAD}
-            = sub { $_[0]->_to_record( $Attrib, $_[0]->_value($Attrib) ) };
+            = sub { $_[0]->_to_record( $Attrib, $_[0]->__value($Attrib) ) };
         goto &$AUTOLOAD;
     }
     elsif ( $self->_accessible( $Attrib, 'foreign-collection' ) ) {
@@ -561,8 +508,13 @@ sub _class_accessible_from_schema {
         }
         elsif ( my $refclass = $schema->{$field}{'REFERENCES'} ) {
             if ( UNIVERSAL::isa( $refclass, 'Jifty::DBI::Record' ) ) {
-                $accessible->{$field}
-                    = { 'record-read' => 1, 'record-write' => 1 };
+            if ($field =~ /(.*)_id$/) {
+                $accessible->{$field} = { 'read' => 1, 'write' => 1 };
+                $accessible->{$1}     = { 'record-read' => 1, 'column' => $field };
+            } else {
+                $accessible->{$field} = { 'record-read' => 1, 'record-write' => 1 };
+            }
+
             }
             elsif ( UNIVERSAL::isa( $refclass, 'Jifty::DBI::Collection' ) ) {
                 $accessible->{$field} = { 'foreign-collection' => 1 };
@@ -584,7 +536,9 @@ sub _to_record {
     return unless defined $value;
 
     my $schema      = $self->schema;
-    my $description = $schema->{$field};
+    my $description = $schema->{$field} || $schema->{$field . "_id"};
+
+    die "Can't get schema for $field on $self" unless $description;
 
     return unless $description;
 
@@ -664,6 +618,8 @@ never override __value.
 sub __value {
     my $self  = shift;
     my $field = lc shift;
+
+    $field = $self->_accessible($field, "column") while $self->_accessible($field, "column");
 
     if ( !$self->{'fetched'}{$field} and my $id = $self->id() ) {
         my $pkey = $self->_primary_key();
