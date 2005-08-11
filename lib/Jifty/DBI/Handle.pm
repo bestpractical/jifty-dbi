@@ -276,7 +276,7 @@ sub auto_commit {
     my $mode = 1;
     $mode = shift if (@_);
 
-    $self->dbh->{Autocommit} = $mode;
+    $self->dbh->{AutoCommit} = $mode;
 }
 
 =head2 disconnect
