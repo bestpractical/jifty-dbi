@@ -15,8 +15,8 @@ INSTALLATION
 TESTING
     In order to test most of the features of Jifty::DBI, you need
     to provide "make test" with a test database. For each DBI driver that
-    you would like to test, set the environment variables "SB_TEST_FOO",
-    "SB_TEST_FOO_USER", and "SB_TEST_FOO_PASS" to a database name, database
+    you would like to test, set the environment variables "JDBI_TEST_FOO",
+    "JDBI_TEST_FOO_USER", and "JDBI_TEST_FOO_PASS" to a database name, database
     username, and database password, where "FOO" is the driver name in all
     uppercase. You can test as many drivers as you like. (The appropriate
     "DBD::" module needs to be installed in order for the test to work.)
@@ -24,8 +24,8 @@ TESTING
     "DBD::Sqlite" is installed, using a temporary file as the database. For
     example:
 
-      SB_TEST_MYSQL=test SB_TEST_MYSQL_USER=root SB_TEST_MYSQL_PASS=foo \
-        SB_TEST_PG=test SB_TEST_PG_USER=postgres  make test
+      JDBI_TEST_MYSQL=test JDBI_TEST_MYSQL_USER=root JDBI_TEST_MYSQL_PASS=foo \
+        JDBI_TEST_PG=test JDBI_TEST_PG_USER=postgres  make test
 
 AUTHOR
     Copyright (c) 2001-2005 Jesse Vincent, jesse@fsck.com.

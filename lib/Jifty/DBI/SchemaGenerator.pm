@@ -33,11 +33,11 @@ sub new {
     return $self;
 }
 
-=for public_doc AddModel MODEL
+=for public_doc add_model MODEL
 
 Adds a new model class to the SchemaGenerator.  Model should either be an object 
 of a subclass of C<Jifty::DBI::Record>, or the name of such a subclass; in the
-latter case, C<AddModel> will instantiate an object of the subclass.
+latter case, C<add_model> will instantiate an object of the subclass.
 
 The model must define the instance methods C<Schema> and C<Table>.
 
@@ -46,7 +46,7 @@ otherwise.
 
 =cut
 
-sub AddModel {
+sub add_model {
     my $self  = shift;
     my $model = shift;
 
@@ -68,48 +68,48 @@ sub AddModel {
         $model = $new_model;
     }
 
-    my $table_obj = $self->_DBSchemaTableFromModel($model);
+    my $table_obj = $self->_db_schema_table_from_model($model);
 
     $self->_db_schema->addtable($table_obj);
 
     1;
 }
 
-=for public_doc CreateTableSQLStatements
+=for public_doc create_table_sql_statements
 
 Returns a list of SQL statements (as strings) to create tables for all of
 the models added to the SchemaGenerator.
 
 =cut
 
-sub CreateTableSQLStatements {
+sub create_table_sql_statements {
     my $self = shift;
 
     # The sort here is to make it predictable, so that we can write tests.
     return sort $self->_db_schema->sql( $self->handle->dbh );
 }
 
-=for public_doc CreateTableSQLText
+=for public_doc create_table_sql_text
 
 Returns a string containg a sequence of SQL statements to create tables for all of
 the models added to the SchemaGenerator.
 
 =cut
 
-sub CreateTableSQLText {
+sub create_table_sql_text {
     my $self = shift;
 
-    return join "\n", map {"$_ ;\n"} $self->CreateTableSQLStatements;
+    return join "\n", map {"$_ ;\n"} $self->create_table_sql_statements;
 }
 
-=for private_doc _DBSchemaTableFromModel MODEL
+=for private_doc _db_schema_table_from_model MODEL
 
 Takes an object of a subclass of Jifty::DBI::Record; returns a new
 C<DBIx::DBSchema::Table> object corresponding to the model.
 
 =cut
 
-sub _DBSchemaTableFromModel {
+sub _db_schema_table_from_model {
     my $self  = shift;
     my $model = shift;
 

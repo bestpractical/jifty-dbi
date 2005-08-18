@@ -51,8 +51,8 @@ my $SG = Jifty::DBI::SchemaGenerator->new($handle);
 die "Couldn't make SchemaGenerator" unless $SG;
 
 for my $model (__PACKAGE__->models) {
-  my $ret = $SG->AddModel($model);
+  my $ret = $SG->add_model($model);
   $ret or die "couldn't add model $model: ".$ret->error_message;
 }
 
-print $SG->CreateTableSQLText;
+print $SG->create_table_sql_text;

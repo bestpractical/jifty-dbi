@@ -106,9 +106,9 @@ sub connect_mysql
 	my $handle = shift;
 	return $handle->connect(
 		driver => 'mysql',
-		database => $ENV{'SB_TEST_MYSQL'},
-		user => $ENV{'SB_TEST_MYSQL_USER'} || 'root',
-		password => $ENV{'SB_TEST_MYSQL_PASS'} || '',
+		database => $ENV{'JDBI_TEST_MYSQL'},
+		user => $ENV{'JDBI_TEST_MYSQL_USER'} || 'root',
+		password => $ENV{'JDBI_TEST_MYSQL_PASS'} || '',
 	);
 }
 
@@ -117,15 +117,15 @@ sub connect_pg
 	my $handle = shift;
 	return $handle->connect(
 		driver => 'Pg',
-		database => $ENV{'SB_TEST_PG'},
-		user => $ENV{'SB_TEST_PG_USER'} || 'postgres',
-		password => $ENV{'SB_TEST_PG_PASS'} || '',
+		database => $ENV{'JDBI_TEST_PG'},
+		user => $ENV{'JDBI_TEST_PG_USER'} || 'postgres',
+		password => $ENV{'JDBI_TEST_PG_PASS'} || '',
 	);
 }
 
 =head2 should_test
 
-Checks environment for C<SB_TEST_*> variables.
+Checks environment for C<JDBI_TEST_*> variables.
 Returns true if specified DB back-end should be tested.
 Takes one argument C<$driver> name.
 
@@ -135,7 +135,7 @@ sub should_test
 {
 	my $driver = shift;
 	return 1 if lc $driver eq 'sqlite';
-	my $env = 'SB_TEST_'. uc $driver;
+	my $env = 'JDBI_TEST_'. uc $driver;
 	return $ENV{$env};
 }
 

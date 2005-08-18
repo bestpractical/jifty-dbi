@@ -7,6 +7,7 @@ inc/Module/Install/AutoInstall.pm
 inc/Module/Install/Base.pm
 inc/Module/Install/Makefile.pm
 inc/Module/Install/Metadata.pm
+lib/Jifty/DBI.pm
 lib/Jifty/DBI/Collection.pm
 lib/Jifty/DBI/Handle.pm
 lib/Jifty/DBI/Handle/Informix.pm
@@ -27,6 +28,7 @@ MANIFEST			This list of files
 META.yml
 README
 ROADMAP
+SIGNATURE
 t/00.load.t
 t/01basics.t
 t/01records.t
