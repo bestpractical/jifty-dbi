@@ -474,7 +474,7 @@ sub simple_query {
 
         }
         else {
-            warn "$self couldn't execute the query '$QueryString'";
+            Carp::cluck "$self couldn't execute the query '$QueryString'";
 
             my $ret = Class::ReturnValue->new();
             $ret->as_error(

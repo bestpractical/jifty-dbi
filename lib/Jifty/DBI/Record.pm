@@ -460,39 +460,14 @@ sub _primary_key {
 
 =head2 _class_accessible 
 
-An older way to specify fields attributes in a derived class.
+An older way to read fields attributes in a derived class.
 (The current preferred method is by overriding C<schema>; if you do
 this and don't override C<_class_accessible>, the module will generate
 an appropriate C<_class_accessible> based on your C<schema>.)
 
-Here's an example declaration:
-
-  sub _class_accessible {
-    { 
-	 Tofu  => { 'read'=>1, 'write'=>1 },
-         Maz   => { 'auto'=>1, },
-         Roo   => { 'read'=>1, 'auto'=>1, 'public'=>1, },
-    };
-  }
-
 =cut
 
 sub _class_accessible {
-    my $self = shift;
-
-    return $self->_class_accessible_from_schema if $self->can('schema');
-
-    # XXX This is stub code to deal with the old way we used to do _accessible
-    # It should never be called by modern code
-
-    my %accessible;
-    while ( my $col = shift ) {
-        $accessible{$col}->{ lc($_) } = 1 foreach split( /[\/,]/, shift );
-    }
-    return ( \%accessible );
-}
-
-sub _class_accessible_from_schema {
     my $self = shift;
 
     my $accessible = {};
@@ -1231,6 +1206,18 @@ sub _handle {
     }
     return ( $self->{'DBIxHandle'} );
 }
+
+=head2 schema
+
+You must subclass schema to return your table's columns.
+
+XXX: See L<Jifty::DBI::SchemaGenerator> (I bet)
+
+=cut
+
+# This stub is here to prevent a call to AUTOLOAD
+sub schema {}
+
 
 1;
 
