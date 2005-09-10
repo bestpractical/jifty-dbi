@@ -13,6 +13,74 @@ __PACKAGE__->mk_accessors(qw(handle));
 # Internal accessors: do not use from outside class
 __PACKAGE__->mk_accessors(qw(_db_schema));
 
+=head1 NAME
+
+Jifty::DBI::SchemaGenerator - Generate table schemas from Jifty::DBI records
+
+=head1 SYNOPSIS
+
+    use Jifty::DBI::SchemaGenerator;
+
+=head1 DESCRIPTION
+
+This module turns a Jifty::Record object into an SQL schema for your chosen
+database. At the moment, your chosen database is Postgres 7.4 or newer.
+Patches welcome.
+
+=head1 INTERFACE 
+
+=for author to fill in:
+    Write a separate section listing the public components of the modules
+    interface. These normally consist of either subroutines that may be
+    exported, or methods that may be called on objects belonging to the
+    classes provided by the module.
+
+
+=head1 DIAGNOSTICS
+
+=for author to fill in:
+    List every single error and warning message that the module can
+    generate (even the ones that will "never happen"), with a full
+    explanation of each problem, one or more likely causes, and any
+    suggested remedies.
+
+=over
+
+=item C<< Error message here, perhaps with %s placeholders >>
+
+[Description of error here]
+
+=item C<< Another error message here >>
+
+[Description of error here]
+
+[Et cetera, et cetera]
+
+=back
+
+
+=head1 CONFIGURATION AND ENVIRONMENT
+
+=for author to fill in:
+    A full explanation of any configuration system(s) used by the
+    module, including the names and locations of any configuration
+    files, and the meaning of any environment variables or properties
+    that can be set. These descriptions must also include details of any
+    configuration language used.
+
+<MODULE NAME> requires no configuration files or environment variables.
+
+
+=head1 DEPENDENCIES
+
+=for author to fill in:
+    A list of all the other modules that this module relies upon,
+    including any restrictions on versions, and an indication whether
+    the module is part of the standard Perl distribution, part of the
+    module's distribution, or must be installed separately. ]
+
+None.
+
 =head2 new HANDLE
 
 Creates a new C<Jifty::DBI::SchemaGenerator> object.  The single
@@ -27,7 +95,7 @@ sub new {
 
     $self->handle($handle);
 
-    my $schema = DBIx::DBSchema->new;
+    my $schema = DBIx::DBSchema->new();
     $self->_db_schema($schema);
 
     return $self;
@@ -61,10 +129,10 @@ sub add_model {
             return $self->_error("Error making new object from $model: $@");
         }
 
+      unless (UNIVERSAL::isa( $new_model, 'Jifty::DBI::Record' )) {
         return $self->_error(
             "Didn't get a Jifty::DBI::Record from $model, got $new_model")
-            unless UNIVERSAL::isa( $new_model, 'Jifty::DBI::Record' );
-
+        }
         $model = $new_model;
     }
 
@@ -176,77 +244,6 @@ sub _error {
 }
 
 1;    # Magic true value required at end of module
-__END__
-
-=head1 NAME
-
-Jifty::DBI::SchemaGenerator - Generate table schemas from Jifty::DBI records
-
-=head1 SYNOPSIS
-
-    use Jifty::DBI::SchemaGenerator;
-
-
-=head1 DESCRIPTION
-
-=for author to fill in:
-    Write a full description of the module and its features here.
-    Use subsections (=head2, =head3) as appropriate.
-
-
-=head1 INTERFACE 
-
-=for author to fill in:
-    Write a separate section listing the public components of the modules
-    interface. These normally consist of either subroutines that may be
-    exported, or methods that may be called on objects belonging to the
-    classes provided by the module.
-
-
-=head1 DIAGNOSTICS
-
-=for author to fill in:
-    List every single error and warning message that the module can
-    generate (even the ones that will "never happen"), with a full
-    explanation of each problem, one or more likely causes, and any
-    suggested remedies.
-
-=over
-
-=item C<< Error message here, perhaps with %s placeholders >>
-
-[Description of error here]
-
-=item C<< Another error message here >>
-
-[Description of error here]
-
-[Et cetera, et cetera]
-
-=back
-
-
-=head1 CONFIGURATION AND ENVIRONMENT
-
-=for author to fill in:
-    A full explanation of any configuration system(s) used by the
-    module, including the names and locations of any configuration
-    files, and the meaning of any environment variables or properties
-    that can be set. These descriptions must also include details of any
-    configuration language used.
-
-<MODULE NAME> requires no configuration files or environment variables.
-
-
-=head1 DEPENDENCIES
-
-=for author to fill in:
-    A list of all the other modules that this module relies upon,
-    including any restrictions on versions, and an indication whether
-    the module is part of the standard Perl distribution, part of the
-    module's distribution, or must be installed separately. ]
-
-None.
 
 
 =head1 INCOMPATIBILITIES
@@ -286,7 +283,7 @@ David Glasser  C<< glasser@bestpractical.com >>
 
 =head1 LICENCE AND COPYRIGHT
 
-Copyright (c) <YEAR>, <AUTHOR> C<< <<EMAIL>> >>. All rights reserved.
+Copyright (c) 2005, Best Practical Solutions, LLC.  All rights reserved.
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself. See L<perlartistic>.
