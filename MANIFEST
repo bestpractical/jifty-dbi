@@ -23,6 +23,7 @@ lib/Jifty/DBI/Record/Cachable.pm
 lib/Jifty/DBI/SchemaGenerator.pm
 lib/Jifty/DBI/Union.pm
 lib/Jifty/DBI/Unique.pm
+lib/Jifty/DBI/Column.pm
 Makefile.PL
 MANIFEST			This list of files
 META.yml
