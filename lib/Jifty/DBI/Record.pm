@@ -6,6 +6,8 @@ use warnings;
 use vars qw($AUTOLOAD);
 use Class::ReturnValue;
 
+our %COLUMNS;
+
 =head1 NAME
 
 Jifty::DBI::Record - Superclass for records loaded by Jifty::DBI::Collection
@@ -15,25 +17,10 @@ Jifty::DBI::Record - Superclass for records loaded by Jifty::DBI::Collection
   package MyRecord;
   use base qw/Jifty::DBI::Record/;
   
-  sub _Init {
-      my $self       = shift;
-      my $DBIxHandle =
-	shift;    # A Jifty::DBI::Handle::foo object for your database
-  
-      $self->_handle($DBIxHandle);
-      $self->table("Users");
-  }
-  
-  # Tell Record what the primary keys are
-  sub _primary_keys {
-      return ['id'];
-  }
-  
-  
-
 =head1 DESCRIPTION
 
-Jifty::DBI::Record is designed to work with Jifty::DBI.
+Jifty::DBI::Record encapuslates records and tables as part of the L<Jifty::DBI> 
+object-relational mapper.
 
 
 =head2 What is it trying to do. 
@@ -67,23 +54,7 @@ really do are define some values and send you on your way.  As you might
 have guessed the '_' suggests that these are private methods, they are. 
 They will get called by your record objects constructor.  
 
-=over 4
 
-=item '_Init' 
-
-Defines what table we are talking about, and set a variable to store 
-the database handle. 
-
-=item '_class_accessible
-
-Defines what operations may be performed on various data selected 
-from the database.  For example you can define fields to be mutable,
-or immutable, there are a few other options but I don't understand 
-what they do at this time. 
-
-=back
-
-And really, thats it.  So lets have some sample code.
 
 =head2 An Annotated Example
 
@@ -339,104 +310,124 @@ sub AUTOLOAD {
     my $self = $_[0];
 
     no strict 'refs';
-    my ($Attrib) = ( $AUTOLOAD =~ /::(\w+)$/o );
+    my ( $column_name, $action ) = $self->_parse_autoload_method($AUTOLOAD);
 
-    if ( $self->_accessible( $Attrib, 'read' ) ) {
-        *{$AUTOLOAD} = sub { return ( $_[0]->_value($Attrib) ) };
-        goto &$AUTOLOAD;
+    unless ( $action and $column_name ) {
+        my ( $package, $filename, $line ) = caller;
+        die "$AUTOLOAD Unimplemented in $package. ($filename line $line) \n";
     }
-    elsif ( $self->_accessible( $Attrib, 'record-read' ) ) {
-        *{$AUTOLOAD}
-            = sub { $_[0]->_to_record( $Attrib, $_[0]->__value($Attrib) ) };
-        goto &$AUTOLOAD;
-    }
-    elsif ( $self->_accessible( $Attrib, 'foreign-collection' ) ) {
-        *{$AUTOLOAD} = sub { $_[0]->_collection_value($Attrib) };
-        goto &$AUTOLOAD;
-    }
-    elsif ( $AUTOLOAD =~ /.*::set_(\w+)/o ) {
-        $Attrib = $1;
 
-        if ( $self->_accessible( $Attrib, 'write' ) ) {
-            *{$AUTOLOAD} = sub {
-                return ( $_[0]->_set( field => $Attrib, value => $_[1] ) );
-            };
-            goto &$AUTOLOAD;
+    my $column = $self->column($column_name);
+
+    unless ($column) {
+        my ( $package, $filename, $line ) = caller;
+        die "$AUTOLOAD Unimplemented in $package. ($filename line $line) \n";
+
+    }
+
+    if ( $action eq 'read' and $column->readable ) {
+
+        if ( $column->refers_to_record_class ) {
+            *{$AUTOLOAD}
+                = sub { $_[0]->_to_record( $column_name, $_[0]->__value($column_name) ) };
         }
-        elsif ( $self->_accessible( $Attrib, 'record-write' ) ) {
+        elsif ( $column->refers_to_collection_class ) {
+            *{$AUTOLOAD} = sub { $_[0]->_collection_value($column_name) };
+        }
+        else {
+            *{$AUTOLOAD} = sub { return ( $_[0]->_value($column_name) ) };
+        }
+        goto &$AUTOLOAD;
+    }
+
+    if ( $action eq 'write' and $column->writeable ) {
+
+        if ( $column->refers_to_record_class ) {
             *{$AUTOLOAD} = sub {
                 my $self = shift;
                 my $val  = shift;
 
                 $val = $val->id
                     if UNIVERSAL::isa( $val, 'Jifty::DBI::Record' );
-                return ( $self->_set( field => $Attrib, value => $val ) );
+                return ( $self->_set( field => $column_name, value => $val ) );
             };
-            goto &$AUTOLOAD;
-        }
-        elsif ( $self->_accessible( $Attrib, 'read' ) ) {
-            *{$AUTOLOAD} = sub { return ( 0, 'Immutable field' ) };
-            goto &$AUTOLOAD;
         }
         else {
-            return ( 0, 'Nonexistant field?' );
-        }
-    }
-    elsif ( $AUTOLOAD =~ /.*::(\w+?)_obj$/o ) {
-        $Attrib = $1;
-        if ( $self->_accessible( $Attrib, 'object' ) ) {
             *{$AUTOLOAD} = sub {
-                return (shift)->_object(
-                    field => $Attrib,
-                    args  => [@_],
-                );
+                return ( $_[0]->_set( field => $column_name, value => $_[1] ) );
             };
-            goto &$AUTOLOAD;
         }
-        else {
-            return ( 0, 'No object mapping for field' );
-        }
-    }
-
-    #Previously, I checked for writability here. but I'm not sure that's the
-    #right idea. it breaks the ability to do ValidateQueue for a ticket
-    #on creation.
-
-    elsif ( $AUTOLOAD =~ /.*::validate_(\w+)/o ) {
-        $Attrib = $1;
-
-        *{$AUTOLOAD} = sub { return ( $_[0]->_validate( $Attrib, $_[1] ) ) };
         goto &$AUTOLOAD;
     }
 
-   # TODO: if autoload = 0 or 1 _ then a combination of lowercase and _ chars,
-   # turn them into studlycapped phrases
+    elsif ( $action eq 'validate' ) {
+        *{$AUTOLOAD}
+            = sub { return ( $_[0]->_validate( $column_name, $_[1] ) ) };
+        goto &$AUTOLOAD;
+    }
 
     else {
-        my ( $package, $filename, $line );
-        ( $package, $filename, $line ) = caller;
+        my ( $package, $filename, $line ) = caller;
 
         die "$AUTOLOAD Unimplemented in $package. ($filename line $line) \n";
     }
 
 }
 
-=head2 _accessible  KEY MODE
+=head2 _parse_autoload_method $AUTOLOAD
+
+Parses autoload methods and attempts to determine if they're 
+set, get or validate calls.
+
+Returns a tuple of (COLUMN_NAME, ACTION);
+
+=cut
+
+sub _parse_autoload_method {
+    my $self = shift;
+    my $method = shift;
+
+    my ($column_name, $action);
+
+    if ( $$method =~ /.*::set_(\w+)/o ) {
+        $column_name = $1;
+        $action = 'write';
+    }
+    elsif ( $$method =~ /.*::validate_(\w+)/o ) {
+        $column_name = $1;
+        $action = 'validate';
+
+
+    }
+    elsif ( $$method =~ /::(\w+)$/o) {
+        $column_name = $1;
+        $action = 'read';
+
+    }
+    return ($column_name, $action);
+
+}
+=head2 _accessible COLUMN ATTRIBUTE
 
 Private method.
 
-Returns undef unless C<KEY> is accessible in C<MODE> otherwise returns C<MODE> value
+Returns undef unless C<COLUMN> has a true value for C<ATTRIBUTE>.
+
+Otherwise returns C<COLUMN>'s value for that attribute.
+
 
 =cut
 
 sub _accessible {
     my $self = shift;
-    my $attr = shift;
-    my $mode = lc( shift || '' );
+    my $column_name = shift;
+    my $attribute = lc( shift || '' );
 
-    my $attribute = $self->_class_accessible(@_)->{$attr};
-    return unless defined $attribute;
-    return $attribute->{$mode};
+
+    my $col = $self->column($column_name);
+    return undef unless ($col and $col->can($attribute));
+    return $col->$attribute();
+
 }
 
 =head2 _primary_keys
@@ -470,29 +461,39 @@ an appropriate C<_class_accessible> based on your C<schema>.)
 sub _class_accessible {
     my $self = shift;
 
-    my $accessible = {};
-    foreach my $key ( $self->_primary_keys ) {
-        $accessible->{$key} = { 'read' => 1 };
+    foreach my $column_name ( $self->_primary_keys ) {
+        my $column = $self->add_column($column_name);
+        $column->read(1);
     }
 
     my $schema = $self->schema;
 
-    for my $field ( keys %$schema ) {
-        if ( $schema->{$field}{'TYPE'} ) {
-            $accessible->{$field} = { 'read' => 1, 'write' => 1 };
+    for my $column_name ( keys %$schema ) {
+        my $column = $self->add_column($column_name);
+        if ( $schema->{$column_name}{'TYPE'} ) {
+            $column->read(1);
+            $column->write(1);
+
         }
-        elsif ( my $refclass = $schema->{$field}{'REFERENCES'} ) {
+        elsif ( my $refclass = $schema->{$column_name}{'REFERENCES'} ) {
             if ( UNIVERSAL::isa( $refclass, 'Jifty::DBI::Record' ) ) {
-            if ($field =~ /(.*)_id$/) {
-                $accessible->{$field} = { 'read' => 1, 'write' => 1 };
-                $accessible->{$1}     = { 'record-read' => 1, 'column' => $field };
-            } else {
-                $accessible->{$field} = { 'record-read' => 1, 'record-write' => 1 };
-            }
+                if ( $column_name =~ /(.*)_id$/ ) {
+                    $column->read(1);
+                    $column->write(1);
+
+                    my $virtual_column = $self->add_column($1);
+                    $virtual_column->refers_to_record_class($refclass);
+                    $virtual_column->alias_for_column($column_name);
+                }
+                else {
+                    $column->refers_to_record_class($refclass);
+                    $column->read(1);
+                    $column->write(1);
+                }
 
             }
             elsif ( UNIVERSAL::isa( $refclass, 'Jifty::DBI::Collection' ) ) {
-                $accessible->{$field} = { 'foreign-collection' => 1 };
+                $column->refers_to_collection_class($refclass);
             }
             else {
                 warn "Error: $refclass neither Record nor Collection";
@@ -500,30 +501,40 @@ sub _class_accessible {
         }
     }
 
-    return $accessible;
 }
+
+=head2 _to_record COLUMN VALUE
+
+This B<PRIVATE> method takes a column name and a value for that column. 
+
+It returns C<undef> unless C<COLUMN> is a valid column for this record
+that refers to another record class.
+
+If it is valid, this method returns a new record object with an id
+of C<VALUE>.
+
+=cut
+
 
 sub _to_record {
     my $self  = shift;
-    my $field = shift;
+    my $column_name = shift;
     my $value = shift;
 
+
+
+    my $column = $self->column($column_name);
+    my $classname = $column->references_record_class();
+
+
     return unless defined $value;
-
-    my $schema      = $self->schema;
-    my $description = $schema->{$field} || $schema->{$field . "_id"};
-
-    die "Can't get schema for $field on $self" unless $description;
-
-    return unless $description;
-
-    return $value unless $description->{'REFERENCES'};
-
-    my $classname = $description->{'REFERENCES'};
+    return undef unless $classname;
 
     return unless UNIVERSAL::isa( $classname, 'Jifty::DBI::Record' );
 
-# XXX TODO FIXME perhaps this is not what should be passed to new, but it needs it
+    # XXX TODO FIXME we need to figure out the right way to call new here
+    # perhaps the handle should have an initiializer for records/collections
+
     my $object = $classname->new( $self->_handle );
     $object->load_by_id($value);
     return $object;
@@ -550,37 +561,60 @@ sub _collection_value {
     return $coll;
 }
 
+=head2 add_column
+
+=cut
+
+sub add_column {
+    my $self = shift;
+    my $name = shift;
+    $name = lc $name;
+    $COLUMNS{$name} = Jifty::DBI::Column->new() unless exists $COLUMNS{$name};
+    $COLUMNS{$name}->name($name);
+}
+
+
+=head2 column
+
+=cut
+
+sub column {
+    my $self = shift;
+    my $name = shift;
+    $name = lc $name;
+    return $COLUMNS{$name};
+
+}
+
+sub columns {
+    return values %COLUMNS;
+}
+
 # sub {{{ readable_attributes
 
 =head2 readable_attributes
 
-Returns an array of the attributes of this class defined as "read" =>
-1 in this class' _class_accessible datastructure
+Returns a list this table's readable columns
 
+XXX TODO actuall returns the column objects
 =cut
 
 sub readable_attributes {
     my $self     = shift;
-    my $ca       = $self->_class_accessible();
-    my @readable = grep { $ca->{$_}->{'read'} or $ca->{$_}->{'record-read'} }
-        keys %{$ca};
-    return (@readable);
+    return grep { $_->readable } @{$self->columns};
 }
 
 =head2 writable_attributes
 
-Returns an array of the attributes of this class defined as "write" =>
-1 in this class' _class_accessible datastructure
+Returns a list of this table's writable columns
+
+XXX TODO returns the column objects
 
 =cut
 
 sub writable_attributes {
     my $self = shift;
-    my $ca   = $self->_class_accessible();
-    my @writable
-        = grep { $ca->{$_}->{'write'} || $ca->{$_}->{'record-write'} }
-        keys %{$ca};
-    return @writable;
+    return grep { $_->writeable } @{$self->columns};
 }
 
 =head2 __value
@@ -594,7 +628,10 @@ sub __value {
     my $self  = shift;
     my $field = lc shift;
 
-    $field = $self->_accessible($field, "column") while $self->_accessible($field, "column");
+    # If the requested column is actually an alias for another, resolve it.
+   
+    $field = $self->column($field)->alias_for_column() 
+        while $self->column($field)->alias_for_column();
 
     if ( !$self->{'fetched'}{$field} and my $id = $self->id() ) {
         my $pkey = $self->_primary_key();
@@ -643,15 +680,20 @@ sub __set {
     my $self = shift;
 
     my %args = (
-        'field'  => undef,
+        'column'  => undef,
         'value'  => undef,
-        'is_sql' => undef,
+        'is_sql_function' => undef,
         @_
     );
 
-    $args{'column'}          = delete $args{'field'};
-    $args{'is_sql_function'} = delete $args{'is_sql'};
-
+    if ($args{'field'} ) {
+        Carp::cluck("field in ->set is deprecated");
+            $args{'column'}          = delete $args{'field'};
+    }
+    if ($args{'is_sql'}) {
+        Carp::cluck("is_sql in ->set is deprecated");
+        $args{'is_sql_function'} = delete $args{'is_sql'};
+    }
     my $ret = Class::ReturnValue->new();
 
     unless ( $args{'column'} ) {
@@ -663,7 +705,7 @@ sub __set {
         );
         return ( $ret->return_value );
     }
-    my $column = lc $args{'column'};
+    my $column_name = lc $args{'column'};
     if ( !defined( $args{'value'} ) ) {
         $ret->as_array( 0, "No value passed to _set" );
         $ret->as_error(
@@ -673,8 +715,8 @@ sub __set {
         );
         return ( $ret->return_value );
     }
-    elsif ( ( defined $self->__value($column) )
-        and ( $args{'value'} eq $self->__value($column) ) )
+    elsif ( ( defined $self->__value($column_name) )
+        and ( $args{'value'} eq $self->__value($column_name) ) )
     {
         $ret->as_array( 0, "That is already the current value" );
         $ret->as_error(
@@ -686,7 +728,7 @@ sub __set {
     }
 
     # First, we truncate the value, if we need to.
-    #
+    
 
     $args{'value'} = $self->truncate_value( $args{'column'}, $args{'value'} );
 
@@ -701,31 +743,30 @@ sub __set {
         return ( $ret->return_value );
     }
 
-    $args{'table'}        = $self->table();
-    $args{'primary_keys'} = { $self->primary_keys() };
 
     # The blob handling will destroy $args{'Value'}. But we assign
     # that back to the object at the end. this works around that
     my $unmunged_value = $args{'value'};
 
     unless ( $self->_handle->knows_blobs ) {
+        my $column = $self->column($column_name);
 
         # Support for databases which don't deal with LOBs automatically
-        my $ca  = $self->_class_accessible();
-        my $key = $args{'column'};
-        if ( $ca->{$key}->{'type'} =~ /^(text|longtext|clob|blob|lob)$/i ) {
-            my $bhash
-                = $self->_handle->blob_params( $key, $ca->{$key}->{'type'} );
+        if ( $column->type =~ /^(text|longtext|clob|blob|lob)$/i ) {
+            my $bhash = $self->_handle->blob_params( $column_name, $column->type );
             $bhash->{'value'} = $args{'value'};
             $args{'value'} = $bhash;
         }
     }
 
-    my $val = $self->_handle->update_record_value(%args);
+    my $val = $self->_handle->update_record_value(
+        %args,
+        table        => $self->table(),
+        primary_keys => { $self->primary_keys() }
+
+    );
     unless ($val) {
-        my $message = $args{'column'}
-            . " could not be set to "
-            . $args{'value'} . ".";
+        my $message = $args{'column'} . " could not be set to " . $args{'value'} . ".";
         $ret->as_array( 0, $message );
         $ret->as_error(
             errno        => 4,
@@ -739,10 +780,10 @@ sub __set {
     # then we need to reload the object from the DB to know what's
     # really going on. (ex SET Cost = Cost+5)
     if ( $args{'is_sql_function'} ) {
-        $self->Load( $self->Id );
+        $self->load_by_id( $self->id );
     }
     else {
-        $self->{'values'}->{"$column"} = $unmunged_value;
+        $self->{'values'}->{"$column_name"} = $unmunged_value;
     }
     $ret->as_array( 1, "The new value has been set." );
     return ( $ret->return_value );
@@ -814,7 +855,7 @@ sub _validate {
     return (1);
 }
 
-=head2 truncate_value  KEY VALUE
+=head2 truncate_value  COLUMN VALUE
 
 Truncate a value that's about to be set so that it will fit inside the
 database' s idea of how big the column is.
@@ -826,19 +867,19 @@ directly into the db).
 
 sub truncate_value {
     my $self  = shift;
-    my $key   = shift;
+    my $column_name   = shift;
     my $value = shift;
 
     # We don't need to truncate empty things.
     return undef unless ( defined($value) );
 
-    my $metadata = $self->_class_accessible->{$key};
+    my $column = $self->column($column_name);
 
     my $truncate_to;
-    if ( $metadata->{'length'} && !$metadata->{'is_numeric'} ) {
-        $truncate_to = $metadata->{'length'};
+    if ( $column->length && !$column->is_numeric ) {
+        $truncate_to = $column->length;
     }
-    elsif ( $metadata->{'type'} && $metadata->{'type'} =~ /char\((\d+)\)/ ) {
+    elsif ( $column->type && $column->type =~ /char\((\d+)\)/ ) {
         $truncate_to = $1;
     }
 
@@ -868,50 +909,6 @@ sub truncate_value {
 
 }
 
-=head2 _object
-
-_object takes a single column name and an array reference.  It creates
-new object instance of class specified in _class_accessable structure
-and calls load_by_id on recently created object with the current
-column value as argument. It uses the array reference as the object
-constructor's arguments.  Subclasses can override _object to insert
-custom access control or define default contructor arguments.
-
-Note that if you are using a C<schema> with a C<REFERENCES> field, 
-this is unnecessary: the method to access the column's value will
-automatically turn it into the appropriate object.
-
-=cut
-
-sub _object {
-    my $self = shift;
-    return $self->__object(@_);
-}
-
-sub __object {
-    my $self = shift;
-    my %args = ( field => '', args => [], @_ );
-
-    my $field = $args{'field'};
-    my $class = $self->_accessible( $field, 'object' );
-
-    # Globs magic to be sure that we call 'eval "require $class"' only once
-    # because eval is quite slow -- cubic@acronis.ru
-    no strict qw( refs );
-    my $vglob = ${ $class . '::' }{'VERSION'};
-    unless ( $vglob && *$vglob{'SCALAR'} ) {
-        eval "require $class";
-        die "Couldn't use $class: $@" if ($@);
-        unless ( $vglob && *$vglob{'SCALAR'} ) {
-            *{ $class . "::VERSION" } = '-1, By DBIx::SerchBuilder';
-        }
-    }
-
-    my $object = $class->new( @{ $args{'args'} } );
-    $object->load_by_id( $self->__value($field) );
-    return $object;
-}
-
 # load should do a bit of overloading
 # if we call it with only one argument, we're trying to load by reference.
 # if we call it with a passel of arguments, we're trying to load by value
@@ -928,7 +925,6 @@ is $id
 sub load {
     my $self = shift;
 
-    # my ($package, $filename, $line) = caller;
     return $self->load_by_id(@_);
 }
 
@@ -948,7 +944,7 @@ sub load_by_col {
     return ( $self->load_by_cols( $col => $val ) );
 }
 
-=head2 loadbycols
+=head2 load_by_cols
 
 Takes a hash of columns and values. Loads the first record that matches all
 keys.
@@ -984,13 +980,9 @@ sub load_by_cols {
         }
         else {
             push @phrases, "($key IS NULL OR $key = ?)";
-            my $meta = $self->_class_accessible->{$key};
-            $meta->{'type'} ||= '';
+            my $column = $self->column($key);
 
-            # TODO: type checking should be done in generic way
-            if (   $meta->{'is_numeric'}
-                || $meta->{'type'}
-                =~ /INT|NUMERIC|DECIMAL|REAL|DOUBLE|FLOAT/i )
+            if (   $column->is_numeric)
             {
                 push @bind, 0;
             }
@@ -1008,7 +1000,7 @@ sub load_by_cols {
     return ( $self->_load_from_sql( $QueryString, @bind ) );
 }
 
-=head2 loadbyid
+=head2 load_by_id
 
 Loads a record by its primary key. Your record class must define a single primary key column.
 
@@ -1112,29 +1104,30 @@ sub create {
     my $self    = shift;
     my %attribs = @_;
 
-    my ($key);
-    foreach $key ( keys %attribs ) {
-
-        if ( $self->_accessible( $key, 'record-write' ) ) {
-            $attribs{$key} = $attribs{$key}->id
-                if UNIVERSAL::isa( $attribs{$key}, 'Jifty::DBI::Record' );
+    foreach my $column_name ( keys %attribs ) {
+        my $column = $self->column($column_name);
+        unless ($column) {
+            die "$column_name isn't a column we know about"
+        }
+        if ( $column->readable and $column->refers_to_record ) {
+            $attribs{$column_name} = $attribs{$column_name}->id
+                if UNIVERSAL::isa( $attribs{$column_name}, 'Jifty::DBI::Record' );
         }
 
         #Truncate things that are too long for their datatypes
-        $attribs{$key} = $self->truncate_value( $key => $attribs{$key} );
+        $attribs{$column_name} = $self->truncate_value( $column_name => $attribs{$column_name} );
 
     }
     unless ( $self->_handle->knows_blobs ) {
-
         # Support for databases which don't deal with LOBs automatically
-        my $ca = $self->_class_accessible();
-        foreach $key ( keys %attribs ) {
-            if ( $ca->{$key}->{'type'} =~ /^(text|longtext|clob|blob|lob)$/i )
+        foreach my $column_name ( keys %attribs ) {
+            my $column = $self->column($column_name);
+            if ( $column->type =~ /^(text|longtext|clob|blob|lob)$/i )
             {
-                my $bhash = $self->_handle->blob_params( $key,
-                    $ca->{$key}->{'type'} );
-                $bhash->{'value'} = $attribs{$key};
-                $attribs{$key} = $bhash;
+                my $bhash = $self->_handle->blob_params( $column_name,
+                    $column->type );
+                $bhash->{'value'} = $attribs{$column_name};
+                $attribs{$column_name} = $bhash;
             }
         }
     }
