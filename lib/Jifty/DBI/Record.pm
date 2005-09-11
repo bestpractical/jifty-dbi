@@ -5,8 +5,10 @@ use warnings;
 
 use vars qw($AUTOLOAD);
 use Class::ReturnValue;
+use Lingua::EN::Inflect;
+use Jifty::DBI::Column;
 
-our %COLUMNS;
+our $COLUMNS; # The global cache of all schema columns
 
 =head1 NAME
 
@@ -265,6 +267,9 @@ sub new {
     my $class = ref($proto) || $proto;
     my $self = {};
     bless( $self, $class );
+
+    $self->_init_columns() unless keys %{$self->COLUMNS};
+
     $self->_init(@_);
 
     return $self;
@@ -340,7 +345,8 @@ sub AUTOLOAD {
         goto &$AUTOLOAD;
     }
 
-    if ( $action eq 'write' and $column->writeable ) {
+    if ( $action eq 'write' ) {
+        if ( $column->writable ) {
 
         if ( $column->refers_to_record_class ) {
             *{$AUTOLOAD} = sub {
@@ -349,17 +355,19 @@ sub AUTOLOAD {
 
                 $val = $val->id
                     if UNIVERSAL::isa( $val, 'Jifty::DBI::Record' );
-                return ( $self->_set( field => $column_name, value => $val ) );
+                return ( $self->_set( column => $column_name, value => $val ) );
             };
         }
         else {
             *{$AUTOLOAD} = sub {
-                return ( $_[0]->_set( field => $column_name, value => $_[1] ) );
+                return ( $_[0]->_set( column => $column_name, value => $_[1] ) );
             };
         }
         goto &$AUTOLOAD;
+    } else {
+            return (0, 'Immutable field');
     }
-
+    }
     elsif ( $action eq 'validate' ) {
         *{$AUTOLOAD}
             = sub { return ( $_[0]->_validate( $column_name, $_[1] ) ) };
@@ -389,17 +397,17 @@ sub _parse_autoload_method {
 
     my ($column_name, $action);
 
-    if ( $$method =~ /.*::set_(\w+)/o ) {
+    if ( $method =~ /^.*::set_(\w+)$/o ) {
         $column_name = $1;
         $action = 'write';
     }
-    elsif ( $$method =~ /.*::validate_(\w+)/o ) {
+    elsif ( $method =~ /^.*::validate_(\w+)$/o ) {
         $column_name = $1;
         $action = 'validate';
 
 
     }
-    elsif ( $$method =~ /::(\w+)$/o) {
+    elsif ( $method =~ /^.*::(\w+)$/o) {
         $column_name = $1;
         $action = 'read';
 
@@ -409,7 +417,9 @@ sub _parse_autoload_method {
 }
 =head2 _accessible COLUMN ATTRIBUTE
 
-Private method.
+Private method. 
+
+DEPRECATED
 
 Returns undef unless C<COLUMN> has a true value for C<ATTRIBUTE>.
 
@@ -422,7 +432,6 @@ sub _accessible {
     my $self = shift;
     my $column_name = shift;
     my $attribute = lc( shift || '' );
-
 
     my $col = $self->column($column_name);
     return undef unless ($col and $col->can($attribute));
@@ -449,46 +458,60 @@ sub _primary_key {
     return $pkeys->[0];
 }
 
-=head2 _class_accessible 
+=head2 _init_columns
 
-An older way to read fields attributes in a derived class.
-(The current preferred method is by overriding C<schema>; if you do
-this and don't override C<_class_accessible>, the module will generate
-an appropriate C<_class_accessible> based on your C<schema>.)
-
+Turns your sub schema into a set of column objects
 =cut
 
-sub _class_accessible {
+sub _init_columns {
     my $self = shift;
 
-    foreach my $column_name ( $self->_primary_keys ) {
+    foreach my $column_name ( @{$self->_primary_keys} ) {
         my $column = $self->add_column($column_name);
-        $column->read(1);
+        $column->writable(0);
     }
 
     my $schema = $self->schema;
 
     for my $column_name ( keys %$schema ) {
         my $column = $self->add_column($column_name);
-        if ( $schema->{$column_name}{'TYPE'} ) {
-            $column->read(1);
-            $column->write(1);
+        # Default, everything readable and writable
+        $column->readable(1);
+
+        if ( $schema->{$column_name}{'read'} ) {
+            $column->readable( $schema->{$column_name}{'read'});
+        } else {
+            $column->readable(1);
+        }
+    
+        if ( $schema->{$column_name}{'write'} ) {
+            $column->writable( $schema->{$column_name}{'write'});
+        } elsif (not defined $column->writable) { # don't want to make pkeys writable
+            $column->writable(1);
+        }
+
+    
+        # Next time, all-lower hash keys
+        my $type = $schema->{$column_name}{'type'} || $schema->{$column_name}{'TYPE'};
+
+        if ($type) {
+            $column->type($type);
 
         }
-        elsif ( my $refclass = $schema->{$column_name}{'REFERENCES'} ) {
+
+        my $refclass = $schema->{$column_name}{'REFERENCES'} || $schema->{$column_name}{'references'};
+
+        if ($refclass) {
             if ( UNIVERSAL::isa( $refclass, 'Jifty::DBI::Record' ) ) {
                 if ( $column_name =~ /(.*)_id$/ ) {
-                    $column->read(1);
-                    $column->write(1);
 
                     my $virtual_column = $self->add_column($1);
                     $virtual_column->refers_to_record_class($refclass);
                     $virtual_column->alias_for_column($column_name);
+                    $virtual_column->readable( $schema->{$column_name}{'read'});
                 }
                 else {
                     $column->refers_to_record_class($refclass);
-                    $column->read(1);
-                    $column->write(1);
                 }
 
             }
@@ -524,7 +547,7 @@ sub _to_record {
 
 
     my $column = $self->column($column_name);
-    my $classname = $column->references_record_class();
+    my $classname = $column->refers_to_record_class();
 
 
     return unless defined $value;
@@ -569,8 +592,9 @@ sub add_column {
     my $self = shift;
     my $name = shift;
     $name = lc $name;
-    $COLUMNS{$name} = Jifty::DBI::Column->new() unless exists $COLUMNS{$name};
-    $COLUMNS{$name}->name($name);
+    $self->COLUMNS->{$name} = Jifty::DBI::Column->new() unless exists $self->COLUMNS->{$name};
+    $self->COLUMNS->{$name}->name($name);
+    return $self->COLUMNS->{$name};
 }
 
 
@@ -582,13 +606,27 @@ sub column {
     my $self = shift;
     my $name = shift;
     $name = lc $name;
-    return $COLUMNS{$name};
+    return $self->COLUMNS->{$name} ;
 
 }
 
 sub columns {
-    return values %COLUMNS;
+    my $self = shift;
+    return (values %{$self->COLUMNS});
 }
+
+sub COLUMNS {
+    my $self = shift;
+    my $class = ref($self) || $self;
+    my $symbol_name = $class."::_COLUMNS";
+     
+    no strict 'refs';
+    # Initialize the has of columns if we haven't been here yet for this class
+    *{$symbol_name} = {} unless (*{$symbol_name}{HASH});
+    return *{$symbol_name};
+
+}
+
 
 # sub {{{ readable_attributes
 
@@ -596,25 +634,23 @@ sub columns {
 
 Returns a list this table's readable columns
 
-XXX TODO actuall returns the column objects
 =cut
 
 sub readable_attributes {
     my $self     = shift;
-    return grep { $_->readable } @{$self->columns};
+    return sort map {$_->name }  grep { $_->readable } $self->columns;
 }
 
 =head2 writable_attributes
 
 Returns a list of this table's writable columns
 
-XXX TODO returns the column objects
 
 =cut
 
 sub writable_attributes {
     my $self = shift;
-    return grep { $_->writeable } @{$self->columns};
+    return sort map { $_->name } grep { $_->writable } $self->columns;
 }
 
 =head2 __value
@@ -631,7 +667,7 @@ sub __value {
     # If the requested column is actually an alias for another, resolve it.
    
     $field = $self->column($field)->alias_for_column() 
-        while $self->column($field)->alias_for_column();
+    while ($self->column($field) and $self->column($field)->alias_for_column());
 
     if ( !$self->{'fetched'}{$field} and my $id = $self->id() ) {
         my $pkey = $self->_primary_key();
@@ -696,7 +732,8 @@ sub __set {
     }
     my $ret = Class::ReturnValue->new();
 
-    unless ( $args{'column'} ) {
+    my $column = $self->column(lc $args{'column'});
+    unless ( $column) {
         $ret->as_array( 0, 'No column specified' );
         $ret->as_error(
             errno        => 5,
@@ -705,7 +742,6 @@ sub __set {
         );
         return ( $ret->return_value );
     }
-    my $column_name = lc $args{'column'};
     if ( !defined( $args{'value'} ) ) {
         $ret->as_array( 0, "No value passed to _set" );
         $ret->as_error(
@@ -715,8 +751,8 @@ sub __set {
         );
         return ( $ret->return_value );
     }
-    elsif ( ( defined $self->__value($column_name) )
-        and ( $args{'value'} eq $self->__value($column_name) ) )
+    elsif ( ( defined $self->__value($column->name) )
+        and ( $args{'value'} eq $self->__value($column->name) ) )
     {
         $ret->as_array( 0, "That is already the current value" );
         $ret->as_error(
@@ -730,15 +766,15 @@ sub __set {
     # First, we truncate the value, if we need to.
     
 
-    $args{'value'} = $self->truncate_value( $args{'column'}, $args{'value'} );
+    $args{'value'} = $self->truncate_value( $column->name, $args{'value'} );
 
-    my $method = "validate_" . $args{'column'};
+    my $method = "validate_" . $column->name;
     unless ( $self->$method( $args{'value'} ) ) {
-        $ret->as_array( 0, 'Illegal value for ' . $args{'column'} );
+        $ret->as_array( 0, 'Illegal value for ' . $column->name);
         $ret->as_error(
             errno        => 3,
             do_backtrace => 0,
-            message      => "Illegal value for " . $args{'column'}
+            message      => "Illegal value for " . $column->name
         );
         return ( $ret->return_value );
     }
@@ -749,11 +785,10 @@ sub __set {
     my $unmunged_value = $args{'value'};
 
     unless ( $self->_handle->knows_blobs ) {
-        my $column = $self->column($column_name);
 
         # Support for databases which don't deal with LOBs automatically
         if ( $column->type =~ /^(text|longtext|clob|blob|lob)$/i ) {
-            my $bhash = $self->_handle->blob_params( $column_name, $column->type );
+            my $bhash = $self->_handle->blob_params( $column->name, $column->type );
             $bhash->{'value'} = $args{'value'};
             $args{'value'} = $bhash;
         }
@@ -766,7 +801,7 @@ sub __set {
 
     );
     unless ($val) {
-        my $message = $args{'column'} . " could not be set to " . $args{'value'} . ".";
+        my $message = $column->name . " could not be set to " . $args{'value'} . ".";
         $ret->as_array( 0, $message );
         $ret->as_error(
             errno        => 4,
@@ -783,7 +818,7 @@ sub __set {
         $self->load_by_id( $self->id );
     }
     else {
-        $self->{'values'}->{"$column_name"} = $unmunged_value;
+        $self->{'values'}->{$column->name} = $unmunged_value;
     }
     $ret->as_array( 1, "The new value has been set." );
     return ( $ret->return_value );
@@ -871,9 +906,11 @@ sub truncate_value {
     my $value = shift;
 
     # We don't need to truncate empty things.
-    return undef unless ( defined($value) );
+    return undef unless ( defined($value) ); 
 
     my $column = $self->column($column_name);
+
+    die "No column $column_name" unless ($column);
 
     my $truncate_to;
     if ( $column->length && !$column->is_numeric ) {
@@ -1109,7 +1146,7 @@ sub create {
         unless ($column) {
             die "$column_name isn't a column we know about"
         }
-        if ( $column->readable and $column->refers_to_record ) {
+        if ( $column->readable and $column->refers_to_record_class ) {
             $attribs{$column_name} = $attribs{$column_name}->id
                 if UNIVERSAL::isa( $attribs{$column_name}, 'Jifty::DBI::Record' );
         }
@@ -1172,19 +1209,41 @@ sub __delete {
     }
 }
 
+
+
+
+
 =head2 table
 
-Returns or sets the name of the current table
+This method returns this class's default table name. It uses
+Lingua::EN::Inflect to pluralize the class's name as we believe that
+class names for records should be in the singular and table names
+should be plural.
+
+If your class name is C<My::App::Rhino>, your table name will default
+to C<rhinos>. If your class name is C<My::App::RhinoOctopus>, your
+default table name will be C<rhino_octopuses>. Not perfect, but
+arguably correct.
 
 =cut
 
 sub table {
     my $self = shift;
-    if (@_) {
-        $self->{'table'} = shift;
+    use Carp; die Carp::longmess unless ref $self;
+
+    if (not $self->{__table_name} ) {
+	    my $class = ref($self);
+	    die "Couldn't turn ".$class." into a table name" unless ($class =~ /::(\w+)$/);
+            my $table = $1;
+            $table =~ s/(?<=[a-z])([A-Z]+)/"_" . lc($1)/eg;
+            $table =~ tr/A-Z/a-z/;
+            $table = Lingua::EN::Inflect::PL_N($table);
+	    $self->{__table_name} = $table;
     }
-    return ( $self->{'table'} );
+    return $self->{__table_name};
 }
+
+
 
 =head2 _handle
 

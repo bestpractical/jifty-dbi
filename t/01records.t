@@ -8,7 +8,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 65;
+use constant TESTS_PER_DRIVER => 64;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -32,9 +32,10 @@ SKIP: {
 	my $rec = TestApp::Address->new($handle);
 	isa_ok($rec, 'Jifty::DBI::Record');
 
+
 # _accessible testings
 	is( $rec->_accessible('id' => 'read'), 1, 'id is accessible for read' );
-	is( $rec->_accessible('id' => 'write'), undef, 'id is not accessible for write' );
+	is( $rec->_accessible('id' => 'write'), 0, 'id is not accessible for write' );
 	is( $rec->_accessible('id'), undef, "any field is not accessible in undefined mode" );
 	is( $rec->_accessible('unexpected_field' => 'read'), undef, "field doesn't exist and can't be accessible for read" );
 	is_deeply( [sort($rec->readable_attributes)], [sort qw(employee_id id name phone)], 'readable attributes' );
@@ -67,10 +68,8 @@ SKIP: {
 		local $SIG{__WARN__} = sub {return};
 		is( $rec->_value( 'some_unexpected_field' ), undef, "The record has no 'some_unexpected_field'");
 	}
-	($val, $msg) = $rec->set_some_unexpected_field( 'foo' );
-	ok(!$val, $msg);
-	is($msg, 'Nonexistant field?', "Field doesn't exist");
-	($val, $msg) = $rec->_set('some_unexpected_field', 'foo');
+	ok (!eval { $rec->set_some_unexpected_field( 'foo' )}, "Can't call nonexistent fields");
+	($val, $msg) = $rec->_set(column =>'some_unexpected_field', value =>'foo');
 	ok(!$val, "$msg");
 
 
@@ -109,20 +108,20 @@ SKIP: {
 
 # no prefetch feature and _load_from_sql sub checks
 	$newrec = TestApp::Address->new($handle);
-	($val, $msg) = $newrec->_load_from_sql('SELECT id FROM address WHERE id = ?', $newid);
+	($val, $msg) = $newrec->_load_from_sql('SELECT id FROM addresses WHERE id = ?', $newid);
 	is($val, 1, 'found object');
 	is($newrec->name, '12345678901234', "autoloaded not prefetched field");
 	is($newrec->employee_id, '1234567890', "autoloaded not prefetched field");
 
 # _load_from_sql and missing PK
 	$newrec = TestApp::Address->new($handle);
-	($val, $msg) = $newrec->_load_from_sql('SELECT name FROM address WHERE name = ?', '12345678901234');
+	($val, $msg) = $newrec->_load_from_sql('SELECT name FROM addresses WHERE name = ?', '12345678901234');
 	is($val, 0, "didn't find object");
 	is($msg, "Missing a primary key?", "reason is missing PK");
 
 # _load_from_sql and not existant row
 	$newrec = TestApp::Address->new($handle);
-	($val, $msg) = $newrec->_load_from_sql('SELECT id FROM address WHERE id = ?', 0);
+	($val, $msg) = $newrec->_load_from_sql('SELECT id FROM addresses WHERE id = ?', 0);
 	is($val, 0, "didn't find object");
 	is($msg, "Couldn't find row", "reason is wrong id");
 
@@ -208,13 +207,6 @@ package TestApp::Address;
 
 use base qw/Jifty::DBI::Record/;
 
-sub _init {
-    my $self = shift;
-    my $handle = shift;
-    $self->table('address');
-    $self->_handle($handle);
-}
-
 sub validate_name
 {
 	my ($self, $value) = @_;
@@ -222,18 +214,14 @@ sub validate_name
 	return 1;
 }
 
-sub _class_accessible {
+sub schema {
 
     {   
         
-        id =>
-        {read => 1, type => 'int(11)', default => ''}, 
-        name => 
-        {read => 1, write => 1, type => 'varchar(14)', default => ''},
-        phone => 
-        {read => 1, write => 1, type => 'varchar(18)', length => 18, default => ''},
-        employee_id => 
-        {read => 1, write => 1, type => 'int(8)', default => ''},
+        id => { TYPE => 'int(11)' },
+        name => { TYPE => 'varchar(14)', DEFAULT => ''},
+        phone => { TYPE => 'varchar(18)', length => 18, DEFAULT => ''},
+        employee_id => { TYPE => 'int(8)', DEFAULT => ''},
 
 }
 
@@ -241,7 +229,7 @@ sub _class_accessible {
 
 sub schema_mysql {
 <<EOF;
-CREATE TEMPORARY TABLE address (
+CREATE TEMPORARY TABLE addresses (
         id integer AUTO_INCREMENT,
         name varchar(36),
         phone varchar(18),
@@ -253,7 +241,7 @@ EOF
 
 sub schema_pg {
 <<EOF;
-CREATE TEMPORARY TABLE address (
+CREATE TEMPORARY TABLE addresses (
         id serial PRIMARY KEY,
         name varchar,
         phone varchar,
@@ -266,7 +254,7 @@ EOF
 sub schema_sqlite {
 
 <<EOF;
-CREATE TABLE address (
+CREATE TABLE addresses (
         id  integer primary key,
         name varchar(36),
         phone varchar(18),

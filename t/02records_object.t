@@ -9,7 +9,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 11;
+use constant TESTS_PER_DRIVER => 9;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -40,16 +40,11 @@ SKIP: {
 	is($p_id, 1, "Loaded record $p_id");
 	$phone->load( $p_id );
 
-	my $obj = $phone->employee_obj($handle);
+	my $obj = $phone->employee($handle);
 	ok($obj, "Employee #$e_id has phone #$p_id");
 	isa_ok( $obj, 'TestApp::Employee');
 	is($obj->id, $e_id);
 	is($obj->name, 'RUZ');
-
-	# tests for no object mapping
-	my ($state, $msg) = $phone->value_obj($handle);
-	ok(!$state, "State is false");
-	is( $msg, 'No object mapping for field', 'Error message is correct');
 
 	cleanup_schema( 'TestApp', $handle );
 }} # SKIP, foreach blocks
@@ -110,14 +105,7 @@ use base qw/Jifty::DBI::Record/;
 use vars qw/$VERSION/;
 $VERSION=0.01;
 
-sub _init {
-    my $self = shift;
-    my $handle = shift;
-    $self->table('employees');
-    $self->_handle($handle);
-}
-
-sub _class_accessible {
+sub schema {
     {   
         
         id =>
@@ -137,21 +125,14 @@ $VERSION=0.01;
 
 use base qw/Jifty::DBI::Record/;
 
-sub _init {
-    my $self = shift;
-    my $handle = shift;
-    $self->table('phones');
-    $self->_handle($handle);
-}
-
-sub _class_accessible {
+sub schema {
     {   
         
         id =>
         {read => 1, type => 'int(11)'}, 
         employee => 
-        {read => 1, write => 1, type => 'int(11)', object => 'TestApp::Employee' },
-        value => 
+        {read => 1, write => 1, type => 'int(11)', references => 'TestApp::Employee' },
+        phone => 
         {read => 1, write => 1, type => 'varchar(18)'},
 
     }

@@ -11,13 +11,13 @@ Array of all supported DBD drivers.
 =cut
 
 our @supported_drivers = qw(
+	SQLite
 	Informix
 	mysql
 	mysqlPP
 	ODBC
 	Oracle
 	Pg
-	SQLite
 	Sybase
 );
 

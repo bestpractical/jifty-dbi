@@ -44,4 +44,9 @@ sub is_numeric {
     return 0;
 
 }
+
+# Aliases for compatibility with searchbuilder code
+*read = \&readable;
+*write = \&writable;
+
 1;

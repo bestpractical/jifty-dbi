@@ -213,7 +213,7 @@ sub _init {
     $self->_handle($handle);
 }
 
-sub _class_accessible {
+sub schema {
     {   
         id =>
         {read => 1, type => 'int(11)' }, 
