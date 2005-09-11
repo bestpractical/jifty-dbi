@@ -8,7 +8,11 @@ use Class::ReturnValue;
 use Lingua::EN::Inflect;
 use Jifty::DBI::Column;
 
-our $COLUMNS; # The global cache of all schema columns
+use base qw/Class::Data::Inheritable/;
+
+Jifty::DBI::Record->mk_classdata('COLUMNS'); 
+
+#our $COLUMNS; # The global cache of all schema columns
 
 =head1 NAME
 
@@ -50,11 +54,6 @@ replace it by defining two methods and inheriting some code.  Its pretty
 simple, and incredibly powerful.  For more complex cases, you can, gasp, 
 do more complicated things by overriding certain methods.  Lets stick with
 the simple case for now. 
-
-The two methods in question are '_Init' and '_class_accessible', all they 
-really do are define some values and send you on your way.  As you might 
-have guessed the '_' suggests that these are private methods, they are. 
-They will get called by your record objects constructor.  
 
 
 
@@ -103,30 +102,16 @@ First, let's define our record class in a new module named "Simple.pm".
 This should be pretty obvious, name the package, import ::Record and then 
 define ourself as a subclass of ::Record. 
 
-  003: 
-  004: sub _Init {
-  005:   my $this   = shift; 
-  006:   my $handle = shift;
-  007: 
-  008:   $this->_handle($handle); 
-  009:   $this->table("Simple"); 
-  010:   
-  011:   return ($this);
-  012: }
-
-Here we set our handle and table name, while its not obvious so far, we'll 
-see later that $handle (line: 006) gets passed via ::Record::new when a 
-new instance is created.  Thats actually an important concept, the DB handle 
-is not bound to a single object but rather, its shared across objects. 
-
   013: 
-  014: sub _class_accessible {
+  014: sub schema {
   015:   {  
   016:     Foo => { 'read'  => 1 },
   017:     Bar => { 'read'  => 1, 'write' => 1  },
   018:     Id  => { 'read'  => 1 }
   019:   };
   020: }
+
+  XXX TODO add types
 
 What's happening might be obvious, but just in case this method is going to 
 return a reference to a hash. That hash is where our columns are defined, 
@@ -268,7 +253,7 @@ sub new {
     my $self = {};
     bless( $self, $class );
 
-    $self->_init_columns() unless keys %{$self->COLUMNS};
+    $self->_init_columns() unless $self->COLUMNS;
 
     $self->_init(@_);
 
@@ -314,7 +299,6 @@ sub DESTROY {
 sub AUTOLOAD {
     my $self = $_[0];
 
-    no strict 'refs';
     my ( $column_name, $action ) = $self->_parse_autoload_method($AUTOLOAD);
 
     unless ( $action and $column_name ) {
@@ -330,6 +314,7 @@ sub AUTOLOAD {
 
     }
 
+            no strict 'refs'; # We're going to be defining subs
     if ( $action eq 'read' and $column->readable ) {
 
         if ( $column->refers_to_record_class ) {
@@ -466,6 +451,8 @@ Turns your sub schema into a set of column objects
 sub _init_columns {
     my $self = shift;
 
+    $self->COLUMNS({}); # Clear out the columns hash
+
     foreach my $column_name ( @{$self->_primary_keys} ) {
         my $column = $self->add_column($column_name);
         $column->writable(0);
@@ -508,7 +495,7 @@ sub _init_columns {
                     my $virtual_column = $self->add_column($1);
                     $virtual_column->refers_to_record_class($refclass);
                     $virtual_column->alias_for_column($column_name);
-                    $virtual_column->readable( $schema->{$column_name}{'read'});
+                    $virtual_column->readable( $schema->{$column_name}{'read'} || 1);
                 }
                 else {
                     $column->refers_to_record_class($refclass);
@@ -606,6 +593,7 @@ sub column {
     my $self = shift;
     my $name = shift;
     $name = lc $name;
+    return undef unless $self->COLUMNS and $self->COLUMNS->{$name};
     return $self->COLUMNS->{$name} ;
 
 }
@@ -613,18 +601,6 @@ sub column {
 sub columns {
     my $self = shift;
     return (values %{$self->COLUMNS});
-}
-
-sub COLUMNS {
-    my $self = shift;
-    my $class = ref($self) || $self;
-    my $symbol_name = $class."::_COLUMNS";
-     
-    no strict 'refs';
-    # Initialize the has of columns if we haven't been here yet for this class
-    *{$symbol_name} = {} unless (*{$symbol_name}{HASH});
-    return *{$symbol_name};
-
 }
 
 
@@ -664,11 +640,14 @@ sub __value {
     my $self  = shift;
     my $field = lc shift;
 
+    Carp::confess unless ($field);
     # If the requested column is actually an alias for another, resolve it.
-   
-    $field = $self->column($field)->alias_for_column() 
-    while ($self->column($field) and $self->column($field)->alias_for_column());
+    while ( $self->column($field) and defined $self->column($field)->alias_for_column) {
+        warn "Turning $field into ". $self->column($field)->alias_for_column() ;
+        $field = $self->column($field)->alias_for_column() 
+    }
 
+    warn "Now field is $field\n";
     if ( !$self->{'fetched'}{$field} and my $id = $self->id() ) {
         my $pkey = $self->_primary_key();
         my $QueryString
@@ -681,9 +660,7 @@ sub __value {
         $self->{'fetched'}{$field} = 1;
     }
 
-    my $value = $self->{'values'}{$field};
-
-    return $value;
+    return $self->{'values'}{$field};
 }
 
 =head2 _value
