@@ -643,11 +643,9 @@ sub __value {
     Carp::confess unless ($field);
     # If the requested column is actually an alias for another, resolve it.
     while ( $self->column($field) and defined $self->column($field)->alias_for_column) {
-        warn "Turning $field into ". $self->column($field)->alias_for_column() ;
         $field = $self->column($field)->alias_for_column() 
     }
 
-    warn "Now field is $field\n";
     if ( !$self->{'fetched'}{$field} and my $id = $self->id() ) {
         my $pkey = $self->_primary_key();
         my $QueryString
