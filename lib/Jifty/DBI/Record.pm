@@ -12,8 +12,6 @@ use base qw/Class::Data::Inheritable/;
 
 Jifty::DBI::Record->mk_classdata('COLUMNS'); 
 
-#our $COLUMNS; # The global cache of all schema columns
-
 =head1 NAME
 
 Jifty::DBI::Record - Superclass for records loaded by Jifty::DBI::Collection
