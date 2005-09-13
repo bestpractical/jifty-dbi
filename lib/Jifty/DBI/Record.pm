@@ -297,6 +297,8 @@ sub DESTROY {
 sub AUTOLOAD {
     my $self = $_[0];
 
+    $self->_init_columns() unless $self->COLUMNS;
+
     my ( $column_name, $action ) = $self->_parse_autoload_method($AUTOLOAD);
 
     unless ( $action and $column_name ) {
@@ -487,6 +489,7 @@ sub _init_columns {
         my $refclass = $schema->{$column_name}{'REFERENCES'} || $schema->{$column_name}{'references'};
 
         if ($refclass) {
+            $refclass->require();
             if ( UNIVERSAL::isa( $refclass, 'Jifty::DBI::Record' ) ) {
                 if ( $column_name =~ /(.*)_id$/ ) {
 
