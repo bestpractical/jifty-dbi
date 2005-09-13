@@ -401,6 +401,7 @@ sub _parse_autoload_method {
     return ($column_name, $action);
 
 }
+
 =head2 _accessible COLUMN ATTRIBUTE
 
 Private method. 
@@ -447,6 +448,7 @@ sub _primary_key {
 =head2 _init_columns
 
 Turns your sub schema into a set of column objects
+
 =cut
 
 sub _init_columns {
