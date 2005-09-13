@@ -8,6 +8,7 @@ requires:
   DBI: 0
   Want: 0
   Encode: 0
+  UNIVERSAL::require: 0
   Class::ReturnValue: 0.4
   Cache::Simple::TimedExpiry: 0.21
 no_index:

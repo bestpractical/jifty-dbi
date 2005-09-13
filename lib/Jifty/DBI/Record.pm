@@ -7,6 +7,7 @@ use vars qw($AUTOLOAD);
 use Class::ReturnValue;
 use Lingua::EN::Inflect;
 use Jifty::DBI::Column;
+use UNIVERSAL::require;
 
 use base qw/Class::Data::Inheritable/;
 
