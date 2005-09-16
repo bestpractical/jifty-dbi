@@ -146,30 +146,15 @@ it to be more clear to define it.
   009: 
   010: my $s = Simple->new($handle);
   011: 
-  012: $s->load_by_id(1); 
+  012: $s->load_by_cols(id=>1); 
 
-load_by_id is one of four 'load_by_*' methods, as the name suggests it
-searches for an row in the database that has id='0'.  This causes,
-what I think is a bug, in that it current requires there to be an id
-field. More reasonably it also assumes that the id field is
-unique. load_by_id($id) will do undefined things if there is >1 row
-with the same id.
-
-In addition to load_by_id, we also have:
-
-=over 4
-
-=item load_by_col 
-
-Takes two arguments, a column name and a value.  Again, it will do 
-undefined things if you use non-unique things.  
 
 =item load_by_cols
 
 Takes a hash of columns=>values and returns the *first* to match. 
 First is probably lossy across databases vendors. 
 
-=item LoadFromHash
+=item load_from_hash
 
 Populates this record with data from a Jifty::DBI.  I'm 
 currently assuming that Jifty::DBI is what we use in 
@@ -228,7 +213,7 @@ object!
   028:
   029: $s1 = undef;
   030: $s1 = Simple->new($handle);
-  031: $s1->load_by_id(4);
+  031: $s1->load_by_cols(id=>4);
   032: $s1->Delete();
 
 And its gone. 
@@ -550,7 +535,7 @@ sub _to_record {
     # perhaps the handle should have an initiializer for records/collections
 
     my $object = $classname->new( $self->_handle );
-    $object->load_by_id($value);
+    $object->load_by_cols(id => $value);
     return $object;
 }
 
@@ -794,7 +779,8 @@ sub __set {
     # then we need to reload the object from the DB to know what's
     # really going on. (ex SET Cost = Cost+5)
     if ( $args{'is_sql_function'} ) {
-        $self->load_by_id( $self->id );
+        # XXX TODO primary_keys
+        $self->load_by_cols  id =>$self->id );
     }
     else {
         $self->{'values'}->{$column->name} = $unmunged_value;
@@ -933,7 +919,7 @@ sub truncate_value {
 
 =head2 load
 
-Takes a single argument, $id. Calls load_by_id to retrieve the row whose primary key
+Takes a single argument, $id. Calls load_by_cols to retrieve the row whose primary key
 is $id
 
 =cut
@@ -941,7 +927,7 @@ is $id
 sub load {
     my $self = shift;
 
-    return $self->load_by_id(@_);
+    return $self->load_by_cols(id=>@_);
 }
 
 =head2 load_by_col
@@ -1016,24 +1002,8 @@ sub load_by_cols {
     return ( $self->_load_from_sql( $QueryString, @bind ) );
 }
 
-=head2 load_by_id
-
-Loads a record by its primary key. Your record class must define a single primary key column.
-
-=cut
-
-sub load_by_id {
-    my $self = shift;
-    my $id   = shift;
-
-    $id = 0 if ( !defined($id) );
-    my $pkey = $self->_primary_key();
-    return ( $self->load_by_cols( $pkey => $id ) );
-}
-
 =head2 load_by_primary_keys 
 
-Like load_by_id with basic support for compound primary keys.
 
 =cut
 

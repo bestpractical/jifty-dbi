@@ -30,10 +30,6 @@ Known bugs:
         must_redo_search bcomes true also so CountAll after NextPage force
         useless query.
 
-Things should be done in 2 release:
-    * switch to lover case API
-        ** patch capitalization.pm to support converting from lower case
-           to upper.
     * Class::ReturnValue is prefered way to handle errors, should implement
       it in all error paths.
     * rework&review pages support, now I can't write next code:
