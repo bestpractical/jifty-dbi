@@ -240,7 +240,6 @@ package TestApp::Employee;
 
 use base qw/Jifty::DBI::Record/;
 
-sub table { 'employees' }
 
 sub schema {
     return {
@@ -262,7 +261,6 @@ package TestApp::Phone;
 
 use base qw/Jifty::DBI::Record/;
 
-sub table { 'phones' }
 
 sub schema {
     return {   

@@ -913,12 +913,6 @@ sub truncate_value {
 
 }
 
-# load should do a bit of overloading
-# if we call it with only one argument, we're trying to load by reference.
-# if we call it with a passel of arguments, we're trying to load by value
-# The latter is primarily important when we've got a whole set of record that we're
-# reading in with a recordset class and want to instantiate objefcts for each record.
-
 =head2 load
 
 Takes a single argument, $id. Calls load_by_cols to retrieve the row whose primary key
@@ -929,24 +923,9 @@ is $id
 sub load {
     my $self = shift;
 
-    return $self->load_by_cols(id=>@_);
+    return $self->load_by_cols(id=>shift);
 }
 
-=head2 load_by_col
-
-Takes two arguments, a column and a value. The column can be any table column
-which contains unique values.  Behavior when using a non-unique value is
-undefined
-
-=cut
-
-sub load_by_col {
-    my $self = shift;
-    my $col  = shift;
-    my $val  = shift;
-
-    return ( $self->load_by_cols( $col => $val ) );
-}
 
 =head2 load_by_cols
 
@@ -1180,11 +1159,10 @@ arguably correct.
 
 sub table {
     my $self = shift;
-    use Carp; die Carp::longmess unless ref $self;
 
     if (not $self->{__table_name} ) {
 	    my $class = ref($self);
-	    die "Couldn't turn ".$class." into a table name" unless ($class =~ /::(\w+)$/);
+	    die "Couldn't turn ".$class." into a table name" unless ($class =~ /(?:\:\:)?(\w+)$/);
             my $table = $1;
             $table =~ s/(?<=[a-z])([A-Z]+)/"_" . lc($1)/eg;
             $table =~ tr/A-Z/a-z/;

@@ -4,7 +4,6 @@ use base qw/Jifty::DBI::Record/;
 
 # Class and instance method
 
-sub table { "addresses" }
 
 # Class and instance method
 
@@ -20,7 +19,6 @@ package Sample::Employee;
 
 use base qw/Jifty::DBI::Record/;
 
-sub table { "employees" }
 
 sub schema {
     return {

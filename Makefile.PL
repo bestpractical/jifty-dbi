@@ -7,6 +7,7 @@ requires('DBI');
 requires('Want');
 requires('Encode');
 requires('UNIVERSAL::require');
+requires('Lingua::EN::Inflect');
 requires('Class::ReturnValue', 0.40);
 requires('Cache::Simple::TimedExpiry' => '0.21');
 build_requires('Test::More' => 0.52);

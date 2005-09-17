@@ -140,12 +140,12 @@ SKIP: {
 	is( $newrec->id, undef, "can't load record with undef id");
 
 	$newrec = TestApp::Address->new($handle);
-	$newrec->load_by_col( name => '12345678901234' );
+	$newrec->load_by_cols( name => '12345678901234' );
 	is( $newrec->id, $newid, "load record by 'name' column value");
 
 # load_by_col with operator
 	$newrec = TestApp::Address->new($handle);
-	$newrec->load_by_col( name => { value => '%45678%',
+	$newrec->load_by_cols( name => { value => '%45678%',
 				      operator => 'LIKE' } );
 	is( $newrec->id, $newid, "load record by 'name' with LIKE");
 
