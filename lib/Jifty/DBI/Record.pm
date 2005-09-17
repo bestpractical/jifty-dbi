@@ -149,6 +149,8 @@ it to be more clear to define it.
   012: $s->load_by_cols(id=>1); 
 
 
+=over
+
 =item load_by_cols
 
 Takes a hash of columns=>values and returns the *first* to match. 
@@ -780,7 +782,7 @@ sub __set {
     # really going on. (ex SET Cost = Cost+5)
     if ( $args{'is_sql_function'} ) {
         # XXX TODO primary_keys
-        $self->load_by_cols  id =>$self->id );
+        $self->load_by_cols ( id =>$self->id );
     }
     else {
         $self->{'values'}->{$column->name} = $unmunged_value;
