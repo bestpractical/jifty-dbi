@@ -5,13 +5,20 @@ package Jifty::DBI::Column;
 
 use base qw/Class::Accessor/;
 
-__PACKAGE__->mk_accessors qw/name type default validator 
+__PACKAGE__->mk_accessors qw/
+    name 
+    type 
+    default 
+    validator 
     boolean 
     readable writable 
     length 
     refers_to_collection_class
     refers_to_record_class
     alias_for_column 
+    filters
+    input_filters
+    output_filters
     /;
 
 =head1 NAME
@@ -48,5 +55,44 @@ sub is_numeric {
 # Aliases for compatibility with searchbuilder code
 *read = \&readable;
 *write = \&writable;
+
+
+sub decode_value {
+    my $self = shift;
+    my $value_ref = shift;
+    $self->_apply_filters( value_ref => $value_ref, 
+                           filters  => (reverse $self->filters, $self->output_filters),
+                           action => 'decode'
+                        );
+}
+
+
+sub encode_value {
+    my $self = shift;
+    my $value_ref = shift;
+    $self->_apply_filters( value_ref => $value_ref, 
+                           filters  => ($self->input_filters, $self->filters),
+                           action => 'encode'
+                        );
+}
+
+
+sub _apply_filters {
+    my $self = shift;
+    my %args = (
+        value_ref => undef,
+        filters   => undef,
+        action    => undef,
+        @_
+    );
+    my $action = $args{'action'};
+    foreach my $filter_class ( @{ $args{filters} } ) {
+        $filter_class->require();
+
+        # XXX TODO error proof this
+        $filter_class->$action( $args{value_ref} );
+    }
+}
+
 
 1;
