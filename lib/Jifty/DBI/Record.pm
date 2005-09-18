@@ -629,27 +629,34 @@ never override __value.
 
 sub __value {
     my $self  = shift;
-    my $field = lc shift;
+    my $column_name = shift;
 
-    Carp::confess unless ($field);
     # If the requested column is actually an alias for another, resolve it.
-    while ( $self->column($field) and defined $self->column($field)->alias_for_column) {
-        $field = $self->column($field)->alias_for_column() 
+    while ( $self->column($column_name) 
+            and defined $self->column($column_name)->alias_for_column) {
+        $column_name = $self->column($column_name)->alias_for_column() 
     }
 
-    if ( !$self->{'fetched'}{$field} and my $id = $self->id() ) {
+    my $column = $self->column($column_name);
+
+    return unless ($column);
+    #Carp::confess unless ($column);
+
+
+    if ( !$self->{'fetched'}{$column->name} and my $id = $self->id() ) {
         my $pkey = $self->_primary_key();
         my $QueryString
-            = "SELECT $field FROM " . $self->table . " WHERE $pkey = ?";
+            = "SELECT ".$column->name." FROM " . $self->table . " WHERE $pkey = ?";
         my $sth = $self->_handle->simple_query( $QueryString, $id );
         my ($value) = eval { $sth->fetchrow_array() };
         warn $@ if $@;
 
-        $self->{'values'}{$field}  = $value;
-        $self->{'fetched'}{$field} = 1;
+        $column->decode_value(\$value);
+        $self->{'values'}{$column->name}  = $value;
+        $self->{'fetched'}{$column->name} = 1;
     }
 
-    return $self->{'values'}{$field};
+    return $self->{'values'}{$column->name};
 }
 
 =head2 _value
@@ -692,13 +699,10 @@ sub __set {
         Carp::cluck("field in ->set is deprecated");
             $args{'column'}          = delete $args{'field'};
     }
-    if ($args{'is_sql'}) {
-        Carp::cluck("is_sql in ->set is deprecated");
-        $args{'is_sql_function'} = delete $args{'is_sql'};
-    }
+    
     my $ret = Class::ReturnValue->new();
 
-    my $column = $self->column(lc $args{'column'});
+    my $column = $self->column($args{'column'});
     unless ( $column) {
         $ret->as_array( 0, 'No column specified' );
         $ret->as_error(
@@ -708,6 +712,11 @@ sub __set {
         );
         return ( $ret->return_value );
     }
+
+   
+    $column->encode_value(\$args{'value'});
+    
+    
     if ( !defined( $args{'value'} ) ) {
         $ret->as_array( 0, "No value passed to _set" );
         $ret->as_error(
@@ -729,10 +738,8 @@ sub __set {
         return ( $ret->return_value );
     }
 
-    # First, we truncate the value, if we need to.
     
 
-    $args{'value'} = $self->truncate_value( $column->name, $args{'value'} );
 
     my $method = "validate_" . $column->name;
     unless ( $self->$method( $args{'value'} ) ) {
@@ -791,45 +798,6 @@ sub __set {
     return ( $ret->return_value );
 }
 
-=head2 _canonicalize PARAMHASH
-
-This routine massages an input value (VALUE) for FIELD into something that's 
-going to be acceptable.
-
-Takes
-
-=over
-
-=item FIELD
-
-=item VALUE
-
-=item FUNCTION
-
-=back
-
-
-Takes:
-
-=over
-
-=item FIELD
-
-=item VALUE
-
-=item FUNCTION
-
-=back
-
-Returns a replacement VALUE. 
-
-=cut
-
-sub _canonicalize {
-    my $self  = shift;
-    my $field = shift;
-
-}
 
 =head2 _Validate FIELD VALUE
 
@@ -1080,6 +1048,9 @@ sub create {
             $attribs{$column_name} = $attribs{$column_name}->id
                 if UNIVERSAL::isa( $attribs{$column_name}, 'Jifty::DBI::Record' );
         }
+
+
+        $column->encode_value( \$attribs{$column_name});
 
         #Truncate things that are too long for their datatypes
         $attribs{$column_name} = $self->truncate_value( $column_name => $attribs{$column_name} );

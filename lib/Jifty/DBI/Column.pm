@@ -4,6 +4,8 @@ use strict;
 package Jifty::DBI::Column;
 
 use base qw/Class::Accessor/;
+use UNIVERSAL::require;
+
 
 __PACKAGE__->mk_accessors qw/
     name 
@@ -17,9 +19,10 @@ __PACKAGE__->mk_accessors qw/
     refers_to_record_class
     alias_for_column 
     filters
-    input_filters
     output_filters
     /;
+
+#    input_filters
 
 =head1 NAME
 
@@ -61,17 +64,26 @@ sub decode_value {
     my $self = shift;
     my $value_ref = shift;
     $self->_apply_filters( value_ref => $value_ref, 
-                           filters  => (reverse $self->filters, $self->output_filters),
+                           filters  => $self->output_filters,
                            action => 'decode'
                         );
 }
+
+sub input_filters {
+    my $self = shift;
+
+    return (['Jifty::DBI::Filter::Truncate']);
+
+}
+
 
 
 sub encode_value {
     my $self = shift;
     my $value_ref = shift;
     $self->_apply_filters( value_ref => $value_ref, 
-                           filters  => ($self->input_filters, $self->filters),
+                           filters  => 
+                           $self->input_filters,
                            action => 'encode'
                         );
 }
@@ -88,9 +100,9 @@ sub _apply_filters {
     my $action = $args{'action'};
     foreach my $filter_class ( @{ $args{filters} } ) {
         $filter_class->require();
-
+        my $filter = $filter_class->new( column => $self, value_ref => $args{'value_ref'});
         # XXX TODO error proof this
-        $filter_class->$action( $args{value_ref} );
+        $filter->$action();
     }
 }
 
