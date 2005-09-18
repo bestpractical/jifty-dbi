@@ -825,62 +825,6 @@ sub _validate {
     return (1);
 }
 
-=head2 truncate_value  COLUMN VALUE
-
-Truncate a value that's about to be set so that it will fit inside the
-database' s idea of how big the column is.
-
-(Actually, it looks at L<Jifty::DBI>'s concept of the database, not
-directly into the db).
-
-=cut
-
-sub truncate_value {
-    my $self  = shift;
-    my $column_name   = shift;
-    my $value = shift;
-
-    # We don't need to truncate empty things.
-    return undef unless ( defined($value) ); 
-
-    my $column = $self->column($column_name);
-
-    die "No column $column_name" unless ($column);
-
-    my $truncate_to;
-    if ( $column->length && !$column->is_numeric ) {
-        $truncate_to = $column->length;
-    }
-    elsif ( $column->type && $column->type =~ /char\((\d+)\)/ ) {
-        $truncate_to = $1;
-    }
-
-    return ($value) unless ($truncate_to);    # don't need to truncate
-
-    # Perl 5.6 didn't speak unicode
-    return substr( $value, 0, $truncate_to ) unless ( $] >= 5.007 );
-
-    require Encode;
-
-    if ( Encode::is_utf8($value) ) {
-        return Encode::decode(
-            utf8 =>
-                substr( Encode::encode( utf8 => $value ), 0, $truncate_to ),
-            Encode::FB_QUIET(),
-        );
-    }
-    else {
-        return Encode::encode(
-            utf8 => Encode::decode(
-                utf8 => substr( $value, 0, $truncate_to ),
-                Encode::FB_QUIET(),
-            )
-        );
-
-    }
-
-}
-
 =head2 load
 
 Takes a single argument, $id. Calls load_by_cols to retrieve the row whose primary key
@@ -1051,9 +995,6 @@ sub create {
 
 
         $column->encode_value( \$attribs{$column_name});
-
-        #Truncate things that are too long for their datatypes
-        $attribs{$column_name} = $self->truncate_value( $column_name => $attribs{$column_name} );
 
     }
     unless ( $self->_handle->knows_blobs ) {

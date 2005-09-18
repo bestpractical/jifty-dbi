@@ -8,7 +8,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 64;
+use constant TESTS_PER_DRIVER => 63;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -78,8 +78,6 @@ SKIP: {
 	($val,$msg) = $rec->set_name('1234567890123456789012345678901234567890');
 	ok($val, $msg);
 	is($rec->name, '12345678901234', "Truncated on update");
-	$val = $rec->truncate_value(phone => '12345678901234567890');
-	is($val, '123456789012345678', 'truncate by length attribute');
 
 
 # Test unicode truncation:
