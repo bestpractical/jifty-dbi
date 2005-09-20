@@ -35,7 +35,7 @@ perl objects
 
   my $sb = My::Things->new( handle => $handle );
 
-  $sb->Limit( FIELD => "column_1", VALUE => "matchstring" );
+  $sb->limit( FIELD => "column_1", VALUE => "matchstring" );
 
   while ( my $record = $sb->next ) {
       print $record->my_column_name();
@@ -544,9 +544,9 @@ sub unlimit {
     $self->_is_limited(-1);
 }
 
-=head2 Limit
+=head2 limit
 
-Limit takes a hash of parameters with the following keys:
+limit takes a hash of parameters with the following keys:
 
 =over 4
 
@@ -608,7 +608,7 @@ this search case sensitive
 
 =cut 
 
-sub Limit {
+sub limit {
     my $self = shift;
     my %args = (
         TABLE           => $self->table,
@@ -1016,7 +1016,7 @@ sub _group_clause {
 =head2 new_alias
 
 Takes the name of a table.  Returns the string of a new Alias for that
-table, which can be used to Join tables or to Limit what gets found by
+table, which can be used to Join tables or to limit what gets found by
 a search.
 
 =cut
@@ -1056,7 +1056,7 @@ Join instructs Jifty::DBI::Collection to join two tables.
 
 The standard form takes a param hash with keys ALIAS1, FIELD1, ALIAS2
 and FIELD2. ALIAS1 and ALIAS2 are column aliases obtained from
-$self->new_alias or a $self->Limit. FIELD1 and FIELD2 are the fields
+$self->new_alias or a $self->limit. FIELD1 and FIELD2 are the fields
 in ALIAS1 and ALIAS2 that should be linked, respectively.  For this
 type of join, this method has no return value.
 
@@ -1119,7 +1119,7 @@ sub goto_page {
 
 =head2 rows_per_page
 
-Limits the number of rows returned by the database.  Optionally, takes
+limits the number of rows returned by the database.  Optionally, takes
 an integer which restricts the # of rows returned in a result Returns
 the number of rows the database should display.
 
@@ -1217,7 +1217,7 @@ limit_clause.
 # 22:28 [msg(Robrt)] in what case?
 # 22:28 [Robrt(500@outer.space)] count_all _always_ used the return value of _do_count(), as opposed to Count which would return the cached number of
 #           results returned.
-# 22:28 [Robrt(500@outer.space)] IIRC, if you do a search with a Limit, then raw_rows will == Limit.
+# 22:28 [Robrt(500@outer.space)] IIRC, if you do a search with a limit, then raw_rows will == limit.
 # 22:31 [msg(Robrt)] ah.
 # 22:31 [msg(Robrt)] that actually makes sense
 # 22:31 [Robrt(500@outer.space)] You should paste this conversation into the count_all docs.
@@ -1405,9 +1405,6 @@ sub table {
     return $self->{table};
 }
 
-if ( eval { require capitalization } ) {
-    capitalization->unimport(__PACKAGE__);
-}
 
 1;
 __END__

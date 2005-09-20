@@ -557,7 +557,7 @@ sub _collection_value {
 
     my $coll = $classname->new( handle => $self->_handle );
 
-    $coll->Limit( FIELD => $description->{'KEY'}, VALUE => $self->id );
+    $coll->limit( FIELD => $description->{'KEY'}, VALUE => $self->id );
 
     return $coll;
 }
