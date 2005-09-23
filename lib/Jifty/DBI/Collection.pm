@@ -17,15 +17,9 @@ perl objects
   
   sub _init {
       my $self = shift;
-      $self->table('Things');
       return $self->SUPER::_init(@_);
   }
   
-  sub new_item {
-      my $self = shift;
-      # MyThing is a subclass of Jifty::DBI::Record
-      return(MyThing->new);
-  }
   
   package main;
 
