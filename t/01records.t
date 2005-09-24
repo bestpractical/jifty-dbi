@@ -8,7 +8,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 63;
+use constant TESTS_PER_DRIVER => 61;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -80,18 +80,13 @@ SKIP: {
 	is($rec->name, '12345678901234', "Truncated on update");
 
 
-# Test unicode truncation:
-	my $univalue = "這是個測試";
-	($val,$msg) = $rec->set_name($univalue.$univalue);
-	ok($val, $msg) ;
-	is($rec->name, '這是個測');
-
-
-
 # make sure we do _not_ truncate things which should not be truncated
 	($val,$msg) = $rec->set_employee_id('1234567890');
 	ok($val, $msg) ;
 	is($rec->employee_id, '1234567890', "Did not truncate id on create");
+
+	#delete prev record
+	$rec->delete;
 
 # make sure we do truncation on create
 	my $newrec = TestApp::Address->new($handle);
@@ -181,10 +176,11 @@ SKIP: {
 	is( ($val->as_array)[1], 'Illegal value for name', "correct error message" );
 	is( $rec->name, 'Obra', "old value is still there");
 # XXX TODO FIXME: this test cover current implementation that is broken //RUZ
+# fixed, now we can set undef values(NULLs)
 	$val = $rec->set_name( );
-	isa_ok( $val, 'Class::ReturnValue', "couldn't set empty/undef value, error returned");
-	is( ($val->as_array)[1], "No value passed to _set", "correct error message" );
-	is( $rec->name, 'Obra', "old value is still there");
+	isa_ok( $val, 'Class::ReturnValue', "set empty/undef/NULL value");
+	is( ($val->as_array)[1], "The new value has been set.", "correct error message" );
+	is( $rec->name, undef, "new value is undef, NULL in DB");
 
 # deletes
 	$newrec = TestApp::Address->new($handle);
@@ -208,7 +204,7 @@ use base qw/Jifty::DBI::Record/;
 sub validate_name
 {
 	my ($self, $value) = @_;
-	return 0 if $value =~ /invalid/i;
+	return 0 if $value && $value =~ /invalid/i;
 	return 1;
 }
 
