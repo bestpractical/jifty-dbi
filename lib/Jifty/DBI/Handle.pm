@@ -1,13 +1,11 @@
 package Jifty::DBI::Handle;
 use strict;
 use Carp;
-use DBI ();
-use Class::ReturnValue ();
-use Encode ();
+use DBI;
+use Class::ReturnValue;
+use Encode;
 
-use base qw/Jifty::DBI::HasFilters/;
-
-use vars qw($VERSION %DBIHandle $PrevHandle $DEBUG $TRANSDEPTH);
+use vars qw($VERSION @ISA %DBIHandle $PrevHandle $DEBUG $TRANSDEPTH);
 
 $TRANSDEPTH = 0;
 
@@ -561,18 +559,13 @@ Returns the database's version. The base implementation uses a "SELECT VERSION"
 
 sub database_version {
     my $self = shift;
-    my %args = ( short => 1, @_ );
 
-    unless( defined $self->{'database_version'} ) {
+    unless ( $self->{'database_version'} ) {
         my $statement = "SELECT VERSION()";
         my $sth       = $self->simple_query($statement);
-	unless( $sth ) {
-	    return( $self->{'database_version'} = '' );
-	}
-        my $ver       = ($sth->fetchrow_array())[0];
-        $self->{'database_version'} = $ver;
+        my @vals      = $sth->fetchrow();
+        $self->{'database_version'} = $vals[0];
     }
-    return $self->{'database_version'};
 }
 
 =head2 case_sensitive

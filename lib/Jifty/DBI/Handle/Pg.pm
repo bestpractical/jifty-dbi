@@ -40,28 +40,12 @@ sub connect {
     return ($DBIHandle);
 }
 
-=head2 database_version
-
-=cut
-
-sub database_version {
-    my $self = shift;
-    my %args = ( short => 1, @_ );
-
-    my $ver = $self->SUPER::database_version( %args );
-    if( $args{'short'} && $ver =~ /(\d+(?:\.\d+)*(?:-[a-z0-9]+)?)/i ) {
-        $ver = $1;
-    }
-
-    return $ver;
-}
-
 =head2 insert
 
 Takes a table name as the first argument and assumes that the rest of
 the arguments are an array of key-value pairs to be inserted.
 
-In case of insert failure, returns a L<Class::ReturnValue> object
+In case of isnert failure, returns a L<Class::ReturnValue> object
 preloaded with error info
 
 =cut
