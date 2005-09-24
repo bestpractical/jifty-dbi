@@ -1,11 +1,13 @@
 package Jifty::DBI::Handle;
 use strict;
-use Carp;
-use DBI;
-use Class::ReturnValue;
-use Encode;
+use Carp ();
+use DBI ();
+use Class::ReturnValue ();
+use Encode ();
 
-use vars qw($VERSION @ISA %DBIHandle $PrevHandle $DEBUG $TRANSDEPTH);
+use base qw/Jifty::DBI::HasFilters/;
+
+use vars qw($VERSION %DBIHandle $PrevHandle $DEBUG $TRANSDEPTH);
 
 $TRANSDEPTH = 0;
 
@@ -94,7 +96,7 @@ sub connect {
     {
         my $handle
             = DBI->connect( $self->DSN, $args{'user'}, $args{'password'} )
-            || croak "Connect Failed $DBI::errstr\n";
+            || Carp::croak "Connect Failed $DBI::errstr\n";
 
 #databases do case conversion on the name of columns returned.
 #actually, some databases just ignore case. this smashes it to something consistent
@@ -183,11 +185,8 @@ Turns on the Database Handle's RaiseError attribute.
 
 sub raise_error {
     my $self = shift;
-
-    my $mode = 1;
-    $mode = shift if (@_);
-
-    $self->dbh->{RaiseError} = $mode;
+    $self->dbh->{RaiseError} = shift if (@_);
+    return $self->dbh->{RaiseError};
 }
 
 =head2 print_error [MODE]
@@ -198,11 +197,8 @@ Turns on the Database Handle's PrintError attribute.
 
 sub print_error {
     my $self = shift;
-
-    my $mode = 1;
-    $mode = shift if (@_);
-
-    $self->dbh->{PrintError} = $mode;
+    $self->dbh->{PrintError} = shift if (@_);
+    return $self->dbh->{PrintError};
 }
 
 =head2 log_sql_statements BOOL
@@ -219,8 +215,8 @@ sub log_sql_statements {
     if (@_) {
         require Time::HiRes;
         $self->{'_dologsql'} = shift;
-        return ( $self->{'_dologsql'} );
     }
+    return ( $self->{'_dologsql'} );
 }
 
 =head2 _log_sql_statement STATEMENT DURATION
@@ -241,7 +237,6 @@ sub _log_sql_statement {
 =head2 clear_sql_statement_log
 
 Clears out the SQL statement log. 
-
 
 =cut
 
@@ -553,19 +548,41 @@ sub blob_params {
 
 =head2 database_version
 
-Returns the database's version. The base implementation uses a "SELECT VERSION"
+Returns the database's version.
+
+If argument C<short> is true returns short variant, in other
+case returns whatever database handle/driver returns. By default
+returns short version, e.g. '4.1.23' or '8.0-rc4'.
+
+Returns empty string on error or if database couldn't return version.
+
+The base implementation uses a C<SELECT VERSION()>
 
 =cut
 
 sub database_version {
     my $self = shift;
+    my %args = ( short => 1, @_ );
 
-    unless ( $self->{'database_version'} ) {
+    unless( defined $self->{'database_version'} ) {
+        # turn off error handling, store old values to restore later
+        my $re = $self->raise_error; $self->raise_error(0);
+        my $pe = $self->print_error; $self->print_error(0);
+
         my $statement = "SELECT VERSION()";
-        my $sth       = $self->simple_query($statement);
-        my @vals      = $sth->fetchrow();
-        $self->{'database_version'} = $vals[0];
+        my $sth = $self->simple_query($statement);
+
+	my $ver = '';
+	$ver = ($sth->fetchrow_arrayref->[0] || '') if $sth;
+	$ver =~ /(\d+(?:\.\d+)*(?:-[a-z0-9]+)?)/i;
+	$self->{'database_version'} = $ver;
+	$self->{'database_version_short'} = $1 || $ver;
+
+        $self->raise_error($re); $self->print_error($pe);
     }
+
+    return $self->{'database_version_short'} if $args{'short'};
+    return $self->{'database_version'};
 }
 
 =head2 case_sensitive
