@@ -45,7 +45,7 @@ sub connect {
 Takes a table name as the first argument and assumes that the rest of
 the arguments are an array of key-value pairs to be inserted.
 
-In case of isnert failure, returns a L<Class::ReturnValue> object
+In case of insert failure, returns a L<Class::ReturnValue> object
 preloaded with error info
 
 =cut
