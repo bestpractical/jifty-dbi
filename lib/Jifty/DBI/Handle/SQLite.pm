@@ -20,7 +20,17 @@ compensates for some of the idiosyncrasies of SQLite.
 
 =head1 METHODS
 
+=head2
+
+Returns the version of the SQLite library which is used, e.g., "2.8.0".
+
 =cut
+
+sub database_version {
+    my $self = shift;
+    return undef unless $self->dbh;
+    return $self->dbh->{sqlite_version} || '';
+}
 
 =head2 insert
 

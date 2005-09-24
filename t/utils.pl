@@ -1,6 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
+use File::Spec ();
 
 =head1 VARIABLES
 
@@ -123,7 +124,7 @@ sub connect_pg
 	);
 }
 
-=head2 should_test
+=head2 should_test $driver
 
 Checks environment for C<JDBI_TEST_*> variables.
 Returns true if specified DB back-end should be tested.
@@ -139,23 +140,41 @@ sub should_test
 	return $ENV{$env};
 }
 
-=head2 had_schema
+=head2 has_schema $class $driver|$handle
 
-Returns true if C<$class> has schema for C<$driver>.
+Returns method name if C<$class> has schema for C<$driver> or C<$handle>.
+If second argument is handle object then checks also for DB version
+specific schemas.
 
 =cut
 
 sub has_schema
 {
 	my ($class, $driver) = @_;
-	my $method = 'schema_'. lc $driver;
-	return UNIVERSAL::can( $class, $method );
+	unless( UNIVERSAL::isa( $driver, 'Jifty::DBI::Handle' ) ) {
+		my $method = 'schema_'. lc $driver;
+		$method = '' unless UNIVERSAL::can( $class, $method );
+		return $method;
+	} else {
+		my $ver = $driver->database_version;
+		return has_schema( $class, handle_to_driver( $driver ) ) unless $ver;
+
+		my $method = 'schema_'. lc handle_to_driver( $driver );
+		$ver =~ s/-.*$//;
+		my @nums = grep $_, map { int($_) } split /\./, $ver;
+		while( @nums ) {
+			my $m = $method ."_". join '_', @nums;
+			return $m if( UNIVERSAL::can( $class, $m ) );
+			pop @nums;
+		}
+		return has_schema( $class, handle_to_driver( $driver ) );
+	}
 }
 
 =head2 init_schema
 
-Takes C<$class> and C<$handle> and inits schema by calling
-C<schema_$driver> method of the C<$class>.
+Takes C<$class> and C<$handle> or C<$driver> and inits schema
+by calling method C<has_schema> returns of the C<$class>.
 Returns last C<DBI::st> on success or last return value of the
 SimpleQuery method on error.
 
@@ -164,7 +183,8 @@ SimpleQuery method on error.
 sub init_schema
 {
 	my ($class, $handle) = @_;
-	my $call = "schema_". lc handle_to_driver( $handle );
+	my $call = has_schema( $class, $handle );
+	diag( "using '$class\:\:$call' schema for ". handle_to_driver( $handle ) ) if $ENV{TEST_VERBOSE};
 	my $schema = $class->$call();
 	$schema = ref( $schema )? $schema : [$schema];
 	my $ret;

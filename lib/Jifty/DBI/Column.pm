@@ -3,9 +3,8 @@ use strict;
 
 package Jifty::DBI::Column;
 
-use base qw/Class::Accessor/;
+use base qw/Class::Accessor Jifty::DBI::HasFilters/;
 use UNIVERSAL::require;
-
 
 __PACKAGE__->mk_accessors qw/
     name 
@@ -17,12 +16,9 @@ __PACKAGE__->mk_accessors qw/
     length 
     refers_to_collection_class
     refers_to_record_class
-    alias_for_column 
-    filters
-    output_filters
+    alias_for_column
     /;
 
-#    input_filters
 
 =head1 NAME
 
@@ -58,53 +54,6 @@ sub is_numeric {
 # Aliases for compatibility with searchbuilder code
 *read = \&readable;
 *write = \&writable;
-
-
-sub decode_value {
-    my $self = shift;
-    my $value_ref = shift;
-    $self->_apply_filters( value_ref => $value_ref, 
-                           filters  => $self->output_filters,
-                           action => 'decode'
-                        );
-}
-
-sub input_filters {
-    my $self = shift;
-
-    return (['Jifty::DBI::Filter::Truncate']);
-
-}
-
-
-
-sub encode_value {
-    my $self = shift;
-    my $value_ref = shift;
-    $self->_apply_filters( value_ref => $value_ref, 
-                           filters  => 
-                           $self->input_filters,
-                           action => 'encode'
-                        );
-}
-
-
-sub _apply_filters {
-    my $self = shift;
-    my %args = (
-        value_ref => undef,
-        filters   => undef,
-        action    => undef,
-        @_
-    );
-    my $action = $args{'action'};
-    foreach my $filter_class ( @{ $args{filters} } ) {
-        $filter_class->require();
-        my $filter = $filter_class->new( column => $self, value_ref => $args{'value_ref'});
-        # XXX TODO error proof this
-        $filter->$action();
-    }
-}
 
 
 1;

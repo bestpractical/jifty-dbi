@@ -5,11 +5,13 @@ use warnings;
 
 use vars qw($AUTOLOAD);
 use Class::ReturnValue;
-use Lingua::EN::Inflect;
 use Jifty::DBI::Column;
 use UNIVERSAL::require;
 
-use base qw/Class::Data::Inheritable/;
+use base qw/
+             Class::Data::Inheritable
+             Jifty::DBI::HasFilters
+           /;
 
 Jifty::DBI::Record->mk_classdata('COLUMNS'); 
 
@@ -240,6 +242,7 @@ sub new {
     bless( $self, $class );
 
     $self->_init_columns() unless $self->COLUMNS;
+    $self->input_filters( 'Jifty::DBI::Filter::Truncate' );
 
     $self->_init(@_);
 
@@ -452,31 +455,29 @@ sub _init_columns {
 
     for my $column_name ( keys %$schema ) {
         my $column = $self->add_column($column_name);
-        # Default, everything readable and writable
-        $column->readable(1);
+	my $meta = $schema->{ $column_name } || {};
 
-        if ( $schema->{$column_name}{'read'} ) {
-            $column->readable( $schema->{$column_name}{'read'});
-        } else {
-            $column->readable(1);
-        }
+        # Default, everything readable
+        $column->readable( delete $meta->{'read'} || 1 );
     
-        if ( $schema->{$column_name}{'write'} ) {
-            $column->writable( $schema->{$column_name}{'write'});
+        # Default, everything writable except columns of the pkey
+        if ( $meta->{'write'} ) {
+            $column->writable( $meta->{'write'} );
         } elsif (not defined $column->writable) { # don't want to make pkeys writable
             $column->writable(1);
         }
+	delete $meta->{'write'};
 
-    
         # Next time, all-lower hash keys
-        my $type = $schema->{$column_name}{'type'} || $schema->{$column_name}{'TYPE'};
+        my $type = delete $meta->{'type'} ||
+	           delete $meta->{'TYPE'};
 
         if ($type) {
             $column->type($type);
-
         }
 
-        my $refclass = $schema->{$column_name}{'REFERENCES'} || $schema->{$column_name}{'references'};
+        my $refclass = delete $meta->{'REFERENCES'} ||
+	               delete $meta->{'references'};
 
         if ($refclass) {
             $refclass->require();
@@ -486,7 +487,7 @@ sub _init_columns {
                     my $virtual_column = $self->add_column($1);
                     $virtual_column->refers_to_record_class($refclass);
                     $virtual_column->alias_for_column($column_name);
-                    $virtual_column->readable( $schema->{$column_name}{'read'} || 1);
+                    $virtual_column->readable( delete $meta->{'read'} || 1);
                 }
                 else {
                     $column->refers_to_record_class($refclass);
@@ -500,6 +501,10 @@ sub _init_columns {
                 warn "Error: $refclass neither Record nor Collection";
             }
         }
+	for my $attr( keys %$meta) {
+	    next unless $column->can( $attr );
+	    $column->$attr( $meta->{$attr} );
+	}
     }
 
 }
@@ -582,8 +587,7 @@ sub add_column {
 
 sub column {
     my $self = shift;
-    my $name = shift;
-    $name = lc $name;
+    my $name = lc( shift || '');
     return undef unless $self->COLUMNS and $self->COLUMNS->{$name};
     return $self->COLUMNS->{$name} ;
 
@@ -651,9 +655,15 @@ sub __value {
         my ($value) = eval { $sth->fetchrow_array() };
         warn $@ if $@;
 
-        $column->decode_value(\$value);
         $self->{'values'}{$column->name}  = $value;
         $self->{'fetched'}{$column->name} = 1;
+    }
+    if( $self->{'fetched'}{$column->name} &&
+        !$self->{'decoded'}{$column->name} ) {
+        $self->_apply_output_filters( column => $column,
+	                              value_ref => \$self->{'values'}{$column->name},
+				    );
+	$self->{'decoded'}{$column->name} = 1;
     }
 
     return $self->{'values'}{$column->name};
@@ -713,33 +723,25 @@ sub __set {
         return ( $ret->return_value );
     }
 
-   
-    $column->encode_value(\$args{'value'});
+    $self->_apply_input_filters( column => $column, value_ref => \$args{'value'} );
     
-    
-    if ( !defined( $args{'value'} ) ) {
-        $ret->as_array( 0, "No value passed to _set" );
-        $ret->as_error(
-            errno        => 2,
-            do_backtrace => 0,
-            message      => "No value passed to _set"
-        );
-        return ( $ret->return_value );
+    # if value is not fetched or it's allready decoded
+    # then we don't check eqality
+    # we also don't call __value cause it's decode value
+    if (  $self->{'fetched'}{$column->name} ||
+         !$self->{'decoded'}{$column->name} ) {
+	if( ( !defined $args{'value'} && !defined $self->{'values'}{$column->name} ) ||
+	    ( defined $args{'value'} && defined $self->{'values'}{$column->name} &&
+	      $args{'value'} eq $self->{'values'}{$column->name} ) ) {
+            $ret->as_array( 0, "That is already the current value" );
+            $ret->as_error(
+                errno        => 1,
+                do_backtrace => 0,
+                message      => "That is already the current value"
+            );
+            return ( $ret->return_value );
+	}
     }
-    elsif ( ( defined $self->__value($column->name) )
-        and ( $args{'value'} eq $self->__value($column->name) ) )
-    {
-        $ret->as_array( 0, "That is already the current value" );
-        $ret->as_error(
-            errno        => 1,
-            do_backtrace => 0,
-            message      => "That is already the current value"
-        );
-        return ( $ret->return_value );
-    }
-
-    
-
 
     my $method = "validate_" . $column->name;
     unless ( $self->$method( $args{'value'} ) ) {
@@ -793,6 +795,7 @@ sub __set {
     }
     else {
         $self->{'values'}->{$column->name} = $unmunged_value;
+        $self->{'decoded'}{$column->name} = 0;
     }
     $ret->as_array( 1, "The new value has been set." );
     return ( $ret->return_value );
@@ -950,6 +953,7 @@ sub _load_from_sql {
 
     $self->{'values'}  = $sth->fetchrow_hashref;
     $self->{'fetched'} = {};
+    $self->{'decoded'} = {};
     if ( !$self->{'values'} && $sth->err ) {
         return ( 0, "Couldn't fetch row: " . $sth->err );
     }
@@ -994,7 +998,9 @@ sub create {
         }
 
 
-        $column->encode_value( \$attribs{$column_name});
+        $self->_apply_input_filters( column => $column,
+	                             value_ref => \$attribs{$column_name},
+				   );
 
     }
     unless ( $self->_handle->knows_blobs ) {
@@ -1078,7 +1084,12 @@ sub table {
             my $table = $1;
             $table =~ s/(?<=[a-z])([A-Z]+)/"_" . lc($1)/eg;
             $table =~ tr/A-Z/a-z/;
-            $table = Lingua::EN::Inflect::PL_N($table);
+	    local $@;
+	    if( eval { require Lingua::EN::Inflect } ) {
+	        $table = Lingua::EN::Inflect::PL_N($table);
+	    } else {
+	    	# here is simple rules without Lingua::*
+	    }
 	    $self->{__table_name} = $table;
     }
     return $self->{__table_name};
@@ -1111,6 +1122,53 @@ XXX: See L<Jifty::DBI::SchemaGenerator> (I bet)
 # This stub is here to prevent a call to AUTOLOAD
 sub schema {}
 
+
+sub _filters
+{
+    my $self = shift;
+    my %args = ( direction => 'input', column => undef, @_ );
+
+    my @filters = ();
+    my @objs = ($self, $args{'column'}, $self->_handle);
+    @objs = reverse @objs if $args{'direction'} eq 'output';
+    my $method = $args{'direction'} ."_filters";
+    foreach my $obj( @objs ) {
+        push @filters, $obj->$method();
+    }
+    return grep $_, @filters;
+}
+
+sub _apply_input_filters {
+    return (shift)->_apply_filters(direction => 'input', @_);
+}
+sub _apply_output_filters {
+    return (shift)->_apply_filters(direction => 'output', @_);
+}
+sub _apply_filters {
+    my $self = shift;
+    my %args = ( direction => 'input',
+                 column => undef,
+		 value_ref => undef,
+		 @_
+	       );
+
+    my @filters = $self->_filters( %args );
+    my $action = $args{'direction'} eq 'output'? 'decode' : 'encode';
+    foreach my $filter_class ( @filters ) {
+        local $UNIVERSAL::require::ERROR;
+        $filter_class->require();
+	if( $UNIVERSAL::require::ERROR ) {
+	    warn $UNIVERSAL::require::ERROR;
+	    next;
+	}
+        my $filter = $filter_class->new( record => $self,
+	                                 column => $args{'column'},
+	                                 value_ref => $args{'value_ref'},
+				       );
+        # XXX TODO error proof this
+        $filter->$action();
+    }
+}
 
 1;
 

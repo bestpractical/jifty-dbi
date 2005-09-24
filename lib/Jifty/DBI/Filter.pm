@@ -4,7 +4,7 @@ use strict;
 package Jifty::DBI::Filter;
 use base 'Class::Accessor';
 
-__PACKAGE__->mk_accessors(qw(column value_ref));
+__PACKAGE__->mk_accessors(qw(record column value_ref));
 
 
 =head2 new
@@ -52,11 +52,7 @@ a form suitable for sticking it in the database. This could be anything
 from flattening a L<DateTime> object into an ISO date to making sure
 that data is utf8 clean.
 
-
-
-
 =cut
-
 
 sub encode {
 
@@ -67,7 +63,6 @@ sub encode {
 C<decode> takes data that the database is handing back to us and gets it into a form that's OK to hand back to the user. This could be anything
 from flattening a L<DateTime> object into an ISO date to making sure
 that data is utf8 clean.
-
 
 =cut
 

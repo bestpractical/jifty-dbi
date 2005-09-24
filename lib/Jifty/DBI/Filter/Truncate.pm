@@ -4,6 +4,7 @@ use warnings;
 
 package Jifty::DBI::Filter::Truncate;
 use base qw/Jifty::DBI::Filter/;
+use Encode ();
 
 sub encode {
     my $self = shift;
@@ -23,31 +24,16 @@ sub encode {
 
     return unless ($truncate_to);    # don't need to truncate
 
-    # Perl 5.6 didn't speak unicode
-    $$value_ref = substr( $$value_ref, 0, $truncate_to )
-        unless ( $] >= 5.007 );
-
-    require Encode;
-
-    if ( Encode::is_utf8( $$value_ref ) ) {
-        $$value_ref = Encode::decode(
-            utf8 => substr(
-                Encode::encode( utf8 => $$value_ref ),
-                0, $truncate_to
-            ),
-            Encode::FB_QUIET(),
-        );
+    my $utf8 = Encode::is_utf8( $$value_ref );
+    {
+        use bytes;
+	$$value_ref = substr( $$value_ref, 0, $truncate_to );
     }
-    else {
-        $$value_ref = Encode::encode(
-            utf8 => Encode::decode(
-                utf8 => substr( $$value_ref, 0, $truncate_to ),
-                Encode::FB_QUIET(),
-            )
-        );
-
+    if( $utf8 ) {
+        # return utf8 flag back, but use Encode::FB_QUIET because
+	# we could broke tail char
+        $$value_ref = Encode::decode_utf8( $$value_ref, Encode::FB_QUIET );
     }
-
 }
 
 1;
