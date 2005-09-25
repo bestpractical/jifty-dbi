@@ -735,12 +735,7 @@ sub __set {
 	if( ( !defined $args{'value'} && !defined $self->{'values'}{$column->name} ) ||
 	    ( defined $args{'value'} && defined $self->{'values'}{$column->name} &&
 	      $args{'value'} eq $self->{'values'}{$column->name} ) ) {
-            $ret->as_array( 0, "That is already the current value" );
-            $ret->as_error(
-                errno        => 1,
-                do_backtrace => 0,
-                message      => "That is already the current value"
-            );
+            $ret->as_array( 1, "That is already the current value" );
             return ( $ret->return_value );
 	}
     }

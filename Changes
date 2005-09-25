@@ -1,5 +1,11 @@
 Revision history for Perl extension Jifty::DBI.
 
+
+* __set no longer returns failure when you try to apply a change that's already 
+  the current value
+
+
+
 ==> Forked into Jifty::DBI
 
 *  Removed {{{ and  }}} fold markers. Patch from Ruslan
