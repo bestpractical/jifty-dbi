@@ -55,21 +55,9 @@ SKIP: {
 }
 
 package TestApp::User;
-
 use base qw/Jifty::DBI::Record/;
 
-sub schema {
-
-    {   
-        
-        id => { TYPE => 'int(11)' },
-        created => { TYPE => 'datetime',
-	             input_filters => 'Jifty::DBI::Filter::DateTime',
-		   },
-
-    }
-
-}
+1;
 
 sub schema_sqlite {
 
@@ -103,6 +91,17 @@ CREATE TEMPORARY TABLE users (
 EOF
 
 }
+
+package TestApp::User::Schema;
+BEGIN {
+    use Jifty::DBI::Schema;
+    
+    column created =>
+      type is 'datetime',
+      input_filters are qw/Jifty::DBI::Filter::DateTime/;
+}
+
+1;
 
 1;
 

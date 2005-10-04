@@ -41,8 +41,8 @@ then set input filter.
 sub input_filters {
     my $self = shift;
     if( @_ ) { # setting
-       my @values = map { UNIVERSAL::isa($_, 'ARRAY')? @$_: $_ } @_;
-       return $self->_input_filters_accessor( @values );
+        my @values = map { UNIVERSAL::isa($_, 'ARRAY')? @$_: $_ } @_;
+        return $self->_input_filters_accessor( @values );
     }
 
     return grep $_, $self->_input_filters_accessor;
@@ -61,7 +61,8 @@ default list based on the input list.
 sub output_filters {
     my $self = shift;
     if( @_ ) { # setting
-       $self->_output_filters_accessor( @_ );
+        my @values = map { UNIVERSAL::isa($_, 'ARRAY')? @$_: $_ } @_;
+        $self->_output_filters_accessor( @values );
     }
 
     my @values = grep $_, $self->_output_filters_accessor;

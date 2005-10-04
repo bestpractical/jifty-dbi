@@ -38,6 +38,7 @@ SKIP: {
 	is( $rec->_accessible('id' => 'write'), 0, 'id is not accessible for write' );
 	is( $rec->_accessible('id'), undef, "any field is not accessible in undefined mode" );
 	is( $rec->_accessible('unexpected_field' => 'read'), undef, "field doesn't exist and can't be accessible for read" );
+
 	is_deeply( [sort($rec->readable_attributes)], [sort qw(employee_id id name phone)], 'readable attributes' );
 	is_deeply( [sort($rec->writable_attributes)], [sort qw(employee_id name phone)], 'writable attributes' );
 
@@ -196,9 +197,7 @@ SKIP: {
 1;
 
 
-
 package TestApp::Address;
-
 use base qw/Jifty::DBI::Record/;
 
 sub validate_name
@@ -206,19 +205,6 @@ sub validate_name
 	my ($self, $value) = @_;
 	return 0 if $value && $value =~ /invalid/i;
 	return 1;
-}
-
-sub schema {
-
-    {   
-        
-        id => { TYPE => 'int(11)' },
-        name => { TYPE => 'varchar(14)', DEFAULT => ''},
-        phone => { TYPE => 'varchar(18)', length => 18, DEFAULT => ''},
-        employee_id => { TYPE => 'int(8)', DEFAULT => ''},
-
-}
-
 }
 
 sub schema_mysql {
@@ -258,3 +244,23 @@ EOF
 }
 
 1;
+
+package TestApp::Address::Schema;
+BEGIN {
+use Jifty::DBI::Schema;
+
+column name =>
+  type is 'varchar(14)',
+  default is '';
+
+column phone =>
+  type is 'varchar(18)',
+  length => 18,
+  default is '';
+
+column employee_id =>
+  type is 'int(8)',
+  default is '';
+}
+1;
+

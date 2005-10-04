@@ -86,20 +86,7 @@ SKIP: {
 }
 
 package TestApp::User;
-
 use base qw/Jifty::DBI::Record/;
-
-sub schema {
-
-    {   
-        
-        id => { TYPE => 'int(11)' },
-        name => { TYPE => 'varchar(5)' },
-        signature => { TYPE => 'varchar(100)' },
-
-    }
-
-}
 
 sub schema_sqlite {
 
@@ -137,6 +124,12 @@ EOF
 
 }
 
+package TestApp::User::Schema;
+BEGIN {
+    use Jifty::DBI::Schema;
+
+    column name      => type is 'varchar(5)';
+    column signature => type is 'varchar(100)';
+}
+
 1;
-
-

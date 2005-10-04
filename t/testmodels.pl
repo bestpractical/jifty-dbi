@@ -1,30 +1,26 @@
-package Sample::Address;
-
-use base qw/Jifty::DBI::Record/;
-
-# Class and instance method
-
-
-# Class and instance method
-
-sub schema {
-    return {
-        name => { TYPE => 'varchar', DEFAULT => 'Frank', },
-        phone => { TYPE => 'varchar', },
-        employee_id => { REFERENCES => 'Sample::Employee', },
-    }
-}
-
 package Sample::Employee;
-
 use base qw/Jifty::DBI::Record/;
 
+package Sample::Employee::Schema;
+use Jifty::DBI::Schema;
 
-sub schema {
-    return {
-      name => { TYPE => 'varchar', },
-      dexterity => { TYPE => 'integer', },
-    }
-}
+column name      => type is 'varchar';
+column dexterity => type is 'integer';
 
-1;
+
+
+package Sample::Address;
+use base qw/Jifty::DBI::Record/;
+
+package Sample::Address::Schema;
+use Jifty::DBI::Schema;
+
+column name =>
+  type is 'varchar',
+  default is 'Frank';
+
+column phone =>
+  type is 'varchar';
+
+column employee_id =>
+  refers_to Sample::Employee;

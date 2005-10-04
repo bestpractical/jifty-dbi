@@ -32,7 +32,7 @@ SKIP: {
 
 	my $emp = TestApp::Employee->new($handle);
 	my $e_id = $emp->create( Name => 'RUZ' );
-	ok($e_id, "Got an ide for the new emplyee");
+	ok($e_id, "Got an id for the new emplyee");
 	my $phone = TestApp::Phone->new($handle);
 	isa_ok( $phone, 'TestApp::Phone', "it's a TestApp::Phone");
 	my $p_id = $phone->create( employee => $e_id, phone => '+7(903)264-03-51');
@@ -99,44 +99,35 @@ CREATE TEMPORARY TABLE phones (
 } ]
 }
 
+
+
 package TestApp::Employee;
-
 use base qw/Jifty::DBI::Record/;
-use vars qw/$VERSION/;
-$VERSION=0.01;
 
-sub schema {
-    {   
-        
-        id =>
-        {read => 1, type => 'int(11)'}, 
-        name => 
-        {read => 1, write => 1, type => 'varchar(18)'},
+1;
 
-    }
+package TestApp::Employee::Schema;
+BEGIN {
+    use Jifty::DBI::Schema;
+
+    column name => type is 'varchar(18)';
 }
 
 1;
 
+
+
 package TestApp::Phone;
-
-use vars qw/$VERSION/;
-$VERSION=0.01;
-
 use base qw/Jifty::DBI::Record/;
 
-sub schema {
-    {   
-        
-        id =>
-        {read => 1, type => 'int(11)'}, 
-        employee => 
-        {read => 1, write => 1, type => 'int(11)', references => 'TestApp::Employee' },
-        phone => 
-        {read => 1, write => 1, type => 'varchar(18)'},
+1;
 
-    }
+package TestApp::Phone::Schema;
+BEGIN {
+    use Jifty::DBI::Schema;
+
+    column employee => refers_to TestApp::Employee;
+    column phone    => type 'varchar(18)';
 }
-
 
 1;

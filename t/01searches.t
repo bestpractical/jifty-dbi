@@ -32,7 +32,7 @@ SKIP: {
 	my $count_all = init_data( 'TestApp::User', $handle );
 	ok( $count_all,  "init users data" );
 
-	my $users_obj = TestApp::Users->new( $handle );
+	my $users_obj = TestApp::UserCollection->new( $handle );
 	isa_ok( $users_obj, 'Jifty::DBI::Collection' );
 	is( $users_obj->_handle, $handle, "same handle as we used in constructor");
 
@@ -213,19 +213,6 @@ sub _init {
     $self->_handle($handle);
 }
 
-sub schema {
-    {   
-        id =>
-        {read => 1, type => 'int(11)' }, 
-        login =>
-        {read => 1, write => 1, type => 'varchar(18)' },
-        name =>
-        {read => 1, write => 1, type => 'varchar(36)' },
-        phone =>
-        {read => 1, write => 1, type => 'varchar(18)', default => ''},
-    }
-}
-
 sub init_data {
     return (
 	[ 'login',	'name',			'phone' ],
@@ -238,7 +225,18 @@ sub init_data {
 
 1;
 
-package TestApp::Users;
+package TestApp::User::Schema;
+BEGIN {
+    use Jifty::DBI::Schema;
+
+    column login => type is 'varchar(18)';
+    column name  => type is 'varchar(36)';
+    column phone => type is 'varchar(18)', default is '';
+}
+
+1;
+
+package TestApp::UserCollection;
 
 # use TestApp::User;
 use base qw/Jifty::DBI::Collection/;
@@ -247,12 +245,6 @@ sub _init {
     my $self = shift;
     $self->SUPER::_init( handle => shift );
     $self->table('users');
-}
-
-sub new_item
-{
-	my $self = shift;
-	return TestApp::User->new( $self->_handle );
 }
 
 1;

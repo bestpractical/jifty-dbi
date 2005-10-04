@@ -303,17 +303,16 @@ sub AUTOLOAD {
     unless ($column) {
         my ( $package, $filename, $line ) = caller;
         die "$AUTOLOAD Unimplemented in $package. ($filename line $line) \n";
-
     }
 
-            no strict 'refs'; # We're going to be defining subs
+    no strict 'refs'; # We're going to be defining subs
     if ( $action eq 'read' and $column->readable ) {
 
-        if ( $column->refers_to_record_class ) {
+        if ( UNIVERSAL::isa($column->refers_to, "Jifty::DBI::Record") ) {
             *{$AUTOLOAD}
                 = sub { $_[0]->_to_record( $column_name, $_[0]->__value($column_name) ) };
         }
-        elsif ( $column->refers_to_collection_class ) {
+        elsif ( UNIVERSAL::isa($column->refers_to, "Jifty::DBI::Collection") ) {
             *{$AUTOLOAD} = sub { $_[0]->_collection_value($column_name) };
         }
         else {
@@ -325,25 +324,25 @@ sub AUTOLOAD {
     if ( $action eq 'write' ) {
         if ( $column->writable ) {
 
-        if ( $column->refers_to_record_class ) {
-            *{$AUTOLOAD} = sub {
-                my $self = shift;
-                my $val  = shift;
+            if ( UNIVERSAL::isa($column->refers_to, "Jifty::DBI::Record") ) {
+                *{$AUTOLOAD} = sub {
+                    my $self = shift;
+                    my $val  = shift;
 
-                $val = $val->id
-                    if UNIVERSAL::isa( $val, 'Jifty::DBI::Record' );
-                return ( $self->_set( column => $column_name, value => $val ) );
-            };
-        }
-        else {
-            *{$AUTOLOAD} = sub {
-                return ( $_[0]->_set( column => $column_name, value => $_[1] ) );
-            };
-        }
-        goto &$AUTOLOAD;
-    } else {
+                    $val = $val->id
+                        if UNIVERSAL::isa( $val, 'Jifty::DBI::Record' );
+                    return ( $self->_set( column => $column_name, value => $val ) );
+                };
+            }
+            else {
+                *{$AUTOLOAD} = sub {
+                    return ( $_[0]->_set( column => $column_name, value => $_[1] ) );
+                };
+            }
+            goto &$AUTOLOAD;
+        } else {
             return (0, 'Immutable field');
-    }
+        }
     }
     elsif ( $action eq 'validate' ) {
         *{$AUTOLOAD}
@@ -419,7 +418,8 @@ sub _accessible {
 
 =head2 _primary_keys
 
-Return our primary keys. (Subclasses should override this, but our default is that we have one primary key, named 'id'.)
+Return our primary keys. (Subclasses should override this, but our
+default is that we have one primary key, named 'id'.)
 
 =cut
 
@@ -438,77 +438,26 @@ sub _primary_key {
 
 =head2 _init_columns
 
-Turns your sub schema into a set of column objects
+Sets up the primary key columns.
 
 =cut
 
 sub _init_columns {
     my $self = shift;
 
-    $self->COLUMNS({}); # Clear out the columns hash
+    return if defined $self->COLUMNS;
+
+    $self->COLUMNS({});
 
     foreach my $column_name ( @{$self->_primary_keys} ) {
         my $column = $self->add_column($column_name);
         $column->writable(0);
+        $column->readable(1);
+        $column->type('serial');
+        $column->null(0);
     }
-
-    my $schema = $self->schema;
-
-    for my $column_name ( keys %$schema ) {
-        my $column = $self->add_column($column_name);
-	my $meta = $schema->{ $column_name } || {};
-
-        # Default, everything readable
-        $column->readable( delete $meta->{'read'} || 1 );
-    
-        # Default, everything writable except columns of the pkey
-        if ( $meta->{'write'} ) {
-            $column->writable( $meta->{'write'} );
-        } elsif (not defined $column->writable) { # don't want to make pkeys writable
-            $column->writable(1);
-        }
-	delete $meta->{'write'};
-
-        # Next time, all-lower hash keys
-        my $type = delete $meta->{'type'} ||
-	           delete $meta->{'TYPE'};
-
-        if ($type) {
-            $column->type($type);
-        }
-
-        my $refclass = delete $meta->{'REFERENCES'} ||
-	               delete $meta->{'references'};
-
-        if ($refclass) {
-            $refclass->require();
-            if ( UNIVERSAL::isa( $refclass, 'Jifty::DBI::Record' ) ) {
-                if ( $column_name =~ /(.*)_id$/ ) {
-
-                    my $virtual_column = $self->add_column($1);
-                    $virtual_column->refers_to_record_class($refclass);
-                    $virtual_column->alias_for_column($column_name);
-                    $virtual_column->readable( delete $meta->{'read'} || 1);
-                }
-                else {
-                    $column->refers_to_record_class($refclass);
-                }
-
-            }
-            elsif ( UNIVERSAL::isa( $refclass, 'Jifty::DBI::Collection' ) ) {
-                $column->refers_to_collection_class($refclass);
-            }
-            else {
-                warn "Error: $refclass neither Record nor Collection";
-            }
-        }
-	for my $attr( keys %$meta) {
-	    next unless $column->can( $attr );
-	    $column->$attr( $meta->{$attr} );
-	}
-    }
-
 }
+
 
 =head2 _to_record COLUMN VALUE
 
@@ -531,12 +480,11 @@ sub _to_record {
 
 
     my $column = $self->column($column_name);
-    my $classname = $column->refers_to_record_class();
+    my $classname = $column->refers_to();
 
 
     return unless defined $value;
     return undef unless $classname;
-
     return unless UNIVERSAL::isa( $classname, 'Jifty::DBI::Record' );
 
     # XXX TODO FIXME we need to figure out the right way to call new here
@@ -553,18 +501,14 @@ sub _collection_value {
     my $method_name = shift;
     return unless defined $method_name;
 
-    my $schema      = $self->schema;
-    my $description = $schema->{$method_name};
-    return unless $description;
+    my $column    = $self->column($method_name);
+    my $classname = $column->refers_to();
 
-    my $classname = $description->{'REFERENCES'};
-
+    return undef unless $classname;
     return unless UNIVERSAL::isa( $classname, 'Jifty::DBI::Collection' );
 
     my $coll = $classname->new( handle => $self->_handle );
-
-    $coll->limit( FIELD => $description->{'KEY'}, VALUE => $self->id );
-
+    $coll->limit( FIELD => $column->by(), VALUE => $self->id );
     return $coll;
 }
 
@@ -990,7 +934,8 @@ sub create {
         unless ($column) {
             die "$column_name isn't a column we know about"
         }
-        if ( $column->readable and $column->refers_to_record_class ) {
+        if ( $column->readable and $column->refers_to
+             and UNIVERSAL::isa($column->refers_to, "Jifty::DBI::Record")) {
             $attribs{$column_name} = $attribs{$column_name}->id
                 if UNIVERSAL::isa( $attribs{$column_name}, 'Jifty::DBI::Record' );
         }
@@ -1106,15 +1051,22 @@ sub _handle {
 
 =head2 schema
 
-You must subclass schema to return your table's columns.
-
-XXX: See L<Jifty::DBI::SchemaGenerator> (I bet)
+Deprecated.
 
 =cut
 
-# This stub is here to prevent a call to AUTOLOAD
-sub schema {}
+sub schema {
+    my $self = shift;
+    use Carp;
+    croak "Deprecated";
+}
 
+sub refers_to (@) {
+    my $class = shift;
+    my (%args) = @_;
+
+    return (refers_to => $class, %args);
+}
 
 sub _filters
 {

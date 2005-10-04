@@ -76,6 +76,7 @@ sub new {
     my $class = ref($proto) || $proto;
     my $self  = {};
     bless( $self, $class );
+    $self->record_class( $proto->record_class ) if ref $proto;
     $self->_init(@_);
     return ($self);
 }
@@ -501,17 +502,45 @@ sub items_array_ref {
     return ( $self->{'items'} || [] );
 }
 
-=head2 new_item
+sub new_item {
+    my $self = shift;
+    my $class =$self->record_class();
 
-new_item must be subclassed. It is used by Jifty::DBI::Collection to
-create record objects for each row returned from the database.
+    die "Jifty::DBI::Collection needs to be subclassed; override new_item\n"
+      unless $class;
+
+    $class->require();
+    return $class->new($self->_handle);
+}
+
+=head2 record_class
+
+Returns the record class which this is a collection of; override this
+to subclass.  Or, pass it the name of a class an an argument after
+creating a C<JFDI::Collection> object to create an 'anonymous'
+collection class.
+
+If you haven't specified a record class, this eturns a best guess at
+the name of the record class for this collection.
+
+It uses a simple heuristic to determine the record class name -- It
+chops "Collection" off its own name. If you want to name your records
+and collections differently, go right ahead, but don't say we didn't
+warn you
 
 =cut
 
-sub new_item {
+sub record_class {
     my $self = shift;
-
-    die "Jifty::DBI::Collection needs to be subclassed; override new_item\n";
+    if (@_) {
+        $self->{record_class} = shift if (@_);
+    }
+        elsif (not $self->{record_class}) {
+        my $class = ref($self);
+        $class =~ s/Collection$//;
+        $self->{record_class} = $class;
+    }
+    return $self->{record_class};
 }
 
 =head2 redo_search
@@ -1399,6 +1428,13 @@ sub table {
     return $self->{table};
 }
 
+sub refers_to (@) {
+    my $class = shift;
+    my (%args) = @_;
+
+    warn "Check if $class can $args{by}\n";
+    return (refers_to => $class, %args);
+}
 
 1;
 __END__

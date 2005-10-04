@@ -70,22 +70,7 @@ SKIP: {
 }
 
 package TestApp::User;
-
 use base qw/Jifty::DBI::Record/;
-
-sub schema {
-
-    {   
-        
-        id => { TYPE => 'int(11)' },
-# special small lengths to test truncation
-        login => { TYPE => 'varchar(5)', DEFAULT => ''},
-        name => { TYPE => 'varchar(10)', length => 10, DEFAULT => ''},
-        disabled => { TYPE => 'int(4)', length => 4, DEFAULT => 0},
-
-    }
-
-}
 
 sub schema_sqlite {
 
@@ -143,3 +128,24 @@ EOF
 
 1;
 
+package TestApp::User::Schema;
+BEGIN {
+    use Jifty::DBI::Schema;
+
+    # special small lengths to test truncation
+    column login =>
+      type is 'varchar(5)',
+      default is '';
+
+    column name =>
+      type is 'varchar(10)',
+      length is 10,
+      default is '';
+
+    column disabled =>
+      type is 'int(4)',
+      length is 4,
+      default is 0;
+}
+
+1;

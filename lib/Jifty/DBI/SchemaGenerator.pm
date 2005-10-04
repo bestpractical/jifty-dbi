@@ -182,45 +182,27 @@ sub _db_schema_table_from_model {
     my $model = shift;
 
     my $table_name = $model->table;
-    my $schema     = $model->schema;
+    my @columns    = $model->columns;
 
-    my $primary     = "id";                          # TODO allow override
-    my $primary_col = DBIx::DBSchema::Column->new(
-        {   name => $primary,
-            type => 'serial',
-            null => 'NOT NULL',
-        }
-    );
-
-    my @cols = ($primary_col);
-
+    my @cols;
     # The sort here is to make it predictable, so that we can write tests.
-    for my $field ( sort keys %$schema ) {
-
+    for my $column ( sort {$a->name cmp $b->name} @columns) {
         # Skip foreign keys
-
-        next
-            if defined $schema->{$field}->{'REFERENCES'}
-            and defined $schema->{$field}->{'KEY'};
-
-        # TODO XXX FIXME
-        # In lieu of real reference support, make references just integers
-        $schema->{$field}{'TYPE'} = 'integer'
-            if $schema->{$field}{'REFERENCES'};
+        next if defined $column->refers_to and defined $column->by;
 
         push @cols,
             DBIx::DBSchema::Column->new(
-            {   name    => $field,
-                type    => $schema->{$field}{'TYPE'},
-                null    => 'NULL',
-                default => $schema->{$field}{'DEFAULT'},
+            {   name    => $column->name,
+                type    => $column->name,
+                null    => $column->null,
+                default => $column->default,
             }
             );
     }
 
     my $table = DBIx::DBSchema::Table->new(
         {   name        => $table_name,
-            primary_key => $primary,
+            primary_key => "id",
             columns     => \@cols,
         }
     );

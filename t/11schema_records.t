@@ -237,16 +237,7 @@ CREATE TEMPORARY TABLE phones (
 }
 
 package TestApp::Employee;
-
 use base qw/Jifty::DBI::Record/;
-
-
-sub schema {
-    return {
-        name => { TYPE => 'varchar' },
-        phones => { REFERENCES => 'TestApp::PhoneCollection', KEY => 'employee' }
-    };
-}
 
 sub _value  {
   my $self = shift;
@@ -254,23 +245,10 @@ sub _value  {
   return $x;
 }
 
-
-1;
-
 package TestApp::Phone;
-
 use base qw/Jifty::DBI::Record/;
 
-
-sub schema {
-    return {   
-        employee => { REFERENCES => 'TestApp::Employee' },
-        phone => { TYPE => 'varchar' }, 
-    }
-}
-
 package TestApp::PhoneCollection;
-
 use base qw/Jifty::DBI::Collection/;
 
 sub table {
@@ -279,11 +257,19 @@ sub table {
     return $tab;
 }
 
-sub new_item {
-    my $self = shift;
-    my $class = 'TestApp::Phone';
-    return $class->new( $self->_handle );
 
+package TestApp::Phone::Schema;
+BEGIN {
+    use Jifty::DBI::Schema;
+    column employee => refers_to TestApp::Employee;
+    column phone    => type 'varchar';
+}
+
+package TestApp::Employee::Schema;
+BEGIN {
+    use Jifty::DBI::Schema;
+    column name => type 'varchar';
+    column phones => refers_to TestApp::PhoneCollection by 'employee';
 }
 
 
