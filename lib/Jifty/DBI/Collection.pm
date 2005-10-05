@@ -1432,7 +1432,6 @@ sub refers_to (@) {
     my $class = shift;
     my (%args) = @_;
 
-    warn "Check if $class can $args{by}\n";
     return (refers_to => $class, %args);
 }
 

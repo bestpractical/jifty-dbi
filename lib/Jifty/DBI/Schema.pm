@@ -1,6 +1,6 @@
 package Jifty::DBI::Schema;
 use Exporter::Lite;
-our @EXPORT = qw(column type default validator immutable length not_null valid_values input_filters output_filters mandatory is by are on);
+our @EXPORT = qw(column type default validator immutable unreadable length not_null valid_values label hints render_as since input_filters output_filters mandatory is by are on);
 
 our $SCHEMA;
 sub column {
@@ -16,6 +16,7 @@ sub column {
                 null     => 1,
                 @_,
                );
+    my @original = @args;
 
     my $column = Jifty::DBI::Column->new();
     while (@args) {
@@ -30,13 +31,13 @@ sub column {
         if ( UNIVERSAL::isa( $refclass, 'Jifty::DBI::Record' ) ) {
             if ( $name =~ /(.*)_id$/ ) {
                 my $virtual_column = $from->add_column($1);
-                $virtual_column->refers_to($refclass);
+                while (@original) {
+                    my ($method, $arguments) = splice @original, 0, 2;
+                    $virtual_column->$method($arguments);
+                }
+                $column->refers_to(undef);
                 $virtual_column->alias_for_column($name);
             }
-            else {
-                $column->refers_to($refclass);
-            }
-
         }
         elsif ( UNIVERSAL::isa( $refclass, 'Jifty::DBI::Collection' ) ) {
             $column->by('id') unless $column->by;
@@ -65,6 +66,10 @@ sub immutable () {
     return ([writable => 0]);
 }
 
+sub unreadable {
+    return ([readable => 0]);
+}
+
 sub length ($) {
     return (length => shift);
 }
@@ -82,6 +87,9 @@ sub output_filters ($) {
 }
 
 
+sub since ($) {
+    return (since => shift);
+}
 
 sub mandatory () {
     return ([mandatory => 1]);
@@ -91,6 +99,17 @@ sub valid_values ($) {
     return (valid_values => shift);
 }
 
+sub label ($) {
+    return (label => shift);
+}
+
+sub hints ($) {
+    return (hints => shift);
+}
+
+sub render_as ($) {
+    return (render_as => shift);
+}
 
 
 sub is ($) {

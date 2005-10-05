@@ -288,7 +288,7 @@ sub DESTROY {
 
 sub AUTOLOAD {
     my $self = $_[0];
-
+    
     $self->_init_columns() unless $self->COLUMNS;
 
     my ( $column_name, $action ) = $self->_parse_autoload_method($AUTOLOAD);
@@ -306,7 +306,8 @@ sub AUTOLOAD {
     }
 
     no strict 'refs'; # We're going to be defining subs
-    if ( $action eq 'read' and $column->readable ) {
+    if ( $action eq 'read' ) {
+        return '' unless $column->readable;
 
         if ( UNIVERSAL::isa($column->refers_to, "Jifty::DBI::Record") ) {
             *{$AUTOLOAD}
@@ -320,29 +321,25 @@ sub AUTOLOAD {
         }
         goto &$AUTOLOAD;
     }
+    elsif ( $action eq 'write' ) {
+        return (0, 'Immutable field') unless $column->writable;
 
-    if ( $action eq 'write' ) {
-        if ( $column->writable ) {
+        if ( UNIVERSAL::isa($column->refers_to, "Jifty::DBI::Record") ) {
+            *{$AUTOLOAD} = sub {
+                my $self = shift;
+                my $val  = shift;
 
-            if ( UNIVERSAL::isa($column->refers_to, "Jifty::DBI::Record") ) {
-                *{$AUTOLOAD} = sub {
-                    my $self = shift;
-                    my $val  = shift;
-
-                    $val = $val->id
-                        if UNIVERSAL::isa( $val, 'Jifty::DBI::Record' );
-                    return ( $self->_set( column => $column_name, value => $val ) );
-                };
-            }
-            else {
-                *{$AUTOLOAD} = sub {
-                    return ( $_[0]->_set( column => $column_name, value => $_[1] ) );
-                };
-            }
-            goto &$AUTOLOAD;
-        } else {
-            return (0, 'Immutable field');
+                $val = $val->id
+                  if UNIVERSAL::isa( $val, 'Jifty::DBI::Record' );
+                return ( $self->_set( column => $column_name, value => $val ) );
+            };
         }
+        else {
+            *{$AUTOLOAD} = sub {
+                return ( $_[0]->_set( column => $column_name, value => $_[1] ) );
+            };
+        }
+        goto &$AUTOLOAD;
     }
     elsif ( $action eq 'validate' ) {
         *{$AUTOLOAD}
@@ -352,7 +349,6 @@ sub AUTOLOAD {
 
     else {
         my ( $package, $filename, $line ) = caller;
-
         die "$AUTOLOAD Unimplemented in $package. ($filename line $line) \n";
     }
 
@@ -477,11 +473,8 @@ sub _to_record {
     my $column_name = shift;
     my $value = shift;
 
-
-
     my $column = $self->column($column_name);
     my $classname = $column->refers_to();
-
 
     return unless defined $value;
     return undef unless $classname;
@@ -489,7 +482,6 @@ sub _to_record {
 
     # XXX TODO FIXME we need to figure out the right way to call new here
     # perhaps the handle should have an initiializer for records/collections
-
     my $object = $classname->new( $self->_handle );
     $object->load_by_cols(id => $value);
     return $object;

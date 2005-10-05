@@ -189,11 +189,12 @@ sub _db_schema_table_from_model {
     for my $column ( sort {$a->name cmp $b->name} @columns) {
         # Skip foreign keys
         next if defined $column->refers_to and defined $column->by;
+        next if defined $column->alias_for_column;
 
         push @cols,
             DBIx::DBSchema::Column->new(
             {   name    => $column->name,
-                type    => $column->name,
+                type    => $column->type,
                 null    => $column->null,
                 default => $column->default,
             }

@@ -16,6 +16,10 @@ __PACKAGE__->mk_accessors qw/
     null
     refers_to by
     alias_for_column
+    since until
+
+    label hints render_as
+    valid_values
     /;
 
 
