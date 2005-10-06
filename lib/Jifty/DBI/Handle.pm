@@ -229,8 +229,9 @@ sub _log_sql_statement {
     my $self      = shift;
     my $statement = shift;
     my $duration  = shift;
+    my @bind = @_;
     push @{ $self->{'StatementLog'} },
-        ( [ Time::Hires::time(), $statement, $duration ] );
+        ( [ Time::HiRes::time(), $statement, [@bind], $duration ] );
 
 }
 
@@ -458,7 +459,7 @@ sub simple_query {
         eval { $executed = $sth->execute(@bind_values) };
     }
     if ( $self->log_sql_statements ) {
-        $self->_log_sql_statement( $QueryString, tv_interval($basetime) );
+        $self->_log_sql_statement( $QueryString, Time::HiRes::time() - $basetime, @bind_values );
 
     }
 

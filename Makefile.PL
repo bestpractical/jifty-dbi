@@ -14,6 +14,7 @@ requires('DateTime');
 requires('DateTime::Format::Strptime');
 
 build_requires('Test::More' => 0.52);
+build_requires('DBD::SQLite');
 
 features(
 	'Schema generation' => [
