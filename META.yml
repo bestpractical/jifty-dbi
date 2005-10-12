@@ -4,13 +4,17 @@ license: perl
 distribution_type: module
 build_requires:
   Test::More: 0.52
+  DBD::SQLite: 0
 requires:
   DBI: 0
   Want: 0
   Encode: 0
   UNIVERSAL::require: 0
+  Lingua::EN::Inflect: 0
   Class::ReturnValue: 0.4
   Cache::Simple::TimedExpiry: 0.21
+  DateTime: 0
+  DateTime::Format::Strptime: 0
 no_index:
   directory:
     - inc
