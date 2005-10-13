@@ -114,28 +114,28 @@ SKIP: {
 	is( $first_rec->login, 'glasser', 'login is correct' );
 
 	# MATCHES
-	$users_obj->CleanSlate;
-	is_deeply( $users_obj, $clean_obj, 'after CleanSlate looks like new object');
-	$users_obj->Limit( FIELD => 'Name', OPERATOR => 'MATCHES', VALUE => 'lass' );
-	is( $users_obj->Count, 0, "found no user matching 'lass' in the name" );
+	$users_obj->clean_slate;
+	is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
+	$users_obj->limit( FIELD => 'name', OPERATOR => 'MATCHES', VALUE => 'lass' );
+	is( $users_obj->count, 0, "found no user matching 'lass' in the name" );
 
-	$users_obj->CleanSlate;
-	is_deeply( $users_obj, $clean_obj, 'after CleanSlate looks like new object');
-	$users_obj->Limit( FIELD => 'Name', OPERATOR => 'MATCHES', VALUE => '%lass' );
-	is( $users_obj->Count, 0, "found no user matching '%lass' in the name" );
+	$users_obj->clean_slate;
+	is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
+	$users_obj->limit( FIELD => 'name', OPERATOR => 'MATCHES', VALUE => '%lass' );
+	is( $users_obj->count, 0, "found no user matching '%lass' in the name" );
 
-	$users_obj->CleanSlate;
-	is_deeply( $users_obj, $clean_obj, 'after CleanSlate looks like new object');
-	$users_obj->Limit( FIELD => 'Name', OPERATOR => 'MATCHES', VALUE => 'lass%' );
-	is( $users_obj->Count, 0, "found no user matching 'lass%' in the name" );
+	$users_obj->clean_slate;
+	is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
+	$users_obj->limit( FIELD => 'name', OPERATOR => 'MATCHES', VALUE => 'lass%' );
+	is( $users_obj->count, 0, "found no user matching 'lass%' in the name" );
 
-	$users_obj->CleanSlate;
-	is_deeply( $users_obj, $clean_obj, 'after CleanSlate looks like new object');
-	$users_obj->Limit( FIELD => 'Name', OPERATOR => 'MATCHES', VALUE => '%lass%' );
-	is( $users_obj->Count, 1, "found one user matching '%lass%' in the name" );
-	$first_rec = $users_obj->First;
-	isa_ok( $first_rec, 'DBIx::SearchBuilder::Record', 'First returns record object' );
-	is( $first_rec->Login, 'glasser', 'login is correct' );
+	$users_obj->clean_slate;
+	is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
+	$users_obj->limit( FIELD => 'name', OPERATOR => 'MATCHES', VALUE => '%lass%' );
+	is( $users_obj->count, 1, "found one user matching '%lass%' in the name" );
+	$first_rec = $users_obj->first;
+	isa_ok( $first_rec, 'Jifty::DBI::Record', 'First returns record object' );
+	is( $first_rec->login, 'glasser', 'login is correct' );
 
 	# STARTSWITH
 	$users_obj->clean_slate;

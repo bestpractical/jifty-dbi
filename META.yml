@@ -1,5 +1,5 @@
-name: DBIx-SearchBuilder
-version: 1.33
+name: Jifty-DBI
+version: 0.02
 license: perl
 distribution_type: module
 build_requires:
@@ -8,7 +8,7 @@ build_requires:
 requires:
   DBI: 0
   Want: 0
-  Encode: 0
+  Encode: 2.11
   UNIVERSAL::require: 0
   Lingua::EN::Inflect: 0
   Class::ReturnValue: 0.4
