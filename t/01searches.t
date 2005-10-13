@@ -8,7 +8,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 59;
+use constant TESTS_PER_DRIVER => 69;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -112,6 +112,30 @@ SKIP: {
 	$first_rec = $users_obj->first;
 	isa_ok( $first_rec, 'Jifty::DBI::Record', 'First returns record object' );
 	is( $first_rec->login, 'glasser', 'login is correct' );
+
+	# MATCHES
+	$users_obj->CleanSlate;
+	is_deeply( $users_obj, $clean_obj, 'after CleanSlate looks like new object');
+	$users_obj->Limit( FIELD => 'Name', OPERATOR => 'MATCHES', VALUE => 'lass' );
+	is( $users_obj->Count, 0, "found no user matching 'lass' in the name" );
+
+	$users_obj->CleanSlate;
+	is_deeply( $users_obj, $clean_obj, 'after CleanSlate looks like new object');
+	$users_obj->Limit( FIELD => 'Name', OPERATOR => 'MATCHES', VALUE => '%lass' );
+	is( $users_obj->Count, 0, "found no user matching '%lass' in the name" );
+
+	$users_obj->CleanSlate;
+	is_deeply( $users_obj, $clean_obj, 'after CleanSlate looks like new object');
+	$users_obj->Limit( FIELD => 'Name', OPERATOR => 'MATCHES', VALUE => 'lass%' );
+	is( $users_obj->Count, 0, "found no user matching 'lass%' in the name" );
+
+	$users_obj->CleanSlate;
+	is_deeply( $users_obj, $clean_obj, 'after CleanSlate looks like new object');
+	$users_obj->Limit( FIELD => 'Name', OPERATOR => 'MATCHES', VALUE => '%lass%' );
+	is( $users_obj->Count, 1, "found one user matching '%lass%' in the name" );
+	$first_rec = $users_obj->First;
+	isa_ok( $first_rec, 'DBIx::SearchBuilder::Record', 'First returns record object' );
+	is( $first_rec->Login, 'glasser', 'login is correct' );
 
 	# STARTSWITH
 	$users_obj->clean_slate;

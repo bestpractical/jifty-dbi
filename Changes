@@ -1,12 +1,20 @@
 Revision history for Perl extension Jifty::DBI.
 
+1.33 Thu Sep 22 14:27:46 EDT 2005
 
-* __set no longer returns failure when you try to apply a change that's already 
-  the current value
+* Better SQL statement logging from alex
 
 
+1.32 Thu Sep  1 06:52:42 EDT 2005
 
-==> Forked into Jifty::DBI
+* DBD::SQLite is necessary for the test suite to run correctl
+
+1.31 Fri Jul 29 12:47:25 EDT 2005
+
+* Updated MANIFEST to fix a build issue - 
+    Thanks to Andy Lester and David Glasser
+
+1.30 Thu Jul 28 10:17:27 EDT 2005
 
 *  Removed {{{ and  }}} fold markers. Patch from Ruslan
 
