@@ -7,7 +7,6 @@ build_requires:
   DBD::SQLite: 0
 requires:
   DBI: 0
-  Want: 0
   Encode: 2.11
   UNIVERSAL::require: 0
   Lingua::EN::Inflect: 0

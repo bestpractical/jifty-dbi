@@ -3,7 +3,6 @@ use strict;
 
 use vars qw($VERSION @ISA $DBIHandle $DEBUG);
 use base qw(Jifty::DBI::Handle);
-use Want qw(want howmany);
 
 use strict;
 
@@ -139,17 +138,7 @@ sub _make_clause_case_insensitive {
         return ( $field, $operator, $value );
     }
     elsif ( $operator =~ /=/ ) {
-        if ( howmany() >= 4 ) {
-            return ( "LOWER($field)", $operator, $value, "LOWER(?)" );
-        }
-
-        # RT 3.0.x and earlier  don't know how to cope with a "LOWER" function
-        # on the value. they only expect field, operator, value.
-        #
-        else {
-            return ( "LOWER($field)", $operator, lc($value) );
-
-        }
+        return ( "LOWER($field)", $operator, $value, "LOWER(?)" );
     }
     else {
         $self->SUPER::_make_clause_case_insensitive( $field, $operator,
