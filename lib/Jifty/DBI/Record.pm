@@ -1055,18 +1055,35 @@ arguably correct.
 sub table {
     my $self = shift;
 
-    if ( not $self->{__table_name} ) {
-        my $class = ref($self);
+    if ( not ref($self) )  {
+        return $self->_guess_table_name();
+    }
+    $self->{__table_name} ||= $self->_guess_table_name;
+   
+    return $self->{__table_name};
+}
+
+
+=head2 _guess_table_name
+
+Guesses a table name based on the class's last part.
+
+
+=cut
+
+sub _guess_table_name  {
+    my $self = shift;
+        my $class = ref($self) ? ref($self) : $self ;
         die "Couldn't turn " . $class . " into a table name"
             unless ( $class =~ /(?:\:\:)?(\w+)$/ );
         my $table = $1;
         $table =~ s/(?<=[a-z])([A-Z]+)/"_" . lc($1)/eg;
         $table =~ tr/A-Z/a-z/;
         $table = Lingua::EN::Inflect::PL_N($table);
-        $self->{__table_name} = $table;
+    return($table);
+
     }
-    return $self->{__table_name};
-}
+
 
 =head2 _handle
 
