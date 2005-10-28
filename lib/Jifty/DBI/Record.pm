@@ -960,7 +960,7 @@ sub create {
     foreach my $column_name ( keys %attribs ) {
         my $column = $self->column($column_name);
         unless ($column) {
-            die "$column_name isn't a column we know about";
+            Carp::confess "$column_name isn't a column we know about";
         }
         if (    $column->readable
             and $column->refers_to

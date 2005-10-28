@@ -2,6 +2,8 @@ package Jifty::DBI::Collection;
 
 use strict;
 use vars qw($VERSION);
+use UNIVERSAL::can;
+
 
 =head1 NAME
 
@@ -1036,17 +1038,25 @@ sub _group_clause {
     return ( $self->{'group_clause'} );
 }
 
-=head2 new_alias
+=head2 new_alias TABLE_OR_CLASS
 
-Takes the name of a table.  Returns the string of a new Alias for that
-table, which can be used to Join tables or to limit what gets found by
+Takes the name of a table or a Jifty::DBI::Record subclass.
+Returns the string of a new Alias for that table, which can be used 
+to Join tables or to limit what gets found by
 a search.
 
 =cut
 
 sub new_alias {
     my $self  = shift;
-    my $table = shift || die "Missing parameter";
+    my $refers_to = shift || die "Missing parameter";
+    my $table;
+
+    if ($refers_to->can('table')) {
+        $table = $refers_to->table;
+    } else {
+        $table = $refers_to;
+    }
 
     my $alias = $self->_get_alias($table);
 

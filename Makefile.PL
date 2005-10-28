@@ -1,5 +1,5 @@
 use inc::Module::Install;
-
+requires( perl => '5.8.3');
 name ('Jifty-DBI');
 license ('perl');
 version_from('lib/Jifty/DBI.pm');
@@ -22,7 +22,7 @@ features(
 	  'Class::Accessor' => '',
 	],
 );
+auto_bundle_deps();
 auto_install();
-
 &WriteAll;
 
