@@ -888,7 +888,7 @@ sub _normal_join {
         return ($alias);
     }
     else {
-        $sb->Jifty::DBI::limit(
+        $sb->Jifty::DBI::Collection::limit(
             ENTRYAGGREGATOR => 'AND',
             QUOTEVALUE      => 0,
             ALIAS           => $args{'ALIAS1'},
