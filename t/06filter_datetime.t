@@ -62,7 +62,7 @@ use base qw/Jifty::DBI::Record/;
 sub schema_sqlite {
 
 <<EOF;
-CREATE TABLE users (
+CREATE table users (
         id integer primary key,
 	created datetime
 )
@@ -73,7 +73,7 @@ EOF
 sub schema_mysql {
 
 <<EOF;
-CREATE TEMPORARY TABLE users (
+CREATE TEMPORARY table users (
         id integer auto_increment primary key,
 	created datetime
 )
@@ -84,7 +84,7 @@ EOF
 sub schema_pg {
 
 <<EOF;
-CREATE TEMPORARY TABLE users (
+CREATE TEMPORARY table users (
         id serial primary key,
 	created timestamp
 )

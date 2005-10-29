@@ -6,8 +6,8 @@ sub Table { "Employees" }
 
 sub Schema {
     return {
-      Name => { TYPE => 'varchar', },
-      Dexterity => { TYPE => 'integer', },
+      Name => { type => 'varchar', },
+      Dexterity => { type => 'integer', },
     }
 }
 

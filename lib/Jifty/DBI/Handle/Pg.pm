@@ -113,12 +113,12 @@ sub apply_limits {
 
 }
 
-=head2 _make_clause_case_insensitive FIELD OPERATOR VALUE
+=head2 _make_clause_case_insensitive column operator VALUE
 
 Takes a field, operator and value. performs the magic necessary to make
 your database treat this clause as case insensitive.
 
-Returns a FIELD OPERATOR VALUE triple.
+Returns a column operator value triple.
 
 =cut
 

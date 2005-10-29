@@ -1,4 +1,4 @@
-package Jifty::DBI::Union;
+package Jifty::DBI::Collection::Union;
 use strict;
 use warnings;
 
@@ -14,13 +14,13 @@ our $VERSION = '0';
 
 =head1 NAME
 
-Jifty::DBI::Union - Deal with multiple L<Jifty::DBI::Collection>
+Jifty::DBI::Collection::Union - Deal with multiple L<Jifty::DBI::Collection>
 result sets as one
 
 =head1 SYNOPSIS
 
-  use Jifty::DBI::Union;
-  my $U = new Jifty::DBI::Union;
+  use Jifty::DBI::Collection::Union;
+  my $U = new Jifty::DBI::Collection::Union;
   $U->add( $tickets1 );
   $U->add( $tickets2 );
 
@@ -44,7 +44,7 @@ in a single list.
 
 =head2 new
 
-Create a new L<Jifty::DBI::Union> object.  No arguments.
+Create a new L<Jifty::DBI::Collection::Union> object.  No arguments.
 
 =cut
 
@@ -75,7 +75,7 @@ sub add {
         || ref($newobj) eq ref( $self->{data}[0] ) )
     {
         die
-            "All elements of a Jifty::DBI::Union must be of the same type.  Looking for a "
+            "All elements of a Jifty::DBI::Collection::Union must be of the same type.  Looking for a "
             . ref( $self->{data}[0] ) . ".";
     }
 
@@ -94,7 +94,7 @@ element.
 sub first {
     my $self = shift;
 
-    die "No elements in Jifty::DBI::Union"
+    die "No elements in Jifty::DBI::Collection::Union"
         unless @{ $self->{data} };
 
     $self->{curp} = 0;

@@ -193,12 +193,12 @@ package TestApp;
 sub schema_sqlite {
 [
 q{
-CREATE TABLE employees (
+CREATE table employees (
 	id integer primary key,
 	name varchar(36)
 )
 }, q{
-CREATE TABLE phones (
+CREATE table phones (
 	id integer primary key,
 	employee integer NOT NULL,
 	phone varchar(18)
@@ -208,12 +208,12 @@ CREATE TABLE phones (
 
 sub schema_mysql {
 [ q{
-CREATE TEMPORARY TABLE employees (
+CREATE TEMPORARY table employees (
 	id integer AUTO_INCREMENT primary key,
 	name varchar(36)
 )
 }, q{
-CREATE TEMPORARY TABLE phones (
+CREATE TEMPORARY table phones (
 	id integer AUTO_INCREMENT primary key,
 	employee integer NOT NULL,
 	phone varchar(18)
@@ -223,12 +223,12 @@ CREATE TEMPORARY TABLE phones (
 
 sub schema_pg {
 [ q{
-CREATE TEMPORARY TABLE employees (
+CREATE TEMPORARY table employees (
 	id serial PRIMARY KEY,
 	name varchar
 )
 }, q{
-CREATE TEMPORARY TABLE phones (
+CREATE TEMPORARY table phones (
 	id serial PRIMARY KEY,
 	employee integer references employees(id),
 	phone varchar

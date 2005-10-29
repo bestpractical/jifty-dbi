@@ -31,7 +31,7 @@ that user has installed.
 
 our @available_drivers = grep { eval "require DBD::". $_ } @supported_drivers;
 
-=head1 FUNCTIONS
+=head1 functionS
 
 =head2 get_handle
 

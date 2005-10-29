@@ -61,7 +61,7 @@ foreach my $d ( @available_drivers ) {
     ok($ret != 0, "added model from real class");
 
     is_ignoring_space($SG->create_table_sql_text, <<END_SCHEMA, "got the right schema");
-    CREATE TABLE addresses ( 
+    CREATE table addresses ( 
       id serial NOT NULL , 
       employee_id integer ,
       name varchar DEFAULT 'Frank' ,
@@ -79,14 +79,14 @@ END_SCHEMA
     ok($ret != 0, "added model from an instantiated object");
 
     is_ignoring_space($SG->create_table_sql_text, <<END_SCHEMA, "got the right schema");
-    CREATE TABLE addresses ( 
+    CREATE table addresses ( 
       id serial NOT NULL , 
       employee_id integer  ,
       name varchar DEFAULT 'Frank' ,
       phone varchar ,
       PRIMARY KEY (id)
     ) ;
-    CREATE TABLE employees (
+    CREATE table employees (
       id serial NOT NULL ,
       dexterity integer ,
       name varchar ,

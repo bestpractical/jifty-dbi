@@ -306,7 +306,7 @@ sub dbh {
     return ( $DBIHandle{$self} ||= $PrevHandle );
 }
 
-=head2 insert $TABLE_NAME @KEY_VALUE_PAIRS
+=head2 insert $table_NAME @KEY_VALUE_PAIRS
 
 Takes a table name and a set of key-value pairs in an array. splits the key value pairs, constructs an INSERT statement and performs the insert. Returns the row_id of this row.
 
@@ -382,9 +382,9 @@ sub update_record_value {
     return ( $self->simple_query( $query_str, @bind ) );
 }
 
-=head2 update_table_value TABLE COLUMN NEW_VALUE RECORD_ID IS_SQL
+=head2 update_table_value table COLUMN NEW_value RECORD_ID IS_SQL
 
-Update column COLUMN of table TABLE where the record id = RECORD_ID.  if IS_SQL is set,
+Update column COLUMN of table table where the record id = RECORD_ID.  if IS_SQL is set,
 don\'t quote the NEW_VALUE
 
 =cut
@@ -533,7 +533,7 @@ sub knows_blobs {
     return (1);
 }
 
-=head2 blob_params FIELD_NAME FIELD_TYPE
+=head2 blob_params column_NAME column_type
 
 Returns a hash ref for the bind_param call to identify BLOB types used by 
 the current database for a particular column type.                 
@@ -598,12 +598,12 @@ sub case_sensitive {
     return (1);
 }
 
-=head2 _make_clause_case_insensitive FIELD OPERATOR VALUE
+=head2 _make_clause_case_insensitive column operator VALUE
 
 Takes a field, operator and value. performs the magic necessary to make
 your database treat this clause as case insensitive.
 
-Returns a FIELD OPERATOR VALUE triple.
+Returns a column operator value triple.
 
 =cut
 
@@ -757,12 +757,12 @@ sub join {
     my $self = shift;
     my %args = (
         collection => undef,
-        TYPE       => 'normal',
-        FIELD1     => 'main',
-        ALIAS1     => undef,
-        TABLE2     => undef,
-        FIELD2     => undef,
-        ALIAS2     => undef,
+        type       => 'normal',
+        column1     => 'main',
+        alias1     => undef,
+        table2     => undef,
+        column2     => undef,
+        alias2     => undef,
         EXPRESSION => undef,
         @_
     );
@@ -771,19 +771,19 @@ sub join {
 
     my $alias;
 
-#If we're handed in an ALIAS2, we need to go remove it from the
+#If we're handed in an alias2, we need to go remove it from the
 # Aliases array.  Basically, if anyone generates an alias and then
 # tries to use it in a join later, we want to be smart about creating
 # joins, so we need to go rip it out of the old aliases table and drop
 # it in as an explicit join
-    if ( $args{'ALIAS2'} ) {
+    if ( $args{'alias2'} ) {
 
         # this code is slow and wasteful, but it's clear.
         my @aliases = @{ $args{'collection'}->{'aliases'} };
         my @new_aliases;
         foreach my $old_alias (@aliases) {
-            if ( $old_alias =~ /^(.*?) ($args{'ALIAS2'})$/ ) {
-                $args{'TABLE2'} = $1;
+            if ( $old_alias =~ /^(.*?) ($args{'alias2'})$/ ) {
+                $args{'table2'} = $1;
                 $alias = $2;
 
             }
@@ -796,18 +796,18 @@ sub join {
         unless ($alias) {
 
             # if we can't do that, can we reverse the join and have it work?
-            my $a1 = $args{'ALIAS1'};
-            my $f1 = $args{'FIELD1'};
-            $args{'ALIAS1'} = $args{'ALIAS2'};
-            $args{'FIELD1'} = $args{'FIELD2'};
-            $args{'ALIAS2'} = $a1;
-            $args{'FIELD2'} = $f1;
+            my $a1 = $args{'alias1'};
+            my $f1 = $args{'column1'};
+            $args{'alias1'} = $args{'alias2'};
+            $args{'column1'} = $args{'column2'};
+            $args{'alias2'} = $a1;
+            $args{'column2'} = $f1;
 
             @aliases     = @{ $args{'collection'}->{'aliases'} };
             @new_aliases = ();
             foreach my $old_alias (@aliases) {
-                if ( $old_alias =~ /^(.*?) ($args{'ALIAS2'})$/ ) {
-                    $args{'TABLE2'} = $1;
+                if ( $old_alias =~ /^(.*?) ($args{'alias2'})$/ ) {
+                    $args{'table2'} = $1;
                     $alias = $2;
 
                 }
@@ -818,7 +818,7 @@ sub join {
 
         }
 
-        if ( !$alias || $args{'ALIAS1'} ) {
+        if ( !$alias || $args{'alias1'} ) {
             return ( $self->_normal_join(%args) );
         }
 
@@ -826,18 +826,18 @@ sub join {
     }
 
     else {
-        $alias = $args{'collection'}->_get_alias( $args{'TABLE2'} );
+        $alias = $args{'collection'}->_get_alias( $args{'table2'} );
 
     }
 
-    if ( $args{'TYPE'} =~ /LEFT/i ) {
+    if ( $args{'type'} =~ /LEFT/i ) {
 
-        $string = " LEFT JOIN " . $args{'TABLE2'} . " $alias ";
+        $string = " LEFT JOIN " . $args{'table2'} . " $alias ";
 
     }
     else {
 
-        $string = " JOIN " . $args{'TABLE2'} . " $alias ";
+        $string = " JOIN " . $args{'table2'} . " $alias ";
 
     }
 
@@ -846,16 +846,16 @@ sub join {
         $criterion = $args{'EXPRESSION'};
     }
     else {
-        $criterion = $args{'ALIAS1'} . "." . $args{'FIELD1'};
+        $criterion = $args{'alias1'} . "." . $args{'column1'};
     }
 
-    $args{'collection'}->{'left_joins'}{"$alias"}{'alias_string'}
+    $args{'collection'}->{'leftjoins'}{"$alias"}{'alias_string'}
         = $string;
-    $args{'collection'}->{'left_joins'}{"$alias"}{'depends_on'}
-        = $args{'ALIAS1'};
-    $args{'collection'}->{'left_joins'}{"$alias"}{'criteria'}
+    $args{'collection'}->{'leftjoins'}{"$alias"}{'depends_on'}
+        = $args{'alias1'};
+    $args{'collection'}->{'leftjoins'}{"$alias"}{'criteria'}
         { 'criterion' . $args{'collection'}->{'criteria_count'}++ }
-        = " $alias.$args{'FIELD2'} = $criterion";
+        = " $alias.$args{'column2'} = $criterion";
 
     return ($alias);
 }
@@ -865,35 +865,35 @@ sub _normal_join {
     my $self = shift;
     my %args = (
         collection => undef,
-        TYPE       => 'normal',
-        FIELD1     => undef,
-        ALIAS1     => undef,
-        TABLE2     => undef,
-        FIELD2     => undef,
-        ALIAS2     => undef,
+        type       => 'normal',
+        column1     => undef,
+        alias1     => undef,
+        table2     => undef,
+        column2     => undef,
+        alias2     => undef,
         @_
     );
 
     my $sb = $args{'collection'};
 
-    if ( $args{'TYPE'} =~ /LEFT/i ) {
-        my $alias = $sb->_get_alias( $args{'TABLE2'} );
+    if ( $args{'type'} =~ /LEFT/i ) {
+        my $alias = $sb->_get_alias( $args{'table2'} );
 
-        $sb->{'left_joins'}{"$alias"}{'alias_string'}
-            = " LEFT JOIN $args{'TABLE2'} $alias ";
+        $sb->{'leftjoins'}{"$alias"}{'alias_string'}
+            = " LEFT JOIN $args{'table2'} $alias ";
 
-        $sb->{'left_joins'}{"$alias"}{'criteria'}{'base_criterion'}
-            = " $args{'ALIAS1'}.$args{'FIELD1'} = $alias.$args{'FIELD2'}";
+        $sb->{'leftjoins'}{"$alias"}{'criteria'}{'base_criterion'}
+            = " $args{'alias1'}.$args{'column1'} = $alias.$args{'column2'}";
 
         return ($alias);
     }
     else {
         $sb->Jifty::DBI::Collection::limit(
-            ENTRYAGGREGATOR => 'AND',
-            QUOTEVALUE      => 0,
-            ALIAS           => $args{'ALIAS1'},
-            FIELD           => $args{'FIELD1'},
-            VALUE           => $args{'ALIAS2'} . "." . $args{'FIELD2'},
+            entry_aggregator => 'AND',
+            quote_value      => 0,
+            alias           => $args{'alias1'},
+            column           => $args{'column1'},
+            value           => $args{'alias2'} . "." . $args{'column2'},
             @_
         );
     }
@@ -918,18 +918,18 @@ sub _build_joins {
 
     my $join_clause = $sb->table . " main ";
 
-    my @keys = ( keys %{ $sb->{'left_joins'} } );
+    my @keys = ( keys %{ $sb->{'leftjoins'} } );
     my %seen;
 
     while ( my $join = shift @keys ) {
-        if ( !$sb->{'left_joins'}{$join}{'depends_on'}
-            || $seen_aliases{ $sb->{'left_joins'}{$join}{'depends_on'} } )
+        if ( !$sb->{'leftjoins'}{$join}{'depends_on'}
+            || $seen_aliases{ $sb->{'leftjoins'}{$join}{'depends_on'} } )
         {
             $join_clause = "(" . $join_clause;
             $join_clause
-                .= $sb->{'left_joins'}{$join}{'alias_string'} . " ON (";
+                .= $sb->{'leftjoins'}{$join}{'alias_string'} . " ON (";
             $join_clause .= CORE::join( ') AND( ',
-                values %{ $sb->{'left_joins'}{$join}{'criteria'} } );
+                values %{ $sb->{'leftjoins'}{$join}{'criteria'} } );
             $join_clause .= ")) ";
 
             $seen_aliases{$join} = 1;

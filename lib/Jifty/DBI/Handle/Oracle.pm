@@ -165,7 +165,7 @@ sub knows_blobs {
     return (undef);
 }
 
-=head2 blob_params FIELD_NAME FIELD_TYPE
+=head2 blob_params column_NAME column_type
 
 Returns a hash ref for the bind_param call to identify BLOB types used
 by the current database for a particular column type.  The current

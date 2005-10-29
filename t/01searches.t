@@ -77,7 +77,7 @@ SKIP: {
 # basic limits
 	$users_obj->clean_slate;
 	is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
-	$users_obj->limit( FIELD => 'login', VALUE => 'obra' );
+	$users_obj->limit( column => 'login', value => 'obra' );
 	is( $users_obj->count, 1, 'found one user with login obra' );
 	TODO: {
 		local $TODO = 'require discussion';
@@ -103,11 +103,11 @@ SKIP: {
 	isa_ok( $items_ref, 'ARRAY', 'items_array_ref always returns array reference' );
 	is( scalar @{$items_ref}, 1, 'items_array_ref has only 1 record' );
 
-# similar basic limit, but with different OPERATORS and less first/next/last tests
+# similar basic limit, but with different operatorS and less first/next/last tests
 	# LIKE
 	$users_obj->clean_slate;
 	is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
-	$users_obj->limit( FIELD => 'name', OPERATOR => 'LIKE', VALUE => 'Glass' );
+	$users_obj->limit( column => 'name', operator => 'MATCHES', value => 'Glass' );
 	is( $users_obj->count, 1, "found one user with 'Glass' in the name" );
 	$first_rec = $users_obj->first;
 	isa_ok( $first_rec, 'Jifty::DBI::Record', 'First returns record object' );
@@ -116,7 +116,7 @@ SKIP: {
 	# STARTSWITH
 	$users_obj->clean_slate;
 	is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
-	$users_obj->limit( FIELD => 'name', OPERATOR => 'STARTSWITH', VALUE => 'Ruslan' );
+	$users_obj->limit( column => 'name', operator => 'STARTSWITH', value => 'Ruslan' );
 	is( $users_obj->count, 1, "found one user who name starts with 'Ruslan'" );
 	$first_rec = $users_obj->first;
 	isa_ok( $first_rec, 'Jifty::DBI::Record', 'First returns record object' );
@@ -125,32 +125,32 @@ SKIP: {
 	# ENDSWITH
 	$users_obj->clean_slate;
 	is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
-	$users_obj->limit( FIELD => 'name', OPERATOR => 'ENDSWITH', VALUE => 'Tang' );
+	$users_obj->limit( column => 'name', operator => 'ENDSWITH', value => 'Tang' );
 	is( $users_obj->count, 1, "found one user who name ends with 'Tang'" );
 	$first_rec = $users_obj->first;
 	isa_ok( $first_rec, 'Jifty::DBI::Record', 'First returns record object' );
 	is( $first_rec->login, 'autrijus', 'login is correct' );
 
 	# IS NULL
-	# XXX TODO FIXME: FIELD => undef should be handled as NULL
+	# XXX TODO FIXME: column => undef should be handled as NULL
 	$users_obj->clean_slate;
 	is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
-	$users_obj->limit( FIELD => 'phone', OPERATOR => 'IS', VALUE => 'NULL' );
+	$users_obj->limit( column => 'phone', operator => 'IS', value => 'NULL' );
 	is( $users_obj->count, 2, "found 2 users who has unknown phone number" );
 	
 	# IS NOT NULL
 	$users_obj->clean_slate;
 	is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
-	$users_obj->limit( FIELD => 'phone', OPERATOR => 'IS NOT', VALUE => 'NULL', QOUTEVALUE => 0 );
+	$users_obj->limit( column => 'phone', operator => 'IS NOT', value => 'NULL', QOUTEvalue => 0 );
 	is( $users_obj->count, $count_all - 2, "found users who has phone number filled" );
 	
 	# ORDER BY / GROUP BY
 	$users_obj->clean_slate;
 	is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
 	$users_obj->unlimit;
-	$users_obj->group_by_cols({FIELD => 'login'});
-	$users_obj->order_by(FIELD => 'login', ORDER => 'desc');
-	$users_obj->column(FIELD => 'login');
+	$users_obj->group_by_cols({column => 'login'});
+	$users_obj->order_by(column => 'login', order => 'desc');
+	$users_obj->column(column => 'login');
 	is( $users_obj->count, $count_all, "group by / order by finds right amount");
 	$first_rec = $users_obj->first;
 	isa_ok( $first_rec, 'Jifty::DBI::Record', 'First returns record object' );
@@ -165,7 +165,7 @@ package TestApp;
 
 sub schema_mysql {
 <<EOF;
-CREATE TEMPORARY TABLE users (
+CREATE TEMPORARY table users (
         id integer AUTO_INCREMENT,
         login varchar(18) NOT NULL,
         name varchar(36),
@@ -177,7 +177,7 @@ EOF
 
 sub schema_pg {
 <<EOF;
-CREATE TEMPORARY TABLE users (
+CREATE TEMPORARY table users (
         id serial PRIMARY KEY,
         login varchar(18) NOT NULL,
         name varchar(36),
@@ -190,7 +190,7 @@ EOF
 sub schema_sqlite {
 
 <<EOF;
-CREATE TABLE users (
+CREATE table users (
 	id integer primary key,
 	login varchar(18) NOT NULL,
 	name varchar(36),

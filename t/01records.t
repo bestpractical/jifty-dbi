@@ -209,7 +209,7 @@ sub validate_name
 
 sub schema_mysql {
 <<EOF;
-CREATE TEMPORARY TABLE addresses (
+CREATE TEMPORARY table addresses (
         id integer AUTO_INCREMENT,
         name varchar(36),
         phone varchar(18),
@@ -221,7 +221,7 @@ EOF
 
 sub schema_pg {
 <<EOF;
-CREATE TEMPORARY TABLE addresses (
+CREATE TEMPORARY table addresses (
         id serial PRIMARY KEY,
         name varchar,
         phone varchar,
@@ -234,7 +234,7 @@ EOF
 sub schema_sqlite {
 
 <<EOF;
-CREATE TABLE addresses (
+CREATE table addresses (
         id  integer primary key,
         name varchar(36),
         phone varchar(18),

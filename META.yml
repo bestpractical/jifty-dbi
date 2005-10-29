@@ -15,11 +15,6 @@ requires:
   Cache::Simple::TimedExpiry: 0.21
   DateTime: 0
   DateTime::Format::Strptime: 0
-bundles:
-  DateTime::Duration: DateTime-0.2901
-  DateTime::Locale::Base: DateTime-Locale-0.22
-  DateTime::Duration: DateTime-0.2901
-  DateTime::Locale::Base: DateTime-Locale-0.22
 no_index:
   directory:
     - inc

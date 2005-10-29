@@ -1,4 +1,4 @@
-package Jifty::DBI::Unique;
+package Jifty::DBI::Collection::Unique;
 use base 'Exporter';
 our @EXPORT  = qw(AddRecord);
 our $VERSION = "0.01";
@@ -21,14 +21,14 @@ sub AddRecord {
 
 =head1 NAME
 
-Jifty::DBI::Unique - Ensure uniqueness of records in a collection
+Jifty::DBI::Collection::Unique - Ensure uniqueness of records in a collection
 
 =head1 SYNOPSIS
 
     package Foo::Collection;
     use base 'Jifty::DBI::Collection';
 
-    use Jifty::DBI::Unique; # mixin
+    use Jifty::DBI::Collection::Unique; # mixin
 
     my $collection = Foo::Collection->New();
     $collection->SetupComplicatedJoins;

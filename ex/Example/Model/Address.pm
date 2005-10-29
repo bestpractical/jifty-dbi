@@ -10,8 +10,8 @@ sub Table { "Addresses" }
 
 sub Schema {
     return {
-        Name => { TYPE => 'varchar', },
-        Phone => { TYPE => 'varchar', },
+        Name => { type => 'varchar', },
+        Phone => { type => 'varchar', },
         EmployeeId => { REFERENCES => 'Example::Model::Employee', },
     }
 }

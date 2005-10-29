@@ -17,12 +17,6 @@ perl objects
   package My::Things;
   use base qw/Jifty::DBI::Collection/;
   
-  sub _init {
-      my $self = shift;
-      return $self->SUPER::_init(@_);
-  }
-  
-  
   package main;
 
   use Jifty::DBI::Handle;
@@ -31,7 +25,7 @@ perl objects
 
   my $sb = My::Things->new( handle => $handle );
 
-  $sb->limit( FIELD => "column_1", VALUE => "matchstring" );
+  $sb->limit( field => "column_1", value => "matchstring" );
 
   while ( my $record = $sb->next ) {
       print $record->my_column_name();
@@ -128,7 +122,7 @@ sub clean_slate {
 
     delete $self->{$_} for qw(
         items
-        left_joins
+        leftjoins
         raw_rows
         count_all
         subclauses
@@ -302,7 +296,7 @@ together.
 
 sub _is_joined {
     my $self = shift;
-    if ( keys( %{ $self->{'left_joins'} } ) ) {
+    if ( keys( %{ $self->{'leftjoins'} } ) ) {
         return (1);
     } else {
         return ( @{ $self->{'aliases'} } );
@@ -575,18 +569,18 @@ limit takes a hash of parameters with the following keys:
 
 =over 4
 
-=item TABLE 
+=item table 
 
 Can be set to something different than this table if a join is
 wanted (that means we can't do recursive joins as for now).  
 
-=item ALIAS
+=item alias
 
-Unless ALIAS is set, the join criterias will be taken from EXT_LINKFIELD
-and INT_LINKFIELD and added to the criterias.  If ALIAS is set, new
+Unless alias is set, the join criterias will be taken from EXT_LINKcolumn
+and INT_LINKcolumn and added to the criterias.  If alias is set, new
 criterias about the foreign table will be added.
 
-=item FIELD
+=item column
 
 Column to be checked against.
 
@@ -594,9 +588,9 @@ Column to be checked against.
 
 Should always be set and will always be quoted. 
 
-=item OPERATOR
+=item operator
 
-OPERATOR is the SQL operator to use for this phrase.  Possible choices include:
+operator is the SQL operator to use for this phrase.  Possible choices include:
 
 =over 4
 
@@ -620,13 +614,13 @@ ENDSWITH is like LIKE, except it prepends a % to the beginning of the string
 
 =back
 
-=item ENTRYAGGREGATOR 
+=item entry_aggregator 
 
 Can be AND or OR (or anything else valid to aggregate two clauses in SQL)
 
-=item CASESENSITIVE
+=item case_sensitive
 
-on some databases, such as postgres, setting CASESENSITIVE to 1 will make
+on some databases, such as postgres, setting case_sensitive to 1 will make
 this search case sensitive
 
 =back
@@ -636,16 +630,16 @@ this search case sensitive
 sub limit {
     my $self = shift;
     my %args = (
-        TABLE           => $self->table,
-        FIELD           => undef,
-        VALUE           => undef,
-        ALIAS           => undef,
-        QUOTEVALUE      => 1,
-        ENTRYAGGREGATOR => 'or',
-        CASESENSITIVE   => undef,
-        OPERATOR        => '=',
-        SUBCLAUSE       => undef,
-        LEFTJOIN        => undef,
+        table           => $self->table,
+        column           => undef,
+        value           => undef,
+        alias           => undef,
+        quote_value      => 1,
+        entry_aggregator => 'or',
+        case_sensitive   => undef,
+        operator        => '=',
+        subclause       => undef,
+        leftjoin        => undef,
         @_    # get the real argumentlist
     );
 
@@ -654,37 +648,40 @@ sub limit {
     #since we're changing the search criteria, we need to redo the search
     $self->redo_search();
 
-    if ( $args{'FIELD'} ) {
+    if ( $args{'column'} ) {
 
         #If it's a like, we supply the %s around the search term
-        if ( $args{'OPERATOR'} =~ /LIKE/i ) {
-            $args{'VALUE'} = "%" . $args{'VALUE'} . "%";
-        } elsif ( $args{'OPERATOR'} =~ /STARTSWITH/i ) {
-            $args{'VALUE'}    = $args{'VALUE'} . "%";
-            $args{'OPERATOR'} = "LIKE";
-        } elsif ( $args{'OPERATOR'} =~ /ENDSWITH/i ) {
-            $args{'VALUE'}    = "%" . $args{'VALUE'};
-            $args{'OPERATOR'} = "LIKE";
+        if ( $args{'operator'} =~ /LIKE/i ) {
+            $args{'value'} =  $args{'value'} ;
+        } elsif ( $args{'operator'} =~ /MATCHES/i ) {
+            $args{'value'}    = "%".$args{'value'} . "%";
+            $args{'operator'} = "LIKE";
+        } elsif ( $args{'operator'} =~ /STARTSWITH/i ) {
+            $args{'value'}    = $args{'value'} . "%";
+            $args{'operator'} = "LIKE";
+        } elsif ( $args{'operator'} =~ /ENDSWITH/i ) {
+            $args{'value'}    = "%" . $args{'value'};
+            $args{'operator'} = "LIKE";
         }
 
         #if we're explicitly told not to to quote the value or
         # we're doing an IS or IS NOT (null), don't quote the operator.
 
-        if ( $args{'QUOTEVALUE'} && $args{'OPERATOR'} !~ /IS/i ) {
-            my $tmp = $self->_handle->dbh->quote( $args{'VALUE'} );
+        if ( $args{'quote_value'} && $args{'operator'} !~ /IS/i ) {
+            my $tmp = $self->_handle->dbh->quote( $args{'value'} );
 
             # Accomodate DBI drivers that don't understand UTF8
             if ( $] >= 5.007 ) {
                 require Encode;
-                if ( Encode::is_utf8( $args{'VALUE'} ) ) {
+                if ( Encode::is_utf8( $args{'value'} ) ) {
                     Encode::_utf8_on($tmp);
                 }
             }
-            $args{'VALUE'} = $tmp;
+            $args{'value'} = $tmp;
         }
     }
 
-    $Alias = $self->_generic_restriction(%args);
+    $Alias = $self->_compile_phrase(%args);
 
     warn "No table alias set!"
         unless $Alias;
@@ -700,54 +697,54 @@ sub limit {
     }
 }
 
-sub _generic_restriction {
+sub _compile_phrase {
     my $self = shift;
     my %args = (
-        TABLE           => $self->table,
-        FIELD           => undef,
-        VALUE           => undef,
-        ALIAS           => undef,
-        LEFTJOIN        => undef,
-        ENTRYAGGREGATOR => undef,
-        OPERATOR        => '=',
-        SUBCLAUSE       => undef,
-        CASESENSITIVE   => undef,
-        QUOTEVALUE      => undef,
+        table           => $self->table,
+        column           => undef,
+        value           => undef,
+        alias           => undef,
+        leftjoin        => undef,
+        entry_aggregator => undef,
+        operator        => '=',
+        subclause       => undef,
+        case_sensitive   => undef,
+        quote_value      => undef,
         @_
     );
 
     my ( $Clause, $QualifiedField );
 
-    #TODO: $args{'VALUE'} should take an array of values and generate
+    #TODO: $args{'value'} should take an array of values and generate
     # the proper where clause.
 
     #If we're performing a left join, we really want the alias to be the
     #left join criterion.
 
-    if (   ( defined $args{'LEFTJOIN'} )
-        && ( !defined $args{'ALIAS'} ) )
+    if (   ( defined $args{'leftjoin'} )
+        && ( !defined $args{'alias'} ) )
     {
-        $args{'ALIAS'} = $args{'LEFTJOIN'};
+        $args{'alias'} = $args{'leftjoin'};
     }
 
     # {{{ if there's no alias set, we need to set it
 
-    unless ( $args{'ALIAS'} ) {
+    unless ( $args{'alias'} ) {
 
         #if the table we're looking at is the same as the main table
-        if ( $args{'TABLE'} eq $self->table ) {
+        if ( $args{'table'} eq $self->table ) {
 
             # TODO this code assumes no self joins on that table.
             # if someone can name a case where we'd want to do that,
             # I'll change it.
 
-            $args{'ALIAS'} = 'main';
+            $args{'alias'} = 'main';
         }
 
         # {{{ if we're joining, we need to work out the table alias
 
         else {
-            $args{'ALIAS'} = $self->new_alias( $args{'TABLE'} );
+            $args{'alias'} = $self->new_alias( $args{'table'} );
         }
 
         # }}}
@@ -758,10 +755,10 @@ sub _generic_restriction {
     # Set this to the name of the field and the alias, unless we've been
     # handed a subclause name
 
-    $QualifiedField = $args{'ALIAS'} . "." . $args{'FIELD'};
+    $QualifiedField = $args{'alias'} . "." . $args{'column'};
 
-    if ( $args{'SUBCLAUSE'} ) {
-        $Clause = $args{'SUBCLAUSE'};
+    if ( $args{'subclause'} ) {
+        $Clause = $args{'subclause'};
     } else {
         $Clause = $QualifiedField;
     }
@@ -775,8 +772,8 @@ sub _generic_restriction {
     # If we're trying to get a leftjoin restriction, lets set
     # $restriction to point htere. otherwise, lets construct normally
 
-    if ( $args{'LEFTJOIN'} ) {
-        $restriction = \$self->{'left_joins'}{ $args{'LEFTJOIN'} }{'criteria'}
+    if ( $args{'leftjoin'} ) {
+        $restriction = \$self->{'leftjoins'}{ $args{'leftjoin'} }{'criteria'}
             {"$Clause"};
     } else {
         $restriction = \$self->{'restrictions'}{"$Clause"};
@@ -785,21 +782,21 @@ sub _generic_restriction {
     # If it's a new value or we're overwriting this sort of restriction,
 
     if (   $self->_handle->case_sensitive
-        && defined $args{'VALUE'}
-        && $args{'VALUE'} ne ''
-        && $args{'VALUE'} ne "''"
-        && ( $args{'OPERATOR'} !~ /IS/ && $args{'VALUE'} !~ /^null$/i ) )
+        && defined $args{'value'}
+        && $args{'value'} ne ''
+        && $args{'value'} ne "''"
+        && ( $args{'operator'} !~ /IS/ && $args{'value'} !~ /^null$/i ) )
     {
 
-        unless ( $args{'CASESENSITIVE'} || !$args{'QUOTEVALUE'} ) {
-            ( $QualifiedField, $args{'OPERATOR'}, $args{'VALUE'} )
+        unless ( $args{'case_sensitive'} || !$args{'quote_value'} ) {
+            ( $QualifiedField, $args{'operator'}, $args{'value'} )
                 = $self->_handle->_make_clause_case_insensitive(
-                $QualifiedField, $args{'OPERATOR'}, $args{'VALUE'} );
+                $QualifiedField, $args{'operator'}, $args{'value'} );
         }
 
     }
 
-    my $clause = "($QualifiedField $args{'OPERATOR'} $args{'VALUE'})";
+    my $clause = "($QualifiedField $args{'operator'} $args{'value'})";
 
     # Juju because this should come _AFTER_ the EA
     my $prefix = "";
@@ -808,8 +805,8 @@ sub _generic_restriction {
         delete $self->{_open_parens}{$Clause};
     }
 
-    if ((       ( exists $args{'ENTRYAGGREGATOR'} )
-            and ( $args{'ENTRYAGGREGATOR'} || "" ) eq 'none'
+    if ((       ( exists $args{'entry_aggregator'} )
+            and ( $args{'entry_aggregator'} || "" ) eq 'none'
         )
         or ( !$$restriction )
         )
@@ -818,10 +815,10 @@ sub _generic_restriction {
         $$restriction = $prefix . $clause;
 
     } else {
-        $$restriction .= $args{'ENTRYAGGREGATOR'} . $prefix . $clause;
+        $$restriction .= $args{'entry_aggregator'} . $prefix . $clause;
     }
 
-    return ( $args{'ALIAS'} );
+    return ( $args{'alias'} );
 
 }
 
@@ -841,7 +838,7 @@ sub _close_paren {
     }
 }
 
-sub _add_sub_clause {
+sub _add_subclause {
     my $self      = shift;
     my $clauseid  = shift;
     my $subclause = shift;
@@ -900,12 +897,12 @@ sub _compile_generic_restrictions {
 
 =head2 order_by PARAMHASH
 
-Orders the returned results by ALIAS.FIELD ORDER. (by default 'main.id ASC')
+Orders the returned results by alias.column order. (by default 'main.id ASC')
 
-Takes a paramhash of ALIAS, FIELD and ORDER.  
-ALIAS defaults to main
-FIELD defaults to the primary key of the main table.  Also accepts C<FUNCTION(FIELD)> format
-ORDER defaults to ASC(ending).  DESC(ending) is also a valid value for order_by
+Takes a paramhash of alias, column and order.  
+alias defaults to main
+C<column> defaults to the primary key of the main table.  Also accepts C<function(column)> format
+order defaults to ASC(ending).  DESC(ending) is also a valid value for order_by
 
 
 =cut
@@ -933,33 +930,33 @@ sub order_by_cols {
     foreach $row (@args) {
 
         my %rowhash = (
-            ALIAS => 'main',
-            FIELD => undef,
-            ORDER => 'ASC',
+            alias => 'main',
+            column => undef,
+            order => 'ASC',
             %$row
         );
-        if ( $rowhash{'ORDER'} =~ /^des/i ) {
-            $rowhash{'ORDER'} = "DESC";
+        if ( $rowhash{'order'} =~ /^des/i ) {
+            $rowhash{'order'} = "DESC";
         } else {
-            $rowhash{'ORDER'} = "ASC";
+            $rowhash{'order'} = "ASC";
         }
 
-        if (    ( $rowhash{'ALIAS'} )
-            and ( $rowhash{'FIELD'} )
-            and ( $rowhash{'ORDER'} ) )
+        if (    ( $rowhash{'alias'} )
+            and ( $rowhash{'column'} )
+            and ( $rowhash{'order'} ) )
         {
 
-            if ( $rowhash{'FIELD'} =~ /^(\w+\()(.*\))$/ ) {
+            if ( $rowhash{'column'} =~ /^(\w+\()(.*\))$/ ) {
 
-                # handle 'FUNCTION(FIELD)' formatted fields
-                $rowhash{'ALIAS'} = $1 . $rowhash{'ALIAS'};
-                $rowhash{'FIELD'} = $2;
+                # handle 'function(column)' formatted fields
+                $rowhash{'alias'} = $1 . $rowhash{'alias'};
+                $rowhash{'column'} = $2;
             }
 
             $clause .= ( $clause ? ", " : " " );
-            $clause .= $rowhash{'ALIAS'} . ".";
-            $clause .= $rowhash{'FIELD'} . " ";
-            $clause .= $rowhash{'ORDER'};
+            $clause .= $rowhash{'alias'} . ".";
+            $clause .= $rowhash{'column'} . " ";
+            $clause .= $rowhash{'order'};
         }
     }
 
@@ -986,7 +983,7 @@ sub _order_clause {
 
 =head2 group_by_cols ARRAY_OF_HASHES
 
-Each hash contains the keys ALIAS and FIELD. ALIAS defaults to 'main'
+Each hash contains the keys alias and column. alias defaults to 'main'
 if ignored.
 
 =cut
@@ -999,21 +996,21 @@ sub group_by_cols {
 
     foreach $row (@args) {
         my %rowhash = (
-            ALIAS => 'main',
-            FIELD => undef,
+            alias => 'main',
+            column => undef,
             %$row
         );
-        if ( $rowhash{'FUNCTION'} ) {
+        if ( $rowhash{'function'} ) {
             $clause .= ( $clause ? ", " : " " );
-            $clause .= $rowhash{'FUNCTION'};
+            $clause .= $rowhash{'function'};
 
-        } elsif ( ( $rowhash{'ALIAS'} )
-            and ( $rowhash{'FIELD'} ) )
+        } elsif ( ( $rowhash{'alias'} )
+            and ( $rowhash{'column'} ) )
         {
 
             $clause .= ( $clause ? ", " : " " );
-            $clause .= $rowhash{'ALIAS'} . ".";
-            $clause .= $rowhash{'FIELD'};
+            $clause .= $rowhash{'alias'} . ".";
+            $clause .= $rowhash{'column'};
         }
     }
 
@@ -1038,7 +1035,7 @@ sub _group_clause {
     return ( $self->{'group_clause'} );
 }
 
-=head2 new_alias TABLE_OR_CLASS
+=head2 new_alias table_OR_CLASS
 
 Takes the name of a table or a Jifty::DBI::Record subclass.
 Returns the string of a new Alias for that table, which can be used 
@@ -1087,32 +1084,32 @@ sub _get_alias {
 
 Join instructs Jifty::DBI::Collection to join two tables.  
 
-The standard form takes a param hash with keys ALIAS1, FIELD1, ALIAS2
-and FIELD2. ALIAS1 and ALIAS2 are column aliases obtained from
-$self->new_alias or a $self->limit. FIELD1 and FIELD2 are the fields
-in ALIAS1 and ALIAS2 that should be linked, respectively.  For this
+The standard form takes a param hash with keys alias1, column1, alias2
+and column2. alias1 and alias2 are column aliases obtained from
+$self->new_alias or a $self->limit. column1 and column2 are the fields
+in alias1 and alias2 that should be linked, respectively.  For this
 type of join, this method has no return value.
 
-Supplying the parameter TYPE => 'left' causes Join to preform a left
-join.  in this case, it takes ALIAS1, FIELD1, TABLE2 and
-FIELD2. Because of the way that left joins work, this method needs a
-TABLE for the second field rather than merely an alias.  For this type
+Supplying the parameter type => 'left' causes Join to preform a left
+join.  in this case, it takes alias1, column1, table2 and
+column2. Because of the way that left joins work, this method needs a
+table for the second field rather than merely an alias.  For this type
 of join, it will return the alias generated by the join.
 
-Instead of ALIAS1/FIELD1, it's possible to specify EXPRESSION, to join
-ALIAS2/TABLE2 on an arbitrary expression.
+Instead of alias1/column1, it's possible to specify EXPRESSION, to join
+alias2/table2 on an arbitrary expression.
 
 =cut
 
 sub join {
     my $self = shift;
     my %args = (
-        TYPE   => 'normal',
-        FIELD1 => undef,
-        ALIAS1 => 'main',
-        TABLE2 => undef,
-        FIELD2 => undef,
-        ALIAS2 => undef,
+        type   => 'normal',
+        column1 => undef,
+        alias1 => 'main',
+        table2 => undef,
+        column2 => undef,
+        alias2 => undef,
         @_
     );
 
@@ -1307,11 +1304,11 @@ sub DEBUG {
     return ( $self->{'DEBUG'} );
 }
 
-=head2 column { FIELD => undef } 
+=head2 column { column => undef } 
 
-Specify that we want to load the column  FIELD. 
+Specify that we want to load the column  column. 
 
-Other parameters are TABLE ALIAS AND FUNCTION.
+Other parameters are table alias AND function.
 
 Autrijus and Ruslan owe docs.
 
@@ -1320,15 +1317,15 @@ Autrijus and Ruslan owe docs.
 sub column {
     my $self = shift;
     my %args = (
-        TABLE    => undef,
-        ALIAS    => undef,
-        FIELD    => undef,
-        FUNCTION => undef,
+        table    => undef,
+        alias    => undef,
+        column    => undef,
+        function => undef,
         @_
     );
 
-    my $table = $args{TABLE} || do {
-        if ( my $alias = $args{ALIAS} ) {
+    my $table = $args{table} || do {
+        if ( my $alias = $args{alias} ) {
             $alias =~ s/_\d+$//;
             $alias;
         } else {
@@ -1336,8 +1333,8 @@ sub column {
         }
     };
 
-    my $name = ( $args{ALIAS} || 'main' ) . '.' . $args{FIELD};
-    if ( my $func = $args{FUNCTION} ) {
+    my $name = ( $args{alias} || 'main' ) . '.' . $args{column};
+    if ( my $func = $args{function} ) {
         if ( $func =~ /^DISTINCT\s*COUNT$/i ) {
             $name = "COUNT(DISTINCT $name)";
         }
@@ -1357,7 +1354,7 @@ sub column {
     }
 
     my $column = "col" . @{ $self->{columns} ||= [] };
-    $column = $args{FIELD} if $table eq $self->table and !$args{ALIAS};
+    $column = $args{column} if $table eq $self->table and !$args{alias};
     push @{ $self->{columns} }, "$name AS \L$column";
     return $column;
 }
@@ -1370,12 +1367,12 @@ Specify that we want to load only the columns in LIST
 
 sub columns {
     my $self = shift;
-    $self->column( FIELD => $_ ) for @_;
+    $self->column( column => $_ ) for @_;
 }
 
-=head2 fields TABLE
+=head2 fields table
 
-Return a list of fields in TABLE, lowercased.
+Return a list of fields in table, lowercased.
 
 TODO: Why are they lowercased?
 
@@ -1399,9 +1396,9 @@ sub fields {
         };
 }
 
-=head2 has_field  { TABLE => undef, FIELD => undef }
+=head2 has_field  { table => undef, column => undef }
 
-Returns true if TABLE has field FIELD.
+Returns true if table has field column.
 Return false otherwise
 
 =cut
@@ -1409,17 +1406,17 @@ Return false otherwise
 sub has_field {
     my $self = shift;
     my %args = (
-        FIELD => undef,
-        TABLE => undef,
+        column => undef,
+        table => undef,
         @_
     );
 
-    my $table = $args{TABLE} or die;
-    my $field = $args{FIELD} or die;
+    my $table = $args{table} or die;
+    my $field = $args{column} or die;
     return grep { $_ eq $field } $self->fields($table);
 }
 
-=head2 table [TABLE]
+=head2 table [table]
 
 If called with an argument, sets this collection's table.
 

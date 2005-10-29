@@ -22,7 +22,7 @@ features(
 	  'Class::Accessor' => '',
 	],
 );
-auto_bundle_deps();
+#auto_bundle_deps();
 auto_install();
 &WriteAll;
 

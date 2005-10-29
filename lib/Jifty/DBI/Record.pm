@@ -503,7 +503,7 @@ sub _collection_value {
     return unless UNIVERSAL::isa( $classname, 'Jifty::DBI::Collection' );
 
     my $coll = $classname->new( handle => $self->_handle );
-    $coll->limit( FIELD => $column->by(), VALUE => $self->id );
+    $coll->limit( column => $column->by(), value => $self->id );
     return $coll;
 }
 
@@ -769,9 +769,9 @@ sub __set {
     return ( $ret->return_value );
 }
 
-=head2 _Validate FIELD VALUE
+=head2 _Validate column VALUE
 
-Validate that VALUE will be an acceptable value for FIELD. 
+Validate that value will be an acceptable value for column. 
 
 Currently, this routine does nothing whatsoever. 
 
