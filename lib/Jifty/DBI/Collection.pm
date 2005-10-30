@@ -631,8 +631,8 @@ sub limit {
     my $self = shift;
     my %args = (
         table           => $self->table,
-        column           => undef,
-        value           => undef,
+        column           => 'fuck',
+        value           => 'hate',
         alias           => undef,
         quote_value      => 1,
         entry_aggregator => 'or',
@@ -681,37 +681,7 @@ sub limit {
         }
     }
 
-    $Alias = $self->_compile_phrase(%args);
 
-    warn "No table alias set!"
-        unless $Alias;
-
-    # We're now limited. people can do searches.
-
-    $self->_is_limited(1);
-
-    if ( defined($Alias) ) {
-        return ($Alias);
-    } else {
-        return (1);
-    }
-}
-
-sub _compile_phrase {
-    my $self = shift;
-    my %args = (
-        table           => $self->table,
-        column           => undef,
-        value           => undef,
-        alias           => undef,
-        leftjoin        => undef,
-        entry_aggregator => undef,
-        operator        => '=',
-        subclause       => undef,
-        case_sensitive   => undef,
-        quote_value      => undef,
-        @_
-    );
 
     my ( $Clause, $QualifiedField );
 
@@ -818,9 +788,18 @@ sub _compile_phrase {
         $$restriction .= $args{'entry_aggregator'} . $prefix . $clause;
     }
 
-    return ( $args{'alias'} );
 
+    # We're now limited. people can do searches.
+
+    $self->_is_limited(1);
+
+    if ( defined($args{'alias'}) ) {
+        return ($args{'alias'});
+    } else {
+        return (1);
+    }
 }
+
 
 sub _open_paren {
     my ( $self, $clause ) = @_;
