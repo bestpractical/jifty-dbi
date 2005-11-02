@@ -148,7 +148,7 @@ SKIP: {
 	$users_obj->clean_slate;
 	is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
 	$users_obj->unlimit;
-	$users_obj->group_by_cols({column => 'login'});
+	$users_obj->group_by(column => 'login');
 	$users_obj->order_by(column => 'login', order => 'desc');
 	$users_obj->column(column => 'login');
 	is( $users_obj->count, $count_all, "group by / order by finds right amount");

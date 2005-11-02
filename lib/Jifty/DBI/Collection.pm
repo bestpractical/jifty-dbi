@@ -2,8 +2,6 @@ package Jifty::DBI::Collection;
 
 use strict;
 use vars qw($VERSION);
-use UNIVERSAL::can;
-
 
 =head1 NAME
 
@@ -874,39 +872,65 @@ sub _compile_generic_restrictions {
     }
 }
 
-=head2 order_by PARAMHASH
+# set $self->{$type .'_clause'} to new value
+# redo_search only if new value is really new
+sub _set_clause {
+    my $self = shift;
+    my ($type, $value) = @_;
+    $type .= '_clause';
+    if( ($self->{$type} || '') ne ($value||'') ) {
+        $self->redo_search;
+    }
+    $self->{$type} = $value;
+}
 
-Orders the returned results by alias.column order. (by default 'main.id ASC')
+=head2 order_by_cols DEPRECATED
 
-Takes a paramhash of alias, column and order.  
-alias defaults to main
-C<column> defaults to the primary key of the main table.  Also accepts C<function(column)> format
-order defaults to ASC(ending).  DESC(ending) is also a valid value for order_by
+*DEPRECATED*. Use C<order_by> method.
 
+=cut
+
+sub order_by_cols {
+    require Carp;
+    Carp::cluck("order_by_cols is deprecated, use order_by method");
+    goto &order_by;
+}
+
+=head2 order_by EMPTY|HASH|ARRAY_OF_HASHES
+
+Orders the returned results by column(s) and/or function(s) on column(s).
+
+Takes a paramhash of C<alias>, C<column> and C<order>
+or C<function> and C<order>.
+C<alias> defaults to main.
+C<order> defaults to ASC(ending), DES(cending) is also a valid value.
+C<column> and C<function> have no default values.
+
+Use C<function> field instead of C<alias> and C<column> to order by
+the function value. Note that if you want use a column as argument of
+the function then you have to build correct reference with alias
+in the C<alias.column> format.
+
+Use array of hashes to order by many columns/functions.
+
+The results would be unordered if method called without arguments.
 
 =cut
 
 sub order_by {
     my $self = shift;
-    my %args = (@_);
 
-    $self->order_by_cols( \%args );
-}
-
-=head2 order_by_cols ARRAY
-
-order_by_cols takes an array of paramhashes of the form passed to
-order_by.  The result set is ordered by the items in the array.
-
-=cut
-
-sub order_by_cols {
-    my $self = shift;
     my @args = @_;
-    my $row;
-    my $clause;
+    unless( @args ) {
+        return $self->_set_clause( order => '' );
+    }
 
-    foreach $row (@args) {
+    unless( UNIVERSAL::isa( $args[0], 'HASH' ) ) {
+        @args = { @args };
+    }
+
+    my $clause = '';
+    foreach my $row (@args) {
 
         my %rowhash = (
             alias => 'main',
@@ -920,17 +944,14 @@ sub order_by_cols {
             $rowhash{'order'} = "ASC";
         }
 
-        if (    ( $rowhash{'alias'} )
-            and ( $rowhash{'column'} )
-            and ( $rowhash{'order'} ) )
+        if ( $rowhash{'function'} ) {
+            $clause .= ( $clause ? ", " : " " );
+            $clause .= $rowhash{'function'};
+            $clause .= $rowhash{'order'};
+
+        } elsif ( ( $rowhash{'alias'} )
+            and ( $rowhash{'column'} ) )
         {
-
-            if ( $rowhash{'column'} =~ /^(\w+\()(.*\))$/ ) {
-
-                # handle 'function(column)' formatted fields
-                $rowhash{'alias'} = $1 . $rowhash{'alias'};
-                $rowhash{'column'} = $2;
-            }
 
             $clause .= ( $clause ? ", " : " " );
             $clause .= $rowhash{'alias'} . ".";
@@ -938,13 +959,8 @@ sub order_by_cols {
             $clause .= $rowhash{'order'};
         }
     }
-
-    if ($clause) {
-        $self->{'order_clause'} = "ORDER BY" . $clause;
-    } else {
-        $self->{'order_clause'} = "";
-    }
-    $self->redo_search();
+    $clause = "ORDER BY$clause" if $clause;
+    $self->_set_clause( order => $clause );
 }
 
 =head2 _order_clause
@@ -960,20 +976,50 @@ sub _order_clause {
     return ( $self->{'order_clause'} );
 }
 
-=head2 group_by_cols ARRAY_OF_HASHES
+=head2 group_by_cols DEPRECATED
 
-Each hash contains the keys alias and column. alias defaults to 'main'
-if ignored.
+*DEPRECATED*. Use group_by method.
 
 =cut
 
 sub group_by_cols {
-    my $self = shift;
-    my @args = @_;
-    my $row;
-    my $clause;
+    require Carp;
+    Carp::cluck( "group_by_cols is deprecated, use group_by method" );
+    goto &group_by;
+}
 
-    foreach $row (@args) {
+=head2 group_by_cols EMPTY|HASH|ARRAY_OF_HASHES
+
+Groups the search results by column(s) and/or function(s) on column(s).
+
+Takes a paramhash of C<alias> and C<column> or C<function>.
+C<alias> defaults to main.
+C<column> and C<function> have no default values.
+
+Use C<function> field instead of C<alias> and C<column> to group by
+the function value. Note that if you want use a column as argument
+of the function then you have to build correct reference with alias
+in the C<alias.column> format.
+
+Use array of hashes to group by many columns/functions.
+
+The method is EXPERIMENTAL and subject to change.
+
+=cut
+
+sub group_by {
+    my $self = shift;
+
+    my @args = @_;
+    unless( @args ) {
+        return $self->_set_clause( group => '' );
+    }
+    unless( UNIVERSAL::isa( $args[0], 'HASH' ) ) {
+        @args = { @args };
+    }
+
+    my $clause = '';
+    foreach my $row (@args) {
         my %rowhash = (
             alias => 'main',
             column => undef,
@@ -993,12 +1039,8 @@ sub group_by_cols {
         }
     }
 
-    if ($clause) {
-        $self->{'group_clause'} = "GROUP BY" . $clause;
-    } else {
-        $self->{'group_clause'} = "";
-    }
-    $self->redo_search();
+    $clause = "GROUP BY" . $clause if $clause;
+    return $self->_set_clause( group => $clause );
 }
 
 =head2 _group_clause
