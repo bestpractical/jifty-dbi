@@ -681,7 +681,7 @@ sub limit {
 
 
 
-    my ( $Clause, $QualifiedField );
+    my ( $Clause, $qualified_field );
 
     #TODO: $args{'value'} should take an array of values and generate
     # the proper where clause.
@@ -690,7 +690,7 @@ sub limit {
     #left join criterion.
 
     if (   ( defined $args{'leftjoin'} )
-        && ( !defined $args{'alias'} ) )
+        && ( not defined $args{'alias'} ) )
     {
         $args{'alias'} = $args{'leftjoin'};
     }
@@ -709,13 +709,9 @@ sub limit {
             $args{'alias'} = 'main';
         }
 
-        # {{{ if we're joining, we need to work out the table alias
-
         else {
             $args{'alias'} = $self->new_alias( $args{'table'} );
         }
-
-        # }}}
     }
 
     # }}}
@@ -723,16 +719,15 @@ sub limit {
     # Set this to the name of the field and the alias, unless we've been
     # handed a subclause name
 
-    $QualifiedField = $args{'alias'} . "." . $args{'column'};
+    $qualified_field = $args{'alias'} . "." . $args{'column'};
 
     if ( $args{'subclause'} ) {
         $Clause = $args{'subclause'};
     } else {
-        $Clause = $QualifiedField;
+        $Clause = $qualified_field;
     }
 
-    print STDERR
-        "$self->_generic_restriction QualifiedField=$QualifiedField\n"
+        warn "$self->_generic_restriction qualified_field=$qualified_field\n"
         if ( $self->DEBUG );
 
     my ($restriction);
@@ -757,14 +752,14 @@ sub limit {
     {
 
         unless ( $args{'case_sensitive'} || !$args{'quote_value'} ) {
-            ( $QualifiedField, $args{'operator'}, $args{'value'} )
+            ( $qualified_field, $args{'operator'}, $args{'value'} )
                 = $self->_handle->_make_clause_case_insensitive(
-                $QualifiedField, $args{'operator'}, $args{'value'} );
+                $qualified_field, $args{'operator'}, $args{'value'} );
         }
 
     }
 
-    my $clause = "($QualifiedField $args{'operator'} $args{'value'})";
+    my $clause = "($qualified_field $args{'operator'} $args{'value'})";
 
     # Juju because this should come _AFTER_ the EA
     my $prefix = "";
