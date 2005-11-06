@@ -1460,16 +1460,17 @@ Always returns this collection's table.
 
 =cut
 
-sub set_table {
-    my $self = shift;
-    return $self->table(@_);
-}
-
 sub table {
     my $self = shift;
     $self->{table} = shift if (@_);
     return $self->{table};
 }
+
+=head2 refers_to
+
+Private convenience method needed for the declarative schema generation.
+
+=cut
 
 sub refers_to (@) {
     my $class = shift;
