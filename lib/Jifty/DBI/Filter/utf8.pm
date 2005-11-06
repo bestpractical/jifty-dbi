@@ -32,16 +32,19 @@ sub encode {
     my $self = shift;
 
     my $value_ref = $self->value_ref;
-    return undef unless ( defined( $$value_ref ) );
+    return undef unless ( defined($$value_ref) );
 
-    if( Encode::is_utf8( $$value_ref ) ) {
-        $$value_ref = Encode::encode_utf8( $$value_ref );
-    } else {
+    if ( Encode::is_utf8($$value_ref) ) {
+        $$value_ref = Encode::encode_utf8($$value_ref);
+    }
+    else {
+
         # if value has no utf8 flag but filter on the stack
-	# we do double encoding, and stop on the first bad characters
-	# with FB_QUIET fallback schema. We this schema because we
-	# don't want data grow
-	$$value_ref = Encode::encode_utf8( Encode::decode_utf8( $$value_ref, Encode::FB_QUIET ) );
+        # we do double encoding, and stop on the first bad characters
+        # with FB_QUIET fallback schema. We this schema because we
+        # don't want data grow
+        $$value_ref = Encode::encode_utf8(
+            Encode::decode_utf8( $$value_ref, Encode::FB_QUIET ) );
     }
     return 1;
 }
@@ -59,10 +62,10 @@ sub decode {
     my $self = shift;
 
     my $value_ref = $self->value_ref;
-    return undef unless ( defined( $$value_ref ) );
+    return undef unless ( defined($$value_ref) );
 
-    unless( Encode::is_utf8( $$value_ref ) ) {
-        $$value_ref = Encode::decode_utf8( $$value_ref );
+    unless ( Encode::is_utf8($$value_ref) ) {
+        $$value_ref = Encode::decode_utf8($$value_ref);
     }
     return 1;
 }

@@ -1,9 +1,9 @@
 package Jifty::DBI::Handle;
 use strict;
-use Carp ();
-use DBI ();
+use Carp               ();
+use DBI                ();
 use Class::ReturnValue ();
-use Encode ();
+use Encode             ();
 
 use base qw/Jifty::DBI::HasFilters/;
 
@@ -229,7 +229,7 @@ sub _log_sql_statement {
     my $self      = shift;
     my $statement = shift;
     my $duration  = shift;
-    my @bind = @_;
+    my @bind      = @_;
     push @{ $self->{'StatementLog'} },
         ( [ Time::HiRes::time(), $statement, [@bind], $duration ] );
 
@@ -459,7 +459,8 @@ sub simple_query {
         eval { $executed = $sth->execute(@bind_values) };
     }
     if ( $self->log_sql_statements ) {
-        $self->_log_sql_statement( $QueryString, Time::HiRes::time() - $basetime, @bind_values );
+        $self->_log_sql_statement( $QueryString,
+            Time::HiRes::time() - $basetime, @bind_values );
 
     }
 
@@ -565,21 +566,25 @@ sub database_version {
     my $self = shift;
     my %args = ( short => 1, @_ );
 
-    unless( defined $self->{'database_version'} ) {
+    unless ( defined $self->{'database_version'} ) {
+
         # turn off error handling, store old values to restore later
-        my $re = $self->raise_error; $self->raise_error(0);
-        my $pe = $self->print_error; $self->print_error(0);
+        my $re = $self->raise_error;
+        $self->raise_error(0);
+        my $pe = $self->print_error;
+        $self->print_error(0);
 
         my $statement = "SELECT VERSION()";
-        my $sth = $self->simple_query($statement);
+        my $sth       = $self->simple_query($statement);
 
-	my $ver = '';
-	$ver = ($sth->fetchrow_arrayref->[0] || '') if $sth;
-	$ver =~ /(\d+(?:\.\d+)*(?:-[a-z0-9]+)?)/i;
-	$self->{'database_version'} = $ver;
-	$self->{'database_version_short'} = $1 || $ver;
+        my $ver = '';
+        $ver = ( $sth->fetchrow_arrayref->[0] || '' ) if $sth;
+        $ver =~ /(\d+(?:\.\d+)*(?:-[a-z0-9]+)?)/i;
+        $self->{'database_version'}       = $ver;
+        $self->{'database_version_short'} = $1 || $ver;
 
-        $self->raise_error($re); $self->print_error($pe);
+        $self->raise_error($re);
+        $self->print_error($pe);
     }
 
     return $self->{'database_version_short'} if $args{'short'};
@@ -758,10 +763,10 @@ sub join {
     my %args = (
         collection => undef,
         type       => 'normal',
-        column1     => 'main',
+        column1    => 'main',
         alias1     => undef,
         table2     => undef,
-        column2     => undef,
+        column2    => undef,
         alias2     => undef,
         EXPRESSION => undef,
         @_
@@ -771,11 +776,11 @@ sub join {
 
     my $alias;
 
-#If we're handed in an alias2, we need to go remove it from the
-# Aliases array.  Basically, if anyone generates an alias and then
-# tries to use it in a join later, we want to be smart about creating
-# joins, so we need to go rip it out of the old aliases table and drop
-# it in as an explicit join
+    #If we're handed in an alias2, we need to go remove it from the
+    # Aliases array.  Basically, if anyone generates an alias and then
+    # tries to use it in a join later, we want to be smart about creating
+    # joins, so we need to go rip it out of the old aliases table and drop
+    # it in as an explicit join
     if ( $args{'alias2'} ) {
 
         # this code is slow and wasteful, but it's clear.
@@ -798,9 +803,9 @@ sub join {
             # if we can't do that, can we reverse the join and have it work?
             my $a1 = $args{'alias1'};
             my $f1 = $args{'column1'};
-            $args{'alias1'} = $args{'alias2'};
+            $args{'alias1'}  = $args{'alias2'};
             $args{'column1'} = $args{'column2'};
-            $args{'alias2'} = $a1;
+            $args{'alias2'}  = $a1;
             $args{'column2'} = $f1;
 
             @aliases     = @{ $args{'collection'}->{'aliases'} };
@@ -849,8 +854,7 @@ sub join {
         $criterion = $args{'alias1'} . "." . $args{'column1'};
     }
 
-    $args{'collection'}->{'leftjoins'}{"$alias"}{'alias_string'}
-        = $string;
+    $args{'collection'}->{'leftjoins'}{"$alias"}{'alias_string'} = $string;
     $args{'collection'}->{'leftjoins'}{"$alias"}{'depends_on'}
         = $args{'alias1'};
     $args{'collection'}->{'leftjoins'}{"$alias"}{'criteria'}
@@ -866,10 +870,10 @@ sub _normal_join {
     my %args = (
         collection => undef,
         type       => 'normal',
-        column1     => undef,
+        column1    => undef,
         alias1     => undef,
         table2     => undef,
-        column2     => undef,
+        column2    => undef,
         alias2     => undef,
         @_
     );
@@ -891,9 +895,9 @@ sub _normal_join {
         $sb->Jifty::DBI::Collection::limit(
             entry_aggregator => 'AND',
             quote_value      => 0,
-            alias           => $args{'alias1'},
+            alias            => $args{'alias1'},
             column           => $args{'column1'},
-            value           => $args{'alias2'} . "." . $args{'column2'},
+            value            => $args{'alias2'} . "." . $args{'column2'},
             @_
         );
     }

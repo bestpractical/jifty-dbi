@@ -10,7 +10,7 @@ sub encode {
     my $self = shift;
 
     my $value_ref = $self->value_ref;
-    return undef unless ( defined( $$value_ref ) );
+    return undef unless ( defined($$value_ref) );
 
     my $column = $self->column();
 
@@ -24,14 +24,15 @@ sub encode {
 
     return unless ($truncate_to);    # don't need to truncate
 
-    my $utf8 = Encode::is_utf8( $$value_ref );
+    my $utf8 = Encode::is_utf8($$value_ref);
     {
         use bytes;
-	$$value_ref = substr( $$value_ref, 0, $truncate_to );
+        $$value_ref = substr( $$value_ref, 0, $truncate_to );
     }
-    if( $utf8 ) {
+    if ($utf8) {
+
         # return utf8 flag back, but use Encode::FB_QUIET because
-	# we could broke tail char
+        # we could broke tail char
         $$value_ref = Encode::decode_utf8( $$value_ref, Encode::FB_QUIET );
     }
 }

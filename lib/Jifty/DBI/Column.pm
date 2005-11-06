@@ -7,11 +7,11 @@ use base qw/Class::Accessor Jifty::DBI::HasFilters/;
 use UNIVERSAL::require;
 
 __PACKAGE__->mk_accessors qw/
-    name 
-    type 
-    default 
-    validator 
-    readable writable 
+    name
+    type
+    default
+    validator
+    readable writable
     length
     null
     refers_to by
@@ -21,7 +21,6 @@ __PACKAGE__->mk_accessors qw/
     label hints render_as
     valid_values
     /;
-
 
 =head1 NAME
 
@@ -41,7 +40,7 @@ refers_to readable writable length>.
 
 sub is_numeric {
     my $self = shift;
-    if ($self->type =~ /INT|NUMERIC|DECIMAL|REAL|DOUBLE|FLOAT/i ) {
+    if ( $self->type =~ /INT|NUMERIC|DECIMAL|REAL|DOUBLE|FLOAT/i ) {
         return 1;
     }
     return 0;
@@ -49,7 +48,7 @@ sub is_numeric {
 }
 
 # Aliases for compatibility with searchbuilder code
-*read = \&readable;
+*read  = \&readable;
 *write = \&writable;
 
 1;

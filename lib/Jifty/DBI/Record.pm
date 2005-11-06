@@ -623,12 +623,12 @@ control.
 =cut
 
 sub _value {
-    my $self = shift;
+    my $self   = shift;
     my $column = shift;
-    
-    my $value = $self->__value($column => @_);
+
+    my $value = $self->__value( $column => @_ );
     my $method = "after_$column";
-    $self->$method(\$value) if ($self->can($method));
+    $self->$method( \$value ) if ( $self->can($method) );
     return $value;
 }
 
@@ -648,11 +648,11 @@ sub _set {
         'is_sql_function' => undef,
         @_
     );
-    
-    my $method = "before_set_".$args{column};
-    $self->$method(\%args) if ($self->can($method));
 
-    return $self->__set(%args) ;
+    my $method = "before_set_" . $args{column};
+    $self->$method( \%args ) if ( $self->can($method) );
+
+    return $self->__set(%args);
 
 }
 
@@ -953,9 +953,7 @@ sub create {
     my $self    = shift;
     my %attribs = @_;
 
-
-    $self->before_create(\%attribs) if $self->can('before_create');
-
+    $self->before_create( \%attribs ) if $self->can('before_create');
 
     foreach my $column_name ( keys %attribs ) {
         my $column = $self->column($column_name);
@@ -990,9 +988,9 @@ sub create {
             }
         }
     }
-    my $ret =  $self->_handle->insert( $self->table, %attribs );
+    my $ret = $self->_handle->insert( $self->table, %attribs );
     $self->after_create($ret) if $self->can('after_create');
-    return ( $ret );
+    return ($ret);
 }
 
 =head2 delete
@@ -1006,8 +1004,8 @@ sub delete {
     my $self = shift;
     $self->before_delete() if $self->can('before_delete');
     my $ret = $self->__delete;
-    $self->after_delete(\$ret) if $self->can('after_delete');
-    return($ret);
+    $self->after_delete( \$ret ) if $self->can('after_delete');
+    return ($ret);
 
 }
 
@@ -1055,14 +1053,13 @@ arguably correct.
 sub table {
     my $self = shift;
 
-    if ( not ref($self) )  {
+    if ( not ref($self) ) {
         return $self->_guess_table_name();
     }
     $self->{__table_name} ||= $self->_guess_table_name;
-   
+
     return $self->{__table_name};
 }
-
 
 =head2 _guess_table_name
 
@@ -1071,19 +1068,18 @@ Guesses a table name based on the class's last part.
 
 =cut
 
-sub _guess_table_name  {
+sub _guess_table_name {
     my $self = shift;
-        my $class = ref($self) ? ref($self) : $self ;
-        die "Couldn't turn " . $class . " into a table name"
-            unless ( $class =~ /(?:\:\:)?(\w+)$/ );
-        my $table = $1;
-        $table =~ s/(?<=[a-z])([A-Z]+)/"_" . lc($1)/eg;
-        $table =~ tr/A-Z/a-z/;
-        $table = Lingua::EN::Inflect::PL_N($table);
-    return($table);
+    my $class = ref($self) ? ref($self) : $self;
+    die "Couldn't turn " . $class . " into a table name"
+        unless ( $class =~ /(?:\:\:)?(\w+)$/ );
+    my $table = $1;
+    $table =~ s/(?<=[a-z])([A-Z]+)/"_" . lc($1)/eg;
+    $table =~ tr/A-Z/a-z/;
+    $table = Lingua::EN::Inflect::PL_N($table);
+    return ($table);
 
-    }
-
+}
 
 =head2 _handle
 
@@ -1098,7 +1094,6 @@ sub _handle {
     }
     return ( $self->{'DBIxHandle'} );
 }
-
 
 =for private refers_to
 

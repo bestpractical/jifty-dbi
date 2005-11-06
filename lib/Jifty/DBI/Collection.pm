@@ -267,7 +267,8 @@ sub _distinct_query {
         && $self->{'order_clause'} =~ /(?<!main)\./ )
     {
         $$statementref = "SELECT main.* FROM $$statementref";
-    } else {
+    }
+    else {
         $self->_handle->distinct_query( $statementref, $table );
     }
 }
@@ -296,7 +297,8 @@ sub _is_joined {
     my $self = shift;
     if ( keys( %{ $self->{'leftjoins'} } ) ) {
         return (1);
-    } else {
+    }
+    else {
         return ( @{ $self->{'aliases'} } );
     }
 
@@ -314,7 +316,8 @@ sub _limit_clause {
             $limit_clause .= $self->first_row . ", ";
         }
         $limit_clause .= $self->rows_per_page;
-    } else {
+    }
+    else {
         $limit_clause = "";
     }
     return $limit_clause;
@@ -331,7 +334,8 @@ sub _is_limited {
     my $self = shift;
     if (@_) {
         $self->{'is_limited'} = shift;
-    } else {
+    }
+    else {
         return ( $self->{'is_limited'} );
     }
 }
@@ -355,7 +359,8 @@ sub build_select_query {
     # DISTINCT query only required for multi-table selects
     if ( $self->_is_joined ) {
         $self->_distinct_query( \$QueryString, $self->table );
-    } else {
+    }
+    else {
         $QueryString = "SELECT main.* FROM $QueryString";
     }
 
@@ -389,7 +394,8 @@ sub build_select_count_query {
     # DISTINCT query only required for multi-table selects
     if ( $self->_is_joined ) {
         $QueryString = $self->_handle->distinct_count( \$QueryString );
-    } else {
+    }
+    else {
         $QueryString = "SELECT count(main.id) FROM " . $QueryString;
     }
 
@@ -419,7 +425,8 @@ sub next {
         my $item = ( $self->{'items'}[ $self->{'itemscount'} ] );
         $self->{'itemscount'}++;
         return ($item);
-    } else {    #we've gone through the whole list. reset the count.
+    }
+    else {    #we've gone through the whole list. reset the count.
         $self->goto_first_item();
         return (undef);
     }
@@ -497,14 +504,14 @@ sub items_array_ref {
 }
 
 sub new_item {
-    my $self = shift;
-    my $class =$self->record_class();
+    my $self  = shift;
+    my $class = $self->record_class();
 
     die "Jifty::DBI::Collection needs to be subclassed; override new_item\n"
-      unless $class;
+        unless $class;
 
     $class->require();
-    return $class->new($self->_handle);
+    return $class->new( $self->_handle );
 }
 
 =head2 record_class
@@ -529,7 +536,7 @@ sub record_class {
     if (@_) {
         $self->{record_class} = shift if (@_);
     }
-        elsif (not $self->{record_class}) {
+    elsif ( not $self->{record_class} ) {
         my $class = ref($self);
         $class =~ s/Collection$//;
         $self->{record_class} = $class;
@@ -628,16 +635,16 @@ this search case sensitive
 sub limit {
     my $self = shift;
     my %args = (
-        table           => $self->table,
+        table            => $self->table,
         column           => 'fuck',
-        value           => 'hate',
-        alias           => undef,
+        value            => 'hate',
+        alias            => undef,
         quote_value      => 1,
         entry_aggregator => 'or',
         case_sensitive   => undef,
-        operator        => '=',
-        subclause       => undef,
-        leftjoin        => undef,
+        operator         => '=',
+        subclause        => undef,
+        leftjoin         => undef,
         @_    # get the real argumentlist
     );
 
@@ -650,14 +657,17 @@ sub limit {
 
         #If it's a like, we supply the %s around the search term
         if ( $args{'operator'} =~ /LIKE/i ) {
-            $args{'value'} =  $args{'value'} ;
-        } elsif ( $args{'operator'} =~ /MATCHES/i ) {
-            $args{'value'}    = "%".$args{'value'} . "%";
+            $args{'value'} = $args{'value'};
+        }
+        elsif ( $args{'operator'} =~ /MATCHES/i ) {
+            $args{'value'}    = "%" . $args{'value'} . "%";
             $args{'operator'} = "LIKE";
-        } elsif ( $args{'operator'} =~ /STARTSWITH/i ) {
+        }
+        elsif ( $args{'operator'} =~ /STARTSWITH/i ) {
             $args{'value'}    = $args{'value'} . "%";
             $args{'operator'} = "LIKE";
-        } elsif ( $args{'operator'} =~ /ENDSWITH/i ) {
+        }
+        elsif ( $args{'operator'} =~ /ENDSWITH/i ) {
             $args{'value'}    = "%" . $args{'value'};
             $args{'operator'} = "LIKE";
         }
@@ -678,8 +688,6 @@ sub limit {
             $args{'value'} = $tmp;
         }
     }
-
-
 
     my ( $Clause, $qualified_field );
 
@@ -723,11 +731,12 @@ sub limit {
 
     if ( $args{'subclause'} ) {
         $Clause = $args{'subclause'};
-    } else {
+    }
+    else {
         $Clause = $qualified_field;
     }
 
-        warn "$self->_generic_restriction qualified_field=$qualified_field\n"
+    warn "$self->_generic_restriction qualified_field=$qualified_field\n"
         if ( $self->DEBUG );
 
     my ($restriction);
@@ -738,7 +747,8 @@ sub limit {
     if ( $args{'leftjoin'} ) {
         $restriction = \$self->{'leftjoins'}{ $args{'leftjoin'} }{'criteria'}
             {"$Clause"};
-    } else {
+    }
+    else {
         $restriction = \$self->{'restrictions'}{"$Clause"};
     }
 
@@ -777,22 +787,22 @@ sub limit {
 
         $$restriction = $prefix . $clause;
 
-    } else {
+    }
+    else {
         $$restriction .= $args{'entry_aggregator'} . $prefix . $clause;
     }
-
 
     # We're now limited. people can do searches.
 
     $self->_is_limited(1);
 
-    if ( defined($args{'alias'}) ) {
-        return ($args{'alias'});
-    } else {
+    if ( defined( $args{'alias'} ) ) {
+        return ( $args{'alias'} );
+    }
+    else {
         return (1);
     }
 }
-
 
 sub _open_paren {
     my ( $self, $clause ) = @_;
@@ -805,7 +815,8 @@ sub _close_paren {
     my $restriction = \$self->{'restrictions'}{"$clause"};
     if ( !$$restriction ) {
         $$restriction = " ) ";
-    } else {
+    }
+    else {
         $$restriction .= " ) ";
     }
 }
@@ -823,10 +834,10 @@ sub _where_clause {
     my $self = shift;
     my ( $subclause, $where_clause );
 
-# Go through all the generic restrictions and build up the
-# "generic_restrictions" subclause.  That's the only one that the
-# collection builds itself.  Arguably, the abstraction should be
-# better, but I don't really see where to put it.
+    # Go through all the generic restrictions and build up the
+    # "generic_restrictions" subclause.  That's the only one that the
+    # collection builds itself.  Arguably, the abstraction should be
+    # better, but I don't really see where to put it.
     $self->_compile_generic_restrictions();
 
     #Go through all restriction types. Build the where clause from the
@@ -928,14 +939,15 @@ sub order_by {
     foreach my $row (@args) {
 
         my %rowhash = (
-            alias => 'main',
+            alias  => 'main',
             column => undef,
-            order => 'ASC',
+            order  => 'ASC',
             %$row
         );
         if ( $rowhash{'order'} =~ /^des/i ) {
             $rowhash{'order'} = "DESC";
-        } else {
+        }
+        else {
             $rowhash{'order'} = "ASC";
         }
 
@@ -1016,7 +1028,7 @@ sub group_by {
     my $clause = '';
     foreach my $row (@args) {
         my %rowhash = (
-            alias => 'main',
+            alias  => 'main',
             column => undef,
             %$row
         );
@@ -1024,7 +1036,8 @@ sub group_by {
             $clause .= ( $clause ? ", " : " " );
             $clause .= $rowhash{'function'};
 
-        } elsif ( ( $rowhash{'alias'} )
+        }
+        elsif ( ( $rowhash{'alias'} )
             and ( $rowhash{'column'} ) )
         {
 
@@ -1061,13 +1074,14 @@ a search.
 =cut
 
 sub new_alias {
-    my $self  = shift;
+    my $self = shift;
     my $refers_to = shift || die "Missing parameter";
     my $table;
 
-    if ($refers_to->can('table')) {
+    if ( $refers_to->can('table') ) {
         $table = $refers_to->table;
-    } else {
+    }
+    else {
         $table = $refers_to;
     }
 
@@ -1120,12 +1134,12 @@ alias2/table2 on an arbitrary expression.
 sub join {
     my $self = shift;
     my %args = (
-        type   => 'normal',
+        type    => 'normal',
         column1 => undef,
-        alias1 => 'main',
-        table2 => undef,
+        alias1  => 'main',
+        table2  => undef,
         column2 => undef,
-        alias2 => undef,
+        alias2  => undef,
         @_
     );
 
@@ -1147,7 +1161,8 @@ sub prev_page {
     my $self = shift;
     if ( ( $self->first_row - $self->rows_per_page ) > 1 ) {
         $self->first_row( $self->first_row - $self->rows_per_page );
-    } else {
+    }
+    else {
         $self->first_row(1);
     }
 }
@@ -1158,7 +1173,8 @@ sub goto_page {
 
     if ( $self->rows_per_page ) {
         $self->first_row( 1 + ( $self->rows_per_page * $page ) );
-    } else {
+    }
+    else {
         $self->first_row(1);
     }
 }
@@ -1307,7 +1323,8 @@ sub is_last {
 
     if ( $self->_items_counter == $self->count ) {
         return (1);
-    } else {
+    }
+    else {
         return (0);
     }
 }
@@ -1335,7 +1352,7 @@ sub column {
     my %args = (
         table    => undef,
         alias    => undef,
-        column    => undef,
+        column   => undef,
         function => undef,
         @_
     );
@@ -1344,7 +1361,8 @@ sub column {
         if ( my $alias = $args{alias} ) {
             $alias =~ s/_\d+$//;
             $alias;
-        } else {
+        }
+        else {
             $self->table;
         }
     };
@@ -1363,7 +1381,8 @@ sub column {
         # If we want to call a simple function on the column
         elsif ( $func !~ /\(/ ) {
             $name = "\U$func\E($name)";
-        } else {
+        }
+        else {
             $name = $func;
         }
 
@@ -1423,11 +1442,11 @@ sub has_field {
     my $self = shift;
     my %args = (
         column => undef,
-        table => undef,
+        table  => undef,
         @_
     );
 
-    my $table = $args{table} or die;
+    my $table = $args{table}  or die;
     my $field = $args{column} or die;
     return grep { $_ eq $field } $self->fields($table);
 }
@@ -1455,7 +1474,7 @@ sub refers_to (@) {
     my $class = shift;
     my (%args) = @_;
 
-    return (refers_to => $class, %args);
+    return ( refers_to => $class, %args );
 }
 
 1;

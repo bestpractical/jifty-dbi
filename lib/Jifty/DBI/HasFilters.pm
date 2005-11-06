@@ -5,8 +5,8 @@ use strict;
 
 use base qw/Class::Accessor/;
 __PACKAGE__->mk_accessors qw/
-        input_filters
-	output_filters
+    input_filters
+    output_filters
     /;
 
 =head1 NAME
@@ -40,9 +40,9 @@ then set input filter.
 
 sub input_filters {
     my $self = shift;
-    if( @_ ) { # setting
-        my @values = map { UNIVERSAL::isa($_, 'ARRAY')? @$_: $_ } @_;
-        return $self->_input_filters_accessor( @values );
+    if (@_) {    # setting
+        my @values = map { UNIVERSAL::isa( $_, 'ARRAY' ) ? @$_ : $_ } @_;
+        return $self->_input_filters_accessor(@values);
     }
 
     return grep $_, $self->_input_filters_accessor;
@@ -60,15 +60,15 @@ default list based on the input list.
 
 sub output_filters {
     my $self = shift;
-    if( @_ ) { # setting
-        my @values = map { UNIVERSAL::isa($_, 'ARRAY')? @$_: $_ } @_;
-        $self->_output_filters_accessor( @values );
+    if (@_) {    # setting
+        my @values = map { UNIVERSAL::isa( $_, 'ARRAY' ) ? @$_ : $_ } @_;
+        $self->_output_filters_accessor(@values);
     }
 
     my @values = grep $_, $self->_output_filters_accessor;
     return @values if @values;
 
-    return reverse $self->input_filters
+    return reverse $self->input_filters;
 }
 
 =head1 SEE ALSO

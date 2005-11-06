@@ -129,9 +129,10 @@ sub add_model {
             return $self->_error("Error making new object from $model: $@");
         }
 
-      unless (UNIVERSAL::isa( $new_model, 'Jifty::DBI::Record' )) {
-        return $self->_error(
-            "Didn't get a Jifty::DBI::Record from $model, got $new_model")
+        unless ( UNIVERSAL::isa( $new_model, 'Jifty::DBI::Record' ) ) {
+            return $self->_error(
+                "Didn't get a Jifty::DBI::Record from $model, got $new_model"
+            );
         }
         $model = $new_model;
     }
@@ -185,8 +186,10 @@ sub _db_schema_table_from_model {
     my @columns    = $model->columns;
 
     my @cols;
+
     # The sort here is to make it predictable, so that we can write tests.
-    for my $column ( sort {$a->name cmp $b->name} @columns) {
+    for my $column ( sort { $a->name cmp $b->name } @columns ) {
+
         # Skip foreign keys
         next if defined $column->refers_to and defined $column->by;
         next if defined $column->alias_for_column;
@@ -227,7 +230,6 @@ sub _error {
 }
 
 1;    # Magic true value required at end of module
-
 
 =head1 INCOMPATIBILITIES
 
@@ -296,3 +298,4 @@ SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF
 SUCH DAMAGES.
 
 =cut
+

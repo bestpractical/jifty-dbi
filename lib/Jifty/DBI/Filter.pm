@@ -6,7 +6,6 @@ use base 'Class::Accessor';
 
 __PACKAGE__->mk_accessors(qw(record column value_ref));
 
-
 =head2 new
 
 Takes
@@ -28,15 +27,17 @@ A L<Jifty::DBI::Column> object, whatever sort of column we're working with here.
 
 sub new {
     my $class = shift;
-    my %args = (column => undef,
-                value_ref => undef,
-                @_);
+    my %args  = (
+        column    => undef,
+        value_ref => undef,
+        @_
+    );
     my $self = {};
     bless $self, $class;
-   
-    for ( keys %args) {
-        if ($self->can($_)) {
-            $self->$_($args{$_}); 
+
+    for ( keys %args ) {
+        if ( $self->can($_) ) {
+            $self->$_( $args{$_} );
         }
 
     }
@@ -69,6 +70,5 @@ that data is utf8 clean.
 sub decode {
 
 }
-
 
 1;

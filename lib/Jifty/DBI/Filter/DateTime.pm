@@ -4,7 +4,7 @@ use warnings;
 use strict;
 
 use base qw(Jifty::DBI::Filter);
-use DateTime ();
+use DateTime                   ();
 use DateTime::Format::Strptime ();
 
 =head1 NAME
@@ -32,7 +32,7 @@ sub encode {
 
     return unless UNIVERSAL::isa( $$value_ref, 'DateTime' );
 
-    $$value_ref = $$value_ref->strftime( "%Y-%m-%d %H:%M:%S" );
+    $$value_ref = $$value_ref->strftime("%Y-%m-%d %H:%M:%S");
 
     return 1;
 }
@@ -50,19 +50,19 @@ sub decode {
     my $value_ref = $self->value_ref;
     return unless defined $$value_ref;
 
-    # XXX: Looks like we should use special modules for parsing DT because
-    # different MySQL versions can return DT in different formats(none strict ISO)
-    # Pg has also special format that depends on "european" and
-    #    server time_zone, by default ISO
-    # other DBs may have own formats(Interbase for example can be forced to use special format)
-    # but we need Jifty::DBI::Handle here to get DB type
-    my $parser = DateTime::Format::Strptime->new(
-			pattern => '%Y-%m-%d %H:%M:%S',
-		 );
-    my $dt = $parser->parse_datetime( $$value_ref );
-    if( $dt ) {
+# XXX: Looks like we should use special modules for parsing DT because
+# different MySQL versions can return DT in different formats(none strict ISO)
+# Pg has also special format that depends on "european" and
+#    server time_zone, by default ISO
+# other DBs may have own formats(Interbase for example can be forced to use special format)
+# but we need Jifty::DBI::Handle here to get DB type
+    my $parser
+        = DateTime::Format::Strptime->new( pattern => '%Y-%m-%d %H:%M:%S', );
+    my $dt = $parser->parse_datetime($$value_ref);
+    if ($dt) {
         $$value_ref = $dt;
-    } else {
+    }
+    else {
         return;
     }
 }
