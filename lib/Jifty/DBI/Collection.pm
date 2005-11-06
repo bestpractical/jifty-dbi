@@ -882,9 +882,9 @@ sub _compile_generic_restrictions {
 # redo_search only if new value is really new
 sub _set_clause {
     my $self = shift;
-    my ($type, $value) = @_;
+    my ( $type, $value ) = @_;
     $type .= '_clause';
-    if( ($self->{$type} || '') ne ($value||'') ) {
+    if ( ( $self->{$type} || '' ) ne ( $value || '' ) ) {
         $self->redo_search;
     }
     $self->{$type} = $value;
@@ -927,12 +927,12 @@ sub order_by {
     my $self = shift;
 
     my @args = @_;
-    unless( @args ) {
+    unless (@args) {
         return $self->_set_clause( order => '' );
     }
 
-    unless( UNIVERSAL::isa( $args[0], 'HASH' ) ) {
-        @args = { @args };
+    unless ( UNIVERSAL::isa( $args[0], 'HASH' ) ) {
+        @args = {@args};
     }
 
     my $clause = '';
@@ -956,7 +956,8 @@ sub order_by {
             $clause .= $rowhash{'function'};
             $clause .= $rowhash{'order'};
 
-        } elsif ( ( $rowhash{'alias'} )
+        }
+        elsif ( ( $rowhash{'alias'} )
             and ( $rowhash{'column'} ) )
         {
 
@@ -991,7 +992,7 @@ sub _order_clause {
 
 sub group_by_cols {
     require Carp;
-    Carp::cluck( "group_by_cols is deprecated, use group_by method" );
+    Carp::cluck("group_by_cols is deprecated, use group_by method");
     goto &group_by;
 }
 
@@ -1018,11 +1019,11 @@ sub group_by {
     my $self = shift;
 
     my @args = @_;
-    unless( @args ) {
+    unless (@args) {
         return $self->_set_clause( group => '' );
     }
-    unless( UNIVERSAL::isa( $args[0], 'HASH' ) ) {
-        @args = { @args };
+    unless ( UNIVERSAL::isa( $args[0], 'HASH' ) ) {
+        @args = {@args};
     }
 
     my $clause = '';
