@@ -768,7 +768,7 @@ sub join {
         table2     => undef,
         column2    => undef,
         alias2     => undef,
-        EXPRESSION => undef,
+        expression => undef,
         @_
     );
 
@@ -847,14 +847,16 @@ sub join {
     }
 
     my $criterion;
-    if ( $args{'EXPRESSION'} ) {
-        $criterion = $args{'EXPRESSION'};
+    if ( $args{'expression'} ) {
+        $criterion = $args{'expression'};
     }
     else {
         $criterion = $args{'alias1'} . "." . $args{'column1'};
     }
 
     $args{'collection'}->{'leftjoins'}{"$alias"}{'alias_string'} = $string;
+    $args{'collection'}->{'leftjoins'}{"$alias"}{'entry_aggregator'}
+          = $args{'entry_aggregator'} if ( $args{'entry_aggregator'} );
     $args{'collection'}->{'leftjoins'}{"$alias"}{'depends_on'}
         = $args{'alias1'};
     $args{'collection'}->{'leftjoins'}{"$alias"}{'criteria'}
@@ -929,12 +931,15 @@ sub _build_joins {
         if ( !$sb->{'leftjoins'}{$join}{'depends_on'}
             || $seen_aliases{ $sb->{'leftjoins'}{$join}{'depends_on'} } )
         {
-            $join_clause = "(" . $join_clause;
-            $join_clause
-                .= $sb->{'leftjoins'}{$join}{'alias_string'} . " ON (";
-            $join_clause .= CORE::join( ') AND( ',
-                values %{ $sb->{'leftjoins'}{$join}{'criteria'} } );
-            $join_clause .= ")) ";
+            $join_clause .= $sb->{'leftjoins'}{$join}{'alias_string'} . " ON ";
+          
+            my @criteria = values %{ $sb->{'leftjoins'}{$join}{'criteria'} } ;
+            my $entry_aggregator =  $sb->{'leftjoins'}{$join}{'entry_aggregator'}  || 'AND';
+            my $criteria = CORE::join( " $entry_aggregator ", map { " ( $_ ) " } @criteria);  
+
+            $join_clause .= "( ".$criteria. " ) ";
+            $join_clause = "(" .$join_clause .")";
+
 
             $seen_aliases{$join} = 1;
         }
