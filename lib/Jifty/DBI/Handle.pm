@@ -11,7 +11,7 @@ use vars qw($VERSION %DBIHandle $PrevHandle $DEBUG $TRANSDEPTH);
 
 $TRANSDEPTH = 0;
 
-$VERSION = '$Version$';
+$VERSION = '0.01';
 
 =head1 NAME
 
@@ -326,12 +326,12 @@ sub insert {
         push @bind, $value;
     }
 
-    my $QueryString = "INSERT INTO $table ("
+    my $query_string = "INSERT INTO $table ("
         . CORE::join( ", ", @cols )
         . ") VALUES " . "("
         . CORE::join( ", ", @vals ) . ")";
 
-    my $sth = $self->simple_query( $QueryString, @bind );
+    my $sth = $self->simple_query( $query_string, @bind );
     return ($sth);
 }
 
@@ -411,23 +411,23 @@ Execute the SQL string specified in QUERY_STRING
 
 sub simple_query {
     my $self        = shift;
-    my $QueryString = shift;
+    my $query_string = shift;
     my @bind_values;
     @bind_values = (@_) if (@_);
 
-    my $sth = $self->dbh->prepare($QueryString);
+    my $sth = $self->dbh->prepare($query_string);
     unless ($sth) {
         if ($DEBUG) {
-            die "$self couldn't prepare the query '$QueryString'"
+            die "$self couldn't prepare the query '$query_string'"
                 . $self->dbh->errstr . "\n";
         }
         else {
-            warn "$self couldn't prepare the query '$QueryString'"
+            warn "$self couldn't prepare the query '$query_string'"
                 . $self->dbh->errstr . "\n";
             my $ret = Class::ReturnValue->new();
             $ret->as_error(
                 errno   => '-1',
-                message => "Couldn't prepare the query '$QueryString'."
+                message => "Couldn't prepare the query '$query_string'."
                     . $self->dbh->errstr,
                 do_backtrace => undef
             );
@@ -459,24 +459,24 @@ sub simple_query {
         eval { $executed = $sth->execute(@bind_values) };
     }
     if ( $self->log_sql_statements ) {
-        $self->_log_sql_statement( $QueryString,
+        $self->_log_sql_statement( $query_string,
             Time::HiRes::time() - $basetime, @bind_values );
 
     }
 
     if ( $@ or !$executed ) {
         if ($DEBUG) {
-            die "$self couldn't execute the query '$QueryString'"
+            die "$self couldn't execute the query '$query_string'"
                 . $self->dbh->errstr . "\n";
 
         }
         else {
-            Carp::cluck "$self couldn't execute the query '$QueryString'";
+            Carp::cluck "$self couldn't execute the query '$query_string'";
 
             my $ret = Class::ReturnValue->new();
             $ret->as_error(
                 errno   => '-1',
-                message => "Couldn't execute the query '$QueryString'"
+                message => "Couldn't execute the query '$query_string'"
                     . $self->dbh->errstr,
                 do_backtrace => undef
             );

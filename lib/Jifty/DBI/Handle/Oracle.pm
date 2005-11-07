@@ -62,19 +62,19 @@ sub insert {
     # Oracle Hack to replace non-supported mysql_rowid call
 
     my %attribs = @_;
-    my ( $unique_id, $QueryString );
+    my ( $unique_id, $query_string );
 
     if ( $attribs{'Id'} || $attribs{'id'} ) {
         $unique_id = ( $attribs{'Id'} ? $attribs{'Id'} : $attribs{'id'} );
     }
     else {
 
-        $QueryString = "SELECT " . $table . "_seq.nextval FROM DUAL";
+        $query_string = "SELECT " . $table . "_seq.nextval FROM DUAL";
 
-        $sth = $self->simple_query($QueryString);
+        $sth = $self->simple_query($query_string);
         if ( !$sth ) {
             if ($main::debug) {
-                die "Error with $QueryString";
+                die "Error with $query_string";
             }
             else {
                 return (undef);
@@ -97,7 +97,7 @@ sub insert {
 
     unless ($sth) {
         if ($main::debug) {
-            die "Error with $QueryString: " . $self->dbh->errstr;
+            die "Error with $query_string: " . $self->dbh->errstr;
         }
         else {
             return (undef);
