@@ -386,12 +386,11 @@ Builds a SELECT statement to find the number of rows this collection
 sub build_select_count_query {
     my $self = shift;
 
-    # TODO: refactor DoSearch and do_count such that we only have one
-    # place where we build most of the querystring
     my $QueryString = $self->_build_joins . " ";
 
-    $QueryString .= $self->_where_clause . " "
-        if ( $self->_is_limited > 0 );
+    if ( $self->_is_limited ) {
+        $QueryString .= $self->_where_clause . " "
+    }
 
     # DISTINCT query only required for multi-table selects
     if ( $self->_is_joined ) {
