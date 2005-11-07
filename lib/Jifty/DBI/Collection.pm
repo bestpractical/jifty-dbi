@@ -114,7 +114,6 @@ sub clean_slate {
     $self->{'order'}            = "";
     $self->{'alias_count'}      = 0;
     $self->{'first_row'}        = 0;
-    $self->{'must_redo_search'} = 1;
     $self->{'show_rows'}        = 0;
     @{ $self->{'aliases'} } = ();
 
