@@ -589,12 +589,12 @@ sub __value {
 
     if ( !$self->{'fetched'}{ $column->name } and my $id = $self->id() ) {
         my $pkey        = $self->_primary_key();
-        my $QueryString = "SELECT "
+        my $query_string = "SELECT "
             . $column->name
             . " FROM "
             . $self->table
             . " WHERE $pkey = ?";
-        my $sth = $self->_handle->simple_query( $QueryString, $id );
+        my $sth = $self->_handle->simple_query( $query_string, $id );
         my ($value) = eval { $sth->fetchrow_array() };
         warn $@ if $@;
 
@@ -856,11 +856,11 @@ sub load_by_cols {
         }
     }
 
-    my $QueryString = "SELECT  * FROM "
+    my $query_string = "SELECT  * FROM "
         . $self->table
         . " WHERE "
         . join( ' AND ', @phrases );
-    return ( $self->_load_from_sql( $QueryString, @bind ) );
+    return ( $self->_load_from_sql( $query_string, @bind ) );
 }
 
 =head2 load_by_primary_keys 
@@ -908,10 +908,10 @@ Load a record as the result of an SQL statement
 
 sub _load_from_sql {
     my $self        = shift;
-    my $QueryString = shift;
+    my $query_string = shift;
     my @bind_values = (@_);
 
-    my $sth = $self->_handle->simple_query( $QueryString, @bind_values );
+    my $sth = $self->_handle->simple_query( $query_string, @bind_values );
 
     #TODO this only gets the first row. we should check if there are more.
 
@@ -1025,8 +1025,8 @@ sub __delete {
     }
 
     $where =~ s/AND\s$//;
-    my $QueryString = "DELETE FROM " . $self->table . ' ' . $where;
-    my $return      = $self->_handle->simple_query( $QueryString, @bind );
+    my $query_string = "DELETE FROM " . $self->table . ' ' . $where;
+    my $return      = $self->_handle->simple_query( $query_string, @bind );
 
     if ( UNIVERSAL::isa( 'Class::ReturnValue', $return ) ) {
         return ($return);
