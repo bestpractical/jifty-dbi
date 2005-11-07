@@ -243,6 +243,8 @@ sub _apply_limits {
     my $statementref = shift;
     $self->_handle->apply_limits( $statementref, $self->rows_per_page,
         $self->first_row );
+
+    # XXX TODO: refactor me, once we figure out the last place that columns could be set
     $$statementref =~ s/main\.\*/CORE::join(', ', @{$self->{columns}})/eg
         if $self->{columns}
         and @{ $self->{columns} };
@@ -352,11 +354,12 @@ sub build_select_query {
     # The initial SELECT or SELECT DISTINCT is decided later
 
     my $QueryString = $self->_build_joins . " ";
-    $QueryString .= $self->_where_clause . " "
-        if ( $self->_is_limited > 0 );
 
-    # DISTINCT query only required for multi-table selects
+    if ( $self->_is_limited ) { 
+        $QueryString .= $self->_where_clause . " "
+    }
     if ( $self->_is_joined ) {
+        # DISTINCT query only required for multi-table selects
         $self->_distinct_query( \$QueryString, $self->table );
     }
     else {
@@ -831,7 +834,7 @@ sub _add_subclause {
 
 sub _where_clause {
     my $self = shift;
-    my ( $subclause, $where_clause );
+    my  $where_clause = '';
 
     # Go through all the generic restrictions and build up the
     # "generic_restrictions" subclause.  That's the only one that the
@@ -841,19 +844,13 @@ sub _where_clause {
 
     #Go through all restriction types. Build the where clause from the
     #Various subclauses.
-    foreach $subclause ( keys %{ $self->{'subclauses'} } ) {
-
-        # Now, build up the where clause
-        if ( defined($where_clause) ) {
-            $where_clause .= " AND ";
-        }
-
-        warn "$self $subclause doesn't exist"
-            if ( !defined $self->{'subclauses'}{"$subclause"} );
-        $where_clause .= $self->{'subclauses'}{"$subclause"};
+    
+    my @subclauses;
+    foreach my $subclause ( keys %{ $self->{'subclauses'} } ) {
+        push @subclauses, $self->{'subclauses'}{"$subclause"};
     }
 
-    $where_clause = " WHERE " . $where_clause if ( $where_clause ne '' );
+    $where_clause = " WHERE " . join ( ' AND ', @subclauses) if ( @subclauses  );
 
     return ($where_clause);
 
