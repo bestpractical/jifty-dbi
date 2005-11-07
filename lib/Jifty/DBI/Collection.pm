@@ -158,12 +158,12 @@ need results (such as a call to L</next>).
 sub _do_search {
     my $self = shift;
 
-    my $QueryString = $self->build_select_query();
+    my $query_string = $self->build_select_query();
 
     # If we're about to redo the search, we need an empty set of items
     delete $self->{'items'};
 
-    my $records = $self->_handle->simple_query($QueryString);
+    my $records = $self->_handle->simple_query($query_string);
     return 0 unless $records;
 
     while ( my $row = $records->fetchrow_hashref() ) {
@@ -214,8 +214,8 @@ sub _do_count {
     my $self = shift;
     my $all  = shift || 0;
 
-    my $QueryString = $self->build_select_count_query();
-    my $records     = $self->_handle->simple_query($QueryString);
+    my $query_string = $self->build_select_count_query();
+    my $records     = $self->_handle->simple_query($query_string);
     return 0 unless $records;
 
     my @row = $records->fetchrow_array();
@@ -353,26 +353,26 @@ sub build_select_query {
 
     # The initial SELECT or SELECT DISTINCT is decided later
 
-    my $QueryString = $self->_build_joins . " ";
+    my $query_string = $self->_build_joins . " ";
 
     if ( $self->_is_limited ) { 
-        $QueryString .= $self->_where_clause . " "
+        $query_string .= $self->_where_clause . " "
     }
     if ( $self->_is_joined ) {
         # DISTINCT query only required for multi-table selects
-        $self->_distinct_query( \$QueryString, $self->table );
+        $self->_distinct_query( \$query_string, $self->table );
     }
     else {
-        $QueryString = "SELECT main.* FROM $QueryString";
+        $query_string = "SELECT main.* FROM $query_string";
     }
 
-    $QueryString .= ' ' . $self->_group_clause . ' ';
+    $query_string .= ' ' . $self->_group_clause . ' ';
 
-    $QueryString .= ' ' . $self->_order_clause . ' ';
+    $query_string .= ' ' . $self->_order_clause . ' ';
 
-    $self->_apply_limits( \$QueryString );
+    $self->_apply_limits( \$query_string );
 
-    return ($QueryString)
+    return ($query_string)
 
 }
 
@@ -386,21 +386,21 @@ Builds a SELECT statement to find the number of rows this collection
 sub build_select_count_query {
     my $self = shift;
 
-    my $QueryString = $self->_build_joins . " ";
+    my $query_string = $self->_build_joins . " ";
 
     if ( $self->_is_limited ) {
-        $QueryString .= $self->_where_clause . " "
+        $query_string .= $self->_where_clause . " "
     }
 
     # DISTINCT query only required for multi-table selects
     if ( $self->_is_joined ) {
-        $QueryString = $self->_handle->distinct_count( \$QueryString );
+        $query_string = $self->_handle->distinct_count( \$query_string );
     }
     else {
-        $QueryString = "SELECT count(main.id) FROM " . $QueryString;
+        $query_string = "SELECT count(main.id) FROM " . $query_string;
     }
 
-    return ($QueryString);
+    return ($query_string);
 }
 
 =head2 next
