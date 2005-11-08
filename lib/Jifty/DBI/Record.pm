@@ -97,102 +97,95 @@ The table looks like so:
 
 First, let's define our record class in a new module named "Simple.pm".
 
-  000: package Simple; 
-  001: use Jifty::DBI::Record;
-  002: @ISA = (Jifty::DBI::Record);
 
-This should be pretty obvious, name the package, import ::Record and then 
-define ourself as a subclass of ::Record. 
+  use warnings;
+  use strict;
+   
+  package Simple::Schema;
+  use Jifty::DBI::Schema;
+  
+  column foo => type is 'text';
+  column bar => type is 'text';
+  
+  package Simple; 
+  use base qw(Jifty::DBI::Record);
 
-  013: 
-  014: sub schema {
-  015:   {  
-  016:     Foo => { 'read'  => 1 },
-  017:     Bar => { 'read'  => 1, 'write' => 1  },
-  018:     Id  => { 'read'  => 1 }
-  019:   };
-  020: }
+  # your custom code goes here.
 
-  XXX TODO add types
-
-What's happening might be obvious, but just in case this method is going to 
-return a reference to a hash. That hash is where our columns are defined, 
-as well as what type of operations are acceptable.  
-
-  021: 
-  022: 1;             
-
+  1;
 Like all perl modules, this needs to end with a true value. 
 
 Now, on to the code that will actually *do* something with this object. 
 This code would be placed in your Perl script.
 
-  000: use Jifty::DBI::Handle;
-  001: use Simple;
+  use Jifty::DBI::Handle;
+  use Simple;
 
 Use two packages, the first is where I get the DB handle from, the latter 
 is the object I just created. 
 
-  002: 
-  003: my $handle = Jifty::DBI::Handle->new();
-  004:    $handle->Connect( 'Driver'   => 'Pg',
-  005: 		          'Database' => 'test', 
-  006: 		          'Host'     => 'reason',
-  007: 		          'User'     => 'mhat',
-  008: 		          'Password' => '');
-
+  
+  my $handle = Jifty::DBI::Handle->new();
+  $handle->Connect(
+      Driver   => 'Pg',
+      Database => 'test',
+      Host     => 'reason',
+      User     => 'mhat',
+      Password => ''
+  );
+  
 Creates a new Jifty::DBI::Handle, and then connects to the database using 
 that handle.  Pretty straight forward, the password '' is what I use 
 when there is no password.  I could probably leave it blank, but I find 
 it to be more clear to define it.
 
-  009: 
-  010: my $s = Simple->new($handle);
-  011: 
-  012: $s->load_by_cols(id=>1); 
+ 
+ my $s = Simple->new($handle);
+ 
+ $s->load_by_cols(id=>1); 
 
 
 =over
 
 =item load_by_cols
 
-Takes a hash of columns=>values and returns the *first* to match. 
+Takes a hash of column =>value pairs and returns the *first* to match. 
 First is probably lossy across databases vendors. 
 
 =item load_from_hash
 
-Populates this record with data from a Jifty::DBI.  I'm 
+Populates this record with data from a Jifty::DBI::Collection.  I'm 
 currently assuming that Jifty::DBI is what we use in 
 cases where we expect > 1 record.  More on this later.
 
 =back
 
 Now that we have a populated object, we should do something with it! ::Record
-automagically generates accessos and mutators for us, so all we need to do 
-is call the methods.  accessors are named <Field>(), and Mutators are named 
-Set<Field>($).  On to the example, just appending this to the code from 
+automagically generates accessors and mutators for us, so all we need to do 
+is call the methods.  accessors are named C<column>(), and Mutators are named 
+C<set_field>($).  On to the example, just appending this to the code from 
 the last example.
 
-  013:
-  014: print "ID  : ", $s->Id(),  "\n";
-  015: print "Foo : ", $s->Foo(), "\n";
-  016: print "Bar : ", $s->Bar(), "\n";
+
+ print "ID  : ", $s->id(),  "\n";
+ print "Foo : ", $s->foo(), "\n";
+ print "Bar : ", $s->bar(), "\n";
 
 Thats all you have to to get the data, now to change the data!
 
-  017:
-  018: $s->SetBar('NewBar');
+
+ $s->set_bar('NewBar');
 
 Pretty simple! Thats really all there is to it.  Set<Field>($) returns 
 a boolean and a string describing the problem.  Lets look at an example of
 what will happen if we try to set a 'Id' which we previously defined as 
 read only. 
 
-  019: my ($res, $str) = $s->SetId('2');
-  020: if (! $res) {
-  021:   ## Print the error!
-  022:   print "$str\n";
-  023: } 
+ my ($res, $str) = $s->set_id('2');
+ if (! $res) {
+   ## Print the error!
+   print "$str\n";
+ } 
 
 The output will be:
 
@@ -206,22 +199,20 @@ Finally, adding a removing records from the database.  ::Record provides a
 Create method which simply takes a hash of key=>value pairs.  The keys 
 exactly	map to database fields. 
 
-  023: ## Get a new record object.
-  024: $s1 = Simple->new($handle);
-  025: $s1->Create('Id'  => 4,
-  026: 	           'Foo' => 'Foooooo', 
-  027: 	           'Bar' => 'Barrrrr');
+ ## Get a new record object.
+ $s1 = Simple->new($handle);
+ my ($id, $status_msg) = $s1->create(id  => 4,
+ 	           foo => 'Foooooo', 
+ 	           bar => 'Barrrrr');
 
 Poof! A new row in the database has been created!  Now lets delete the 
 object! 
 
-  028:
-  029: $s1 = undef;
-  030: $s1 = Simple->new($handle);
-  031: $s1->load_by_cols(id=>4);
-  032: $s1->Delete();
+ my $s2 = Simple->new($handle);
+ $s2->load_by_cols(id=>4);
+ $s2->delete();
 
-And its gone. 
+And it's gone. 
 
 For simple use, thats more or less all there is to it.  In the future, I hope to exapand 
 this HowTo to discuss using container classes,  overloading, and what 
