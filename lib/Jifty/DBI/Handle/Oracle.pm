@@ -175,12 +175,12 @@ Oracle implementation only supports ORA_CLOB types (112).
 
 sub blob_params {
     my $self  = shift;
-    my $field = shift;
+    my $column = shift;
 
     #my $type = shift;
     # Don't assign to key 'value' as it is defined later.
     return (
-        {   ora_field => $field,
+        {   ora_column => $column,
             ora_type  => ORA_CLOB,
         }
     );

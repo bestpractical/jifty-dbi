@@ -9,7 +9,7 @@ use DateTime::Format::Strptime ();
 
 =head1 NAME
 
-Jifty::DBI::Filter::DateTime - DateTime object wrapper around date fields
+Jifty::DBI::Filter::DateTime - DateTime object wrapper around date columns
 
 =head1 DESCRIPTION
 

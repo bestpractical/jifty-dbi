@@ -129,7 +129,7 @@ sub AUTOLOAD {
         goto &$AUTOLOAD;
     }
     elsif ( $action eq 'write' ) {
-        return ( 0, 'Immutable field' ) unless $column->writable;
+        return ( 0, 'Immutable column' ) unless $column->writable;
 
         if ( UNIVERSAL::isa( $column->refers_to, "Jifty::DBI::Record" ) ) {
             *{$AUTOLOAD} = sub {
@@ -368,7 +368,7 @@ sub writable_attributes {
 
 =head2 __value
 
-Takes a field name and returns that field's value. Subclasses should
+Takes a column name and returns that column's value. Subclasses should
 never override __value.
 
 =cut
@@ -468,11 +468,6 @@ sub __set {
         'is_sql_function' => undef,
         @_
     );
-
-    if ( $args{'field'} ) {
-        Carp::cluck("field in ->set is deprecated");
-        $args{'column'} = delete $args{'field'};
-    }
 
     my $ret = Class::ReturnValue->new();
 
@@ -584,7 +579,7 @@ If it succeeds (which is always the case right now), returns true. Otherwise ret
 
 sub _validate {
     my $self  = shift;
-    my $field = shift;
+    my $column = shift;
     my $value = shift;
 
  #Check type of input
@@ -677,7 +672,7 @@ sub load_by_primary_keys {
 
     my %cols = ();
     foreach ( @{ $self->_primary_keys } ) {
-        return ( 0, "Missing PK field: '$_'" ) unless defined $data->{$_};
+        return ( 0, "Missing PK column: '$_'" ) unless defined $data->{$_};
         $cols{$_} = $data->{$_};
     }
     return ( $self->load_by_cols(%cols) );

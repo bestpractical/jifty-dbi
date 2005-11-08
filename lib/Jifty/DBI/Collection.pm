@@ -690,7 +690,7 @@ sub limit {
         }
     }
 
-    my ( $Clause, $qualified_field );
+    my ( $Clause, $qualified_column );
 
     #TODO: $args{'value'} should take an array of values and generate
     # the proper where clause.
@@ -725,19 +725,19 @@ sub limit {
 
     # }}}
 
-    # Set this to the name of the field and the alias, unless we've been
+    # Set this to the name of the column and the alias, unless we've been
     # handed a subclause name
 
-    $qualified_field = $args{'alias'} . "." . $args{'column'};
+    $qualified_column = $args{'alias'} . "." . $args{'column'};
 
     if ( $args{'subclause'} ) {
         $Clause = $args{'subclause'};
     }
     else {
-        $Clause = $qualified_field;
+        $Clause = $qualified_column;
     }
 
-    warn "$self->_generic_restriction qualified_field=$qualified_field\n"
+    warn "$self->_generic_restriction qualified_column=$qualified_column\n"
         if ( $self->DEBUG );
 
     my ($restriction);
@@ -763,14 +763,14 @@ sub limit {
     {
 
         unless ( $args{'case_sensitive'} || !$args{'quote_value'} ) {
-            ( $qualified_field, $args{'operator'}, $args{'value'} )
+            ( $qualified_column, $args{'operator'}, $args{'value'} )
                 = $self->_handle->_make_clause_case_insensitive(
-                $qualified_field, $args{'operator'}, $args{'value'} );
+                $qualified_column, $args{'operator'}, $args{'value'} );
         }
 
     }
 
-    my $clause = "($qualified_field $args{'operator'} $args{'value'})";
+    my $clause = "($qualified_column $args{'operator'} $args{'value'})";
 
     # Juju because this should come _AFTER_ the EA
     my $prefix = "";
@@ -1370,15 +1370,15 @@ sub columns {
     $self->column( column => $_ ) for @_;
 }
 
-=head2 fields table
+=head2 columns_in_db table
 
-Return a list of fields in table, lowercased.
+Return a list of columns in table, lowercased.
 
 TODO: Why are they lowercased?
 
 =cut
 
-sub fields {
+sub columns_in_db {
     my $self  = shift;
     my $table = shift;
 
@@ -1396,14 +1396,14 @@ sub fields {
         };
 }
 
-=head2 has_field  { table => undef, column => undef }
+=head2 has_column  { table => undef, column => undef }
 
-Returns true if table has field column.
+Returns true if table has column column.
 Return false otherwise
 
 =cut
 
-sub has_field {
+sub has_column {
     my $self = shift;
     my %args = (
         column => undef,
@@ -1412,8 +1412,8 @@ sub has_field {
     );
 
     my $table = $args{table}  or die;
-    my $field = $args{column} or die;
-    return grep { $_ eq $field } $self->fields($table);
+    my $column = $args{column} or die;
+    return grep { $_ eq $column } $self->columns_in_db($table);
 }
 
 =head2 table [table]

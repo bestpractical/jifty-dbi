@@ -143,7 +143,7 @@ cases where we expect > 1 record.  More on this later.
 Now that we have a populated object, we should do something with it! ::Record
 automagically generates accessors and mutators for us, so all we need to do 
 is call the methods.  accessors are named C<column>(), and Mutators are named 
-C<set_field>($).  On to the example, just appending this to the code from 
+C<set_column>($).  On to the example, just appending this to the code from 
 the last example.
 
 
@@ -169,7 +169,7 @@ read only.
 
 The output will be:
 
-  >> Immutable field
+  >> Immutable column
 
 Currently Set<Field> updates the data in the database as soon as you call
 it.  In the future I hope to extend ::Record to better support transactional
@@ -177,7 +177,7 @@ operations, such that updates will only happen when "you" say so.
 
 Finally, adding a removing records from the database.  ::Record provides a 
 Create method which simply takes a hash of key=>value pairs.  The keys 
-exactly	map to database fields. 
+exactly	map to database columns. 
 
  ## Get a new record object.
  $s1 = Simple->new($handle);

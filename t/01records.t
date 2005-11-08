@@ -36,8 +36,8 @@ SKIP: {
 # _accessible testings
 	is( $rec->_accessible('id' => 'read'), 1, 'id is accessible for read' );
 	is( $rec->_accessible('id' => 'write'), 0, 'id is not accessible for write' );
-	is( $rec->_accessible('id'), undef, "any field is not accessible in undefined mode" );
-	is( $rec->_accessible('unexpected_field' => 'read'), undef, "field doesn't exist and can't be accessible for read" );
+	is( $rec->_accessible('id'), undef, "any column is not accessible in undefined mode" );
+	is( $rec->_accessible('unexpected_column' => 'read'), undef, "column doesn't exist and can't be accessible for read" );
 
 	is_deeply( [sort($rec->readable_attributes)], [sort qw(employee_id id name phone)], 'readable attributes' );
 	is_deeply( [sort($rec->writable_attributes)], [sort qw(employee_id name phone)], 'writable attributes' );
@@ -56,21 +56,21 @@ SKIP: {
 	ok($val, $msg) ;
 	is($rec->name, 'Obra', "We did actually change the name");
 
-# Validate immutability of the field id
+# Validate immutability of the column id
 	($val, $msg) = $rec->set_id( $rec->id + 1 );
 	ok(!$val, $msg);
-	is($msg, 'Immutable field', 'id is immutable field');
+	is($msg, 'Immutable column', 'id is immutable column');
 	is($rec->id, $id, "The record still has its id");
 
-# Check some non existant field
-	ok( !eval{ $rec->some_unexpected_field }, "The record has no 'some_unexpected_field'");
+# Check some non existant column
+	ok( !eval{ $rec->some_unexpected_column }, "The record has no 'some_unexpected_column'");
 	{
 		# test produce DBI warning
 		local $SIG{__WARN__} = sub {return};
-		is( $rec->_value( 'some_unexpected_field' ), undef, "The record has no 'some_unexpected_field'");
+		is( $rec->_value( 'some_unexpected_column' ), undef, "The record has no 'some_unexpected_column'");
 	}
-	ok (!eval { $rec->set_some_unexpected_field( 'foo' )}, "Can't call nonexistent fields");
-	($val, $msg) = $rec->_set(column =>'some_unexpected_field', value =>'foo');
+	ok (!eval { $rec->set_some_unexpected_column( 'foo' )}, "Can't call nonexistent columns");
+	($val, $msg) = $rec->_set(column =>'some_unexpected_column', value =>'foo');
 	ok(!$val, "$msg");
 
 
@@ -104,8 +104,8 @@ SKIP: {
 	$newrec = TestApp::Address->new($handle);
 	($val, $msg) = $newrec->_load_from_sql('SELECT id FROM addresses WHERE id = ?', $newid);
 	is($val, 1, 'found object');
-	is($newrec->name, '12345678901234', "autoloaded not prefetched field");
-	is($newrec->employee_id, '1234567890', "autoloaded not prefetched field");
+	is($newrec->name, '12345678901234', "autoloaded not prefetched column");
+	is($newrec->employee_id, '1234567890', "autoloaded not prefetched column");
 
 # _load_from_sql and missing PK
 	$newrec = TestApp::Address->new($handle);
@@ -154,8 +154,8 @@ SKIP: {
 	is( $newrec->id, $newid, "loaded correct record" );
 	$newrec = TestApp::Address->new($handle);
 	($val, $msg) = $newrec->load_by_primary_keys( phone => 'some' );
-	ok( !$val, "couldn't load, missing PK field");
-	is( $msg, "Missing PK field: 'id'", "right error message" );
+	ok( !$val, "couldn't load, missing PK column");
+	is( $msg, "Missing PK column: 'id'", "right error message" );
 
 # load_by_cols and empty or NULL values
 	$rec = TestApp::Address->new($handle);

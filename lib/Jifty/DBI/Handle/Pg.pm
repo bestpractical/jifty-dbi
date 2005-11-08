@@ -115,7 +115,7 @@ sub apply_limits {
 
 =head2 _make_clause_case_insensitive column operator VALUE
 
-Takes a field, operator and value. performs the magic necessary to make
+Takes a column, operator and value. performs the magic necessary to make
 your database treat this clause as case insensitive.
 
 Returns a column operator value triple.
@@ -124,24 +124,24 @@ Returns a column operator value triple.
 
 sub _make_clause_case_insensitive {
     my $self     = shift;
-    my $field    = shift;
+    my $column    = shift;
     my $operator = shift;
     my $value    = shift;
 
     if ( $value =~ /^['"]?\d+['"]?$/ )
     {    # we don't need to downcase numeric values
-        return ( $field, $operator, $value );
+        return ( $column, $operator, $value );
     }
 
     if ( $operator =~ /LIKE/i ) {
         $operator =~ s/LIKE/ILIKE/ig;
-        return ( $field, $operator, $value );
+        return ( $column, $operator, $value );
     }
     elsif ( $operator =~ /=/ ) {
-        return ( "LOWER($field)", $operator, $value, "LOWER(?)" );
+        return ( "LOWER($column)", $operator, $value, "LOWER(?)" );
     }
     else {
-        $self->SUPER::_make_clause_case_insensitive( $field, $operator,
+        $self->SUPER::_make_clause_case_insensitive( $column, $operator,
             $value );
     }
 }

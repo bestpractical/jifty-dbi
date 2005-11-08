@@ -337,9 +337,9 @@ sub insert {
 
 =head2 update_record_value 
 
-Takes a hash with fields: Table, Column, Value PrimaryKeys, and 
+Takes a hash with columns: Table, Column, Value PrimaryKeys, and 
 IsSQLFunction.  Table, and Column should be obvious, Value is where you 
-set the new value you want the column to have. The primary_keys field should 
+set the new value you want the column to have. The primary_keys column should 
 be the lvalue of Jifty::DBI::Record::PrimaryKeys().  Finally 
 IsSQLFunction is set when the Value is a SQL function.  For example, you 
 might have ('Value'=>'PASSWORD(string)'), by setting IsSQLFunction that 
@@ -361,7 +361,7 @@ sub update_record_value {
     my $query = 'UPDATE ' . $args{'table'} . ' ';
     $query .= 'SET ' . $args{'column'} . '=';
 
-    ## Look and see if the field is being updated via a SQL function.
+    ## Look and see if the column is being updated via a SQL function.
     if ( $args{'is_sql_function'} ) {
         $query .= $args{'value'} . ' ';
     }
@@ -605,7 +605,7 @@ sub case_sensitive {
 
 =head2 _make_clause_case_insensitive column operator VALUE
 
-Takes a field, operator and value. performs the magic necessary to make
+Takes a column, operator and value. performs the magic necessary to make
 your database treat this clause as case insensitive.
 
 Returns a column operator value triple.
@@ -614,15 +614,15 @@ Returns a column operator value triple.
 
 sub _make_clause_case_insensitive {
     my $self     = shift;
-    my $field    = shift;
+    my $column    = shift;
     my $operator = shift;
     my $value    = shift;
 
     if ( $value !~ /^\d+$/ ) {    # don't downcase integer values
-        $field = "lower($field)";
+        $column = "lower($column)";
         $value = lc($value);
     }
-    return ( $field, $operator, $value, undef );
+    return ( $column, $operator, $value, undef );
 }
 
 =head2 begin_transaction

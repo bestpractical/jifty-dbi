@@ -183,7 +183,7 @@ sub _db_schema_table_from_model {
     my $model = shift;
 
     my $table_name = $model->table;
-    my @columns    = $model->columns;
+    my @columns    = $model->columns_in_db;
 
     my @cols;
 

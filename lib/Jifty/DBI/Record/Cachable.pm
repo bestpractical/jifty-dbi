@@ -197,8 +197,8 @@ sub _fetch () {
 
 sub __Value {
     my $self  = shift;
-    my $field = shift;
-    return ( $self->SUPER::__value($field) );
+    my $column = shift;
+    return ( $self->SUPER::__value($column) );
 }
 
 # Function: _store
