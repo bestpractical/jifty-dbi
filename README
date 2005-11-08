@@ -1,18 +1,26 @@
 NAME
-    Jifty::DBI - Encapsulate SQL queries and rows in simple perl
-    objects
+    Jifty::DBI - An object-relational mapper
 
 DESCRIPTION
+
     This module provides an object-oriented mechanism for retrieving and
-    updating data in a DBI-accesible database.
+    updating data in a DBI-accesible database. 
+    
+    This module is the direct descendent of DBIx::SearchBuilder. If you're familiar
+    with SearchBuilder, Jifty::DBI should be quite familiar to you.
+
+    Jifty::DBI was forked from SearchBuilder to give us the opportunity to seriously
+    clean up the API and internals without breaking existing applications.
 
 INSTALLATION
+
     $ perl Makefile.PL
     $ make
     $ make test   # but see below for how to actually test against a test database
     # make install
 
 TESTING
+
     In order to test most of the features of Jifty::DBI, you need
     to provide "make test" with a test database. For each DBI driver that
     you would like to test, set the environment variables "JDBI_TEST_FOO",

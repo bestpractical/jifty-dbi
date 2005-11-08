@@ -1,6 +1,9 @@
 package Jifty::DBI;
+use warnings; 
+use strict;
 
-our $VERSION = '0.02';
+
+our $VERSION = '0.05_01';
 
 
 =head1 NAME
@@ -10,6 +13,12 @@ Jifty::DBI - An object-relational persistence framework
 =head1 DESCRIPTION
 
 Jifty::DBI deals with databases, so that you don't have to.
+
+This module provides an object-oriented mechanism for retrieving and
+updating data in a DBI-accesible database. 
+
+This module is the direct descendent of DBIx::SearchBuilder. If you're familiar
+with SearchBuilder, Jifty::DBI should be quite familiar to you.
 
 =head2 What is it trying to do. 
 

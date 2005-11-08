@@ -14,6 +14,9 @@ use base qw/
     Jifty::DBI::HasFilters
     /;
 
+our $VERSION = '0.01';
+
+
 Jifty::DBI::Record->mk_classdata('COLUMNS');
 
 =head1 NAME

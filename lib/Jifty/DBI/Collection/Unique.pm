@@ -1,11 +1,13 @@
 package Jifty::DBI::Collection::Unique;
-use base 'Exporter';
-our @EXPORT  = qw(AddRecord);
-our $VERSION = "0.01";
 use strict;
 use warnings;
 
-sub AddRecord {
+use base 'Exporter';
+our @EXPORT  = qw(AddRecord);
+our $VERSION = "0.01";
+
+
+sub add_record {
     my $self   = shift;
     my $record = shift;
 

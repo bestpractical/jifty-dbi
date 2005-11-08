@@ -7,6 +7,9 @@ use base qw(Class::Accessor);
 use DBIx::DBSchema;
 use Class::ReturnValue;
 
+our $VERSION = '0.01';
+
+
 # Public accessors
 __PACKAGE__->mk_accessors(qw(handle));
 

@@ -7,11 +7,11 @@ use Encode             ();
 
 use base qw/Jifty::DBI::HasFilters/;
 
-use vars qw($VERSION %DBIHandle $PrevHandle $DEBUG $TRANSDEPTH);
+use vars qw(%DBIHandle $PrevHandle $DEBUG $TRANSDEPTH);
 
 $TRANSDEPTH = 0;
 
-$VERSION = '0.01';
+our $VERSION = '0.01';
 
 =head1 NAME
 
