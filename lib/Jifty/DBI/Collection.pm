@@ -1,7 +1,8 @@
 package Jifty::DBI::Collection;
 
+use warnings;
 use strict;
-use vars qw($VERSION);
+
 
 =head1 NAME
 
@@ -44,6 +45,16 @@ and probably should override at least L</_init> also; at the very
 least, L</_init> should probably call L</_handle> and L</_table> to
 set the database handle (a L<Jifty::DBI::Handle> object) and table
 name for the class -- see the L</SYNOPSIS> for an example.
+
+
+=cut
+
+use vars qw($VERSION);
+
+use Data::Page;
+use base qw/Class::Accessor/;
+__PACKAGE__->mk_accessors(qw/pager/);
+
 
 =head1 METHODS
 
@@ -89,10 +100,20 @@ sub _init {
         handle => undef,
         @_
     );
-    $self->_handle( $args{'handle'} );
-
+    $self->_handle( $args{'handle'} ) if ($args{'handle'});
+    $self->_init_pager();
     $self->clean_slate();
 }
+
+
+sub _init_pager {
+    my $self = shift;
+    $self->pager(Data::Page->new);
+
+    $self->pager->total_entries(0);
+    $self->pager->entries_per_page(10);
+    $self->pager->current_page(1);
+} 
 
 =head2 clean_slate
 
@@ -131,7 +152,8 @@ sub clean_slate {
     # Force ourselves to have no limit statements. do_search won't
     # work.
     $self->_is_limited(0);
-}
+} 
+
 
 =head2 _handle [DBH]
 
@@ -1141,6 +1163,35 @@ sub join {
 
     $self->_handle->join( collection => $self, %args );
 
+}
+
+
+=head2 set_page_info [per_page => NUMBER,] [current_page => NUMBER]
+
+Sets the current page (one-based) and number of items per page on the
+pager object, and pulls the number of elements from the collection.
+This both sets up the collection's L<Data::Page> object so that you
+can use its calculations, and sets the L<Jifty::DBI::Collection>
+C<first_row> and C<rows_per_page> so that queries return values from
+the selected page.
+
+=cut
+
+sub set_page_info {
+  my $self = shift;
+  my %args = (
+    per_page => undef,
+    current_page => undef, # 1-based
+    @_
+  );
+  
+  $self->pager->total_entries($self->count_all)
+              ->entries_per_page($args{'per_page'})
+              ->current_page($args{'current_page'});
+  
+  $self->rows_per_page($args{'per_page'});
+  $self->first_row($self->pager->first);
+  
 }
 
 

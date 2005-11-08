@@ -8,7 +8,9 @@ requires('Encode'  => 2.11);
 requires('UNIVERSAL::require');
 requires('Lingua::EN::Inflect');
 requires('Class::ReturnValue', 0.40);
+requires('Class::Accessor' => 0);
 requires('Cache::Simple::TimedExpiry' => '0.21');
+requires('Data::Page');
 requires('DateTime');
 requires('DateTime::Format::Strptime');
 
