@@ -261,7 +261,7 @@ sub _init_columns {
         $column->writable(0);
         $column->readable(1);
         $column->type('serial');
-        $column->null(0);
+        $column->mandatory(1);
     }
 }
 
@@ -511,7 +511,8 @@ sub __set {
     }
 
     my $method = "validate_" . $column->name;
-    unless ( $self->$method( $args{'value'} ) ) {
+    my ($ok, $msg) = $self->$method( $args{'value'} );
+    unless ( $ok ) {
         $ret->as_array( 0, 'Illegal value for ' . $column->name );
         $ret->as_error(
             errno        => 3,

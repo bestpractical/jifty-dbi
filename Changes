@@ -1,5 +1,7 @@
 Revision history for Perl extension Jifty::DBI.
 
+* not_null has been replaced with mandatory
+
 0.05_01 Tue Nov  8 16:29:02 EST 2005
 
 * Initial release

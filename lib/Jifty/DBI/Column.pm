@@ -14,7 +14,7 @@ __PACKAGE__->mk_accessors qw/
     validator
     readable writable
     length
-    null
+    mandatory
     refers_to by
     alias_for_column
     since until

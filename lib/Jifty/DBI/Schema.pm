@@ -1,7 +1,7 @@
 package Jifty::DBI::Schema;
 use Exporter::Lite;
 our @EXPORT
-    = qw(column type default validator immutable unreadable length not_null valid_values label hints render_as since input_filters output_filters mandatory is by are on);
+    = qw(column type default validator immutable unreadable length mandatory valid_values label hints render_as since input_filters output_filters is by are on);
 
 our $SCHEMA;
 
@@ -16,7 +16,6 @@ sub column {
         name     => $name,
         readable => 1,
         writable => 1,
-        null     => 1,
         @_,
     );
     my @original = @args;
@@ -77,8 +76,8 @@ sub length ($) {
     return ( length => shift );
 }
 
-sub not_null () {
-    return ( [ null => 0 ] );
+sub mandatory () {
+    return ( [ mandatory => 1 ] );
 }
 
 sub input_filters ($) {
@@ -91,10 +90,6 @@ sub output_filters ($) {
 
 sub since ($) {
     return ( since => shift );
-}
-
-sub mandatory () {
-    return ( [ mandatory => 1 ] );
 }
 
 sub valid_values ($) {
@@ -115,7 +110,7 @@ sub render_as ($) {
 
 sub is ($) {
     my $thing = shift;
-    return ref $thing ? @{$thing} : $thing;
+    return ref $thing eq "ARRAY" ? @{$thing} : $thing;
 }
 
 sub by ($) {
