@@ -1,7 +1,8 @@
 package Jifty::DBI::Schema;
+use Carp qw/carp/;
 use Exporter::Lite;
 our @EXPORT
-    = qw(column type default validator immutable unreadable length mandatory valid_values label hints render_as since input_filters output_filters is by are on);
+    = qw(column type default validator immutable unreadable length mandatory not_null valid_values label hints render_as since input_filters output_filters is by are on);
 
 our $SCHEMA;
 
@@ -77,6 +78,11 @@ sub length ($) {
 }
 
 sub mandatory () {
+    return ( [ mandatory => 1 ] );
+}
+
+sub not_null () {
+    carp "'is not_null' is deprecated in favor of 'is mandatory'";
     return ( [ mandatory => 1 ] );
 }
 
