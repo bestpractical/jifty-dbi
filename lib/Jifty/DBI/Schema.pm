@@ -2,7 +2,7 @@ package Jifty::DBI::Schema;
 use Carp qw/carp/;
 use Exporter::Lite;
 our @EXPORT
-    = qw(column type default validator immutable unreadable length mandatory not_null valid_values label hints render_as since input_filters output_filters is by are on);
+    = qw(column type default validator immutable unreadable length distinct mandatory not_null valid_values label hints render_as since input_filters output_filters is by are on);
 
 our $SCHEMA;
 
@@ -79,6 +79,10 @@ sub length ($) {
 
 sub mandatory () {
     return ( [ mandatory => 1 ] );
+}
+
+sub distinct () {
+    return ( [ distinct => 1 ] );
 }
 
 sub not_null () {
