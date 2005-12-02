@@ -41,8 +41,11 @@ sub column {
                 $column->refers_to(undef);
                 $virtual_column->alias_for_column($name);
             }
+            #$column->by('id') unless $column->by;
         }
-        elsif ( UNIVERSAL::isa( $refclass, 'Jifty::DBI::Collection' ) ) {
+        elsif (
+                UNIVERSAL::isa( $refclass, 'Jifty::DBI::Collection' ) 
+            ) {
             $column->by('id') unless $column->by;
         }
         else {

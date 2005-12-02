@@ -1,5 +1,5 @@
 name: Jifty-DBI
-version: 0.05_01
+version: 0.05_02
 license: perl
 distribution_type: module
 build_requires:
@@ -8,7 +8,7 @@ build_requires:
 requires:
   perl: 5.8.3
   DBI: 0
-  Encode: 2.11
+  Encode: 2.1
   UNIVERSAL::require: 0
   Lingua::EN::Inflect: 0
   Class::ReturnValue: 0.4
