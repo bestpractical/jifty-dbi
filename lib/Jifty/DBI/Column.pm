@@ -15,6 +15,7 @@ __PACKAGE__->mk_accessors qw/
     readable writable
     length
     mandatory
+    virtual
     distinct 
     refers_to by
     alias_for_column

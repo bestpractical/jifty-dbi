@@ -2,7 +2,7 @@ package Jifty::DBI::Schema;
 use Carp qw/carp/;
 use Exporter::Lite;
 our @EXPORT
-    = qw(column type default validator immutable unreadable length distinct mandatory not_null valid_values label hints render_as since input_filters output_filters is by are on);
+    = qw(column type default validator immutable unreadable length distinct mandatory not_null valid_values label hints render_as since input_filters output_filters is by are on virtual);
 
 our $SCHEMA;
 
@@ -17,6 +17,7 @@ sub column {
         name     => $name,
         readable => 1,
         writable => 1,
+        virtual => 0,
         @_,
     );
     my @original = @args;
@@ -29,7 +30,7 @@ sub column {
 
     if ( my $refclass = $column->refers_to ) {
         $refclass->require();
-        $column->type('integer');
+        $column->type('integer') unless ($column->type);
 
         if ( UNIVERSAL::isa( $refclass, 'Jifty::DBI::Record' ) ) {
             if ( $name =~ /(.*)_id$/ ) {
@@ -41,12 +42,13 @@ sub column {
                 $column->refers_to(undef);
                 $virtual_column->alias_for_column($name);
             }
-            #$column->by('id') unless $column->by;
+            $column->by('id') unless $column->by;
         }
         elsif (
                 UNIVERSAL::isa( $refclass, 'Jifty::DBI::Collection' ) 
             ) {
             $column->by('id') unless $column->by;
+            $column->virtual('1');
         }
         else {
             warn "Error: $refclass neither Record nor Collection";

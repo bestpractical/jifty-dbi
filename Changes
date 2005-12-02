@@ -1,5 +1,12 @@
 Revision history for Perl extension Jifty::DBI.
 
+* Added support for "virtual" columns
+* Added support for named references between tables
+
+    column owner =>
+        refers_to MyApp::User by 'email';
+
+
 * not_null deprecated in favor of mandatory
 
 0.05_01 Tue Nov  8 16:29:02 EST 2005
