@@ -4,7 +4,7 @@ name ('Jifty-DBI');
 license ('perl');
 version_from('lib/Jifty/DBI.pm');
 requires('DBI');
-requires('Encode'  => 2.11);
+requires('Encode'  => 2.10);
 requires('UNIVERSAL::require');
 requires('Lingua::EN::Inflect');
 requires('Class::ReturnValue', 0.40);
