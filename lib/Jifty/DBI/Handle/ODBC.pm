@@ -78,7 +78,11 @@ sub distinct_query {
     my $self         = shift;
     my $statementref = shift;
 
-    $$statementref = "SELECT main.* FROM $$statementref";
+    my $sb = shift;
+ 
+     $$statementref = "SELECT main.* FROM $$statementref";
+    $$statementref .= $sb->_group_clause;
+    $$statementref .= $sb->_order_clause;
 }
 
 sub encoding {
