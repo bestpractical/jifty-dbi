@@ -13,6 +13,7 @@ requires:
   Lingua::EN::Inflect: 0
   Class::ReturnValue: 0.4
   Class::Accessor: 0
+  Clone: 0
   Cache::Simple::TimedExpiry: 0.21
   Data::Page: 0
   DateTime: 0
@@ -20,4 +21,4 @@ requires:
 no_index:
   directory:
     - inc
-generated_by: Module::Install version 0.39
+generated_by: Module::Install version 0.37

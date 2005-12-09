@@ -9,6 +9,7 @@ requires('UNIVERSAL::require');
 requires('Lingua::EN::Inflect');
 requires('Class::ReturnValue', 0.40);
 requires('Class::Accessor' => 0);
+requires('Clone');
 requires('Cache::Simple::TimedExpiry' => '0.21');
 requires('Data::Page');
 requires('DateTime');
