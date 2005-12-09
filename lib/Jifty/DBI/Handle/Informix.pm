@@ -121,17 +121,26 @@ takes an incomplete SQL SELECT statement and massages it to return a DISTINCT re
 
 =cut
 
-sub distinct_query {
-    my $self         = shift;
-    my $statementref = shift;
-    my $table        = shift;
-
-    # Wrapper select query in a subselect as Informix doesn't allow
-    # DISTINCT against CLOB/BLOB column types.
-    $$statementref
-        = "SELECT * FROM $table main WHERE id IN ( SELECT DISTINCT main.id FROM $$statementref )";
-
-}
+ sub distinct_query {
+     my $self = shift;
+     my $statementref = shift;
+    my $sb = shift;
+    my $table = $sb->table;
+ 
+    if ($sb->_order_clause =~ /(?<!main)\./) {
+        # Don't know how to do ORDER BY when the DISTINCT is in a subquery
+        warn "Query will contain duplicate rows; don't how how to ORDER BY across DISTINCT";
+       $$statementref = "SELECT main.* FROM $$statementref";
+    } else {
+        # Wrapper select query in a subselect as Informix doesn't allow
+        # DISTINCT against CLOB/BLOB column types.
+        $$statementref = "SELECT * FROM $table main WHERE id IN ( SELECT DISTINCT main.id FROM $$statementref )";
+    }
+    $$statementref .= $sb->_group_clause;
+    $$statementref .= $sb->_order_clause;
+ }
+ 
+ 
 
 1;
 
