@@ -51,29 +51,66 @@ preloaded with error info
 
 sub insert {
     my $self  = shift;
-    my $table = shift;
+     my $table = shift;
+    my %args  = (@_);
+    my $sth   = $self->SUPER::insert( $table, %args );
 
-    my $sth = $self->SUPER::insert( $table, @_ );
-
-    unless ($sth) {
+     unless ($sth) {
         return ($sth);
     }
 
-    #Lets get the id of that row we just inserted
-    my $oid = $sth->{'pg_oid_status'};
-    my $sql = "SELECT id FROM $table WHERE oid = ?";
-    my @row = $self->fetch_result( $sql, $oid );
-
-    # TODO: Propagate Class::ReturnValue up here.
-    unless ( $row[0] ) {
-        print STDERR "Can't find $table.id  for OID $oid";
-        return (undef);
+    if ( $args{'id'} || $args{'Id'} ) {
+        $self->{'id'} = $args{'id'} || $args{'Id'};
+        return ( $self->{'id'} );
     }
-    $self->{'id'} = $row[0];
 
-    return ( $self->{'id'} );
+    my $sequence_name = $self->id_sequence_name($table);
+    unless ($sequence_name) { return ($sequence_name) }   # Class::ReturnValue
+    my $seqsth = $self->dbh->prepare(
+        qq{SELECT CURRVAL('} . $sequence_name . qq{')} );
+    $seqsth->execute;
+    $self->{'id'} = $seqsth->fetchrow_array();
+
+   return ( $self->{'id'} );
 }
 
+
+=head2 id_sequence_name TABLE
+
+Takes a TABLE name and returns the name of the  sequence of the primary key for that table.
+
+=cut
+
+sub id_sequence_name {
+    my $self  = shift;
+    my $table = shift;
+
+    return $self->{'_sequences'}{$table} if (exists $self->{'_sequences'}{$table});
+    #Lets get the id of that row we just inserted
+    my $seq;
+    my $colinfosth = $self->dbh->column_info( undef, undef, lc($table), '%' );
+    while ( my $foo = $colinfosth->fetchrow_hashref ) {
+
+        # Regexp from DBIx::Class's Pg handle. Thanks to Marcus Ramberg
+        if ( defined $foo->{'COLUMN_DEF'}
+            && $foo->{'COLUMN_DEF'}
+            =~ m!^nextval\('"?([^"']+)"?'::(?:text|regclass)\)!i )
+        {
+            return $self->{'_sequences'}{$table} = $1;
+        }
+
+    }
+            my $ret = Class::ReturnValue->new();
+           $ret->as_error(
+                errno   => '-1',
+                message => "Found no sequence for $table",
+                do_backtrace => undef
+            );
+           return ( $ret->return_value );
+ 
+ }
+ 
+ 
 =head2 binary_safe_blobs
 
 Return undef, as no current version of postgres supports binary-safe
@@ -143,6 +180,33 @@ sub _make_clause_case_insensitive {
     else {
         $self->SUPER::_make_clause_case_insensitive( $column, $operator,
             $value );
+    }
+}
+
+=head2 distinct_query STATEMENTREF
+
+takes an incomplete SQL SELECT statement and massages it to return a DISTINCT result set.
+
+=cut
+
+sub distinct_query {
+    my $self = shift;
+    my $statementref = shift;
+    my $sb = shift;
+    my $table = $sb->table;
+
+    if ($sb->_order_clause =~ /(?<!main)\./) {
+        # If we are ordering by something not in 'main', we need to GROUP
+        # BY and adjust the ORDER_BY accordingly
+        local $sb->{group_by} = [@{$sb->{group_by} || []}, {column => 'id'}];
+        local $sb->{order_by} = [map {($_->{alias} and $_->{alias} ne "main") ? {%{$_}, column => "min(".$_->{column}.")"}: $_} @{$sb->{order_by}}];
+        my $group = $sb->_group_clause;
+        my $order = $sb->_order_clause;
+        $$statementref = "SELECT main.* FROM ( SELECT main.id FROM $$statementref $group $order ) distinctquery, $table main WHERE (main.id = distinctquery.id)";
+    } else {
+        $$statementref = "SELECT DISTINCT main.* FROM $$statementref";
+       $$statementref .= $sb->_group_clause;
+        $$statementref .= $sb->_order_clause;
     }
 }
 
