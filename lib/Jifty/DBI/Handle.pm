@@ -678,24 +678,30 @@ If this method is passed a true argument, stack depth is blown away and the oute
 =cut
 
 sub rollback {
-    my $self  = shift;
-    my $force = shift || undef;
+     my $self = shift;
+    my $force = shift;
 
-#unless ($TRANSDEPTH) {Carp::confess("Attempted to rollback a transaction with none in progress")};
-    $TRANSDEPTH--;
-
-    if ($force) {
+   my $dbh = $self->dbh;
+    unless( $dbh ) {
         $TRANSDEPTH = 0;
-        return ( $self->dbh->rollback );
+        return;
     }
+ 
+    #unless ($TRANSDEPTH) {Carp::confess("Attempted to rollback a transaction with none in progress")};
+     if ($force) {
+         $TRANSDEPTH = 0;
+        return($dbh->rollback);
+     }
+ 
+    $TRANSDEPTH-- if ($TRANSDEPTH >= 1);
+     if ($TRANSDEPTH == 0 ) {
+        return($dbh->rollback);
+     } else { #we're inside a transaction
+         return($TRANSDEPTH);
+     }
 
-    if ( $TRANSDEPTH == 0 ) {
-        return ( $self->dbh->rollback );
-    }
-    else {    #we're inside a transaction
-        return ($TRANSDEPTH);
-    }
 }
+
 
 =head2 force_rollback
 
@@ -962,15 +968,17 @@ takes an incomplete SQL SELECT statement and massages it to return a DISTINCT re
 =cut
 
 sub distinct_query {
-    my $self         = shift;
+    my $self = shift;
     my $statementref = shift;
+    my $sb = shift;
+ 
+     # Prepend select query for DBs which allow DISTINCT on all column types.
+     $$statementref = "SELECT DISTINCT main.* FROM $$statementref";
 
-    #my $table = shift;
-
-    # Prepend select query for DBs which allow DISTINCT on all column types.
-    $$statementref = "SELECT DISTINCT main.* FROM $$statementref";
-
+    $$statementref .= $sb->_group_clause;
+    $$statementref .= $sb->_order_clause;
 }
+ 
 
 =head2 distinct_count STATEMENTREF 
 
