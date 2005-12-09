@@ -382,7 +382,7 @@ sub __value {
     my $column_name = shift;
 
     # If the requested column is actually an alias for another, resolve it.
-    while ( $self->column($column_name)
+    if ( $self->column($column_name)
         and defined $self->column($column_name)->alias_for_column )
     {
         $column_name = $self->column($column_name)->alias_for_column();
