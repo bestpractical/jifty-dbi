@@ -284,17 +284,7 @@ is returned.
 sub _distinct_query {
     my $self         = shift;
     my $statementref = shift;
-    my $table        = shift;
-
-    # XXX - Postgres gets unhappy with distinct and order_by aliases
-    if ( exists $self->{'order_clause'}
-        && $self->{'order_clause'} =~ /(?<!main)\./ )
-    {
-        $$statementref = "SELECT main.* FROM $$statementref";
-    }
-    else {
-        $self->_handle->distinct_query( $statementref, $table );
-    }
+    $self->_handle->distinct_query($statementref, $self);
 }
 
 =head2 _build_joins
@@ -382,16 +372,14 @@ sub build_select_query {
         $query_string .= $self->_where_clause . " "
     }
     if ( $self->_is_joined ) {
-        # DISTINCT query only required for multi-table selects
-        $self->_distinct_query( \$query_string, $self->table );
-    }
-    else {
-        $query_string = "SELECT main.* FROM $query_string";
-    }
-
-    $query_string .= ' ' . $self->_group_clause . ' ';
-
-    $query_string .= ' ' . $self->_order_clause . ' ';
+     # DISTINCT query only required for multi-table selects
+        $self->_distinct_query(\$query_string);
+     } else {
+         $query_string = "SELECT main.* FROM $query_string";
+        $query_string .= $self->_group_clause;
+        $query_string .= $self->_order_clause;
+     }
+ 
 
     $self->_apply_limits( \$query_string );
 
@@ -942,19 +930,31 @@ The results would be unordered if method called without arguments.
 =cut
 
 sub order_by {
-    my $self = shift;
-
-    my @args = @_;
-    unless (@args) {
-        return $self->_set_clause( order => '' );
-    }
-
+     my $self = shift;
+     my @args = @_;
+ 
     unless ( UNIVERSAL::isa( $args[0], 'HASH' ) ) {
         @args = {@args};
     }
+    $self->{'order_by'} = \@args;
+    $self->redo_search();
+}
+
+
+
+=head2 _order_clause
+
+returns the ORDER BY clause for the search.
+
+=cut
+
+sub _order_clause {
+    my $self = shift;
+
+    return '' unless $self->{'order_by'};
 
     my $clause = '';
-    foreach my $row (@args) {
+    foreach my $row ( @{$self->{'order_by'}} ) {
 
         my %rowhash = (
             alias  => 'main',
@@ -985,22 +985,10 @@ sub order_by {
             $clause .= $rowhash{'order'};
         }
     }
-    $clause = "ORDER BY$clause" if $clause;
-    $self->_set_clause( order => $clause );
+    $clause = " ORDER BY$clause " if $clause;
+    return $clause;
 }
 
-=head2 _order_clause
-
-returns the ORDER BY clause for the search.
-
-=cut
-
-sub _order_clause {
-    my $self = shift;
-
-    return '' unless $self->{'order_clause'};
-    return ( $self->{'order_clause'} );
-}
 
 =head2 group_by_cols DEPRECATED
 
@@ -1037,17 +1025,33 @@ sub group_by {
     my $self = shift;
 
     my @args = @_;
-    unless (@args) {
-        return $self->_set_clause( group => '' );
-    }
+
     unless ( UNIVERSAL::isa( $args[0], 'HASH' ) ) {
         @args = {@args};
     }
+    $self->{'group_by'} = \@args;
+    $self->redo_search();
+}
 
-    my $clause = '';
-    foreach my $row (@args) {
-        my %rowhash = (
-            alias  => 'main',
+
+=head2 _group_clause
+
+Private function to return the "GROUP BY" clause for this query.
+
+=cut
+
+sub _group_clause {
+    my $self = shift;
+    return '' unless $self->{'group_by'};
+
+     my $row;
+     my $clause;
+ 
+    foreach $row ( @{$self->{'group_by'}} ) {
+         my %rowhash = ( alias => 'main',
+
+
+
             column => undef,
             %$row
         );
@@ -1065,22 +1069,12 @@ sub group_by {
             $clause .= $rowhash{'column'};
         }
     }
-
-    $clause = "GROUP BY" . $clause if $clause;
-    return $self->_set_clause( group => $clause );
-}
-
-=head2 _group_clause
-
-Private function to return the "GROUP BY" clause for this query.
-
-=cut
-
-sub _group_clause {
-    my $self = shift;
-
-    return '' unless $self->{'group_clause'};
-    return ( $self->{'group_clause'} );
+     if ($clause) {
+	return " GROUP BY" . $clause . " ";
+     }
+     else {
+	return '';
+     }
 }
 
 =head2 new_alias table_OR_CLASS
@@ -1577,7 +1571,4 @@ and/or modify it under the same terms as Perl itself.
 Jifty::DBI::Handle, Jifty::DBI::Record.
 
 =cut
-
-
-
 
