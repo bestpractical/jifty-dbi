@@ -52,6 +52,7 @@ name for the class -- see the L</SYNOPSIS> for an example.
 use vars qw($VERSION);
 
 use Data::Page;
+use Clone;
 use base qw/Class::Accessor/;
 __PACKAGE__->mk_accessors(qw/pager/);
 
@@ -1494,6 +1495,51 @@ sub refers_to (@) {
     return ( refers_to => $class, %args );
 }
 
+
+=head2 Clone
+
+Returns copy of the current object with all search restrictions.
+
+=cut
+
+sub clone
+{
+    my $self = shift;
+
+    my $obj = bless {}, ref($self);
+    %$obj = %$self;
+
+    delete $obj->{$_} for qw(
+        items
+    );
+    $obj->{'must_redo_search'} = 1;
+    $obj->{'itemscount'}       = 0;
+    
+    $obj->{$_} = Clone::clone($obj->{$_}) for ( $self->_cloned_attributes );
+    return $obj;
+}
+
+=head2 _cloned_attributes
+
+Returns list of the object's fields that should be copied.
+
+If your subclass store references in the object that should be copied while
+clonning then you probably want override this method and add own values to
+the list.
+
+=cut
+ 
+sub _cloned_attributes
+{
+    return qw(
+        aliases
+        left_joins
+        subclauses
+        restrictions
+    );
+ }
+ 
+ 
 1;
 __END__
 

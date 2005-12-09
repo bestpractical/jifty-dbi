@@ -1,4 +1,4 @@
-#line 1 "inc/ExtUtils/AutoInstall.pm - /usr/local/share/perl/5.8.7/ExtUtils/AutoInstall.pm"
+#line 1 "inc/ExtUtils/AutoInstall.pm - /home/jesse/jifty-build/lib/site_perl/5.8.7//ExtUtils/AutoInstall.pm"
 package ExtUtils::AutoInstall;
 $ExtUtils::AutoInstall::VERSION = '0.63';
 
