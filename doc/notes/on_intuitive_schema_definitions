@@ -21,12 +21,12 @@ I want better syntax than that. hm.
 But is the general concept ok?
 
 # maybe. I almost wonder whether we want a separate class for this. 
-JFDI::DBI::Record->import(), actually ;
+Jifty::DBI::Record->import(), actually ;
 
 
 
 # or could be:
-JFDI::DBI::Record->inherit; # or something (that means it has to be loaded already)
+Jifty::DBI::Record->inherit; # or something (that means it has to be loaded already)
 # Well, sure, import would just work.
 # that's just evil.  maybe right too.
 
@@ -36,7 +36,7 @@ It works sort of like UNIVERSAL::require.
 
 then you could have
 
-import JFDI::DBI::Record::SchemaFunctions# or something
+import Jifty::DBI::Record::SchemaFunctions# or something
 
 #not sure I like that, though.
 # would you want to have that *and* the use base though?
@@ -46,7 +46,7 @@ import JFDI::DBI::Record::SchemaFunctions# or something
 # if you're not trying to subclass, then I don't see what's wrong
 # with 
 
-use JFDI::DBI::Record ':schemafunctions';
+use Jifty::DBI::Record ':schemafunctions';
 # which is standard Exporter.pm (@EXPORT_TAGS or whatever)
 
 *nod*
@@ -261,8 +261,8 @@ use Jifty::DBI::Record       ;
 
 # well, i mean, there's always
 
-use base 'JFDI::DBI::Record'; # set up inheritance
-JFDI::DBI::Record->im_gonna_be_describing sym;
+use base 'Jifty::DBI::Record'; # set up inheritance
+Jifty::DBI::Record->im_gonna_be_describing sym;
 
 # it should not be two statements.
 

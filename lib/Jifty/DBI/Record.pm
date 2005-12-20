@@ -610,6 +610,8 @@ is $id
 sub load {
     my $self = shift;
 
+    return unless @_ and defined $_[0];
+
     return $self->load_by_cols( id => shift );
 }
 

@@ -530,7 +530,7 @@ sub new_item {
 
 Returns the record class which this is a collection of; override this
 to subclass.  Or, pass it the name of a class an an argument after
-creating a C<JFDI::Collection> object to create an 'anonymous'
+creating a C<Jifty::DBI::Collection> object to create an 'anonymous'
 collection class.
 
 If you haven't specified a record class, this eturns a best guess at
@@ -648,8 +648,8 @@ sub limit {
     my $self = shift;
     my %args = (
         table            => $self->table,
-        column           => 'fuck',
-        value            => 'hate',
+        column           => undef,
+        value            => undef,
         alias            => undef,
         quote_value      => 1,
         entry_aggregator => 'or',
@@ -661,6 +661,12 @@ sub limit {
     );
 
     my ($Alias);
+
+    # We need to be passed a column and a value, at very least
+    die "Must provide a column to limit"
+      unless defined $args{column};
+    die "Must provide a value to limit to"
+      unless defined $args{value};
 
     #since we're changing the search criteria, we need to redo the search
     $self->redo_search();
