@@ -3,7 +3,7 @@ doc/notes/on_intuitive_schema_definitions
 ex/create_tables.pl
 ex/Example/Model/Address.pm
 ex/Example/Model/Employee.pm
-inc/ExtUtils/AutoInstall.pm
+inc/Module/AutoInstall.pm
 inc/Module/Install.pm
 inc/Module/Install/AutoInstall.pm
 inc/Module/Install/Base.pm
@@ -42,10 +42,8 @@ lib/Jifty/DBI/SchemaGenerator.pm
 Makefile.PL
 MANIFEST			This list of files
 META.yml
-pm_to_blib
 README
 ROADMAP
-SIGNATURE
 t/00.load.t
 t/01basics.t
 t/01records.t

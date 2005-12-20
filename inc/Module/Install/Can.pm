@@ -1,4 +1,4 @@
-#line 1 "inc/Module/Install/Can.pm - /home/jesse/jifty-build/lib/site_perl/5.8.7//Module/Install/Can.pm"
+#line 1 "inc/Module/Install/Can.pm - /usr/lib/perl5/site_perl/5.8.7/Module/Install/Can.pm"
 package Module::Install::Can;
 use Module::Install::Base; @ISA = qw(Module::Install::Base);
 $VERSION = '0.01';
@@ -7,6 +7,20 @@ use strict;
 use Config ();
 use File::Spec ();
 use ExtUtils::MakeMaker ();
+
+# check if we can load some module
+sub can_use {
+    my ($self, $mod, $ver) = @_;
+    $mod =~ s{::|\\}{/}g;
+    $mod .= ".pm" unless $mod =~ /\.pm$/i;
+
+    my $pkg = $mod;
+    $pkg =~ s{/}{::}g;
+    $pkg =~ s{\.pm$}{}i;
+
+    local $@;
+    eval { require $mod; $pkg->VERSION($ver || 0); 1 };
+}
 
 # check if we can run some command
 sub can_run {
@@ -33,6 +47,22 @@ sub can_cc {
     }
 
     return;
+}
+
+# Fix Cygwin bug on maybe_command();
+if ($^O eq 'cygwin') {
+    require ExtUtils::MM_Cygwin;
+    if (!defined(&ExtUtils::MM_Cygwin::maybe_command)) {
+        *ExtUtils::MM_Cygwin::maybe_command = sub {
+            my ($self, $file) = @_;
+            if ($file =~ m{^/cygdrive/}i) {
+                ExtUtils::MM_Win32->maybe_command($file);
+            }
+            else {
+                $self->SUPER::maybe_command($file);
+            }
+        }
+    }
 }
 
 1;
