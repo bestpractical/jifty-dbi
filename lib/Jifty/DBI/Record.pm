@@ -342,7 +342,9 @@ sub column {
 
 sub columns {
     my $self = shift;
-    return ( values %{ $self->COLUMNS } );
+    return ( sort { 
+         ((($b->type||'') eq 'serial') <=> (($a->type||'') eq 'serial')) or 
+            ( $a->name cmp $b->name) } values %{ $self->COLUMNS } );
 }
 
 # sub {{{ readable_attributes

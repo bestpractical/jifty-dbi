@@ -1,5 +1,7 @@
 Revision history for Perl extension Jifty::DBI.
 
+* Added more tests for mysql and Pg now that DBSchema supports them. Tests want more love
+
 0.05_03
 
 Forward-ported features from DBIx::SearchBuilder:

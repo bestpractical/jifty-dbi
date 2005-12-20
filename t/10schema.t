@@ -26,7 +26,7 @@ require_ok("t/testmodels.pl");
 
 foreach my $d ( @available_drivers ) {
   SKIP: {
-    unless ($d eq 'Pg') {
+    unless ($d eq 'Pg' or $d eq 'SQLite' or $d eq 'mysql') {
       skip "first goal is to work on Pg", TESTS_PER_DRIVER;
     }
     
@@ -60,8 +60,8 @@ foreach my $d ( @available_drivers ) {
 
     ok($ret != 0, "added model from real class");
 
-    is_ignoring_space($SG->create_table_sql_text, <<END_SCHEMA, "got the right schema");
-    CREATE table addresses ( 
+    if ($d eq 'Pg' ) { is_ignoring_space($SG->create_table_sql_text, <<END_SCHEMA, "got the right schema");
+    CREATE TABLE addresses ( 
       id serial NOT NULL , 
       employee_id integer ,
       name varchar DEFAULT 'Frank' ,
@@ -69,6 +69,13 @@ foreach my $d ( @available_drivers ) {
       PRIMARY KEY (id)
     ) ;
 END_SCHEMA
+
+    } else {
+     TODO: {
+            local $TODO = "Need schema for $d";
+            ok(0, "need db schema for $d");
+        };
+    }
 
     my $employee = Sample::Employee->new;
     
@@ -78,25 +85,41 @@ END_SCHEMA
 
     ok($ret != 0, "added model from an instantiated object");
 
+    if ($d eq 'Pg') {
     is_ignoring_space($SG->create_table_sql_text, <<END_SCHEMA, "got the right schema");
-    CREATE table addresses ( 
+    CREATE TABLE addresses ( 
       id serial NOT NULL , 
       employee_id integer  ,
       name varchar DEFAULT 'Frank' ,
       phone varchar ,
       PRIMARY KEY (id)
     ) ;
-    CREATE table employees (
+    CREATE TABLE employees (
       id serial NOT NULL ,
       dexterity integer ,
       name varchar ,
       PRIMARY KEY (id)
     ) ;
 END_SCHEMA
+    } else {
+        TODO: {
+            local $TODO = "Need schema for $d";
+        ok(0, "need db schema for $d");
+        };
+    }
     
     my $manually_make_text = join ' ', map { "$_;" } $SG->create_table_sql_statements;
-    is_ignoring_space($SG->create_table_sql_text, $manually_make_text, 'create_table_sql_text is the statements in create_table_sql_statements')
-}}
+    if ($d eq 'Pg') { 
+         is_ignoring_space($SG->create_table_sql_text, $manually_make_text, 'create_table_sql_text is the statements in create_table_sql_statements')
+    } else {
+        TODO: {
+            local $TODO = "Need schema for $d";
+        ok(0, "need db schema for $d");
+        };
+    }
+
+}
+}
 
 sub is_ignoring_space {
   my $a = shift;

@@ -190,8 +190,7 @@ sub _db_schema_table_from_model {
 
     my @cols;
 
-    # The sort here is to make it predictable, so that we can write tests.
-    for my $column ( sort { $a->name cmp $b->name } @columns ) {
+    for my $column (  @columns ) {
 
         # Skip "Virtual" columns - (foreign keys to collections)
         next if $column->virtual;
