@@ -550,7 +550,7 @@ sub record_class {
     }
     elsif ( not $self->{record_class} ) {
         my $class = ref($self);
-        $class =~ s/Collection$//;
+        $class =~ s/Collection$// or die "Can't guess record class from $class";
         $self->{record_class} = $class;
     }
     return $self->{record_class};
