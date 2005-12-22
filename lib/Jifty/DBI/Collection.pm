@@ -566,7 +566,8 @@ it's asked for a record, it should requery the database
 sub redo_search {
     my $self = shift;
     $self->{'must_redo_search'} = 1;
-    delete $self->{'raw_rows'};
+    delete $self->{$_} for qw(items raw_rows count_all);
+    $self->{'itemscount'} = 0;
 }
 
 =head2 unlimit
@@ -1514,11 +1515,7 @@ sub clone
     my $obj = bless {}, ref($self);
     %$obj = %$self;
 
-    delete $obj->{$_} for qw(
-        items
-    );
-    $obj->{'must_redo_search'} = 1;
-    $obj->{'itemscount'}       = 0;
+    $obj->redo_search(); # clean out the object of data
     
     $obj->{$_} = Clone::clone($obj->{$_}) for ( $self->_cloned_attributes );
     return $obj;

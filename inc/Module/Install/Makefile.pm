@@ -1,4 +1,4 @@
-#line 1 "inc/Module/Install/Makefile.pm - /usr/lib/perl5/site_perl/5.8.7/Module/Install/Makefile.pm"
+#line 1 "inc/Module/Install/Makefile.pm - /usr/local/share/perl/5.8.7/Module/Install/Makefile.pm"
 package Module::Install::Makefile;
 use Module::Install::Base; @ISA = qw(Module::Install::Base);
 
@@ -62,10 +62,7 @@ sub write {
     $args->{VERSION} = $self->version || $self->determine_VERSION($args);
     $args->{NAME} =~ s/-/::/g;
 
-    # Only call $self->tests if we haven't been given explicit
-    # tests from makemaker_args.
-    $args->{test} ||= {TESTS => $self->tests};
-
+    $args->{test} = {TESTS => $self->tests} if $self->tests;
 
     if ($] >= 5.005) {
 	$args->{ABSTRACT} = $self->abstract;
@@ -157,4 +154,4 @@ sub postamble {
 
 __END__
 
-#line 290
+#line 287

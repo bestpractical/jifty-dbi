@@ -1,8 +1,8 @@
-#line 1 "/home/chmrr/work/rt/local/Jifty-DBI/inc/Module/Install.pm - /usr/lib/perl5/site_perl/5.8.7/Module/Install.pm"
+#line 1 "/home/jesse/svk/Jifty-DBI/inc/Module/Install.pm - /usr/local/share/perl/5.8.7/Module/Install.pm"
 package Module::Install;
 use 5.004;
 
-$VERSION = '0.45';
+$VERSION = '0.46';
 
 die << "." unless $INC{join('/', inc => split(/::/, __PACKAGE__)).'.pm'};
 Please invoke ${\__PACKAGE__} with:
