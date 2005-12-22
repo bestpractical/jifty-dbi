@@ -754,8 +754,8 @@ sub apply_limits {
 
 =head2 join { Paramhash }
 
-Takes a paramhash of everything Searchbuildler::Record does plus a
-parameter called 'collection' that contains a ref to a
+Takes a paramhash of everything Jifty::DBI::Collection's C<join> method
+takes, plus a parameter called C<collection> that contains a ref to a
 L<Jifty::DBI::Collection> object'.
 
 This performs the join.
@@ -775,6 +775,7 @@ sub join {
         column2    => undef,
         alias2     => undef,
         expression => undef,
+        operator   => '=',
         @_
     );
 
@@ -867,7 +868,7 @@ sub join {
         = $args{'alias1'};
     $args{'collection'}->{'leftjoins'}{"$alias"}{'criteria'}
         { 'criterion' . $args{'collection'}->{'criteria_count'}++ }
-        = " $alias.$args{'column2'} = $criterion";
+        = " $criterion $args{'operator'} $alias.$args{'column2'}";
 
     return ($alias);
 }
@@ -883,6 +884,7 @@ sub _normal_join {
         table2     => undef,
         column2    => undef,
         alias2     => undef,
+        operator   => '=',
         @_
     );
 
@@ -895,7 +897,7 @@ sub _normal_join {
             = " LEFT JOIN $args{'table2'} $alias ";
 
         $sb->{'leftjoins'}{"$alias"}{'criteria'}{'base_criterion'}
-            = " $args{'alias1'}.$args{'column1'} = $alias.$args{'column2'}";
+            = " $args{'alias1'}.$args{'column1'} $args{'operator'} $alias.$args{'column2'}";
 
         return ($alias);
     }
