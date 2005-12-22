@@ -566,6 +566,7 @@ it's asked for a record, it should requery the database
 sub redo_search {
     my $self = shift;
     $self->{'must_redo_search'} = 1;
+    delete $self->{'raw_rows'};
 }
 
 =head2 unlimit
@@ -577,6 +578,7 @@ rows in the primary table.
 
 sub unlimit {
     my $self = shift;
+    $self->redo_search();
     $self->_is_limited(-1);
 }
 
