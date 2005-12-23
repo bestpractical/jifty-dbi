@@ -102,7 +102,6 @@ sub _init {
         @_
     );
     $self->_handle( $args{'handle'} ) if ($args{'handle'});
-    $self->_init_pager();
     $self->clean_slate();
 }
 
@@ -128,6 +127,7 @@ cleaner to accomplish that in a different way, though.
 sub clean_slate {
     my $self = shift;
     $self->redo_search();
+    $self->_init_pager();
     $self->{'itemscount'}       = 0;
     $self->{'tables'}           = "";
     $self->{'auxillary_tables'} = "";
@@ -150,11 +150,18 @@ sub clean_slate {
         _close_parens
     );
 
-    # Force ourselves to have no limit statements. do_search won't
-    # work.
+    $self->implicit_clauses();
     $self->_is_limited(0);
 } 
 
+=head2 implicit_clauses
+
+Called by L</clean_slate> to set up any implicit clauses that the
+collection B<always> has.  Defaults to doing nothing.
+
+=cut
+
+sub implicit_clauses {}
 
 =head2 _handle [DBH]
 
@@ -579,7 +586,8 @@ rows in the primary table.
 
 sub unlimit {
     my $self = shift;
-    $self->redo_search();
+    
+    $self->clean_slate();
     $self->_is_limited(-1);
 }
 
