@@ -7,7 +7,7 @@ our @EXPORT
 our $SCHEMA;
 
 sub column {
-    my $name = shift;
+    my $name = lc(shift);
 
     my $from = (caller)[0];
     $from =~ s/::Schema//;
