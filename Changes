@@ -1,5 +1,9 @@
 Revision history for Perl extension Jifty::DBI.
 
+0.08 Sun Dec 25 14:34:12 EST 2005
+
+* Added a missing prereq: Exporter::Lite. Thanks to sri
+
 0.06 Fri Dec 23 15:44:17 EST 2005
 
 * Added more tests for mysql and Pg now that DBSchema supports them. Tests want more love
