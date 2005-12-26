@@ -1,5 +1,7 @@
 Revision history for Perl extension Jifty::DBI.
 
+* Audrey Tang added "smarter" schema declaration processing to get us warnings on bogus usage.
+
 0.08 Sun Dec 25 14:34:12 EST 2005
 
 * Added a missing prereq: Exporter::Lite. Thanks to sri

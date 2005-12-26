@@ -59,85 +59,96 @@ sub column {
 }
 
 sub type ($) {
-    return ( type => shift );
+    _list( type => shift );
 }
 
 sub default ($) {
-    return ( default => shift );
+    _list( default => shift );
 }
 
 sub validator ($) {
-    return ( validator => shift );
+    _list( validator => shift );
 }
 
 sub immutable () {
-    return ( [ writable => 0 ] );
+    _item( [ writable => 0 ] );
 }
 
 sub unreadable {
-    return ( [ readable => 0 ] );
+    _item( [ readable => 0 ] );
 }
 
 sub length ($) {
-    return ( length => shift );
+    _list( length => shift );
 }
 
 sub mandatory () {
-    return ( [ mandatory => 1 ] );
+    _item( [ mandatory => 1 ] );
 }
 
 sub distinct () {
-    return ( [ distinct => 1 ] );
+    _item( [ distinct => 1 ] );
 }
 
 sub not_null () {
     carp "'is not_null' is deprecated in favor of 'is mandatory'";
-    return ( [ mandatory => 1 ] );
+    _item( [ mandatory => 1 ] );
 }
 
 sub input_filters ($) {
-    return ( input_filters => shift );
+    _list( input_filters => shift );
 }
 
 sub output_filters ($) {
-    return ( output_filters => shift );
+    _list( output_filters => shift );
 }
 
 sub since ($) {
-    return ( since => shift );
+    _list( since => shift );
 }
 
 sub valid_values ($) {
-    return ( valid_values => shift );
+    _list( valid_values => shift );
 }
 
 sub label ($) {
-    return ( label => shift );
+    _list( label => shift );
 }
 
 sub hints ($) {
-    return ( hints => shift );
+    _list( hints => shift );
 }
 
 sub render_as ($) {
-    return ( render_as => shift );
+    _list( render_as => shift );
 }
 
 sub is ($) {
     my $thing = shift;
-    return ref $thing eq "ARRAY" ? @{$thing} : $thing;
+    ref $thing eq "ARRAY" ? _list(@{$thing}) : _item($thing);
 }
 
 sub by ($) {
-    return ( by => shift );
+    _list( by => shift );
 }
 
 sub are (@) {
-    return [@_];
+    _item([@_]);
 }
 
 sub on ($) {
-    return ( self => shift );
+    _list( self => shift );
+}
+
+sub _list {
+    defined wantarray or die "Cannot add traits in void context -- check for misspelled preceding comma as a semicolon";
+    wantarray or die "Cannot call list traits in scalar context -- check for unneccessary 'is'";
+    @_;
+}
+
+sub _item {
+    defined wantarray or die "Cannot add traits in void context -- check for misspelled preceding comma as a semicolon";
+    $_[0];
 }
 
 1;
