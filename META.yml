@@ -21,5 +21,6 @@ requires:
   DateTime::Format::Strptime: 0
 no_index:
   directory:
+    - t
     - inc
 generated_by: Module::Install version 0.46

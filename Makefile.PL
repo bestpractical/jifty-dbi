@@ -18,7 +18,8 @@ requires('DateTime::Format::Strptime');
 
 build_requires('Test::More' => 0.52);
 build_requires('DBD::SQLite');
-
+no_index directory => 't';
+no_index directory => 'ex';
 features(
 	'Schema generation' => [
 	  -default => 1,
