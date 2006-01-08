@@ -1,4 +1,8 @@
+use warnings;
+use strict;
+
 package Jifty::DBI::Schema;
+
 use Carp qw/carp/;
 use Exporter::Lite;
 our @EXPORT
