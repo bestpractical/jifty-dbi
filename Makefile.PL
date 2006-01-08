@@ -16,18 +16,10 @@ requires('Cache::Simple::TimedExpiry' => '0.21');
 requires('Data::Page');
 requires('DateTime');
 requires('DateTime::Format::Strptime');
-
+requires('DBIx::DBSchema' => '0.28');
 build_requires('Test::More' => 0.52);
 build_requires('DBD::SQLite');
 no_index directory => 'ex';
-features(
-	'Schema generation' => [
-	  -default => 1,
-	  'DBIx::DBSchema' => '',
-	  'Class::Accessor' => '',
-	],
-);
-#auto_bundle_deps();
 auto_install();
 &WriteAll;
 
