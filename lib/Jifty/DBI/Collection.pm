@@ -316,7 +316,7 @@ together.
 
 sub _is_joined {
     my $self = shift;
-    if ( keys( %{ $self->{'leftjoins'} } ) ) {
+    if ( %{ $self->{'leftjoins'} } ) {
         return (1);
     }
     else {
@@ -873,7 +873,7 @@ sub _where_clause {
     #Various subclauses.
     
     my @subclauses;
-    foreach my $subclause ( keys %{ $self->{'subclauses'} } ) {
+    foreach my $subclause ( sort keys %{ $self->{'subclauses'} } ) {
         push @subclauses, $self->{'subclauses'}{"$subclause"};
     }
 
