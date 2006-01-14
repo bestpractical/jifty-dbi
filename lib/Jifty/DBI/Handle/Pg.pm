@@ -51,11 +51,11 @@ preloaded with error info
 
 sub insert {
     my $self  = shift;
-     my $table = shift;
+    my $table = shift;
     my %args  = (@_);
     my $sth   = $self->SUPER::insert( $table, %args );
 
-     unless ($sth) {
+    unless ($sth) {
         return ($sth);
     }
 
@@ -71,9 +71,8 @@ sub insert {
     $seqsth->execute;
     $self->{'id'} = $seqsth->fetchrow_array();
 
-   return ( $self->{'id'} );
+    return ( $self->{'id'} );
 }
-
 
 =head2 id_sequence_name TABLE
 
@@ -85,7 +84,9 @@ sub id_sequence_name {
     my $self  = shift;
     my $table = shift;
 
-    return $self->{'_sequences'}{$table} if (exists $self->{'_sequences'}{$table});
+    return $self->{'_sequences'}{$table}
+        if ( exists $self->{'_sequences'}{$table} );
+
     #Lets get the id of that row we just inserted
     my $seq;
     my $colinfosth = $self->dbh->column_info( undef, undef, lc($table), '%' );
@@ -100,17 +101,16 @@ sub id_sequence_name {
         }
 
     }
-            my $ret = Class::ReturnValue->new();
-           $ret->as_error(
-                errno   => '-1',
-                message => "Found no sequence for $table",
-                do_backtrace => undef
-            );
-           return ( $ret->return_value );
- 
- }
- 
- 
+    my $ret = Class::ReturnValue->new();
+    $ret->as_error(
+        errno        => '-1',
+        message      => "Found no sequence for $table",
+        do_backtrace => undef
+    );
+    return ( $ret->return_value );
+
+}
+
 =head2 binary_safe_blobs
 
 Return undef, as no current version of postgres supports binary-safe
@@ -161,7 +161,7 @@ Returns a column operator value triple.
 
 sub _make_clause_case_insensitive {
     my $self     = shift;
-    my $column    = shift;
+    my $column   = shift;
     my $operator = shift;
     my $value    = shift;
 
@@ -173,11 +173,9 @@ sub _make_clause_case_insensitive {
     if ( $operator =~ /LIKE/i ) {
         $operator =~ s/LIKE/ILIKE/ig;
         return ( $column, $operator, $value );
-    }
-    elsif ( $operator =~ /=/ ) {
+    } elsif ( $operator =~ /=/ ) {
         return ( "LOWER($column)", $operator, $value, "LOWER(?)" );
-    }
-    else {
+    } else {
         $self->SUPER::_make_clause_case_insensitive( $column, $operator,
             $value );
     }
@@ -190,22 +188,31 @@ takes an incomplete SQL SELECT statement and massages it to return a DISTINCT re
 =cut
 
 sub distinct_query {
-    my $self = shift;
+    my $self         = shift;
     my $statementref = shift;
-    my $sb = shift;
-    my $table = $sb->table;
+    my $sb           = shift;
+    my $table        = $sb->table;
 
-    if ($sb->_order_clause =~ /(?<!main)\./) {
+    if ( $sb->_order_clause =~ /(?<!main)\./ ) {
+
         # If we are ordering by something not in 'main', we need to GROUP
         # BY and adjust the ORDER_BY accordingly
-        local $sb->{group_by} = [@{$sb->{group_by} || []}, {column => 'id'}];
-        local $sb->{order_by} = [map {($_->{alias} and $_->{alias} ne "main") ? {%{$_}, column => "min(".$_->{column}.")"}: $_} @{$sb->{order_by}}];
+        local $sb->{group_by}
+            = [ @{ $sb->{group_by} || [] }, { column => 'id' } ];
+        local $sb->{order_by} = [
+            map {
+                ( $_->{alias} and $_->{alias} ne "main" )
+                    ? { %{$_}, column => "min(" . $_->{column} . ")" }
+                    : $_
+                } @{ $sb->{order_by} }
+        ];
         my $group = $sb->_group_clause;
         my $order = $sb->_order_clause;
-        $$statementref = "SELECT main.* FROM ( SELECT main.id FROM $$statementref $group $order ) distinctquery, $table main WHERE (main.id = distinctquery.id)";
+        $$statementref
+            = "SELECT main.* FROM ( SELECT main.id FROM $$statementref $group $order ) distinctquery, $table main WHERE (main.id = distinctquery.id)";
     } else {
         $$statementref = "SELECT DISTINCT main.* FROM $$statementref";
-       $$statementref .= $sb->_group_clause;
+        $$statementref .= $sb->_group_clause;
         $$statementref .= $sb->_order_clause;
     }
 }

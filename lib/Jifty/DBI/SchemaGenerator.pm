@@ -9,7 +9,6 @@ use Class::ReturnValue;
 
 our $VERSION = '0.01';
 
-
 # Public accessors
 __PACKAGE__->mk_accessors(qw(handle));
 
@@ -190,7 +189,7 @@ sub _db_schema_table_from_model {
 
     my @cols;
 
-    for my $column (  @columns ) {
+    for my $column (@columns) {
 
         # Skip "Virtual" columns - (foreign keys to collections)
         next if $column->virtual;
@@ -198,11 +197,11 @@ sub _db_schema_table_from_model {
 
         push @cols,
             DBIx::DBSchema::Column->new(
-            {   name    => $column->name,
-                type    => $column->type,
-                null    => $column->mandatory ? 0 : 1,
-                distinct    => $column->distinct,
-                default => $column->default,
+            {   name     => $column->name,
+                type     => $column->type,
+                null     => $column->mandatory ? 0 : 1,
+                distinct => $column->distinct,
+                default  => $column->default,
             }
             );
     }

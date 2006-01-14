@@ -79,8 +79,8 @@ sub distinct_query {
     my $statementref = shift;
 
     my $sb = shift;
- 
-     $$statementref = "SELECT main.* FROM $$statementref";
+
+    $$statementref = "SELECT main.* FROM $$statementref";
     $$statementref .= $sb->_group_clause;
     $$statementref .= $sb->_order_clause;
 }

@@ -137,8 +137,7 @@ sub _build_joins {
             $join_clause .= ") ";
 
             $seen_aliases{$join} = 1;
-        }
-        else {
+        } else {
             push( @keys, $join );
             die "Unsatisfied dependency chain in Joins @keys"
                 if $seen{"@keys"}++;

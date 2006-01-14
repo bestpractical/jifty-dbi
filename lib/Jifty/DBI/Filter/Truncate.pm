@@ -17,8 +17,7 @@ sub encode {
     my $truncate_to;
     if ( $column->length && !$column->is_numeric ) {
         $truncate_to = $column->length;
-    }
-    elsif ( $column->type && $column->type =~ /char\((\d+)\)/ ) {
+    } elsif ( $column->type && $column->type =~ /char\((\d+)\)/ ) {
         $truncate_to = $1;
     }
 

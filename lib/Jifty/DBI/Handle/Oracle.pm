@@ -66,8 +66,7 @@ sub insert {
 
     if ( $attribs{'Id'} || $attribs{'id'} ) {
         $unique_id = ( $attribs{'Id'} ? $attribs{'Id'} : $attribs{'id'} );
-    }
-    else {
+    } else {
 
         $query_string = "SELECT " . $table . "_seq.nextval FROM DUAL";
 
@@ -75,8 +74,7 @@ sub insert {
         if ( !$sth ) {
             if ($main::debug) {
                 die "Error with $query_string";
-            }
-            else {
+            } else {
                 return (undef);
             }
         }
@@ -98,8 +96,7 @@ sub insert {
     unless ($sth) {
         if ($main::debug) {
             die "Error with $query_string: " . $self->dbh->errstr;
-        }
-        else {
+        } else {
             return (undef);
         }
     }
@@ -139,8 +136,7 @@ sub build_dsn {
         && $args{'SID'} )
     {
         $dsn .= "host=$args{'Host'};sid=$args{'SID'}";
-    }
-    else {
+    } else {
         $dsn .= "$args{'Database'}"
             if ( defined $args{'Database'} && $args{'Database'} );
     }
@@ -174,14 +170,14 @@ Oracle implementation only supports ORA_CLOB types (112).
 =cut
 
 sub blob_params {
-    my $self  = shift;
+    my $self   = shift;
     my $column = shift;
 
     #my $type = shift;
     # Don't assign to key 'value' as it is defined later.
     return (
         {   ora_column => $column,
-            ora_type  => ORA_CLOB,
+            ora_type   => ORA_CLOB,
         }
     );
 }
@@ -243,30 +239,38 @@ DISTINCT result set.
 
 =cut
 
- 
- sub distinct_query {
-     my $self = shift;
+sub distinct_query {
+    my $self         = shift;
     my $statementref = shift;
-    my $sb = shift;
-    my $table = $sb->Table;
+    my $sb           = shift;
+    my $table        = $sb->Table;
 
     # Wrapp select query in a subselect as Oracle doesn't allow
-     # DISTINCT against CLOB/BLOB column types.
-    if ($sb->_order_clause =~ /(?<!main)\./) {
+    # DISTINCT against CLOB/BLOB column types.
+    if ( $sb->_order_clause =~ /(?<!main)\./ ) {
+
         # If we are ordering by something not in 'main', we need to GROUP
         # BY and adjust the ORDER_BY accordingly
-        local $sb->{group_by} = [@{$sb->{group_by} || []}, {column => 'id'}];
-        local $sb->{order_by} = [map {($_->{alias} and $_->{alias} ne "main") ? {%{$_}, column => "min(".$_->{column}.")"}: $_} @{$sb->{order_by}}];
+        local $sb->{group_by}
+            = [ @{ $sb->{group_by} || [] }, { column => 'id' } ];
+        local $sb->{order_by} = [
+            map {
+                ( $_->{alias} and $_->{alias} ne "main" )
+                    ? { %{$_}, column => "min(" . $_->{column} . ")" }
+                    : $_
+                } @{ $sb->{order_by} }
+        ];
         my $group = $sb->_group_clause;
         my $order = $sb->_order_clause;
-        $$statementref = "SELECT main.* FROM ( SELECT main.id FROM $$statementref $group $order ) distinctquery, $table main WHERE (main.id = distinctquery.id)";
+        $$statementref
+            = "SELECT main.* FROM ( SELECT main.id FROM $$statementref $group $order ) distinctquery, $table main WHERE (main.id = distinctquery.id)";
     } else {
-        $$statementref = "SELECT main.* FROM ( SELECT DISTINCT main.id FROM $$statementref ) distinctquery, $table main WHERE (main.id = distinctquery.id) ";
+        $$statementref
+            = "SELECT main.* FROM ( SELECT DISTINCT main.id FROM $$statementref ) distinctquery, $table main WHERE (main.id = distinctquery.id) ";
         $$statementref .= $sb->_group_clause;
         $$statementref .= $sb->_order_clause;
     }
- }
- 
+}
 
 =head2 binary_safe_blobs
 

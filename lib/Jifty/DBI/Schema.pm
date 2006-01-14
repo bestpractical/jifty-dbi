@@ -21,7 +21,7 @@ sub column {
         name     => $name,
         readable => 1,
         writable => 1,
-        virtual => 0,
+        virtual  => 0,
         @_,
     );
     my @original = @args;
@@ -34,7 +34,7 @@ sub column {
 
     if ( my $refclass = $column->refers_to ) {
         $refclass->require();
-        $column->type('integer') unless ($column->type);
+        $column->type('integer') unless ( $column->type );
 
         if ( UNIVERSAL::isa( $refclass, 'Jifty::DBI::Record' ) ) {
             if ( $name =~ /(.*)_id$/ ) {
@@ -47,14 +47,10 @@ sub column {
                 $virtual_column->alias_for_column($name);
             }
             $column->by('id') unless $column->by;
-        }
-        elsif (
-                UNIVERSAL::isa( $refclass, 'Jifty::DBI::Collection' ) 
-            ) {
+        } elsif ( UNIVERSAL::isa( $refclass, 'Jifty::DBI::Collection' ) ) {
             $column->by('id') unless $column->by;
             $column->virtual('1');
-        }
-        else {
+        } else {
             warn "Error: $refclass neither Record nor Collection";
         }
     }
@@ -129,7 +125,7 @@ sub render_as ($) {
 
 sub is ($) {
     my $thing = shift;
-    ref $thing eq "ARRAY" ? _list(@{$thing}) : _item($thing);
+    ref $thing eq "ARRAY" ? _list( @{$thing} ) : _item($thing);
 }
 
 sub by ($) {
@@ -137,7 +133,7 @@ sub by ($) {
 }
 
 sub are (@) {
-    _item([@_]);
+    _item( [@_] );
 }
 
 sub on ($) {
@@ -145,13 +141,19 @@ sub on ($) {
 }
 
 sub _list {
-    defined wantarray or die "Cannot add traits in void context -- check for misspelled preceding comma as a semicolon";
-    wantarray or die "Cannot call list traits in scalar context -- check for unneccessary 'is'";
+    defined wantarray
+        or die
+        "Cannot add traits in void context -- check for misspelled preceding comma as a semicolon";
+    wantarray
+        or die
+        "Cannot call list traits in scalar context -- check for unneccessary 'is'";
     @_;
 }
 
 sub _item {
-    defined wantarray or die "Cannot add traits in void context -- check for misspelled preceding comma as a semicolon";
+    defined wantarray
+        or die
+        "Cannot add traits in void context -- check for misspelled preceding comma as a semicolon";
     $_[0];
 }
 

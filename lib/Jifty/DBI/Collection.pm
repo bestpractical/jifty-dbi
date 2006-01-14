@@ -3,7 +3,6 @@ package Jifty::DBI::Collection;
 use warnings;
 use strict;
 
-
 =head1 NAME
 
 Jifty::DBI::Collection - Encapsulate SQL queries and rows in simple
@@ -56,7 +55,6 @@ use Clone;
 use base qw/Class::Accessor/;
 __PACKAGE__->mk_accessors(qw/pager/);
 
-
 =head1 METHODS
 
 =head2 new
@@ -101,19 +99,18 @@ sub _init {
         handle => undef,
         @_
     );
-    $self->_handle( $args{'handle'} ) if ($args{'handle'});
+    $self->_handle( $args{'handle'} ) if ( $args{'handle'} );
     $self->clean_slate();
 }
 
-
 sub _init_pager {
     my $self = shift;
-    $self->pager(Data::Page->new);
+    $self->pager( Data::Page->new );
 
     $self->pager->total_entries(0);
     $self->pager->entries_per_page(10);
     $self->pager->current_page(1);
-} 
+}
 
 =head2 clean_slate
 
@@ -152,7 +149,7 @@ sub clean_slate {
 
     $self->implicit_clauses();
     $self->_is_limited(0);
-} 
+}
 
 =head2 implicit_clauses
 
@@ -161,7 +158,7 @@ collection B<always> has.  Defaults to doing nothing.
 
 =cut
 
-sub implicit_clauses {}
+sub implicit_clauses { }
 
 =head2 _handle [DBH]
 
@@ -245,7 +242,7 @@ sub _do_count {
     my $all  = shift || 0;
 
     my $query_string = $self->build_select_count_query();
-    my $records     = $self->_handle->simple_query($query_string);
+    my $records      = $self->_handle->simple_query($query_string);
     return 0 unless $records;
 
     my @row = $records->fetchrow_array();
@@ -274,7 +271,7 @@ sub _apply_limits {
     $self->_handle->apply_limits( $statementref, $self->rows_per_page,
         $self->first_row );
 
-    # XXX TODO: refactor me, once we figure out the last place that columns could be set
+# XXX TODO: refactor me, once we figure out the last place that columns could be set
     $$statementref =~ s/main\.\*/CORE::join(', ', @{$self->{columns}})/eg
         if $self->{columns}
         and @{ $self->{columns} };
@@ -291,7 +288,7 @@ is returned.
 sub _distinct_query {
     my $self         = shift;
     my $statementref = shift;
-    $self->_handle->distinct_query($statementref, $self);
+    $self->_handle->distinct_query( $statementref, $self );
 }
 
 =head2 _build_joins
@@ -318,8 +315,7 @@ sub _is_joined {
     my $self = shift;
     if ( %{ $self->{'leftjoins'} } ) {
         return (1);
-    }
-    else {
+    } else {
         return ( @{ $self->{'aliases'} } );
     }
 
@@ -337,8 +333,7 @@ sub _limit_clause {
             $limit_clause .= $self->first_row . ", ";
         }
         $limit_clause .= $self->rows_per_page;
-    }
-    else {
+    } else {
         $limit_clause = "";
     }
     return $limit_clause;
@@ -355,8 +350,7 @@ sub _is_limited {
     my $self = shift;
     if (@_) {
         $self->{'is_limited'} = shift;
-    }
-    else {
+    } else {
         return ( $self->{'is_limited'} );
     }
 }
@@ -375,18 +369,18 @@ sub build_select_query {
 
     my $query_string = $self->_build_joins . " ";
 
-    if ( $self->_is_limited ) { 
-        $query_string .= $self->_where_clause . " "
+    if ( $self->_is_limited ) {
+        $query_string .= $self->_where_clause . " ";
     }
     if ( $self->_is_joined ) {
-     # DISTINCT query only required for multi-table selects
-        $self->_distinct_query(\$query_string);
-     } else {
-         $query_string = "SELECT main.* FROM $query_string";
+
+        # DISTINCT query only required for multi-table selects
+        $self->_distinct_query( \$query_string );
+    } else {
+        $query_string = "SELECT main.* FROM $query_string";
         $query_string .= $self->_group_clause;
         $query_string .= $self->_order_clause;
-     }
- 
+    }
 
     $self->_apply_limits( \$query_string );
 
@@ -407,14 +401,13 @@ sub build_select_count_query {
     my $query_string = $self->_build_joins . " ";
 
     if ( $self->_is_limited ) {
-        $query_string .= $self->_where_clause . " "
+        $query_string .= $self->_where_clause . " ";
     }
 
     # DISTINCT query only required for multi-table selects
     if ( $self->_is_joined ) {
         $query_string = $self->_handle->distinct_count( \$query_string );
-    }
-    else {
+    } else {
         $query_string = "SELECT count(main.id) FROM " . $query_string;
     }
 
@@ -444,8 +437,7 @@ sub next {
         my $item = ( $self->{'items'}[ $self->{'itemscount'} ] );
         $self->{'itemscount'}++;
         return ($item);
-    }
-    else {    #we've gone through the whole list. reset the count.
+    } else {    #we've gone through the whole list. reset the count.
         $self->goto_first_item();
         return (undef);
     }
@@ -554,10 +546,10 @@ sub record_class {
     my $self = shift;
     if (@_) {
         $self->{record_class} = shift if (@_);
-    }
-    elsif ( not $self->{record_class} ) {
+    } elsif ( not $self->{record_class} ) {
         my $class = ref($self);
-        $class =~ s/Collection$// or die "Can't guess record class from $class";
+        $class =~ s/Collection$//
+            or die "Can't guess record class from $class";
         $self->{record_class} = $class;
     }
     return $self->{record_class};
@@ -586,7 +578,7 @@ rows in the primary table.
 
 sub unlimit {
     my $self = shift;
-    
+
     $self->clean_slate();
     $self->_is_limited(-1);
 }
@@ -675,9 +667,9 @@ sub limit {
 
     # We need to be passed a column and a value, at very least
     die "Must provide a column to limit"
-      unless defined $args{column};
+        unless defined $args{column};
     die "Must provide a value to limit to"
-      unless defined $args{value};
+        unless defined $args{value};
 
     #since we're changing the search criteria, we need to redo the search
     $self->redo_search();
@@ -687,16 +679,13 @@ sub limit {
         #If it's a like, we supply the %s around the search term
         if ( $args{'operator'} =~ /LIKE/i ) {
             $args{'value'} = $args{'value'};
-        }
-        elsif ( $args{'operator'} =~ /MATCHES/i ) {
+        } elsif ( $args{'operator'} =~ /MATCHES/i ) {
             $args{'value'}    = "%" . $args{'value'} . "%";
             $args{'operator'} = "LIKE";
-        }
-        elsif ( $args{'operator'} =~ /STARTSWITH/i ) {
+        } elsif ( $args{'operator'} =~ /STARTSWITH/i ) {
             $args{'value'}    = $args{'value'} . "%";
             $args{'operator'} = "LIKE";
-        }
-        elsif ( $args{'operator'} =~ /ENDSWITH/i ) {
+        } elsif ( $args{'operator'} =~ /ENDSWITH/i ) {
             $args{'value'}    = "%" . $args{'value'};
             $args{'operator'} = "LIKE";
         }
@@ -760,8 +749,7 @@ sub limit {
 
     if ( $args{'subclause'} ) {
         $Clause = $args{'subclause'};
-    }
-    else {
+    } else {
         $Clause = $qualified_column;
     }
 
@@ -776,8 +764,7 @@ sub limit {
     if ( $args{'leftjoin'} ) {
         $restriction = \$self->{'leftjoins'}{ $args{'leftjoin'} }{'criteria'}
             {"$Clause"};
-    }
-    else {
+    } else {
         $restriction = \$self->{'restrictions'}{"$Clause"};
     }
 
@@ -816,8 +803,7 @@ sub limit {
 
         $$restriction = $prefix . $clause;
 
-    }
-    else {
+    } else {
         $$restriction .= $args{'entry_aggregator'} . $prefix . $clause;
     }
 
@@ -827,8 +813,7 @@ sub limit {
 
     if ( defined( $args{'alias'} ) ) {
         return ( $args{'alias'} );
-    }
-    else {
+    } else {
         return (1);
     }
 }
@@ -844,8 +829,7 @@ sub _close_paren {
     my $restriction = \$self->{'restrictions'}{"$clause"};
     if ( !$$restriction ) {
         $$restriction = " ) ";
-    }
-    else {
+    } else {
         $$restriction .= " ) ";
     }
 }
@@ -860,8 +844,8 @@ sub _add_subclause {
 }
 
 sub _where_clause {
-    my $self = shift;
-    my  $where_clause = '';
+    my $self         = shift;
+    my $where_clause = '';
 
     # Go through all the generic restrictions and build up the
     # "generic_restrictions" subclause.  That's the only one that the
@@ -871,13 +855,13 @@ sub _where_clause {
 
     #Go through all restriction types. Build the where clause from the
     #Various subclauses.
-    
+
     my @subclauses;
     foreach my $subclause ( sort keys %{ $self->{'subclauses'} } ) {
         push @subclauses, $self->{'subclauses'}{"$subclause"};
     }
 
-    $where_clause = " WHERE " . join ( ' AND ', @subclauses) if ( @subclauses  );
+    $where_clause = " WHERE " . join( ' AND ', @subclauses ) if (@subclauses);
 
     return ($where_clause);
 
@@ -947,17 +931,15 @@ The results would be unordered if method called without arguments.
 =cut
 
 sub order_by {
-     my $self = shift;
-     my @args = @_;
- 
+    my $self = shift;
+    my @args = @_;
+
     unless ( UNIVERSAL::isa( $args[0], 'HASH' ) ) {
         @args = {@args};
     }
     $self->{'order_by'} = \@args;
     $self->redo_search();
 }
-
-
 
 =head2 _order_clause
 
@@ -971,7 +953,7 @@ sub _order_clause {
     return '' unless $self->{'order_by'};
 
     my $clause = '';
-    foreach my $row ( @{$self->{'order_by'}} ) {
+    foreach my $row ( @{ $self->{'order_by'} } ) {
 
         my %rowhash = (
             alias  => 'main',
@@ -981,8 +963,7 @@ sub _order_clause {
         );
         if ( $rowhash{'order'} =~ /^des/i ) {
             $rowhash{'order'} = "DESC";
-        }
-        else {
+        } else {
             $rowhash{'order'} = "ASC";
         }
 
@@ -991,8 +972,7 @@ sub _order_clause {
             $clause .= $rowhash{'function'};
             $clause .= $rowhash{'order'};
 
-        }
-        elsif ( ( $rowhash{'alias'} )
+        } elsif ( ( $rowhash{'alias'} )
             and ( $rowhash{'column'} ) )
         {
 
@@ -1005,7 +985,6 @@ sub _order_clause {
     $clause = " ORDER BY$clause " if $clause;
     return $clause;
 }
-
 
 =head2 group_by_cols DEPRECATED
 
@@ -1050,7 +1029,6 @@ sub group_by {
     $self->redo_search();
 }
 
-
 =head2 _group_clause
 
 Private function to return the "GROUP BY" clause for this query.
@@ -1061,13 +1039,12 @@ sub _group_clause {
     my $self = shift;
     return '' unless $self->{'group_by'};
 
-     my $row;
-     my $clause;
- 
-    foreach $row ( @{$self->{'group_by'}} ) {
-         my %rowhash = ( alias => 'main',
+    my $row;
+    my $clause;
 
-
+    foreach $row ( @{ $self->{'group_by'} } ) {
+        my %rowhash = (
+            alias => 'main',
 
             column => undef,
             %$row
@@ -1076,8 +1053,7 @@ sub _group_clause {
             $clause .= ( $clause ? ", " : " " );
             $clause .= $rowhash{'function'};
 
-        }
-        elsif ( ( $rowhash{'alias'} )
+        } elsif ( ( $rowhash{'alias'} )
             and ( $rowhash{'column'} ) )
         {
 
@@ -1086,12 +1062,11 @@ sub _group_clause {
             $clause .= $rowhash{'column'};
         }
     }
-     if ($clause) {
-	return " GROUP BY" . $clause . " ";
-     }
-     else {
-	return '';
-     }
+    if ($clause) {
+        return " GROUP BY" . $clause . " ";
+    } else {
+        return '';
+    }
 }
 
 =head2 new_alias table_OR_CLASS
@@ -1110,8 +1085,7 @@ sub new_alias {
 
     if ( $refers_to->can('table') ) {
         $table = $refers_to->table;
-    }
-    else {
+    } else {
         $table = $refers_to;
     }
 
@@ -1180,7 +1154,6 @@ sub join {
 
 }
 
-
 =head2 set_page_info [per_page => NUMBER,] [current_page => NUMBER]
 
 Sets the current page (one-based) and number of items per page on the
@@ -1193,22 +1166,21 @@ the selected page.
 =cut
 
 sub set_page_info {
-  my $self = shift;
-  my %args = (
-    per_page => undef,
-    current_page => undef, # 1-based
-    @_
-  );
-  
-  $self->pager->total_entries($self->count_all)
-              ->entries_per_page($args{'per_page'})
-              ->current_page($args{'current_page'});
-  
-  $self->rows_per_page($args{'per_page'});
-  $self->first_row($self->pager->first);
-  
-}
+    my $self = shift;
+    my %args = (
+        per_page     => undef,
+        current_page => undef,    # 1-based
+        @_
+    );
 
+    $self->pager->total_entries( $self->count_all )
+        ->entries_per_page( $args{'per_page'} )
+        ->current_page( $args{'current_page'} );
+
+    $self->rows_per_page( $args{'per_page'} );
+    $self->first_row( $self->pager->first );
+
+}
 
 =head2 rows_per_page
 
@@ -1354,8 +1326,7 @@ sub is_last {
 
     if ( $self->_items_counter == $self->count ) {
         return (1);
-    }
-    else {
+    } else {
         return (0);
     }
 }
@@ -1392,8 +1363,7 @@ sub column {
         if ( my $alias = $args{alias} ) {
             $alias =~ s/_\d+$//;
             $alias;
-        }
-        else {
+        } else {
             $self->table;
         }
     };
@@ -1412,8 +1382,7 @@ sub column {
         # If we want to call a simple function on the column
         elsif ( $func !~ /\(/ ) {
             $name = "\U$func\E($name)";
-        }
-        else {
+        } else {
             $name = $func;
         }
 
@@ -1477,7 +1446,7 @@ sub has_column {
         @_
     );
 
-    my $table = $args{table}  or die;
+    my $table  = $args{table}  or die;
     my $column = $args{column} or die;
     return grep { $_ eq $column } $self->columns_in_db($table);
 }
@@ -1509,23 +1478,21 @@ sub refers_to (@) {
     return ( refers_to => $class, %args );
 }
 
-
 =head2 Clone
 
 Returns copy of the current object with all search restrictions.
 
 =cut
 
-sub clone
-{
+sub clone {
     my $self = shift;
 
     my $obj = bless {}, ref($self);
     %$obj = %$self;
 
-    $obj->redo_search(); # clean out the object of data
-    
-    $obj->{$_} = Clone::clone($obj->{$_}) for ( $self->_cloned_attributes );
+    $obj->redo_search();    # clean out the object of data
+
+    $obj->{$_} = Clone::clone( $obj->{$_} ) for ( $self->_cloned_attributes );
     return $obj;
 }
 
@@ -1538,18 +1505,16 @@ clonning then you probably want override this method and add own values to
 the list.
 
 =cut
- 
-sub _cloned_attributes
-{
+
+sub _cloned_attributes {
     return qw(
         aliases
         left_joins
         subclauses
         restrictions
     );
- }
- 
- 
+}
+
 1;
 __END__
 

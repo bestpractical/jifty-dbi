@@ -61,8 +61,7 @@ sub decode {
     my $dt = $parser->parse_datetime($$value_ref);
     if ($dt) {
         $$value_ref = $dt;
-    }
-    else {
+    } else {
         return;
     }
 }

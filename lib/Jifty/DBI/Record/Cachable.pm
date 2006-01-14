@@ -196,7 +196,7 @@ sub _fetch () {
 }
 
 sub __Value {
-    my $self  = shift;
+    my $self   = shift;
     my $column = shift;
     return ( $self->SUPER::__value($column) );
 }
@@ -241,8 +241,7 @@ sub _gen_alternate_RecordCache_key {
 
         if ( ref($value) eq "HASH" ) {
             $value = ( $value->{operator} || '=' ) . $value->{value};
-        }
-        else {
+        } else {
             $value = "=" . $value;
         }
         $cache_key .= $key . $value . ',';
@@ -308,8 +307,7 @@ sub _lookup_primary_RecordCache_key {
     # If the alternate key is really the primary one
     elsif ( $self->_record_cache->fetch($alternate_key) ) {
         return ($alternate_key);
-    }
-    else {    # empty!
+    } else {    # empty!
         return (undef);
     }
 

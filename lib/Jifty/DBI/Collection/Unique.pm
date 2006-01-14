@@ -6,7 +6,6 @@ use base 'Exporter';
 our @EXPORT  = qw(AddRecord);
 our $VERSION = "0.01";
 
-
 sub add_record {
     my $self   = shift;
     my $record = shift;

@@ -285,8 +285,7 @@ sub disconnect {
     my $self = shift;
     if ( $self->dbh ) {
         return ( $self->dbh->disconnect() );
-    }
-    else {
+    } else {
         return;
     }
 }
@@ -364,8 +363,7 @@ sub update_record_value {
     ## Look and see if the column is being updated via a SQL function.
     if ( $args{'is_sql_function'} ) {
         $query .= $args{'value'} . ' ';
-    }
-    else {
+    } else {
         $query .= '? ';
         push( @bind, $args{'value'} );
     }
@@ -410,7 +408,7 @@ Execute the SQL string specified in QUERY_STRING
 =cut
 
 sub simple_query {
-    my $self        = shift;
+    my $self         = shift;
     my $query_string = shift;
     my @bind_values;
     @bind_values = (@_) if (@_);
@@ -420,8 +418,7 @@ sub simple_query {
         if ($DEBUG) {
             die "$self couldn't prepare the query '$query_string'"
                 . $self->dbh->errstr . "\n";
-        }
-        else {
+        } else {
             warn "$self couldn't prepare the query '$query_string'"
                 . $self->dbh->errstr . "\n";
             my $ret = Class::ReturnValue->new();
@@ -469,8 +466,7 @@ sub simple_query {
             die "$self couldn't execute the query '$query_string'"
                 . $self->dbh->errstr . "\n";
 
-        }
-        else {
+        } else {
             Carp::cluck "$self couldn't execute the query '$query_string'";
 
             my $ret = Class::ReturnValue->new();
@@ -504,8 +500,7 @@ sub fetch_result {
     my $sth         = $self->simple_query( $query, @bind_values );
     if ($sth) {
         return ( $sth->fetchrow );
-    }
-    else {
+    } else {
         return ($sth);
     }
 }
@@ -614,13 +609,13 @@ Returns a column operator value triple.
 
 sub _make_clause_case_insensitive {
     my $self     = shift;
-    my $column    = shift;
+    my $column   = shift;
     my $operator = shift;
     my $value    = shift;
 
     if ( $value !~ /^\d+$/ ) {    # don't downcase integer values
         $column = "lower($column)";
-        $value = lc($value);
+        $value  = lc($value);
     }
     return ( $column, $operator, $value, undef );
 }
@@ -639,8 +634,7 @@ sub begin_transaction {
     $TRANSDEPTH++;
     if ( $TRANSDEPTH > 1 ) {
         return ($TRANSDEPTH);
-    }
-    else {
+    } else {
         return ( $self->dbh->begin_work );
     }
 }
@@ -662,8 +656,7 @@ sub commit {
 
     if ( $TRANSDEPTH == 0 ) {
         return ( $self->dbh->commit );
-    }
-    else {    #we're inside a transaction
+    } else {    #we're inside a transaction
         return ($TRANSDEPTH);
     }
 }
@@ -678,30 +671,29 @@ If this method is passed a true argument, stack depth is blown away and the oute
 =cut
 
 sub rollback {
-     my $self = shift;
+    my $self  = shift;
     my $force = shift;
 
-   my $dbh = $self->dbh;
-    unless( $dbh ) {
+    my $dbh = $self->dbh;
+    unless ($dbh) {
         $TRANSDEPTH = 0;
         return;
     }
- 
-    #unless ($TRANSDEPTH) {Carp::confess("Attempted to rollback a transaction with none in progress")};
-     if ($force) {
-         $TRANSDEPTH = 0;
-        return($dbh->rollback);
-     }
- 
-    $TRANSDEPTH-- if ($TRANSDEPTH >= 1);
-     if ($TRANSDEPTH == 0 ) {
-        return($dbh->rollback);
-     } else { #we're inside a transaction
-         return($TRANSDEPTH);
-     }
+
+#unless ($TRANSDEPTH) {Carp::confess("Attempted to rollback a transaction with none in progress")};
+    if ($force) {
+        $TRANSDEPTH = 0;
+        return ( $dbh->rollback );
+    }
+
+    $TRANSDEPTH-- if ( $TRANSDEPTH >= 1 );
+    if ( $TRANSDEPTH == 0 ) {
+        return ( $dbh->rollback );
+    } else {    #we're inside a transaction
+        return ($TRANSDEPTH);
+    }
 
 }
-
 
 =head2 force_rollback
 
@@ -798,8 +790,7 @@ sub join {
                 $args{'table2'} = $1;
                 $alias = $2;
 
-            }
-            else {
+            } else {
                 push @new_aliases, $old_alias;
             }
         }
@@ -822,8 +813,7 @@ sub join {
                     $args{'table2'} = $1;
                     $alias = $2;
 
-                }
-                else {
+                } else {
                     push @new_aliases, $old_alias;
                 }
             }
@@ -846,8 +836,7 @@ sub join {
 
         $string = " LEFT JOIN " . $args{'table2'} . " $alias ";
 
-    }
-    else {
+    } else {
 
         $string = " JOIN " . $args{'table2'} . " $alias ";
 
@@ -856,14 +845,14 @@ sub join {
     my $criterion;
     if ( $args{'expression'} ) {
         $criterion = $args{'expression'};
-    }
-    else {
+    } else {
         $criterion = $args{'alias1'} . "." . $args{'column1'};
     }
 
     $args{'collection'}->{'leftjoins'}{"$alias"}{'alias_string'} = $string;
     $args{'collection'}->{'leftjoins'}{"$alias"}{'entry_aggregator'}
-          = $args{'entry_aggregator'} if ( $args{'entry_aggregator'} );
+        = $args{'entry_aggregator'}
+        if ( $args{'entry_aggregator'} );
     $args{'collection'}->{'leftjoins'}{"$alias"}{'depends_on'}
         = $args{'alias1'};
     $args{'collection'}->{'leftjoins'}{"$alias"}{'criteria'}
@@ -900,8 +889,7 @@ sub _normal_join {
             = " $args{'alias1'}.$args{'column1'} $args{'operator'} $alias.$args{'column2'}";
 
         return ($alias);
-    }
-    else {
+    } else {
         $sb->Jifty::DBI::Collection::limit(
             entry_aggregator => 'AND',
             quote_value      => 0,
@@ -939,19 +927,20 @@ sub _build_joins {
         if ( !$sb->{'leftjoins'}{$join}{'depends_on'}
             || $seen_aliases{ $sb->{'leftjoins'}{$join}{'depends_on'} } )
         {
-            $join_clause .= $sb->{'leftjoins'}{$join}{'alias_string'} . " ON ";
-          
-            my @criteria = values %{ $sb->{'leftjoins'}{$join}{'criteria'} } ;
-            my $entry_aggregator =  $sb->{'leftjoins'}{$join}{'entry_aggregator'}  || 'AND';
-            my $criteria = CORE::join( " $entry_aggregator ", map { " ( $_ ) " } @criteria);  
+            $join_clause
+                .= $sb->{'leftjoins'}{$join}{'alias_string'} . " ON ";
 
-            $join_clause .= "( ".$criteria. " ) ";
-            $join_clause = "(" .$join_clause .")";
+            my @criteria = values %{ $sb->{'leftjoins'}{$join}{'criteria'} };
+            my $entry_aggregator
+                = $sb->{'leftjoins'}{$join}{'entry_aggregator'} || 'AND';
+            my $criteria = CORE::join( " $entry_aggregator ",
+                map {" ( $_ ) "} @criteria );
 
+            $join_clause .= "( " . $criteria . " ) ";
+            $join_clause = "(" . $join_clause . ")";
 
             $seen_aliases{$join} = 1;
-        }
-        else {
+        } else {
             push( @keys, $join );
             die "Unsatisfied dependency chain in joins @keys"
                 if $seen{"@keys"}++;
@@ -970,17 +959,16 @@ takes an incomplete SQL SELECT statement and massages it to return a DISTINCT re
 =cut
 
 sub distinct_query {
-    my $self = shift;
+    my $self         = shift;
     my $statementref = shift;
-    my $sb = shift;
- 
-     # Prepend select query for DBs which allow DISTINCT on all column types.
-     $$statementref = "SELECT DISTINCT main.* FROM $$statementref";
+    my $sb           = shift;
+
+    # Prepend select query for DBs which allow DISTINCT on all column types.
+    $$statementref = "SELECT DISTINCT main.* FROM $$statementref";
 
     $$statementref .= $sb->_group_clause;
     $$statementref .= $sb->_order_clause;
 }
- 
 
 =head2 distinct_count STATEMENTREF 
 

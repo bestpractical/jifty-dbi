@@ -36,8 +36,7 @@ sub encode {
 
     if ( Encode::is_utf8($$value_ref) ) {
         $$value_ref = Encode::encode_utf8($$value_ref);
-    }
-    else {
+    } else {
 
         # if value has no utf8 flag but filter on the stack
         # we do double encoding, and stop on the first bad characters

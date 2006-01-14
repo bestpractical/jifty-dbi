@@ -1,10 +1,8 @@
 package Jifty::DBI;
-use warnings; 
+use warnings;
 use strict;
 
-
 our $VERSION = '0.10';
-
 
 =head1 NAME
 

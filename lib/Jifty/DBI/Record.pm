@@ -16,7 +16,6 @@ use base qw/
 
 our $VERSION = '0.01';
 
-
 Jifty::DBI::Record->mk_classdata('COLUMNS');
 
 =head1 NAME
@@ -120,18 +119,15 @@ sub AUTOLOAD {
                 $_[0]->_to_record( $column_name,
                     $_[0]->__value($column_name) );
             };
-        }
-        elsif (
+        } elsif (
             UNIVERSAL::isa( $column->refers_to, "Jifty::DBI::Collection" ) )
         {
             *{$AUTOLOAD} = sub { $_[0]->_collection_value($column_name) };
-        }
-        else {
+        } else {
             *{$AUTOLOAD} = sub { return ( $_[0]->_value($column_name) ) };
         }
         goto &$AUTOLOAD;
-    }
-    elsif ( $action eq 'write' ) {
+    } elsif ( $action eq 'write' ) {
         return ( 0, 'Immutable column' ) unless $column->writable;
 
         if ( UNIVERSAL::isa( $column->refers_to, "Jifty::DBI::Record" ) ) {
@@ -144,16 +140,14 @@ sub AUTOLOAD {
                 return (
                     $self->_set( column => $column_name, value => $val ) );
             };
-        }
-        else {
+        } else {
             *{$AUTOLOAD} = sub {
                 return (
                     $_[0]->_set( column => $column_name, value => $_[1] ) );
             };
         }
         goto &$AUTOLOAD;
-    }
-    elsif ( $action eq 'validate' ) {
+    } elsif ( $action eq 'validate' ) {
         *{$AUTOLOAD}
             = sub { return ( $_[0]->_validate( $column_name, $_[1] ) ) };
         goto &$AUTOLOAD;
@@ -184,13 +178,11 @@ sub _parse_autoload_method {
     if ( $method =~ /^.*::set_(\w+)$/o ) {
         $column_name = $1;
         $action      = 'write';
-    }
-    elsif ( $method =~ /^.*::validate_(\w+)$/o ) {
+    } elsif ( $method =~ /^.*::validate_(\w+)$/o ) {
         $column_name = $1;
         $action      = 'validate';
 
-    }
-    elsif ( $method =~ /^.*::(\w+)$/o ) {
+    } elsif ( $method =~ /^.*::(\w+)$/o ) {
         $column_name = $1;
         $action      = 'read';
 
@@ -282,8 +274,8 @@ sub _to_record {
     my $column_name = shift;
     my $value       = shift;
 
-    my $column    = $self->column($column_name);
-    my $classname = $column->refers_to();
+    my $column        = $self->column($column_name);
+    my $classname     = $column->refers_to();
     my $remote_column = $column->by() || 'id';
 
     return       unless defined $value;
@@ -293,7 +285,7 @@ sub _to_record {
     # XXX TODO FIXME we need to figure out the right way to call new here
     # perhaps the handle should have an initiializer for records/collections
     my $object = $classname->new( $self->_handle );
-    $object->load_by_cols($remote_column => $value );
+    $object->load_by_cols( $remote_column => $value );
     return $object;
 }
 
@@ -310,7 +302,7 @@ sub _collection_value {
     return unless UNIVERSAL::isa( $classname, 'Jifty::DBI::Collection' );
 
     my $coll = $classname->new( handle => $self->_handle );
-    $coll->limit( column =>  $column->by(), value => $self->id );
+    $coll->limit( column => $column->by(), value => $self->id );
     return $coll;
 }
 
@@ -342,9 +334,13 @@ sub column {
 
 sub columns {
     my $self = shift;
-    return ( sort { 
-         ((($b->type||'') eq 'serial') <=> (($a->type||'') eq 'serial')) or 
-            ( $a->name cmp $b->name) } values %{ $self->COLUMNS } );
+    return (
+        sort {
+            ( ( ( $b->type || '' ) eq 'serial' )
+                <=> ( ( $a->type || '' ) eq 'serial' ) )
+                or ( $a->name cmp $b->name )
+            } values %{ $self->COLUMNS }
+    );
 }
 
 # sub {{{ readable_attributes
@@ -371,7 +367,6 @@ sub writable_attributes {
     my $self = shift;
     return sort map { $_->name } grep { $_->writable } $self->columns;
 }
-
 
 =head2 record values
 
@@ -452,7 +447,6 @@ sub _value {
     return $value;
 }
 
-
 =head2 __value
 
 Takes a column name and returns that column's value. Subclasses should
@@ -478,7 +472,7 @@ sub __value {
     #Carp::confess unless ($column);
 
     if ( !$self->{'fetched'}{ $column->name } and my $id = $self->id() ) {
-        my $pkey        = $self->_primary_key();
+        my $pkey         = $self->_primary_key();
         my $query_string = "SELECT "
             . $column->name
             . " FROM "
@@ -580,8 +574,8 @@ sub __set {
     }
 
     my $method = "validate_" . $column->name;
-    my ($ok, $msg) = $self->$method( $args{'value'} );
-    unless ( $ok ) {
+    my ( $ok, $msg ) = $self->$method( $args{'value'} );
+    unless ($ok) {
         $ret->as_array( 0, 'Illegal value for ' . $column->name );
         $ret->as_error(
             errno        => 3,
@@ -631,8 +625,7 @@ sub __set {
 
         # XXX TODO primary_keys
         $self->load_by_cols( id => $self->id );
-    }
-    else {
+    } else {
         $self->{'values'}->{ $column->name } = $unmunged_value;
         $self->{'decoded'}{ $column->name } = 0;
     }
@@ -651,9 +644,9 @@ If it succeeds (which is always the case right now), returns true. Otherwise ret
 =cut
 
 sub _validate {
-    my $self  = shift;
+    my $self   = shift;
     my $column = shift;
-    my $value = shift;
+    my $value  = shift;
 
  #Check type of input
  #If it's null, are nulls permitted?
@@ -706,23 +699,20 @@ sub load_by_cols {
                 $op       = $hash{$key}->{operator};
                 $value    = $hash{$key}->{value};
                 $function = $hash{$key}->{function} || "?";
-            }
-            else {
+            } else {
                 $op    = '=';
                 $value = $hash{$key};
             }
 
             push @phrases, "$key $op $function";
             push @bind,    $value;
-        }
-        else {
+        } else {
             push @phrases, "($key IS NULL OR $key = ?)";
             my $column = $self->column($key);
 
             if ( $column->is_numeric ) {
                 push @bind, 0;
-            }
-            else {
+            } else {
                 push @bind, '';
             }
 
@@ -780,9 +770,9 @@ Load a record as the result of an SQL statement
 =cut
 
 sub _load_from_sql {
-    my $self        = shift;
+    my $self         = shift;
     my $query_string = shift;
-    my @bind_values = (@_);
+    my @bind_values  = (@_);
 
     my $sth = $self->_handle->simple_query( $query_string, @bind_values );
 
@@ -843,9 +833,9 @@ sub create {
     my $self    = shift;
     my %attribs = @_;
 
-    if ($self->can('before_create')) {
-    my $before_ret = $self->before_create( \%attribs ) ;
-    return ($before_ret) unless ($before_ret);
+    if ( $self->can('before_create') ) {
+        my $before_ret = $self->before_create( \%attribs );
+        return ($before_ret) unless ($before_ret);
     }
 
     foreach my $column_name ( keys %attribs ) {
@@ -882,7 +872,7 @@ sub create {
         }
     }
     my $ret = $self->_handle->insert( $self->table, %attribs );
-    $self->after_create(\$ret) if $self->can('after_create');
+    $self->after_create( \$ret ) if $self->can('after_create');
     return ($ret);
 }
 
@@ -910,9 +900,9 @@ from the delete operation.
 
 sub delete {
     my $self = shift;
-    if ($self->can('before_delete')) {
-     my $before_ret = $self->before_delete();
-     return $before_ret unless ($before_ret);
+    if ( $self->can('before_delete') ) {
+        my $before_ret = $self->before_delete();
+        return $before_ret unless ($before_ret);
     }
     my $ret = $self->__delete;
     $self->after_delete( \$ret ) if $self->can('after_delete');
@@ -937,12 +927,11 @@ sub __delete {
 
     $where =~ s/AND\s$//;
     my $query_string = "DELETE FROM " . $self->table . ' ' . $where;
-    my $return      = $self->_handle->simple_query( $query_string, @bind );
+    my $return       = $self->_handle->simple_query( $query_string, @bind );
 
     if ( UNIVERSAL::isa( 'Class::ReturnValue', $return ) ) {
         return ($return);
-    }
-    else {
+    } else {
         return (1);
     }
 }
