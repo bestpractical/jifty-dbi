@@ -1,5 +1,7 @@
 Revision history for Perl extension Jifty::DBI.
 
+* Updated record docs to show hooks
+
 0.09 Thu Dec 29 07:56:30 EST 2005
 
 * Fixed dependency on Class::Data::Inheritable
