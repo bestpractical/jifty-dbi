@@ -22,6 +22,7 @@ sub column {
         readable => 1,
         writable => 1,
         virtual  => 0,
+        type     => 'varchar(255)',
         @_,
     );
     my @original = @args;
