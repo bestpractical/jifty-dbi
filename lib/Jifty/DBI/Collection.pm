@@ -604,7 +604,7 @@ criterias about the foreign table will be added.
 
 Column to be checked against.
 
-=item VALUE
+=item value
 
 Should always be set and will always be quoted. 
 
