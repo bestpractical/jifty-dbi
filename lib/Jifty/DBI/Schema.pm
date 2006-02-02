@@ -22,7 +22,7 @@ sub column {
         readable => 1,
         writable => 1,
         virtual  => 0,
-        type     => 'varchar(255)',
+        type     => '',
         @_,
     );
     my @original = @args;
@@ -54,7 +54,10 @@ sub column {
         } else {
             warn "Error: $refclass neither Record nor Collection";
         }
+    } else {
+        $column->type('varchar(255)') unless ($column->type);
     }
+
 
     $from->COLUMNS->{$name} = $column;
 }
