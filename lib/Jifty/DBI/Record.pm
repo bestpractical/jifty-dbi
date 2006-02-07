@@ -383,7 +383,8 @@ provides the following hook
 
 =item after_I<column_name>
 
-This hook is called with a reference to the value returned by Jifty::DBI. Its return value is discarded.
+This hook is called with a reference to the value returned by
+Jifty::DBI. Its return value is discarded.
 
 =back
 
@@ -393,7 +394,8 @@ When you set a value, C<Jifty::DBI> provides the following hooks
 
 =item before_set_I<column_name> PARAMHASH
 
-C<Jifty::DBI::Record> passes this function a reference to a paramhash composed of:
+C<Jifty::DBI::Record> passes this function a reference to a paramhash
+composed of:
 
 =over
 
@@ -407,7 +409,8 @@ The new value for I<column>.
 
 =item is_sql_function
 
-A boolean that, if true, indicates that I<value> is an SQL function, not just a value.
+A boolean that, if true, indicates that I<value> is an SQL function,
+not just a value.
 
 =back
 
@@ -422,7 +425,6 @@ second is an optional message. Note that validate_I<column_name> may be
 called outside the context of a I<set> operation to validate a potential
 value. (The Jifty application framework uses this as part of its AJAX
 validation system.)
-
 
 =back
 
@@ -817,12 +819,16 @@ This method calls two hooks in your subclass:
 
 =item before_create
 
-This method is called before trying to create our row in the database. It's handed a reference to your paramhash. (That means it can modify your parameters on the fly).  C<before_create> returns a true or false value. If it returns false, the create is aborted. 
+This method is called before trying to create our row in the
+database. It's handed a reference to your paramhash. (That means it
+can modify your parameters on the fly).  C<before_create> returns a
+true or false value. If it returns false, the create is aborted.
 
 =item after_create
 
-This method is called after attempting to insert the record into the database. It gets handed a reference to the return value of the insert. That'll either be a true value or a L<Class::ReturnValue>
-
+This method is called after attempting to insert the record into the
+database. It gets handed a reference to the return value of the
+insert. That'll either be a true value or a L<Class::ReturnValue>
 
 =back
 
@@ -887,12 +893,14 @@ This method has two hooks
 
 =item before_delete
 
-This method is called before the record deletion, if it exists. It returns a boolean value. If the return value is false, it aborts the create and returns the return value from the hook.
+This method is called before the record deletion, if it exists. It
+returns a boolean value. If the return value is false, it aborts the
+create and returns the return value from the hook.
 
 =item after_delete
 
-This method is called after deletion, with a reference to the return value 
-from the delete operation.
+This method is called after deletion, with a reference to the return
+value from the delete operation.
 
 =back
 

@@ -250,7 +250,7 @@ sub clear_sql_statement_log {
 
 Returns the current SQL statement log as an array of arrays. Each entry is a triple of 
 
-(Time,  Statement, Duration)
+(Time, Statement, [Bindings], Duration)
 
 =cut
 

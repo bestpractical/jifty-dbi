@@ -200,7 +200,6 @@ sub _db_schema_table_from_model {
             {   name     => $column->name,
                 type     => $column->type,
                 null     => $column->mandatory ? 0 : 1,
-                distinct => $column->distinct,
                 default  => $column->default,
             }
             );

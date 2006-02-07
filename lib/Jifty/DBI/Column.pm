@@ -16,7 +16,6 @@ __PACKAGE__->mk_accessors qw/
     length
     mandatory
     virtual
-    distinct
     refers_to by
     alias_for_column
     since until
