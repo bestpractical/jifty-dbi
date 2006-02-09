@@ -40,7 +40,7 @@ associations between classes.
 use Carp qw/carp/;
 use Exporter::Lite;
 our @EXPORT
-    = qw(column type default validator immutable unreadable length mandatory not_null valid_values label hints render_as since input_filters output_filters is by are on virtual);
+    = qw(column type default validator immutable unreadable length distinct mandatory not_null valid_values label hints render_as since input_filters output_filters is by are on virtual);
 
 our $SCHEMA;
 
@@ -181,8 +181,8 @@ sub length ($) {
 
 =head2 mandatory
 
-Mark as a required.  May be used for generating user interfaces.
-Correct usage is C<is mandatory>.
+Mark as a required column.  May be used for generating user
+interfaces.  Correct usage is C<is mandatory>.
 
 =cut
 
@@ -200,6 +200,18 @@ C<is not_null>.
 sub not_null () {
     carp "'is not_null' is deprecated in favor of 'is mandatory'";
     _item( [ mandatory => 1 ] );
+}
+
+=head2 distinct
+
+Declares that a column should only have distinct values.  This
+currently does nothing, due to not being implemented in
+L<DBIx::DBSchema>.  Correct usage is C<is distinct>.
+
+=cut
+
+sub distinct () {
+    _item( [ distinct => 1 ] );
 }
 
 =head2 input_filters
