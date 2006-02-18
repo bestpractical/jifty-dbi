@@ -289,6 +289,45 @@ sub hints ($) {
 
 Used in user interface generation to know how to render the column.
 
+The values for this attribute are the same as the names of the modules under
+Jifty::Web::Form::Field, i.e. 
+
+=over 
+
+=item * Button
+
+=item * Checkbox
+
+=item * Combobox
+
+=item * Date
+
+=item * Hidden
+
+=item * InlineButton
+
+=item * Password
+
+=item * Radio
+
+=item * Select
+
+=item * Textarea
+
+=item * Upload
+
+=item * Unrendered
+
+=back
+
+You may also use the same names with the initial character in lowercase. 
+
+The "Unrendered" may seem counter-intuitive, but is there to allow for
+internal fields that should not actually be displayed.
+
+If these don't meet your needs, you can write your own subclass of
+Jifty::Web::Form::Field. See the documentation for that module.
+
 =cut
 
 sub render_as ($) {
