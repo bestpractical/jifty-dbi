@@ -16,7 +16,8 @@ use base qw/
 
 our $VERSION = '0.01';
 
-Jifty::DBI::Record->mk_classdata('COLUMNS');
+Jifty::DBI::Record->mk_classdata(qw/COLUMNS/);
+Jifty::DBI::Record->mk_classdata(qw/TABLE_NAME/ );
 
 =head1 NAME
 
@@ -960,13 +961,8 @@ arguably correct.
 
 sub table {
     my $self = shift;
-
-    if ( not ref($self) ) {
-        return $self->_guess_table_name();
-    }
-    $self->{__table_name} ||= $self->_guess_table_name;
-
-    return $self->{__table_name};
+    $self->TABLE_NAME($self->_guess_table_name) unless ($self->TABLE_NAME());
+    return $self->TABLE_NAME();
 }
 
 =head2 _guess_table_name
