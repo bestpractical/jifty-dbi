@@ -208,19 +208,13 @@ sub __Value {
 sub _store (\$) {
     my $self = shift;
     $self->_record_cache->set( $self->_primary_record_cache_key,
-        $self->_serialize );
-    return (1);
-}
-
-sub _serialize {
-    my $self = shift;
-    return (
         {   values  => $self->{'values'},
             table   => $self->table,
             fetched => $self->{'fetched'}
         }
     );
 }
+
 
 # Function: _gen_alternate_record_cache_key
 # Type    : private instance
