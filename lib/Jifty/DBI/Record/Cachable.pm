@@ -10,11 +10,11 @@ use strict;
 
 =head1 NAME
 
-Jifty::DBI::Record::Cachable - Records with caching behavior
+Jifty::DBI::Record::Cachable - records with caching behavior
 
 =head1 SYNOPSIS
 
-  package MyRecord;
+  package Myrecord;
   use base qw/Jifty::DBI::Record::Cachable/;
 
 =head1 DESCRIPTION
@@ -66,7 +66,7 @@ sub _key_cache {
     my $self  = shift;
     my $cache = $self->_handle->DSN
         . "-KEYS--"
-        . ( $self->{'_Class'} ||= ref($self) );
+        . ( $self->{'_class'} ||= ref($self) );
     $self->_setup_cache($cache) unless exists( $_CACHES{$cache} );
     return ( $_CACHES{$cache} );
 
@@ -82,14 +82,14 @@ sub _flush_key_cache {
     my $self  = shift;
     my $cache = $self->_handle->DSN
         . "-KEYS--"
-        . ( $self->{'_Class'} ||= ref($self) );
+        . ( $self->{'_class'} ||= ref($self) );
     $self->_setup_cache($cache);
 }
 
 sub _record_cache {
     my $self = shift;
     my $cache
-        = $self->_handle->DSN . "--" . ( $self->{'_Class'} ||= ref($self) );
+        = $self->_handle->DSN . "--" . ( $self->{'_class'} ||= ref($self) );
     $self->_setup_cache($cache) unless exists( $_CACHES{$cache} );
     return ( $_CACHES{$cache} );
 
@@ -99,10 +99,10 @@ sub load_from_hash {
     my $self = shift;
 
     # Blow away the primary cache key since we're loading.
-    $self->{'_SB_Record_Primary_RecordCache_key'} = undef;
+    $self->{'_jifty_cache_pkey'} = undef;
     my ( $rvalue, $msg ) = $self->SUPER::load_from_hash(@_);
 
-    my $cache_key = $self->_primary_RecordCache_key();
+    my $cache_key = $self->_primary_record_cache_key();
 
     ## Check the return value, if its good, cache it!
     if ($rvalue) {
@@ -116,13 +116,13 @@ sub load_by_cols {
     my ( $self, %attr ) = @_;
 
     ## Generate the cache key
-    my $alt_key = $self->_gen_alternate_RecordCache_key(%attr);
-    if ( $self->_fetch( $self->_lookup_primary_RecordCache_key($alt_key) ) ) {
+    my $alt_key = $self->_gen_alternate_record_cache_key(%attr);
+    if ( $self->_fetch( $self->_lookup_primary_record_cache_key($alt_key) ) ) {
         return ( 1, "Fetched from cache" );
     }
 
     # Blow away the primary cache key since we're loading.
-    $self->{'_SB_Record_Primary_RecordCache_key'} = undef;
+    $self->{'_jifty_cache_pkey'} = undef;
 
     ## Fetch from the DB!
     my ( $rvalue, $msg ) = $self->SUPER::load_by_cols(%attr);
@@ -130,7 +130,7 @@ sub load_by_cols {
     if ($rvalue) {
         ## Only cache the object if its okay to do so.
         $self->_store();
-        $self->_key_cache->set( $alt_key, $self->_primary_RecordCache_key );
+        $self->_key_cache->set( $alt_key, $self->_primary_record_cache_key );
 
     }
     return ( $rvalue, $msg );
@@ -159,7 +159,6 @@ sub __delete () {
     my ($self) = @_;
 
     $self->_expire();
-
     return $self->SUPER::__delete();
 
 }
@@ -172,10 +171,9 @@ sub __delete () {
 
 sub _expire (\$) {
     my $self = shift;
-    $self->_record_cache->set( $self->_primary_RecordCache_key,
-        undef, time - 1 );
+    $self->_record_cache->set( $self->_primary_record_cache_key, undef, time - 1 );
 
-# We should be doing something more surgical to clean out the key cache. but we do need to expire it
+    # We should be doing something more surgical to clean out the key cache. but we do need to expire it
     $self->_flush_key_cache;
 
 }
@@ -209,7 +207,7 @@ sub __Value {
 
 sub _store (\$) {
     my $self = shift;
-    $self->_record_cache->set( $self->_primary_RecordCache_key,
+    $self->_record_cache->set( $self->_primary_record_cache_key,
         $self->_serialize );
     return (1);
 }
@@ -224,16 +222,15 @@ sub _serialize {
     );
 }
 
-# Function: _gen_alternate_RecordCache_key
+# Function: _gen_alternate_record_cache_key
 # Type    : private instance
 # Args    : hash (attr)
 # Lvalue  : 1
 # Desc    : Takes a perl hash and generates a key from it.
 
-sub _gen_alternate_RecordCache_key {
+sub _gen_alternate_record_cache_key {
     my ( $self, %attr ) = @_;
 
-    #return( Storable::nfreeze( %attr));
     my $cache_key;
     while ( my ( $key, $value ) = each %attr ) {
         $key   ||= '__undef';
@@ -250,51 +247,51 @@ sub _gen_alternate_RecordCache_key {
     return ($cache_key);
 }
 
-# Function: _fetch_RecordCache_key
+# Function: _fetch_record_cache_key
 # Type    : private instance
 # Args    : nil
 # Lvalue  : 1
 
-sub _fetch_RecordCache_key {
+sub _fetch_record_cache_key {
     my ($self) = @_;
     my $cache_key = $self->_cache_config->{'cache_key'};
     return ($cache_key);
 }
 
-# Function: _primary_RecordCache_key
+# Function: _primary_record_cache_key
 # Type    : private instance
 # Args    : none
 # Lvalue: : 1
 # Desc    : generate a primary-key based variant of this object's cache key
 #           primary keys is in the cache
 
-sub _primary_RecordCache_key {
+sub _primary_record_cache_key {
     my ($self) = @_;
 
     return undef unless ( $self->id );
 
-    unless ( $self->{'_SB_Record_Primary_RecordCache_key'} ) {
+    unless ( $self->{'_jifty_cache_pkey'} ) {
 
-        my $primary_RecordCache_key = $self->table() . ':';
+        my $primary_record_cache_key = $self->table() . ':';
         my @attributes;
         foreach my $key ( @{ $self->_primary_keys } ) {
             push @attributes, $key . '=' . $self->SUPER::__value($key);
         }
 
-        $primary_RecordCache_key .= join( ',', @attributes );
+        $primary_record_cache_key .= join( ',', @attributes );
 
-        $self->{'_SB_Record_Primary_RecordCache_key'}
-            = $primary_RecordCache_key;
+        $self->{'_jifty_cache_pkey'}
+            = $primary_record_cache_key;
     }
-    return ( $self->{'_SB_Record_Primary_RecordCache_key'} );
+    return ( $self->{'_jifty_cache_pkey'} );
 
 }
 
-# Function: lookup_primary_RecordCache_key
+# Function: lookup_primary_record_cache_key
 # Type    : private class
 # Args    : string(alternate cache id)
 # Lvalue  : string(cache id)
-sub _lookup_primary_RecordCache_key {
+sub _lookup_primary_record_cache_key {
     my $self          = shift;
     my $alternate_key = shift;
     return undef unless ($alternate_key);
