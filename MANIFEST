@@ -37,6 +37,7 @@ lib/Jifty/DBI/Handle/Sybase.pm
 lib/Jifty/DBI/HasFilters.pm
 lib/Jifty/DBI/Record.pm
 lib/Jifty/DBI/Record/Cachable.pm
+lib/Jifty/DBI/Record/Memcached.pm
 lib/Jifty/DBI/Schema.pm
 lib/Jifty/DBI/SchemaGenerator.pm
 Makefile.PL
@@ -44,6 +45,7 @@ MANIFEST			This list of files
 META.yml
 README
 ROADMAP
+SIGNATURE
 t/00.load.t
 t/01basics.t
 t/01records.t

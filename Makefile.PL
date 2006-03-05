@@ -20,6 +20,10 @@ requires('DBIx::DBSchema' => '0.28');
 build_requires('Test::More' => 0.52);
 build_requires('DBD::SQLite');
 no_index directory => 'ex';
+features( 'Memcached support' => [
+    -default => 1,
+    Cache::Memcached => '']
+);
 auto_install();
 &WriteAll;
 
