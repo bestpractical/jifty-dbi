@@ -193,9 +193,11 @@ sub _fetch () {
 
 }
 
-sub __Value {
+sub __value {
     my $self   = shift;
     my $column = shift;
+
+    # XXX TODO, should we be fetching directly from the cache?
     return ( $self->SUPER::__value($column) );
 }
 
