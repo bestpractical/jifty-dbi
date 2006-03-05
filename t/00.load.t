@@ -1,4 +1,4 @@
-use Test::More tests => 12;
+use Test::More tests => 13;
 
 BEGIN { use_ok("Jifty::DBI::Collection"); }
 BEGIN { use_ok("Jifty::DBI::Handle"); }
@@ -19,6 +19,7 @@ BEGIN { use_ok("Jifty::DBI::Handle::Sybase"); }
 BEGIN { use_ok("Jifty::DBI::Handle::SQLite"); }
 BEGIN { use_ok("Jifty::DBI::Record"); }
 BEGIN { use_ok("Jifty::DBI::Record::Cachable"); }
+BEGIN { use_ok("Jifty::DBI::Record::Memcached"); }
 
 # Commented out until ruslan sends code.
 #BEGIN {
