@@ -38,36 +38,25 @@ use vars qw/$MEMCACHED/;
 
 
 
-# Function: new
+# Function: _init
 # Type    : class ctor
 # Args    : see Jifty::DBI::Record::new
 # Lvalue  : Jifty::DBI::Record::Cachable
 
 sub _init () {
     my ( $self, @args ) = @_;
-    $MEMCACHED ||= $self->_setup_cache();
+    $MEMCACHED ||= Cache::Memcached->new( {$self->memcached_config} );
     $self->SUPER::_init(@_);
-}
-
-sub _setup_cache {
-    my $self  = shift;
-    my $cache = Cache::Memcached->new( {$self->memcached_config} );
-    return $cache;
 }
 
 sub load_from_hash {
     my $self = shift;
 
     # Blow away the primary cache key since we're loading.
-    $self->{'_jifty_cache_pkey'} = undef;
     my ( $rvalue, $msg ) = $self->SUPER::load_from_hash(@_);
 
-    my $cache_key = $self->_primary_cache_key();
-
     ## Check the return value, if its good, cache it!
-    if ($rvalue) {
-        $self->_store();
-    }
+    $self->_store() if ($rvalue);
 
     return ( $rvalue, $msg );
 }
@@ -76,22 +65,18 @@ sub load_by_cols {
     my ( $self, %attr ) = @_;
 
     ## Generate the cache key
-    my $alt_key = $self->_gen_alternate_cache_key(%attr);
-    if ( $self->_get($alt_key) 
-            or  $self->_get( $self->_lookup_primary_cache_key($alt_key) ) ) {
-        return ( 1, "Fetched from cache" );
-    }
-
-    # Blow away the primary cache key since we're loading.
-    $self->{'_jifty_cache_pkey'} = undef;
+    my $key = $self->_gen_load_by_cols_key(%attr);
+        return ( 1, "Fetched from cache" ) if ( $self->_get($key)  );
 
     ## Fetch from the DB!
     my ( $rvalue, $msg ) = $self->SUPER::load_by_cols(%attr);
     ## Check the return value, if its good, cache it!
     if ($rvalue) {
         $self->_store();
-        $MEMCACHED->set( $alt_key, $self->_primary_cache_key, $self->_cache_config->{'cache_for_sec'} );
-        $self->{'loaded_by_cols'} = $alt_key;
+        if ($key ne $self->_primary_key) {
+            $MEMCACHED->add( $key, $self->_primary_cache_key, $self->_cache_config->{'cache_for_sec'} );
+            $self->{'loaded_by_cols'} = $key;
+        }
     }
     return ( $rvalue, $msg );
 
@@ -109,7 +94,7 @@ sub __set () {
 
 }
 
-# Function: Delete
+# Function: _delete
 # Type    : (overloaded) public instance
 # Args    : nil
 # Lvalue  : ?
@@ -128,7 +113,7 @@ sub __delete () {
 
 sub _expire (\$) {
     my $self = shift;
-    $MEMCACHED->delete( $self->_primary_cache_key);
+    $MEMCACHED->delete($self->_primary_cache_key);
     $MEMCACHED->delete($self->{'loaded_by_cols'}) if ($self->{'loaded_by_cols'});
 
 }
@@ -142,6 +127,9 @@ sub _expire (\$) {
 sub _get () {
     my ( $self, $cache_key ) = @_;
     my $data = $MEMCACHED->get($cache_key) or return;
+    # If the cache value is a scalar, that's another key
+    unless (ref $data) { $data = $MEMCACHED->get($data); }
+    unless (ref $data) { return undef; }
     @{$self}{ keys %$data } = values %$data;    # deserialize
 }
 
@@ -159,26 +147,29 @@ sub __value {
 
 sub _store (\$) {
     my $self = shift;
+    # Blow away the primary cache key since we're loading.
+    $self->{'_jifty_cache_pkey'} = undef;
     $MEMCACHED->set( $self->_primary_cache_key,
         {   values  => $self->{'values'},
             table   => $self->table,
-            geted => $self->{'fetched'}
+            fetched => $self->{'fetched'}
         },
         $self->_cache_config->{'cache_for_sec'}
     );
 }
 
 
-# Function: _gen_alternate_cache_key
+# Function: _gen_load_by_cols_key
 # Type    : private instance
 # Args    : hash (attr)
 # Lvalue  : 1
 # Desc    : Takes a perl hash and generates a key from it.
 
-sub _gen_alternate_cache_key {
+sub _gen_load_by_cols_key {
     my ( $self, %attr ) = @_;
 
-    my $cache_key = $self->table() . ':';
+    my $cache_key = $self->cache_key_prefix . '-'. $self->table() . ':';
+    my @items;
     while ( my ( $key, $value ) = each %attr ) {
         $key   ||= '__undef';
         $value ||= '__undef';
@@ -188,20 +179,10 @@ sub _gen_alternate_cache_key {
         } else {
             $value = "=" . $value;
         }
-        $cache_key .= $key . $value . ',';
+        push @items, $key.$value;
+
     }
-    chop($cache_key);
-    return ($cache_key);
-}
-
-# Function: _get_cache_key
-# Type    : private instance
-# Args    : nil
-# Lvalue  : 1
-
-sub _get_cache_key {
-    my ($self) = @_;
-    my $cache_key = $$self->_cache_config->{'cache_key'};
+    $cache_key .= join(',',@items);
     return ($cache_key);
 }
 
@@ -219,7 +200,7 @@ sub _primary_cache_key {
 
     unless ( $self->{'_jifty_cache_pkey'} ) {
 
-        my $primary_cache_key = $self->table() . ':';
+        my $primary_cache_key = $self->cache_key_prefix .'-' .$self->table() . ':';
         my @attributes;
         foreach my $key ( @{ $self->_primary_keys } ) {
             push @attributes, $key . '=' . $self->SUPER::__value($key);
@@ -230,29 +211,6 @@ sub _primary_cache_key {
         $self->{'_jifty_cache_pkey'} = $primary_cache_key;
     }
     return ( $self->{'_jifty_cache_pkey'} );
-
-}
-
-# Function: lookup_primary_cache_key
-# Type    : private class
-# Args    : string(alternate cache id)
-# Lvalue  : string(cache id)
-sub _lookup_primary_cache_key {
-    my $self          = shift;
-    my $alternate_key = shift;
-    return undef unless ($alternate_key);
-
-    my $primary_key = $MEMCACHED->get($alternate_key);
-    if ($primary_key) {
-        return ($primary_key);
-    }
-
-    # If the alternate key is really the primary one
-    elsif ( $MEMCACHED->get($alternate_key) ) {
-        return ($alternate_key);
-    } else {    # empty!
-        return (undef);
-    }
 
 }
 
@@ -283,6 +241,16 @@ sub memcached_config {
 
 }
 
+=head2 cache_key_prefix
+
+Returns the prefix we should prepend to all cache keys. If you're using one memcached for multiple
+applications, you want this to be different for each application or they might end up mingling data.
+
+=cut
+
+sub cache_key_prefix {
+    return 'Jifty-DBI';
+}
 
 1;
 
