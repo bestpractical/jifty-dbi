@@ -532,13 +532,13 @@ to subclass.  Or, pass it the name of a class an an argument after
 creating a C<Jifty::DBI::Collection> object to create an 'anonymous'
 collection class.
 
-If you haven't specified a record class, this eturns a best guess at
+If you haven't specified a record class, this returns a best guess at
 the name of the record class for this collection.
 
 It uses a simple heuristic to determine the record class name -- It
 chops "Collection" off its own name. If you want to name your records
 and collections differently, go right ahead, but don't say we didn't
-warn you
+warn you.
 
 =cut
 
@@ -861,7 +861,7 @@ sub _where_clause {
         push @subclauses, $self->{'subclauses'}{"$subclause"};
     }
 
-    $where_clause = " WHERE " . join( ' AND ', @subclauses ) if (@subclauses);
+    $where_clause = " WHERE " . CORE::join( ' AND ', @subclauses ) if (@subclauses);
 
     return ($where_clause);
 
@@ -969,7 +969,7 @@ sub _order_clause {
 
         if ( $rowhash{'function'} ) {
             $clause .= ( $clause ? ", " : " " );
-            $clause .= $rowhash{'function'};
+            $clause .= $rowhash{'function'} . ' ';
             $clause .= $rowhash{'order'};
 
         } elsif ( ( $rowhash{'alias'} )
