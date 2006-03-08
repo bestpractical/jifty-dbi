@@ -40,7 +40,7 @@ associations between classes.
 use Carp qw/carp/;
 use Exporter::Lite;
 our @EXPORT
-    = qw(column type default validator immutable unreadable length distinct mandatory not_null valid_values label hints render_as since input_filters output_filters is by are on virtual);
+    = qw(column type default validator immutable unreadable length distinct mandatory not_null valid_values label hints render_as since input_filters output_filters filters is by are on virtual);
 
 our $SCHEMA;
 
@@ -212,6 +212,18 @@ L<DBIx::DBSchema>.  Correct usage is C<is distinct>.
 
 sub distinct () {
     _item( [ distinct => 1 ] );
+}
+
+=head2 filters
+
+Sets a list of filters on the data.  These are applied when reading
+B<and> writing to the database.  Correct usage is C<input_filters are
+'Jifty::DBI::Filter::DateTime'>.  See L<Jifty::DBI::Filter>.
+
+=cut
+
+sub filters ($) {
+    _list( input_filters => shift );
 }
 
 =head2 input_filters

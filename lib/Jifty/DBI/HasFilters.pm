@@ -7,6 +7,7 @@ use base qw/Class::Accessor/;
 __PACKAGE__->mk_accessors qw/
     input_filters
     output_filters
+    filters
     /;
 
 =head1 NAME
@@ -69,6 +70,21 @@ sub output_filters {
     return @values if @values;
 
     return reverse $self->input_filters;
+}
+
+=head2 filters FILTERS
+
+Sets the input and output filters at the same time.  Returns a hash,
+with keys C<input> and C<output>, whose values are array references to
+the respective lists.
+
+=cut
+
+sub filters {
+    my $self = shift;
+    return {output => $self->output_filters(@_),
+            input  => $self->input_filters(@_)
+	    };
 }
 
 =head1 SEE ALSO

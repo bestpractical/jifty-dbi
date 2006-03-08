@@ -14,10 +14,10 @@ not run its Makefile.PL or Build.PL.
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA1
 
-SHA1 f79f0b889acf9ac7ddbb0c6ae7cfb943c09808f8 Changes
+SHA1 68f570fefe364b26c569bc5ce7a49ac933e6a69d Changes
 SHA1 507297e1572993e94413173b2f3d5fb386be85ab MANIFEST
-SHA1 1231893dac98c4fcfbb812330ff1bb1af4319455 META.yml
-SHA1 5907726fe0575dc8bacbe69a284fb121b23d2f7c Makefile.PL
+SHA1 11d0829c83c5efd40d4ae2aba18d29303e7c8145 META.yml
+SHA1 fdfcf1a1c7d2d17852b82ae0eef90fb0bea786bc Makefile.PL
 SHA1 d0943ab047f543c92405564ab77ba008052544e6 README
 SHA1 82d6ac3f6def48558d09f8b6e3b53ed4194d8c81 ROADMAP
 SHA1 c28087e498978a1a314dfcaa584844703f31ac8c doc/notes/on_intuitive_schema_definitions
@@ -35,7 +35,7 @@ SHA1 044cd2f160364fe36eca2ba35e16e7cf46c79138 inc/Module/Install/Makefile.pm
 SHA1 49e0d839edeb0f3e9af12fd2444b98365393a23e inc/Module/Install/Metadata.pm
 SHA1 2a1b494a7e5adaa3216e86d909dd5bf87d084c80 inc/Module/Install/Win32.pm
 SHA1 4a23fafe534363a99f0d936df9086ad243e692c9 inc/Module/Install/WriteAll.pm
-SHA1 246a6625e4a2dcfb0d0768ef7e973838cc1bb284 lib/Jifty/DBI.pm
+SHA1 ea6c43a3148aba017e0ee346c5545f0d97082ebe lib/Jifty/DBI.pm
 SHA1 ef358d9e6f42704e2926a7a9461bb1ad9bd0b1ef lib/Jifty/DBI/Collection.pm
 SHA1 ecfae7430da875a856113e0c233daa0e31073000 lib/Jifty/DBI/Collection/Union.pm
 SHA1 07115934091da72e0025c9c754714fc0ceedbef5 lib/Jifty/DBI/Collection/Unique.pm
@@ -58,7 +58,7 @@ SHA1 f2cc4fcce79c9a88a023d4e6bd96c2089eef1ced lib/Jifty/DBI/Handle/mysqlPP.pm
 SHA1 e1f3f71be76647b8a93ce5d00c988c25bb435e5a lib/Jifty/DBI/HasFilters.pm
 SHA1 76c87fb8ec1d422f767781cd0473689ef3134587 lib/Jifty/DBI/Record.pm
 SHA1 84899c21647b64df6d0cad3ff4c3b376e27cb3a8 lib/Jifty/DBI/Record/Cachable.pm
-SHA1 c3715f0e49368259d1a1c9e67cc59385458d407b lib/Jifty/DBI/Record/Memcached.pm
+SHA1 2f375afad7b20d32a69b9bde03488a5d544537ed lib/Jifty/DBI/Record/Memcached.pm
 SHA1 5aac9a0114416331ea76ac6a2f291bbe8b83df8c lib/Jifty/DBI/Schema.pm
 SHA1 08423bd2486097cf4f3b116901b12e8c948f0fa8 lib/Jifty/DBI/SchemaGenerator.pm
 SHA1 597d121dd76e0e5d05b818e44474f6c3ad48fe64 t/00.load.t
@@ -79,7 +79,7 @@ SHA1 e5428d52c38833da883fc0407581264fe31c66a8 t/utils.pl
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.1 (GNU/Linux)
 
-iD8DBQFECkSsEi9d9xCOQEYRAqHoAKC+tOWOhEjjDHGqM9cA6PT0mvWHbgCff6ft
-zlF5ogMPMqa99zA6/Nm8/ig=
-=8LcT
+iD8DBQFECqRrEi9d9xCOQEYRApk4AJ9ke+2v5Jcs27/+hhHVfMHQmQ8OAACghVR9
+A2Xw+euRVX0Z6AFAgA0kNPE=
+=ByQV
 -----END PGP SIGNATURE-----
