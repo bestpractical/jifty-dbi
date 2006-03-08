@@ -968,6 +968,25 @@ sub table {
     return $self->TABLE_NAME();
 }
 
+=head2 collection_class
+
+Returns the collection class which this record belongs to; override this to
+subclass.  If you haven't specified a collection class, this returns a best
+guess at the name of the collection class for this collection.
+
+It uses a simple heuristic to determine the collection class name -- It
+appends "Collection" to its own name. If you want to name your records
+and collections differently, go right ahead, but don't say we didn't
+warn you.
+
+=cut
+
+sub collection_class {
+    my $self = shift;
+    my $class = ref($self) || $self;
+    $class . 'Collection';
+}
+
 =head2 _guess_table_name
 
 Guesses a table name based on the class's last part.
