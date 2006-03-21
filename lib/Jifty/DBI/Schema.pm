@@ -37,7 +37,7 @@ associations between classes.
 
 =cut
 
-use Carp qw/carp/;
+use Carp qw/croak carp/;
 use Exporter::Lite;
 our @EXPORT
     = qw(column type default validator immutable unreadable length distinct mandatory not_null valid_values label hints render_as since input_filters output_filters filters virtual is by are on);
@@ -63,7 +63,7 @@ sub column {
     croak "Base of schema class $from is not a Jifty::DBI::Record"
       unless UNIVERSAL::isa($from, "Jifty::DBI::Record");
 
-    carp "Illegal column definition for column $name in $from"
+    croak "Illegal column definition for column $name in $from"
       if grep {not UNIVERSAL::isa($_, "Jifty::DBI::Schema::Trait")} @_;
 
     $from->_init_columns;
