@@ -40,7 +40,7 @@ associations between classes.
 use Carp qw/carp/;
 use Exporter::Lite;
 our @EXPORT
-    = qw(column type default validator immutable unreadable length distinct mandatory not_null valid_values label hints render_as since input_filters output_filters filters is by are on virtual);
+    = qw(column type default validator immutable unreadable length distinct mandatory not_null valid_values label hints render_as since input_filters output_filters filters virtual is by are on);
 
 our $SCHEMA;
 
@@ -59,23 +59,25 @@ sub column {
 
     my $from = (caller)[0];
     $from =~ s/::Schema//;
+
+    croak "Base of schema class $from is not a Jifty::DBI::Record"
+      unless UNIVERSAL::isa($from, "Jifty::DBI::Record");
+
+    carp "Illegal column definition for column $name in $from"
+      if grep {not UNIVERSAL::isa($_, "Jifty::DBI::Schema::Trait")} @_;
+
     $from->_init_columns;
 
     my @args = (
-        name     => $name,
-        readable => 1,
-        writable => 1,
-        virtual  => 0,
-        type     => '',
-        @_,
+        ! unreadable(),
+        ! immutable(),
+        ! virtual(),
+        type(''),
+        @_
     );
-    my @original = @args;
 
-    my $column = Jifty::DBI::Column->new();
-    while (@args) {
-        my ( $method, $arguments ) = splice @args, 0, 2;
-        $column->$method($arguments);
-    }
+    my $column = Jifty::DBI::Column->new( { name => $name } );
+    $_->apply($column) for @args;
 
     if ( my $refclass = $column->refers_to ) {
         $refclass->require();
@@ -84,10 +86,14 @@ sub column {
         if ( UNIVERSAL::isa( $refclass, 'Jifty::DBI::Record' ) ) {
             if ( $name =~ /(.*)_id$/ ) {
                 my $virtual_column = $from->add_column($1);
-                while (@original) {
-                    my ( $method, $arguments ) = splice @original, 0, 2;
-                    $virtual_column->$method($arguments);
-                }
+
+                # XXX FIXME I think the next line is wrong, but things
+                # explode without it -- mostly because we unique-key
+                # on name instead of some conbination of name and
+                # alias_for_column in a couple places
+                $virtual_column->name( $name );
+
+                $_->apply($virtual_column) for @args;
                 $column->refers_to(undef);
                 $virtual_column->alias_for_column($name);
             }
@@ -114,9 +120,8 @@ to a database-specific type.  Correct usage is C<type is 'text'>.
 
 =cut
 
-sub type ($) {
-    _list( type => shift );
-
+sub type {
+    _list( type => @_ );
 }
 
 =head2 default
@@ -126,8 +131,8 @@ Give a default value for the column.  Correct usage is C<default is
 
 =cut
 
-sub default ($) {
-    _list( default => shift );
+sub default {
+    _list( default => @_ );
 }
 
 =head2 validator
@@ -137,8 +142,8 @@ this column can have.  Correct usage is C<validator is \&foo>.
 
 =cut
 
-sub validator ($) {
-    _list( validator => shift );
+sub validator {
+    _list( validator => @_ );
 }
 
 =head2 immutable
@@ -149,8 +154,8 @@ thereafter, like 'created by'.  Correct usage is C<is immutable>.
 
 =cut
 
-sub immutable () {
-    _item( [ writable => 0 ] );
+sub immutable {
+    _item( writable => 0, @_ );
 }
 
 =head2 unreadable
@@ -163,7 +168,7 @@ Correct usage is C<is unreadable>.
 =cut
 
 sub unreadable {
-    _item( [ readable => 0 ] );
+    _item( readable => 0, @_ );
 }
 
 =head2 length
@@ -175,8 +180,8 @@ B<characters>.  Correct usage is C<length is 42>.
 
 =cut
 
-sub length ($) {
-    _list( length => shift );
+sub length {
+    _list( length => @_ );
 }
 
 =head2 mandatory
@@ -186,8 +191,8 @@ interfaces.  Correct usage is C<is mandatory>.
 
 =cut
 
-sub mandatory () {
-    _item( [ mandatory => 1 ] );
+sub mandatory {
+    _item( mandatory => 1, @_ );
 }
 
 =head2 not_null
@@ -197,9 +202,9 @@ C<is not_null>.
 
 =cut
 
-sub not_null () {
+sub not_null {
     carp "'is not_null' is deprecated in favor of 'is mandatory'";
-    _item( [ mandatory => 1 ] );
+    _item( mandatory => 1, @_ );
 }
 
 =head2 distinct
@@ -210,20 +215,19 @@ L<DBIx::DBSchema>.  Correct usage is C<is distinct>.
 
 =cut
 
-sub distinct () {
-    _item( [ distinct => 1 ] );
+sub distinct {
+    _item( distinct => 1, @_ );
 }
 
-=head2 filters
+=head2 virtual
 
-Sets a list of filters on the data.  These are applied when reading
-B<and> writing to the database.  Correct usage is C<input_filters are
-'Jifty::DBI::Filter::DateTime'>.  See L<Jifty::DBI::Filter>.
+Declares that a column is not backed by an actual column in the
+database, but is instead computed on-the-fly.
 
 =cut
 
-sub filters ($) {
-    _list( input_filters => shift );
+sub virtual {
+    _item( virtual => 1, @_ );
 }
 
 =head2 input_filters
@@ -234,8 +238,8 @@ L<Jifty::DBI::Filter>.
 
 =cut
 
-sub input_filters ($) {
-    _list( input_filters => shift );
+sub input_filters {
+    _list( input_filters => @_ );
 }
 
 =head2 output_filters
@@ -246,8 +250,20 @@ L<Jifty::DBI::Filter>.
 
 =cut
 
-sub output_filters ($) {
-    _list( output_filters => shift );
+sub output_filters {
+    _list( output_filters => @_ );
+}
+
+=head2 filters
+
+Sets a list of filters on the data.  These are applied when reading
+B<and> writing to the database.  Correct usage is C<input_filters are
+'Jifty::DBI::Filter::DateTime'>.  See L<Jifty::DBI::Filter>.
+
+=cut
+
+sub filters {
+    _list( input_filters => @_ );
 }
 
 =head2 since
@@ -257,8 +273,8 @@ is C<since '0.1.5'>.
 
 =cut
 
-sub since ($) {
-    _list( since => shift );
+sub since {
+    _list( since => @_ );
 }
 
 =head2 valid_values
@@ -270,8 +286,8 @@ qw/foo bar baz/>.
 
 =cut
 
-sub valid_values ($) {
-    _list( valid_values => shift );
+sub valid_values {
+    _list( valid_values => @_ );
 }
 
 =head2 label
@@ -281,8 +297,8 @@ interfaces.  Correct usage is C<label is 'Your foo value'>.
 
 =cut
 
-sub label ($) {
-    _list( label => shift );
+sub label {
+    _list( label => @_ );
 }
 
 =head2 hints
@@ -293,8 +309,8 @@ frobnicator to to strange things'>.
 
 =cut
 
-sub hints ($) {
-    _list( hints => shift );
+sub hints {
+    _list( hints => @_ );
 }
 
 =head2 render_as
@@ -302,7 +318,7 @@ sub hints ($) {
 Used in user interface generation to know how to render the column.
 
 The values for this attribute are the same as the names of the modules under
-Jifty::Web::Form::Field, i.e. 
+L<Jifty::Web::Form::Field>, i.e. 
 
 =over 
 
@@ -338,23 +354,12 @@ The "Unrendered" may seem counter-intuitive, but is there to allow for
 internal fields that should not actually be displayed.
 
 If these don't meet your needs, you can write your own subclass of
-Jifty::Web::Form::Field. See the documentation for that module.
+L<Jifty::Web::Form::Field>. See the documentation for that module.
 
 =cut
 
-sub render_as ($) {
-    _list( render_as => shift );
-}
-
-=head2 is
-
-Helper method to improve readability.
-
-=cut
-
-sub is ($) {
-    my $thing = shift;
-    ref $thing eq "ARRAY" ? _list( @{$thing} ) : _item($thing);
+sub render_as {
+    _list( render_as => @_ );
 }
 
 =head2 by
@@ -363,8 +368,19 @@ Helper method to improve readability.
 
 =cut
 
-sub by ($) {
-    _list( by => shift );
+sub by {
+    _list( by => @_ );
+}
+
+=head2 is
+
+Helper method to improve readability.
+
+=cut
+
+sub is {
+    my $thing = shift;
+    ref $thing eq "ARRAY" ? ( @{$thing}, @_ ) : ($thing, @_);
 }
 
 =head2 are
@@ -373,8 +389,10 @@ Helper method to improve readability.
 
 =cut
 
-sub are (@) {
-    _item( [@_] );
+sub are {
+    my $ref = [];
+    push @{$ref}, shift @_ while @_ and not UNIVERSAL::isa($_[0], "Jifty::DBI::Schema::Trait");
+    return( $ref, @_ );
 }
 
 =head2 on
@@ -383,7 +401,7 @@ Helper method to improve readability.
 
 =cut
 
-sub on ($) {
+sub on {
     _list( self => shift );
 }
 
@@ -394,14 +412,20 @@ sub _list {
     wantarray
         or die
         "Cannot call list traits in scalar context -- check for unneccessary 'is'";
-    @_;
+    _trait(@_);
 }
 
 sub _item {
     defined wantarray
         or die
         "Cannot add traits in void context -- check for misspelled preceding comma as a semicolon";
-    $_[0];
+    _trait(@_);
+}
+
+sub _trait {
+    my @trait;
+    push @trait, shift @_ while @_ and not UNIVERSAL::isa($_[0], "Jifty::DBI::Schema::Trait");
+    return wantarray ? (Jifty::DBI::Schema::Trait->new(@trait), @_) : Jifty::DBI::Schema::Trait->new(@trait);
 }
 
 =head1 EXAMPLE
@@ -418,5 +442,32 @@ This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
 
 =cut
+
+package Jifty::DBI::Schema::Trait;
+
+use overload "!" => \&negation;
+
+sub new {
+    my $class = shift;
+    return bless [@_], $class;
+}
+
+sub apply {
+    my $self = shift;
+    my ($column) = @_;
+
+    my ($method, $argument) = @{$self};
+
+    die "Illegal Jifty::DBI::Schema property '$method'"
+      unless $column->can($method);
+
+    $column->$method($argument);
+}
+
+sub negation {
+    my $self = shift;
+    my ($trait, @rest) = @{$self};
+    return (ref $self)->new($trait, map {not $_} @rest);
+}
 
 1;

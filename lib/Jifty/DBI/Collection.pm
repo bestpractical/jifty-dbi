@@ -1471,11 +1471,9 @@ Private convenience method needed for the declarative schema generation.
 
 =cut
 
-sub refers_to (@) {
+sub refers_to {
     my $class = shift;
-    my (%args) = @_;
-
-    return ( refers_to => $class, %args );
+    return ( Jifty::DBI::Schema::Trait->new(refers_to => $class), @_ );
 }
 
 =head2 Clone

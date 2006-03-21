@@ -1028,11 +1028,9 @@ used for the declarative syntax
 
 =cut
 
-sub refers_to (@) {
+sub refers_to {
     my $class = shift;
-    my (%args) = @_;
-
-    return ( refers_to => $class, %args );
+    return ( Jifty::DBI::Schema::Trait->new(refers_to => $class), @_ );
 }
 
 sub _filters {
