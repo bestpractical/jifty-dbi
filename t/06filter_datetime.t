@@ -51,6 +51,9 @@ SKIP: {
 	$rec->set_created( POSIX::strftime( "%Y-%m-%d %H:%M:%S", gmtime($now) ) );
 	isa_ok($rec->created, 'DateTime' );
 	is( $rec->created->epoch, $now, "Correct value");
+
+	cleanup_schema( 'TestApp', $handle );
+	disconnect_handle( $handle );
 }
 }
 

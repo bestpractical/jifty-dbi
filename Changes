@@ -1,6 +1,12 @@
 Revision history for Perl extension Jifty::DBI.
 
-* Added "filters" method to records, which adds both input_filters and output_filters.
+0.18 Fri Mar 31 22:15:59 JST 2006
+
+* Test fixes to remove databases after testing. This fixes
+  Win32 test failures. -- Kenichi Ishigaki
+
+* Added "filters" method to records, which adds both 
+  input_filters and output_filters.
 
 0.17 Sun Mar  5 00:41:41 PST 2006
 

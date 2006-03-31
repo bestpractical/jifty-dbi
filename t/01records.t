@@ -192,6 +192,7 @@ SKIP: {
 	is( $newrec->id, undef, "record doesn't exist any more");
 
 	cleanup_schema( 'TestApp::Address', $handle );
+	disconnect_handle( $handle );
 }} # SKIP, foreach blocks
 
 1;

@@ -157,6 +157,7 @@ SKIP: {
 	is( $first_rec->login, 'obra', 'login is correct' );
 
 	cleanup_schema( 'TestApp', $handle );
+	disconnect_handle( $handle );
 }} # SKIP, foreach blocks
 
 1;

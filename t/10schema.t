@@ -26,7 +26,8 @@ require_ok("t/testmodels.pl");
 
 foreach my $d ( @available_drivers ) {
   SKIP: {
-    unless ($d eq 'Pg' or $d eq 'SQLite' or $d eq 'mysql') {
+#   unless ($d eq 'Pg' or $d eq 'SQLite' or $d eq 'mysql') {
+    unless ($d eq 'Pg') {
       skip "first goal is to work on Pg", TESTS_PER_DRIVER;
     }
     
@@ -118,6 +119,8 @@ END_SCHEMA
         };
     }
 
+    cleanup_schema( 'TestApp', $handle );
+    disconnect_handle( $handle );
 }
 }
 

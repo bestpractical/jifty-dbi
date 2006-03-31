@@ -29,7 +29,8 @@ SKIP: {
 	connect_handle_with_driver( $handle, $d );
 	isa_ok($handle->dbh, 'DBI::db');
 	
-	isa_ok($handle, "Jifty::DBI::Handle::$d", "Specialized Handle")
+	isa_ok($handle, "Jifty::DBI::Handle::$d", "Specialized Handle");
+	disconnect_handle_with_driver( $handle, $d );
 }} # SKIP, foreach blocks
 
 1;

@@ -66,6 +66,9 @@ SKIP: {
 	$rec->set_name( 'Ruslan Zakirov' );
 	is($rec->login, "ruz", "Login is not truncated" );
 	is($rec->name, 'Ruslan Zak', "Name is truncated" );
+
+	cleanup_schema( 'TestApp', $handle );
+	disconnect_handle( $handle );
 }
 }
 

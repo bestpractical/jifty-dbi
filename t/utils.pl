@@ -124,6 +124,56 @@ sub connect_pg
 	);
 }
 
+=head2 disconnect_handle
+
+Disconnects C<$handle> object.
+
+=cut
+
+sub disconnect_handle
+{
+	my $call = "disconnect_". lc handle_to_driver( $_[0] );
+	return unless defined &$call;
+	goto &$call;
+}
+
+=head2 disconnect_handle_with_driver($handle, $driver)
+
+Disconnects C<$handle> using driver C<$driver>.
+
+=cut
+
+sub disconnect_handle_with_driver
+{
+	my $call = "disconnect_". lc $_[1];
+	return unless defined &$call;
+	@_ = $_[0];
+	goto &$call;
+}
+
+sub disconnect_sqlite
+{
+	my $handle = shift;
+	$handle->disconnect;
+	unlink File::Spec->catfile(File::Spec->tmpdir(), "sb-test.$$");
+}
+
+sub disconnect_mysql
+{
+	my $handle = shift;
+	$handle->disconnect;
+
+	# XXX: is there something we should do here?
+}
+
+sub disconnect_pg
+{
+	my $handle = shift;
+	$handle->disconnect;
+
+	# XXX: is there something we should do here?
+}
+
 =head2 should_test $driver
 
 Checks environment for C<JDBI_TEST_*> variables.

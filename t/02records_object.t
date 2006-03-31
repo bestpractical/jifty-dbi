@@ -47,6 +47,7 @@ SKIP: {
 	is($obj->name, 'RUZ');
 
 	cleanup_schema( 'TestApp', $handle );
+	disconnect_handle( $handle );
 }} # SKIP, foreach blocks
 
 1;

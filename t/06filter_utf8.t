@@ -82,6 +82,8 @@ SKIP: {
 	is($rec->id, $id, "The record has its id");
 	is($rec->signature, undef, "successfuly stored and fetched undef");
 
+	cleanup_schema( 'TestApp', $handle );
+	disconnect_handle( $handle );
 }
 }
 
