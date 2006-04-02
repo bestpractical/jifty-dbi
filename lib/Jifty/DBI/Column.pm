@@ -17,6 +17,7 @@ __PACKAGE__->mk_accessors qw/
     mandatory
     virtual
     distinct
+    sort_order
     refers_to by
     alias_for_column
     since until

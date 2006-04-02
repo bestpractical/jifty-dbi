@@ -40,9 +40,10 @@ associations between classes.
 use Carp qw/croak carp/;
 use Exporter::Lite;
 our @EXPORT
-    = qw(column type default validator immutable unreadable length distinct mandatory not_null valid_values label hints render_as since input_filters output_filters filters virtual is by are on);
+    = qw(column type default validator immutable unreadable length distinct mandatory not_null sort_order valid_values label hints render_as since input_filters output_filters filters virtual is by are on);
 
 our $SCHEMA;
+our $SORT_ORDERS = {};
 
 =head1 FUNCTIONS
 
@@ -68,6 +69,7 @@ sub column {
 
     $from->_init_columns;
 
+
     my @args = (
         ! unreadable(),
         ! immutable(),
@@ -77,6 +79,8 @@ sub column {
     );
 
     my $column = Jifty::DBI::Column->new( { name => $name } );
+    $column->sort_order($SORT_ORDERS->{$from}++);
+
     $_->apply($column) for @args;
 
     if ( my $refclass = $column->refers_to ) {
@@ -229,6 +233,19 @@ database, but is instead computed on-the-fly.
 sub virtual {
     _item( virtual => 1, @_ );
 }
+
+
+=head2 sort_order
+
+Declares an integer sort value for this column. By default, Jifty will sort
+columns in the order they are defined.
+
+=cut
+
+sub sort_order {
+    _item ( sort_order => 0, @_);
+}
+
 
 =head2 input_filters
 

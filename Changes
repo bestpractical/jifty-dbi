@@ -1,5 +1,11 @@
 Revision history for Perl extension Jifty::DBI.
 
+0.19 Sun Apr  2 18:59:53 JST 2006
+
+* Columns now have a "sort_order" attribute. This way when auto-rendering
+  forms, we can render them by "order defined" rather than just alphabetically.
+    - idea by Tatsuhiko Miyagawa
+
 0.18 Fri Mar 31 22:15:59 JST 2006
 
 * Test fixes to remove databases after testing. This fixes
