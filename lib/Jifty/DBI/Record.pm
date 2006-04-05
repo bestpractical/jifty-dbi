@@ -339,7 +339,7 @@ sub columns {
         sort {
             ( ( ( $b->type || '' ) eq 'serial' )
                 <=> ( ( $a->type || '' ) eq 'serial' ) )
-                or ( $a->sort_order <=> $b->sort_order)
+                or ( ($a->sort_order || 0) <=> ($b->sort_order || 0))
                 or ( $a->name cmp $b->name )
             } values %{ $self->COLUMNS }
     );
