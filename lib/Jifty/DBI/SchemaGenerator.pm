@@ -26,8 +26,8 @@ Jifty::DBI::SchemaGenerator - Generate table schemas from Jifty::DBI records
 =head1 DESCRIPTION
 
 This module turns a Jifty::Record object into an SQL schema for your chosen
-database. At the moment, your chosen database is Postgres 7.4 or newer.
-Patches welcome.
+database. At the moment, your choices are MySQL, SQLite, or PostgreSQL.
+Oracle might also work right, though it's untested.
 
 =head1 INTERFACE 
 
