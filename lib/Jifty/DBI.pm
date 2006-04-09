@@ -113,12 +113,12 @@ is the object I just created.
 
   
   my $handle = Jifty::DBI::Handle->new();
-  $handle->Connect(
-      Driver   => 'Pg',
-      Database => 'test',
-      Host     => 'reason',
-      User     => 'mhat',
-      Password => ''
+  $handle->connect(
+      driver   => 'Pg',
+      database => 'test',
+      host     => 'reason',
+      user     => 'mhat',
+      password => ''
   );
   
 Creates a new Jifty::DBI::Handle, and then connects to the database using 
