@@ -293,6 +293,8 @@ L<http://rt.cpan.org>.
 
 David Glasser  C<< glasser@bestpractical.com >>
 
+Some pod by Eric Wilhelm <ewilhelm at cpan dot org>
+
 =head1 LICENCE AND COPYRIGHT
 
 Copyright (c) 2005, Best Practical Solutions, LLC.  All rights reserved.
