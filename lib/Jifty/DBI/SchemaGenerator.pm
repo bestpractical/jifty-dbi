@@ -208,6 +208,7 @@ sub create_table_sql_statements {
 Returns a string containing a sequence of SQL statements to create tables for all of
 the models added to the SchemaGenerator.
 
+=end
 
 =cut
 
@@ -291,8 +292,6 @@ L<http://rt.cpan.org>.
 =head1 AUTHOR
 
 David Glasser  C<< glasser@bestpractical.com >>
-
-Some pod by Eric Wilhelm <ewilhelm at cpan dot org>
 
 =head1 LICENCE AND COPYRIGHT
 
