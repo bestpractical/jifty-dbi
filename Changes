@@ -1,5 +1,7 @@
 Revision history for Perl extension Jifty::DBI.
 
+* Postgres sequence parsing fix from Daniel Tabuenca
+
 0.19 Sun Apr  2 18:59:53 JST 2006
 
 * Columns now have a "sort_order" attribute. This way when auto-rendering
