@@ -22,17 +22,17 @@ Jifty::DBI::Handle - Perl extension which is a generic DBI handle
   use Jifty::DBI::Handle;
 
   my $handle = Jifty::DBI::Handle->new();
-  $handle->connect( Driver => 'mysql',
-                    Database => 'dbname',
-                    Host => 'hostname',
-                    User => 'dbuser',
-                    Password => 'dbpassword');
-  # now $handle isa Jifty::DBI::Handle::mysql                    
- 
+  $handle->connect( driver => 'mysql',
+                    database => 'dbname',
+                    host => 'hostname',
+                    user => 'dbuser',
+                    password => 'dbpassword');
+  # now $handle isa Jifty::DBI::Handle::mysql
+
 =head1 DESCRIPTION
 
 This class provides a wrapper for DBI handles that can also perform a number of additional functions.
- 
+
 =cut
 
 =head2 new
