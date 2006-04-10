@@ -19,69 +19,110 @@ __PACKAGE__->mk_accessors(qw(_db_schema));
 
 Jifty::DBI::SchemaGenerator - Generate table schemas from Jifty::DBI records
 
-=head1 SYNOPSIS
-
-    use Jifty::DBI::SchemaGenerator;
-
 =head1 DESCRIPTION
 
 This module turns a Jifty::Record object into an SQL schema for your chosen
 database. At the moment, your choices are MySQL, SQLite, or PostgreSQL.
 Oracle might also work right, though it's untested.
 
-=head1 INTERFACE 
+=head1 SYNOPSIS
 
-=for author to fill in:
-    Write a separate section listing the public components of the modules
-    interface. These normally consist of either subroutines that may be
-    exported, or methods that may be called on objects belonging to the
-    classes provided by the module.
+=head2 The Short Answer
 
+See below for where we get the $handle and $model variables.
 
-=head1 DIAGNOSTICS
+  use Jifty::DBI::SchemaGenerator;
+  ...
+  my $s_gen = Jifty::DBI::SchemaGenerator->new( $handle );
+  $s_gen->add_model($model);
 
-=for author to fill in:
-    List every single error and warning message that the module can
-    generate (even the ones that will "never happen"), with a full
-    explanation of each problem, one or more likely causes, and any
-    suggested remedies.
+  my @statements = $s_gen->create_table_sql_statements;
+  print join("\n", @statements, '');
+  ...
+
+=head2 The Long Version
+
+See L<Jifty::DBI> for details about the first two parts.
 
 =over
 
-=item C<< Error message here, perhaps with %s placeholders >>
+=item MyModel
 
-[Description of error here]
+  package MyModel; 
+  # lib/MyModel.pm
 
-=item C<< Another error message here >>
+  use warnings;
+  use strict;
 
-[Description of error here]
+  use base qw(Jifty::DBI::Record);
+  # your custom code goes here.
+  1;
 
-[Et cetera, et cetera]
+=item MyModel::Schema
+
+  package MyModel::Schema;
+  # lib/MyModel/Schema.pm
+
+  use warnings;
+  use strict;
+
+  use Jifty::DBI::Schema;
+
+  column foo => type is 'text';
+  column bar => type is 'text';
+
+  1;
+
+=item myscript.pl
+
+  #!/usr/bin/perl
+  # myscript.pl
+
+  use strict;
+  use warnings;
+
+  use Jifty::DBI::SchemaGenerator;
+
+  use Jifty::DBI::Handle;
+  use MyModel;
+  use MyModel::Schema;
+
+  my $handle = Jifty::DBI::Handle->new();
+  $handle->connect(
+    driver   => 'SQLite',
+    database => 'testdb',
+  );
+
+  my $model = MyModel->new($handle);
+  my $s_gen = Jifty::DBI::SchemaGenerator->new( $handle );
+  $s_gen->add_model($model);
+
+  # here's the basic point of this module:
+  my @statements = $s_gen->create_table_sql_statements;
+  print join("\n", @statements, '');
+
+  # this part is directly from Jifty::Script::Schema::create_all_tables()
+  $handle->begin_transaction;
+  for my $statement (@statements) {
+    my $ret = $handle->simple_query($statement);
+    $ret or die "error creating a table: " . $ret->error_message;
+  }
+  $handle->commit;
 
 =back
 
-
 =head1 CONFIGURATION AND ENVIRONMENT
 
-=for author to fill in:
-    A full explanation of any configuration system(s) used by the
-    module, including the names and locations of any configuration
-    files, and the meaning of any environment variables or properties
-    that can be set. These descriptions must also include details of any
-    configuration language used.
-
-<MODULE NAME> requires no configuration files or environment variables.
+Requires no configuration files or environment variables.
 
 
 =head1 DEPENDENCIES
 
-=for author to fill in:
-    A list of all the other modules that this module relies upon,
-    including any restrictions on versions, and an indication whether
-    the module is part of the standard Perl distribution, part of the
-    module's distribution, or must be installed separately. ]
+Class::Accessor
 
-None.
+DBIx::DBSchema
+
+Class::ReturnValue
 
 =head2 new HANDLE
 
@@ -103,16 +144,18 @@ sub new {
     return $self;
 }
 
-=for public_doc add_model MODEL
+=head2 add_model MODEL
 
-Adds a new model class to the SchemaGenerator.  Model should either be an object 
-of a subclass of C<Jifty::DBI::Record>, or the name of such a subclass; in the
-latter case, C<add_model> will instantiate an object of the subclass.
+Adds a new model class to the SchemaGenerator.  Model should be an
+object which is an instance of C<Jifty::DBI::Record> or a subclass
+thereof.  It may also be a string which is the name of such a
+class/subclass; in the latter case, C<add_model> will instantiate an
+object of the class.
 
 The model must define the instance methods C<Schema> and C<Table>.
 
-Returns true if the model was added successfully; returns a false C<Class::ReturnValue> error
-otherwise.
+Returns true if the model was added successfully; returns a false
+C<Class::ReturnValue> error otherwise.
 
 =cut
 
@@ -146,7 +189,7 @@ sub add_model {
     1;
 }
 
-=for public_doc create_table_sql_statements
+=head2 create_table_sql_statements
 
 Returns a list of SQL statements (as strings) to create tables for all of
 the models added to the SchemaGenerator.
@@ -160,10 +203,12 @@ sub create_table_sql_statements {
     return sort $self->_db_schema->sql( $self->handle->dbh );
 }
 
-=for public_doc create_table_sql_text
+=head2 create_table_sql_text
 
-Returns a string containg a sequence of SQL statements to create tables for all of
+Returns a string containing a sequence of SQL statements to create tables for all of
 the models added to the SchemaGenerator.
+
+=end
 
 =cut
 
@@ -234,26 +279,9 @@ sub _error {
 
 =head1 INCOMPATIBILITIES
 
-=for author to fill in:
-    A list of any modules that this module cannot be used in conjunction
-    with. This may be due to name conflicts in the interface, or
-    competition for system or program resources, or due to internal
-    limitations of Perl (for example, many modules that use source code
-    filters are mutually incompatible).
-
 None reported.
 
-
 =head1 BUGS AND LIMITATIONS
-
-=for author to fill in:
-    A list of known problems with the module, together with some
-    indication Whether they are likely to be fixed in an upcoming
-    release. Also a list of restrictions on the features the module
-    does provide: data types that cannot be handled, performance issues
-    and the circumstances in which they may arise, practical
-    limitations on the size of data sets, special cases that are not
-    (yet) handled, etc.
 
 No bugs have been reported.
 
@@ -261,11 +289,11 @@ Please report any bugs or feature requests to
 C<bug-<RT NAME>@rt.cpan.org>, or through the web interface at
 L<http://rt.cpan.org>.
 
-
 =head1 AUTHOR
 
 David Glasser  C<< glasser@bestpractical.com >>
 
+Some pod by Eric Wilhelm <ewilhelm at cpan dot org>
 
 =head1 LICENCE AND COPYRIGHT
 
@@ -273,7 +301,6 @@ Copyright (c) 2005, Best Practical Solutions, LLC.  All rights reserved.
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself. See L<perlartistic>.
-
 
 =head1 DISCLAIMER OF WARRANTY
 
