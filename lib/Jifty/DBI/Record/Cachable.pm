@@ -114,13 +114,12 @@ sub load_from_hash {
 
 sub load_by_cols {
     my ( $self, %attr ) = @_;
-
     ## Generate the cache key
     my $alt_key = $self->_gen_alternate_record_cache_key(%attr);
     if ( $self->_fetch( $self->_lookup_primary_record_cache_key($alt_key) ) ) {
         return ( 1, "Fetched from cache" );
     }
-
+    #warn "Didn't get it from the cache";
     # Blow away the primary cache key since we're loading.
     $self->{'_jifty_cache_pkey'} = undef;
 
@@ -264,7 +263,7 @@ sub _fetch_record_cache_key {
 sub _primary_record_cache_key {
     my ($self) = @_;
 
-    return undef unless ( $self->id );
+    return unless ( defined $self->id );
 
     unless ( $self->{'_jifty_cache_pkey'} ) {
 
