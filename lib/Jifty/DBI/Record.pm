@@ -1072,7 +1072,9 @@ sub _apply_filters {
     my $action = $args{'direction'} eq 'output' ? 'decode' : 'encode';
     foreach my $filter_class (@filters) {
         local $UNIVERSAL::require::ERROR;
-        $filter_class->require();
+        $filter_class->require() unless 
+         $INC{ join('/', split(/::/,$filter_class)).".pm" };
+
         if ($UNIVERSAL::require::ERROR) {
             warn $UNIVERSAL::require::ERROR;
             next;
