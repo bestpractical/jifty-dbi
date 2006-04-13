@@ -192,13 +192,13 @@ sub _fetch () {
 
 }
 
-sub __value {
-    my $self   = shift;
-    my $column = shift;
-
-    # XXX TODO, should we be fetching directly from the cache?
-    return ( $self->SUPER::__value($column) );
-}
+#sub __value {
+#    my $self   = shift;
+#    my $column = shift;
+#
+#    # XXX TODO, should we be fetching directly from the cache?
+#    return ( $self->SUPER::__value($column) );
+#}
 
 # Function: _store
 # Type    : private instance

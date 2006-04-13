@@ -460,20 +460,23 @@ never override __value.
 
 sub __value {
     my $self        = shift;
-    my $column_name = shift;
+    my $column_name = lc(shift);
+
+    # In the default case of "yeah, we have a value", return it as
+    # fast as we can.
+    return   $self->{'values'}{$column_name}
+        if ( $self->{'fetched'}{$column_name}
+          && $self->{'decoded'}{$column_name} );
 
     # If the requested column is actually an alias for another, resolve it.
     if ( $self->column($column_name)
-        and defined $self->column($column_name)->alias_for_column )
-    {
+        and defined $self->column($column_name)->alias_for_column ) {
         $column_name = $self->column($column_name)->alias_for_column();
     }
 
     my $column = $self->column($column_name);
 
     return unless ($column);
-
-    #Carp::confess unless ($column);
 
     if ( !$self->{'fetched'}{ $column->name } and my $id = $self->id() ) {
         my $pkey         = $self->_primary_key();

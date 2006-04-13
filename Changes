@@ -1,5 +1,6 @@
 Revision history for Perl extension Jifty::DBI.
 
+* Performance optimization for the "standard case" of __value
 * Postgres sequence parsing fix from Daniel Tabuenca
 
 0.19 Sun Apr  2 18:59:53 JST 2006
