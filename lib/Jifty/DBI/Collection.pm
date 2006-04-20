@@ -1179,7 +1179,7 @@ sub set_page_info {
         ->current_page( $args{'current_page'} );
 
     $self->rows_per_page( $args{'per_page'} );
-    $self->first_row( $self->pager->first );
+    $self->first_row( $self->pager->first ||1 );
 
 }
 
