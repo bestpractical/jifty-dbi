@@ -356,6 +356,8 @@ sub update_record_value {
         @_
     );
 
+    return 1 unless grep {defined} values %{$args{primary_keys}};
+
     my @bind  = ();
     my $query = 'UPDATE ' . $args{'table'} . ' ';
     $query .= 'SET ' . $args{'column'} . '=';

@@ -492,9 +492,7 @@ sub __value {
         $self->{'values'}{ $column->name }  = $value;
         $self->{'fetched'}{ $column->name } = 1;
     }
-    if ( $self->{'fetched'}{ $column->name }
-        && !$self->{'decoded'}{ $column->name } )
-    {
+    unless ( $self->{'decoded'}{ $column->name } ) {
         $self->_apply_output_filters(
             column    => $column,
             value_ref => \$self->{'values'}{ $column->name },
@@ -572,9 +570,13 @@ sub __set {
             )
             || (   defined $args{'value'}
                 && defined $self->{'values'}{ $column->name }
-		   # XXX: This is a bloody hack to stringify DateTime
-		   # and other objects for compares
-                && $args{value}."" eq "".$self->{'values'}{ $column->name } )
+
+                # XXX: This is a bloody hack to stringify DateTime
+                # and other objects for compares
+                && $args{value}
+                . "" eq ""
+                . $self->{'values'}{ $column->name }
+            )
             )
         {
             $ret->as_array( 1, "That is already the current value" );
@@ -582,19 +584,18 @@ sub __set {
         }
     }
 
-    
+    my $method = "validate_" . $column->name;
+    my ( $ok, $msg ) = $self->$method( $args{'value'} );
+    unless ($ok) {
+        $ret->as_array( 0, 'Illegal value for ' . $column->name );
+        $ret->as_error(
+            errno        => 3,
+            do_backtrace => 0,
+            message      => "Illegal value for " . $column->name
+        );
+        return ( $ret->return_value );
+    }
 
-	my $method = "validate_" . $column->name;
-	my ( $ok, $msg ) = $self->$method( $args{'value'} );
-	unless ($ok) {
-	    $ret->as_array( 0, 'Illegal value for ' . $column->name );
-	    $ret->as_error(
-			   errno        => 3,
-			   do_backtrace => 0,
-			   message      => "Illegal value for " . $column->name
-			   );
-	    return ( $ret->return_value );
-	}
     # The blob handling will destroy $args{'Value'}. But we assign
     # that back to the object at the end. this works around that
     my $unmunged_value = $args{'value'};
@@ -614,8 +615,8 @@ sub __set {
         %args,
         table        => $self->table(),
         primary_keys => { $self->primary_keys() }
-
     );
+
     unless ($val) {
         my $message
             = $column->name . " could not be set to " . $args{'value'} . ".";
