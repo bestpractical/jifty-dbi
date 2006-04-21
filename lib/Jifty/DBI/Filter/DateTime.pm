@@ -56,7 +56,11 @@ sub decode {
 #    server time_zone, by default ISO
 # other DBs may have own formats(Interbase for example can be forced to use special format)
 # but we need Jifty::DBI::Handle here to get DB type
-    my $dt = DateTime::Format::ISO8601->parse_datetime($$value_ref);
+
+    my $str = $$value_ref;
+    $str =~ s/ /T/;
+
+    my $dt = DateTime::Format::ISO8601->parse_datetime($str);
     if ($dt) {
         $$value_ref = $dt;
     } else {
