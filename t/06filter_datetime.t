@@ -34,13 +34,16 @@ SKIP: {
 	isa_ok($rec, 'Jifty::DBI::Record');
 
 	my $now = time;
+        my $today = DateTime->from_epoch( epoch => $now )->truncate( to => 'day' )->epoch;
 	my $dt = DateTime->from_epoch( epoch => $now );
-	my($id) = $rec->create( created => $dt );
+	my($id) = $rec->create( created => $dt, event_on => $dt );
 	ok($id, "Successfuly created ticket");
 	ok($rec->load($id), "Loaded the record");
 	is($rec->id, $id, "The record has its id");
 	isa_ok($rec->created, 'DateTime' );
 	is( $rec->created->epoch, $now, "Correct value");
+        isa_ok($rec->event_on, 'DateTime' );
+        is( $rec->event_on->epoch, $today, "Correct value");
 
 	# undef/NULL
 	$rec->set_created;
@@ -67,7 +70,8 @@ sub schema_sqlite {
 <<EOF;
 CREATE table users (
         id integer primary key,
-	created datetime
+	created datetime,
+        event_on date
 )
 EOF
 
@@ -78,7 +82,8 @@ sub schema_mysql {
 <<EOF;
 CREATE TEMPORARY table users (
         id integer auto_increment primary key,
-	created datetime
+	created datetime,
+        event_on date
 )
 EOF
 
@@ -89,7 +94,8 @@ sub schema_pg {
 <<EOF;
 CREATE TEMPORARY table users (
         id serial primary key,
-	created timestamp
+	created timestamp,
+        event_on date
 )
 EOF
 
@@ -101,6 +107,10 @@ BEGIN {
     
     column created =>
       type is 'datetime',
+      input_filters are qw/Jifty::DBI::Filter::DateTime/;
+
+    column event_on =>
+      type is 'date',
       input_filters are qw/Jifty::DBI::Filter::DateTime/;
 }
 

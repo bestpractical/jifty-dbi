@@ -32,7 +32,8 @@ sub encode {
 
     return unless UNIVERSAL::isa( $$value_ref, 'DateTime' );
 
-    $$value_ref = $$value_ref->strftime("%Y-%m-%d %H:%M:%S");
+    my $format = ($self->column->type eq "date" ? "%Y-%m-%d" : "%Y-%m-%d %H:%M:%S");
+    $$value_ref = $$value_ref->strftime($format);
 
     return 1;
 }
@@ -57,9 +58,7 @@ sub decode {
 # other DBs may have own formats(Interbase for example can be forced to use special format)
 # but we need Jifty::DBI::Handle here to get DB type
 
-    my $str = $$value_ref;
-    $str =~ s/ /T/;
-
+    my $str = join('T', split ' ', $$value_ref, 2);
     my $dt = DateTime::Format::ISO8601->parse_datetime($str);
     if ($dt) {
         $$value_ref = $dt;
