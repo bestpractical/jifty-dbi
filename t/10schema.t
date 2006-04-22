@@ -50,7 +50,7 @@ foreach my $d ( @available_drivers ) {
 
     my $ret = $SG->add_model('Sample::This::Does::Not::Exist');
 
-    ok($ret == 0, "couldn't add model from nonexistent class");
+    ok(not ($ret), "couldn't add model from nonexistent class");
 
     like($ret->error_message, qr/Error making new object from Sample::This::Does::Not::Exist/, 
       "couldn't add model from nonexistent class");
