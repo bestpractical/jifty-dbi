@@ -1,5 +1,8 @@
 Revision history for Perl extension Jifty::DBI.
 
+0.20 Fri Apr 21 10:23:14 EDT 2006
+
+* Documentation updates and misc bugfixes from Eric Wilhelm
 * Performance optimization for the "standard case" of __value
 * Postgres sequence parsing fix from Daniel Tabuenca
 

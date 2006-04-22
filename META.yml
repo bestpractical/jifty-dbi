@@ -26,4 +26,4 @@ requires:
   Lingua::EN::Inflect: 0
   UNIVERSAL::require: 0
   perl: 5.8.3
-version: 0.19
+version: 0.20

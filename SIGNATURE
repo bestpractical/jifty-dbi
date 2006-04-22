@@ -14,9 +14,9 @@ not run its Makefile.PL or Build.PL.
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA1
 
-SHA1 1bd6c517f03d87c4418cb5e6c3a841b4a8ca01cd Changes
+SHA1 49f6e48f3b7c6af54d7444ee95264af999228792 Changes
 SHA1 507297e1572993e94413173b2f3d5fb386be85ab MANIFEST
-SHA1 677fa5c7ff730d45cdc7a269a1f3c255f9ed319b META.yml
+SHA1 558eabe629ca451757b904facc29dbeabb14127c META.yml
 SHA1 fdfcf1a1c7d2d17852b82ae0eef90fb0bea786bc Makefile.PL
 SHA1 d0943ab047f543c92405564ab77ba008052544e6 README
 SHA1 82d6ac3f6def48558d09f8b6e3b53ed4194d8c81 ROADMAP
@@ -35,32 +35,32 @@ SHA1 81b798c6ca71d1b665a470fb49d32105084ac389 inc/Module/Install/Makefile.pm
 SHA1 c8c9737da19baa15ffa7d9d5037913f64b592189 inc/Module/Install/Metadata.pm
 SHA1 b97304e2a5c405d950eeaa4afd09c6b5507571c3 inc/Module/Install/Win32.pm
 SHA1 73a588d58f7ad0a6a9ed0ea80c48fa12f234a02c inc/Module/Install/WriteAll.pm
-SHA1 a2e8f875f9424696bf7e06f195a0073b32f1f191 lib/Jifty/DBI.pm
-SHA1 a516aa25d0ebcdab6970f1bd8c8f72c448d3b0c9 lib/Jifty/DBI/Collection.pm
+SHA1 fa25bcb15189208e3f4488ab173b41db6b9482c8 lib/Jifty/DBI.pm
+SHA1 479e44d9a02c538cb06b611e198e3f9a095bd65a lib/Jifty/DBI/Collection.pm
 SHA1 ecfae7430da875a856113e0c233daa0e31073000 lib/Jifty/DBI/Collection/Union.pm
 SHA1 07115934091da72e0025c9c754714fc0ceedbef5 lib/Jifty/DBI/Collection/Unique.pm
-SHA1 7eae62e9a63648174663d29dc0a593bf0462c1bd lib/Jifty/DBI/Column.pm
+SHA1 bbc7eb65380f1c6cac55217f5fa79ff0d9402003 lib/Jifty/DBI/Column.pm
 SHA1 99f9e398e90e8f54221c52c82add2a6466e26ea6 lib/Jifty/DBI/Filter.pm
-SHA1 14fc7302c56aa133a771354152cf429d4ff95e11 lib/Jifty/DBI/Filter/DateTime.pm
+SHA1 60a7b560f0d94666c1d96089a8e84cdc9a5e73fe lib/Jifty/DBI/Filter/DateTime.pm
 SHA1 da39a3ee5e6b4b0d3255bfef95601890afd80709 lib/Jifty/DBI/Filter/JiftyRecord.pm
 SHA1 71c38cf7b837425db478ffbfdc1d700cd810063a lib/Jifty/DBI/Filter/Truncate.pm
 SHA1 da39a3ee5e6b4b0d3255bfef95601890afd80709 lib/Jifty/DBI/Filter/base64.pm
 SHA1 deb33fa7b35f3542aac3e2d7fb4b5d3070dc3917 lib/Jifty/DBI/Filter/utf8.pm
-SHA1 64ace2ad56366394ecd5dae635f4ed152111e957 lib/Jifty/DBI/Handle.pm
+SHA1 749135605e95ccb3ef1d5bbb3382614206f21ba3 lib/Jifty/DBI/Handle.pm
 SHA1 225ae14f338636abf1950245a9b80d353cde0c78 lib/Jifty/DBI/Handle/Informix.pm
 SHA1 6245efd0105e5a56f6427a6b0e2a5291e46ae55d lib/Jifty/DBI/Handle/ODBC.pm
 SHA1 4030d7eac96e53fdeaa38f298b6b82469ffdc66e lib/Jifty/DBI/Handle/Oracle.pm
-SHA1 dffc793f8b1c857dc943a224e345386d9413d712 lib/Jifty/DBI/Handle/Pg.pm
+SHA1 768be59b09cc5f3515de5ffd0c5b10ad4a5f3d58 lib/Jifty/DBI/Handle/Pg.pm
 SHA1 cac67c9bd4a88d6ce8f5e85734055cdd489d007d lib/Jifty/DBI/Handle/SQLite.pm
 SHA1 c0bdbf31535c69fab86ef522a7907a6de1007741 lib/Jifty/DBI/Handle/Sybase.pm
 SHA1 e6041a34c3044ed8b9691a5629ecf146fed95257 lib/Jifty/DBI/Handle/mysql.pm
 SHA1 f2cc4fcce79c9a88a023d4e6bd96c2089eef1ced lib/Jifty/DBI/Handle/mysqlPP.pm
 SHA1 4dc8b8ff1d1db3a0c5e0d02783a4d33a69d4a45f lib/Jifty/DBI/HasFilters.pm
-SHA1 9579b99ea9dd0d310c28341aead427e6930e2856 lib/Jifty/DBI/Record.pm
-SHA1 84899c21647b64df6d0cad3ff4c3b376e27cb3a8 lib/Jifty/DBI/Record/Cachable.pm
+SHA1 0480747f87f7b7977f3132b5fab61d73de3b624f lib/Jifty/DBI/Record.pm
+SHA1 dd12718a92ae0e5f493ad6c97d4c710c2e8c699e lib/Jifty/DBI/Record/Cachable.pm
 SHA1 2f375afad7b20d32a69b9bde03488a5d544537ed lib/Jifty/DBI/Record/Memcached.pm
-SHA1 9111697ca710cceea369d47931a400346617fb18 lib/Jifty/DBI/Schema.pm
-SHA1 08423bd2486097cf4f3b116901b12e8c948f0fa8 lib/Jifty/DBI/SchemaGenerator.pm
+SHA1 9f21836821b92d52c7939e0058bac9ee45daf278 lib/Jifty/DBI/Schema.pm
+SHA1 64fa6d7041389fe79e38a97ea665bbfa9abf7c0d lib/Jifty/DBI/SchemaGenerator.pm
 SHA1 597d121dd76e0e5d05b818e44474f6c3ad48fe64 t/00.load.t
 SHA1 4b4e1d9300737f48e819ee67e59c06910d0c2bd4 t/01basics.t
 SHA1 e599c079902d3281ce2f7fb4cde94d383803f4c3 t/01records.t
@@ -79,7 +79,7 @@ SHA1 9a1c854a72a03c004d2f2338bc55cbdc7ad4ed68 t/utils.pl
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.2.2 (GNU/Linux)
 
-iD8DBQFELSvREi9d9xCOQEYRAg7JAJ9n1pL5QOTsKA/6TBVsJ6QhNRshxgCeM1T2
-mPr0TG8KcSVrHFIyD4c+Dww=
-=71Gy
+iD8DBQFESQefEi9d9xCOQEYRAmgEAKCt/ZcsXZyq5b56OFMGaQ6dqAqqLACfZ627
+8JQtRDxNOIpsBe+fsBPtY6M=
+=h/ie
 -----END PGP SIGNATURE-----
