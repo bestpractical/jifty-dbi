@@ -305,15 +305,9 @@ sub _init_methods_for_column {
     elsif (
         UNIVERSAL::isa( $column->refers_to, "Jifty::DBI::Collection" ) )
     { # XXX elw: collections land here, now what?
-      my $ret = Class::ReturnValue->new();
-      my $message = "Collection column '$column_name' not writable";
-      $ret->as_array( 0, $message );
-      $ret->as_error(
-          errno        => 3,
-          do_backtrace => 0,
-          message      => $message
-      );
-      $subref = sub { return ( $ret->return_value ); };
+      $subref = sub {
+          return (0, "Collection column '$column_name' not writable")
+      };
     }
     else {
       $subref = sub {
