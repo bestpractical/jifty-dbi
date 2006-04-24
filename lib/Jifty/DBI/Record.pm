@@ -3,7 +3,6 @@ package Jifty::DBI::Record;
 use strict;
 use warnings;
 
-use vars qw($AUTOLOAD);
 use Class::ReturnValue  ();
 use Lingua::EN::Inflect ();
 use Jifty::DBI::Column  ();
@@ -88,109 +87,6 @@ sub primary_keys {
     return (%hash);
 }
 
-sub DESTROY {
-    return 1;
-}
-
-sub AUTOLOAD {
-    my $self = $_[0];
-
-    $self->_init_columns() unless $self->COLUMNS;
-
-    my ( $column_name, $action ) = $self->_parse_autoload_method($AUTOLOAD);
-
-    unless ( $action and $column_name ) {
-        my ( $package, $filename, $line ) = caller;
-        die "$AUTOLOAD Unimplemented in $package. ($filename line $line) \n";
-    }
-
-    my $column = $self->column($column_name);
-
-    unless ($column) {
-        my ( $package, $filename, $line ) = caller;
-        die "$AUTOLOAD Unimplemented in $package. ($filename line $line) \n";
-    }
-
-    no strict 'refs';    # We're going to be defining subs
-    if ( $action eq 'read' ) {
-        return '' unless $column->readable;
-
-        if ( UNIVERSAL::isa( $column->refers_to, "Jifty::DBI::Record" ) ) {
-            *{$AUTOLOAD} = sub {
-                $_[0]->_to_record( $column_name,
-                    $_[0]->__value($column_name) );
-            };
-        } elsif (
-            UNIVERSAL::isa( $column->refers_to, "Jifty::DBI::Collection" ) )
-        {
-            *{$AUTOLOAD} = sub { $_[0]->_collection_value($column_name) };
-        } else {
-            *{$AUTOLOAD} = sub { return ( $_[0]->_value($column_name) ) };
-        }
-        goto &$AUTOLOAD;
-    } elsif ( $action eq 'write' ) {
-        return ( 0, 'Immutable column' ) unless $column->writable;
-
-        if ( UNIVERSAL::isa( $column->refers_to, "Jifty::DBI::Record" ) ) {
-            *{$AUTOLOAD} = sub {
-                my $self = shift;
-                my $val  = shift;
-
-                $val = $val->id
-                    if UNIVERSAL::isa( $val, 'Jifty::DBI::Record' );
-                return (
-                    $self->_set( column => $column_name, value => $val ) );
-            };
-        } else {
-            *{$AUTOLOAD} = sub {
-                return (
-                    $_[0]->_set( column => $column_name, value => $_[1] ) );
-            };
-        }
-        goto &$AUTOLOAD;
-    } elsif ( $action eq 'validate' ) {
-        *{$AUTOLOAD}
-            = sub { return ( $_[0]->_validate( $column_name, $_[1] ) ) };
-        goto &$AUTOLOAD;
-    }
-
-    else {
-        my ( $package, $filename, $line ) = caller;
-        die "$AUTOLOAD Unimplemented in $package. ($filename line $line) \n";
-    }
-
-}
-
-=head2 _parse_autoload_method $AUTOLOAD
-
-Parses autoload methods and attempts to determine if they're 
-set, get or validate calls.
-
-Returns a tuple of (COLUMN_NAME, ACTION);
-
-=cut
-
-sub _parse_autoload_method {
-    my $self   = shift;
-    my $method = shift;
-
-    my ( $column_name, $action );
-
-    if ( $method =~ /^.*::set_(\w+)$/o ) {
-        $column_name = $1;
-        $action      = 'write';
-    } elsif ( $method =~ /^.*::validate_(\w+)$/o ) {
-        $column_name = $1;
-        $action      = 'validate';
-
-    } elsif ( $method =~ /^.*::(\w+)$/o ) {
-        $column_name = $1;
-        $action      = 'read';
-
-    }
-    return ( $column_name, $action );
-
-}
 
 =head2 _accessible COLUMN ATTRIBUTE
 
@@ -255,8 +151,66 @@ sub _init_columns {
         $column->readable(1);
         $column->type('serial');
         $column->mandatory(1);
+        $self->_init_methods_for_column($column);
     }
 }
+
+sub _init_methods_for_column {
+  my $self        = $_[0];
+  my $column      = $_[1];
+  my $column_name = ($column->aliased_as ?$column->aliased_as:$column->name);
+  my $package = ref($self)||$self;
+  no strict 'refs';    # We're going to be defining subs
+  if (  not $self->can($column_name)) {
+      
+    my $subref;
+    if ($column->readable) {
+    if ( UNIVERSAL::isa( $column->refers_to, "Jifty::DBI::Record" ) ) {
+      $subref = sub {
+        $_[0]->_to_record( $column_name, $_[0]->__value($column_name) );
+      };
+    }
+    elsif ( UNIVERSAL::isa( $column->refers_to, "Jifty::DBI::Collection" ) ) {
+      $subref = sub { $_[0]->_collection_value($column_name) };
+    }
+    else {
+      $subref = sub { return ( $_[0]->_value($column_name) ) };
+    }
+    } else {
+        $subref = sub { return '' }
+    }
+    *{$package."::".$column_name} = $subref;
+
+  }
+  if ( not $self->can("set_".$column_name)) {
+    my $subref;
+    if ($column->writable) {
+    if ( UNIVERSAL::isa( $column->refers_to, "Jifty::DBI::Record" ) ) {
+      $subref = sub {
+        my $self = shift;
+        my $val  = shift;
+
+        $val = $val->id
+          if UNIVERSAL::isa( $val, 'Jifty::DBI::Record' );
+        return ( $self->_set( column => $column_name, value => $val ) );
+      };
+    }
+    else {
+      $subref = sub {
+        return ( $_[0]->_set( column => $column_name, value => $_[1] ) );
+      };
+    } } 
+    else {
+        $subref = sub { return (0, 'Immutable column') } ;
+    }
+    *{$package."::" . "set_" . $column_name } = $subref;
+  }
+  if (not $self->can("validate_".$column_name)) { 
+  *{ $package ."::" . "validate_" . $column_name }
+    = sub { return ( $_[0]->_validate( $column_name, $_[1] ) ) };
+    }
+}
+
 
 =head2 _to_record COLUMN VALUE
 

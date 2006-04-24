@@ -1,5 +1,8 @@
 Revision history for Perl extension Jifty::DBI.
 
+* Switched Jifty::DBI::Record to autocreate methods on object load rather than
+  use AUTOLOAD.
+
 0.20 Fri Apr 21 10:23:14 EDT 2006
 
 * Documentation updates and misc bugfixes from Eric Wilhelm

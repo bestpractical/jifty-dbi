@@ -25,3 +25,4 @@ column name =>
 column phone =>
   type is 'varchar';
 
+1;

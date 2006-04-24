@@ -20,6 +20,7 @@ __PACKAGE__->mk_accessors qw/
     sort_order
     refers_to by
     alias_for_column
+    aliased_as
     since until
 
     label hints render_as
