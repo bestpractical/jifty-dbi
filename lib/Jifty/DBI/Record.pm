@@ -195,6 +195,13 @@ sub _init_methods_for_column {
         return ( $self->_set( column => $column_name, value => $val ) );
       };
     }
+    elsif (
+        UNIVERSAL::isa( $column->refers_to, "Jifty::DBI::Collection" ) )
+    { # XXX elw: collections land here, now what?
+      $subref = sub {
+          return (0, "Collection column '$column_name' not writable")
+      };
+    }
     else {
       $subref = sub {
         return ( $_[0]->_set( column => $column_name, value => $_[1] ) );

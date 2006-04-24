@@ -20,7 +20,7 @@ requires:
   DBIx::DBSchema: 0.28
   Data::Page: 0
   DateTime: 0
-  DateTime::Format::Strptime: 0
+  DateTime::Format::ISO8601: 0
   Encode: 2.1
   Exporter::Lite: 0
   Lingua::EN::Inflect: 0

@@ -9,7 +9,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 63;
+use constant TESTS_PER_DRIVER => 67;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -38,6 +38,19 @@ SKIP: {
 	
 	my $phone_collection = $emp->phones;
 	isa_ok($phone_collection, 'TestApp::PhoneCollection');
+
+	{
+		my ($val, $msg);
+		eval { ($val, $msg) = $emp->set_phones(1,2,3); };
+		ok(not($@), 'set does not die') or warn $@;
+		ok($@ !~ /^DBD::.*::st execute failed: /,
+			"no stacktrace emitted"
+			);
+		ok(! $val, $msg) or warn "msg: $msg";
+		ok($msg =~ m/Collection column '.*' not writable/,
+			'"not writable" message'
+			);
+	}
 	
 	{
 	    my $ph = $phone_collection->next;
