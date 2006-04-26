@@ -29,7 +29,7 @@ sub encode {
     return unless defined $$value_ref;
 
     $Storable::Deparse = 1;
-    $$value_ref = Storable::nfreeze($$value_ref);
+    $$value_ref = Storable::nfreeze($value_ref);
 }
 
 =head2 decode
@@ -46,7 +46,7 @@ sub decode {
     return unless defined $$value_ref;
 
     $Storable::Eval = 1;
-    $$value_ref = Storable::thaw($$value_ref);
+    $$value_ref = ${ Storable::thaw($$value_ref) };
 }
 
 =head1 SEE ALSO
