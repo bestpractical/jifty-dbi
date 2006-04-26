@@ -71,10 +71,6 @@ sub case_sensitive {
     return (1);
 }
 
-sub binary_safe_blobs {
-    return undef;
-}
-
 =head2 distinct_count STATEMENTREF
 
 takes an incomplete SQL SELECT statement and massages it to return a DISTINCT result count

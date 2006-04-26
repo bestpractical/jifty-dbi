@@ -111,16 +111,22 @@ sub id_sequence_name {
 
 }
 
-=head2 binary_safe_blobs
+=head2 blob_params column_NAME column_type
 
-Return undef, as no current version of postgres supports binary-safe
-blobs
+Returns a hash ref for the bind_param call to identify BLOB types used
+by the current database for a particular column type.  The current
+Postgres implementation only supports BYTEA types.
 
 =cut
 
-sub binary_safe_blobs {
-    my $self = shift;
-    return (undef);
+sub blob_params {
+    my $self   = shift;
+    my $name = shift;
+    my $type = shift;
+
+    # Don't assign to key 'value' as it is defined later.
+    return ( { pg_type => DBD::Pg::PG_BYTEA() } ) if $type eq "blob";
+    return ( {} );
 }
 
 =head2 apply_limits STATEMENTREF ROWS_PER_PAGE FIRST_ROW

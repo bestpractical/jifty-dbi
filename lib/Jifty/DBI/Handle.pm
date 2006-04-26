@@ -507,34 +507,10 @@ sub fetch_result {
     }
 }
 
-=head2 binary_safe_blobs
+=head2 blob_params COLUMN_NAME COLUMN_TYPE
 
-Returns 1 if the current database supports BLOBs with embedded nulls.
-Returns undef if the current database doesn't support BLOBs with embedded nulls
-
-=cut
-
-sub binary_safe_blobs {
-    my $self = shift;
-    return (1);
-}
-
-=head2 knows_blobs
-
-Returns 1 if the current database supports inserts of BLOBs automatically.
-Returns undef if the current database must be informed of BLOBs for inserts.
-
-=cut
-
-sub knows_blobs {
-    my $self = shift;
-    return (1);
-}
-
-=head2 blob_params column_NAME column_type
-
-Returns a hash ref for the bind_param call to identify BLOB types used by 
-the current database for a particular column type.                 
+Returns a hash ref for the bind_param call to identify BLOB types used
+by the current database for a particular column type.
 
 =cut
 

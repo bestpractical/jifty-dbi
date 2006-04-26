@@ -148,19 +148,6 @@ sub build_dsn {
     $self->{'dsn'} = $dsn;
 }
 
-=head2 knows_blobs     
-
-Returns 1 if the current database supports inserts of BLOBs
-automatically.  Returns undef if the current database must be informed
-of BLOBs for inserts.
-
-=cut
-
-sub knows_blobs {
-    my $self = shift;
-    return (undef);
-}
-
 =head2 blob_params column_NAME column_type
 
 Returns a hash ref for the bind_param call to identify BLOB types used
@@ -173,7 +160,6 @@ sub blob_params {
     my $self   = shift;
     my $column = shift;
 
-    #my $type = shift;
     # Don't assign to key 'value' as it is defined later.
     return (
         {   ora_column => $column,
@@ -270,17 +256,6 @@ sub distinct_query {
         $$statementref .= $sb->_group_clause;
         $$statementref .= $sb->_order_clause;
     }
-}
-
-=head2 binary_safe_blobs
-
-Return undef, as Oracle doesn't support binary-safe CLOBS
-
-=cut
-
-sub binary_safe_blobs {
-    my $self = shift;
-    return (undef);
 }
 
 1;

@@ -115,18 +115,6 @@ sub distinct_query {
     $$statementref .= $sb->_order_clause;
 }
 
-=head2 binary_safe_blobs
-
-Return undef, as Oracle doesn't support binary-safe CLOBS
-
-
-=cut
-
-sub binary_safe_blobs {
-    my $self = shift;
-    return (undef);
-}
-
 1;
 
 __END__

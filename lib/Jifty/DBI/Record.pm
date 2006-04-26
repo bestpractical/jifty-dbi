@@ -571,19 +571,14 @@ sub __set {
         return ( $ret->return_value );
     }
 
-    # The blob handling will destroy $args{'Value'}. But we assign
+    # The blob handling will destroy $args{'value'}. But we assign
     # that back to the object at the end. this works around that
     my $unmunged_value = $args{'value'};
 
-    unless ( $self->_handle->knows_blobs ) {
-
-        # Support for databases which don't deal with LOBs automatically
-        if ( $column->type =~ /^(text|longtext|clob|blob|lob)$/i ) {
-            my $bhash
-                = $self->_handle->blob_params( $column->name, $column->type );
-            $bhash->{'value'} = $args{'value'};
-            $args{'value'} = $bhash;
-        }
+    if ( $column->type =~ /^(text|longtext|clob|blob|lob|bytea)$/i ) {
+        my $bhash = $self->_handle->blob_params( $column->name, $column->type );
+        $bhash->{'value'} = $args{'value'};
+        $args{'value'} = $bhash;
     }
 
     my $val = $self->_handle->update_record_value(
@@ -612,7 +607,7 @@ sub __set {
         # XXX TODO primary_keys
         $self->load_by_cols( id => $self->id );
     } else {
-        $self->{'values'}->{ $column->name } = $unmunged_value;
+        $self->{'values'}{ $column->name } = $unmunged_value;
         $self->{'decoded'}{ $column->name } = 0;
     }
     $ret->as_array( 1, "The new value has been set." );
@@ -847,18 +842,10 @@ sub create {
             value_ref => \$attribs{$column_name},
         );
 
-    }
-    unless ( $self->_handle->knows_blobs ) {
-
-        # Support for databases which don't deal with LOBs automatically
-        foreach my $column_name ( keys %attribs ) {
-            my $column = $self->column($column_name);
-            if ( $column->type =~ /^(text|longtext|clob|blob|lob)$/i ) {
-                my $bhash = $self->_handle->blob_params( $column_name,
-                    $column->type );
-                $bhash->{'value'} = $attribs{$column_name};
-                $attribs{$column_name} = $bhash;
-            }
+        if ( $column->type =~ /^(text|longtext|clob|blob|lob|bytea)$/i ) {
+            my $bhash = $self->_handle->blob_params( $column_name, $column->type );
+            $bhash->{'value'} = $attribs{$column_name};
+            $attribs{$column_name} = $bhash;
         }
     }
     my $ret = $self->_handle->insert( $self->table, %attribs );
