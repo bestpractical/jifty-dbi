@@ -211,7 +211,8 @@ sub _store (\$) {
     $self->_record_cache->set( $self->_primary_record_cache_key,
         {   values  => $self->{'values'},
             table   => $self->table,
-            fetched => $self->{'fetched'}
+            fetched => $self->{'fetched'},
+            decoded => $self->{'decoded'},
         }
     );
 }
