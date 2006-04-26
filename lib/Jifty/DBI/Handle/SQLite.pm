@@ -20,7 +20,7 @@ compensates for some of the idiosyncrasies of SQLite.
 
 =head1 METHODS
 
-=head2
+=head2 database_version
 
 Returns the version of the SQLite library which is used, e.g., "2.8.0".
 SQLite can only return short variant.
