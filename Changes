@@ -1,5 +1,5 @@
 Revision history for Perl extension Jifty::DBI.
-
+* Added a filter for Dates, lib/Jifty/DBI/Filter/Date.pm
 * Switched Jifty::DBI::Record to autocreate methods on object load rather than
   use AUTOLOAD.
 
