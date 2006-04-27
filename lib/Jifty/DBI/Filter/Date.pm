@@ -37,14 +37,12 @@ sub encode {
 
     my $value_ref = $self->value_ref;
     return unless $$value_ref;
-    warn "We ended up with ".$$value_ref ." on encode";
 
     return unless UNIVERSAL::isa( $$value_ref, 'DateTime' );
     $$value_ref->time_zone('floating');
 
     my $format = ($self->column->type eq "date" ? "%Y-%m-%d" : "%Y-%m-%d %H:%M:%S");
     $$value_ref = $$value_ref->strftime($format);
-    warn "We ended up with ".$$value_ref ." on encode";
     return 1;
 }
 
@@ -64,7 +62,6 @@ sub decode {
     my $value_ref = $self->value_ref;
     return unless defined $$value_ref;
 
-    warn "Our value is ".$$value_ref;
 # XXX: Looks like we should use special modules for parsing DT because
 # different MySQL versions can return DT in different formats(none strict ISO)
 # Pg has also special format that depends on "european" and
@@ -77,7 +74,6 @@ sub decode {
     $dt->time_zone('floating');
     $dt->set_formatter(DateTime::Format::Strptime->new(pattern => '%Y-%m-%d'));
     if ($dt) {
-        warn "and we end up with ".$dt;
         $$value_ref = $dt;
     } else {
         return;

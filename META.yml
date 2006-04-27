@@ -17,7 +17,7 @@ requires:
   Class::ReturnValue: 0.4
   Clone: 0
   DBI: 0
-  DBIx::DBSchema: 0.28
+  DBIx::DBSchema: 0.29
   Data::Page: 0
   DateTime: 0
   DateTime::Format::ISO8601: 0
