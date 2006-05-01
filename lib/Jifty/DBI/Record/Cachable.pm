@@ -7,6 +7,7 @@ use Jifty::DBI::Handle;
 use Cache::Simple::TimedExpiry;
 
 use strict;
+use warnings;
 
 =head1 NAME
 
@@ -115,11 +116,11 @@ sub load_from_hash {
 sub load_by_cols {
     my ( $self, %attr ) = @_;
     ## Generate the cache key
-    my $alt_key = $self->_gen_alternate_record_cache_key(%attr);
-    if ( $self->_fetch( $self->_lookup_primary_record_cache_key($alt_key) ) ) {
+
+    my $alt_key =$self->_gen_record_cache_key(%attr);
+    if ($self->_fetch($alt_key)) {
         return ( 1, "Fetched from cache" );
     }
-    #warn "Didn't get it from the cache";
     # Blow away the primary cache key since we're loading.
     $self->{'_jifty_cache_pkey'} = undef;
 
@@ -129,7 +130,7 @@ sub load_by_cols {
     if ($rvalue) {
         ## Only cache the object if its okay to do so.
         $self->_store();
-        $self->_key_cache->set( $alt_key, $self->_primary_record_cache_key );
+        $self->_key_cache->set( $alt_key => $self->_primary_record_cache_key );
 
     }
     return ( $rvalue, $msg );
@@ -185,10 +186,20 @@ sub _expire (\$) {
 
 sub _fetch () {
     my ( $self, $cache_key ) = @_;
-    my $data = $self->_record_cache->fetch($cache_key) or return;
+        # If the alternate key is really the primary one
+       
+        
+        my $data = $self->_record_cache->fetch($cache_key);
 
-    @{$self}{ keys %$data } = values %$data;    # deserialize
-    return 1;
+  unless ($data) {      $data
+      = $self->_record_cache->fetch( $self->_key_cache->fetch($cache_key) );
+  }
+
+  return undef unless ($data);
+
+  @{$self}{ keys %$data } = values %$data;    # deserialize
+  return 1;
+
 
 }
 
@@ -218,29 +229,28 @@ sub _store (\$) {
 }
 
 
-# Function: _gen_alternate_record_cache_key
+# Function: _gen_record_cache_key
 # Type    : private instance
 # Args    : hash (attr)
 # Lvalue  : 1
 # Desc    : Takes a perl hash and generates a key from it.
 
-sub _gen_alternate_record_cache_key {
-    my ( $self, %attr ) = @_;
+sub _gen_record_cache_key {
+  my ( $self, %attr ) = @_;
 
-    my $cache_key;
-    while ( my ( $key, $value ) = each %attr ) {
-        $key   ||= '__undef';
-        $value ||= '__undef';
+  my @cols;
 
-        if ( ref($value) eq "HASH" ) {
-            $value = ( $value->{operator} || '=' ) . $value->{value};
-        } else {
-            $value = "=" . $value;
-        }
-        $cache_key .= $key . $value . ',';
+  while ( my ( $key, $value ) = each %attr ) {
+    $key   ||= '__undef';
+    $value ||= '__undef';
+    if ( ref($value) eq "HASH" ) {
+      push @cols, $key . ( $value->{operator} || '=' ) . $value->{value};
     }
-    chop($cache_key);
-    return ($cache_key);
+    else {
+      push @cols, $key . "=" . $value;
+    }
+  }
+  return ( $self->table() . ':' . join( ',', @cols ) );
 }
 
 # Function: _fetch_record_cache_key
@@ -280,29 +290,6 @@ sub _primary_record_cache_key {
             = $primary_record_cache_key;
     }
     return ( $self->{'_jifty_cache_pkey'} );
-
-}
-
-# Function: lookup_primary_record_cache_key
-# Type    : private class
-# Args    : string(alternate cache id)
-# Lvalue  : string(cache id)
-sub _lookup_primary_record_cache_key {
-    my $self          = shift;
-    my $alternate_key = shift;
-    return undef unless ($alternate_key);
-
-    my $primary_key = $self->_key_cache->fetch($alternate_key);
-    if ($primary_key) {
-        return ($primary_key);
-    }
-
-    # If the alternate key is really the primary one
-    elsif ( $self->_record_cache->fetch($alternate_key) ) {
-        return ($alternate_key);
-    } else {    # empty!
-        return (undef);
-    }
 
 }
 
