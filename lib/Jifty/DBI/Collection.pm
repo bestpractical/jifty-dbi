@@ -1196,7 +1196,7 @@ sub set_page_info {
         @_
     );
 
-    $self->pager #->total_entries( $self->count_all )
+    $self->pager->total_entries( $self->count_all )
         ->entries_per_page( $args{'per_page'} )
         ->current_page( $args{'current_page'} );
 
