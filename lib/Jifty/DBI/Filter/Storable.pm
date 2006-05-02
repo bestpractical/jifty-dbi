@@ -45,6 +45,9 @@ sub decode {
     my $value_ref = $self->value_ref;
     return unless defined $$value_ref;
 
+    # Storable doesn't take Unicode strings.
+    Encode::_utf8_off($$value_ref);
+
     $Storable::Eval = 1;
     $$value_ref = ${ Storable::thaw($$value_ref) };
 }
