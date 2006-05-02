@@ -415,6 +415,23 @@ sub build_select_count_query {
     return ($query_string);
 }
 
+=head2 do_search
+
+C<Jifty::DBI::Collection> usually does searches "lazily". That is, it
+does a C<SELECT COUNT> or a C<SELELCT> on the fly the first time you ask
+for results that would need one or the other.  Sometimes, you need to
+display a count of results found before you iterate over a collection,
+but you know you're about to do that too. To save a bit of wear and tear
+on your database, call C<do_search> before that C<count>.
+
+=cut
+
+sub do_search {
+    my $self = shift;
+    $self->_do_search() if $self->{'must_redo_search'};
+
+}
+
 =head2 next
 
 Returns the next row from the set as an object of the type defined by
@@ -929,17 +946,22 @@ Use array of hashes to order by many columns/functions.
 
 The results would be unordered if method called without arguments.
 
+Returns the current list of columns.
+
 =cut
 
 sub order_by {
-    my $self = shift;
+  my $self = shift;
+  if (@_) {
     my @args = @_;
 
     unless ( UNIVERSAL::isa( $args[0], 'HASH' ) ) {
-        @args = {@args};
+      @args = {@args};
     }
     $self->{'order_by'} = \@args;
     $self->redo_search();
+  }
+  return $self->{'order_by'};
 }
 
 =head2 _order_clause
@@ -1174,7 +1196,7 @@ sub set_page_info {
         @_
     );
 
-    $self->pager->total_entries( $self->count_all )
+    $self->pager #->total_entries( $self->count_all )
         ->entries_per_page( $args{'per_page'} )
         ->current_page( $args{'current_page'} );
 
