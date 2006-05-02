@@ -1,4 +1,8 @@
 Revision history for Perl extension Jifty::DBI.
+
+* We no longer do a count when setting up a collection's pager object by default
+* order_by now returns the current orders
+* added a "do_search" method to force a search, say before a count
 * Added a filter for Dates, lib/Jifty/DBI/Filter/Date.pm
 * Switched Jifty::DBI::Record to autocreate methods on object load rather than
   use AUTOLOAD.
