@@ -233,9 +233,14 @@ sub distinct_query {
 
   # Wrapp select query in a subselect as Oracle doesn't allow
   # DISTINCT against CLOB/BLOB column types.
-  if ( grep { $_->{'alias'} ne 'main' || defined $_->{'function'} }
-    @{ $sb->order_by } )
+  if (
+    grep {
+      ( defined $_->{'alias'} and $_->{'alias'} ne 'main' )
+        || defined $_->{'function'}
+    } @{ $sb->order_by }
+    )
   {
+
 
     # If we are ordering by something not in 'main', we need to GROUP
     # BY and adjust the ORDER_BY accordingly

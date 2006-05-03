@@ -194,35 +194,40 @@ takes an incomplete SQL SELECT statement and massages it to return a DISTINCT re
 =cut
 
 sub distinct_query {
-    my $self         = shift;
-    my $statementref = shift;
-    my $sb           = shift;
-    my $table        = $sb->table;
+  my $self         = shift;
+  my $statementref = shift;
+  my $sb           = shift;
+  my $table        = $sb->table;
 
-    if ( grep {    $_->{'alias'} ne 'main' 
-                || defined $_->{'function'} }
-      @{ $sb->order_by } ) {
+  if (
+    grep {
+      ( defined $_->{'alias'} and $_->{'alias'} ne 'main' )
+        || defined $_->{'function'}
+    } @{ $sb->order_by }
+    )
+  {
 
-        # If we are ordering by something not in 'main', we need to GROUP
-        # BY and adjust the ORDER_BY accordingly
-        local $sb->{group_by}
-            = [ @{ $sb->{group_by} || [] }, { column => 'id' } ];
-        local $sb->{order_by} = [
-            map {
-                ( $_->{alias} and $_->{alias} ne "main" )
-                    ? { %{$_}, column => "min(" . $_->{column} . ")" }
-                    : $_
-                } @{ $sb->{order_by} }
-        ];
-        my $group = $sb->_group_clause;
-        my $order = $sb->_order_clause;
-        $$statementref
-            = "SELECT main.* FROM ( SELECT main.id FROM $$statementref $group $order ) distinctquery, $table main WHERE (main.id = distinctquery.id)";
-    } else {
-        $$statementref = "SELECT DISTINCT main.* FROM $$statementref";
-        $$statementref .= $sb->_group_clause;
-        $$statementref .= $sb->_order_clause;
-    }
+    # If we are ordering by something not in 'main', we need to GROUP
+    # BY and adjust the ORDER_BY accordingly
+    local $sb->{group_by}
+      = [ @{ $sb->{group_by} || [] }, { column => 'id' } ];
+    local $sb->{order_by} = [
+      map {
+            ( $_->{alias} and $_->{alias} ne "main" )
+          ? { %{$_}, column => "min(" . $_->{column} . ")" }
+          : $_
+        } @{ $sb->{order_by} }
+    ];
+    my $group = $sb->_group_clause;
+    my $order = $sb->_order_clause;
+    $$statementref
+      = "SELECT main.* FROM ( SELECT main.id FROM $$statementref $group $order ) distinctquery, $table main WHERE (main.id = distinctquery.id)";
+  }
+  else {
+    $$statementref = "SELECT DISTINCT main.* FROM $$statementref";
+    $$statementref .= $sb->_group_clause;
+    $$statementref .= $sb->_order_clause;
+  }
 }
 
 1;
