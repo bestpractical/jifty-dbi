@@ -199,7 +199,9 @@ sub distinct_query {
     my $sb           = shift;
     my $table        = $sb->table;
 
-    if ( $sb->_order_clause =~ /(?<!main)\./ ) {
+    if ( grep {    $_->{'alias'} ne 'main' 
+                || defined $_->{'function'} }
+      @{ $sb->order_by } ) {
 
         # If we are ordering by something not in 'main', we need to GROUP
         # BY and adjust the ORDER_BY accordingly

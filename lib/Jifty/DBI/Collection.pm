@@ -373,7 +373,7 @@ sub build_select_query {
     if ( $self->_is_limited ) {
         $query_string .= $self->_where_clause . " ";
     }
-    if ( $self->_is_joined ) {
+    if ( $self->distinct_required ) {
 
         # DISTINCT query only required for multi-table selects
         $self->_distinct_query( \$query_string );
@@ -386,6 +386,26 @@ sub build_select_query {
     $self->_apply_limits( \$query_string );
 
     return ($query_string)
+
+}
+
+
+=head2 distinct_required
+
+Returns true if Jifty::DBI expects that this result set will end up
+with repeated rows and should be "condensed" down to a single row for
+each unique primary key.  Out of the box, this method returns true if
+you've joined to another table.  If you're smarter than Jifty::DBI,
+feel free to override this method in your subclass.
+
+XXX TODO: it should be possible to create a better heuristic than the simple "is it joined?" question we're asking now. Something along the lines of "are we joining this table to something that is not the other table's primary key"
+
+=cut
+
+
+sub distinct_required {
+    my $self = shift;
+    return $self->_is_joined ? 1 : 0;
 
 }
 
