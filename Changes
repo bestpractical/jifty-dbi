@@ -1,5 +1,7 @@
 Revision history for Perl extension Jifty::DBI.
 
+0.21 Wed May  3 14:14:41 EDT 2006
+
 * We no longer do a count when setting up a collection's pager object by default
 * order_by now returns the current orders
 * added a "do_search" method to force a search, say before a count
