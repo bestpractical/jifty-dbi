@@ -208,7 +208,6 @@ sub create_table_sql_statements {
 Returns a string containing a sequence of SQL statements to create tables for all of
 the models added to the SchemaGenerator.
 
-=end
 
 =cut
 
