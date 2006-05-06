@@ -278,8 +278,9 @@ sub input_filters {
 =head2 output_filters
 
 Sets a list of output filters on the data.  Correct usage is
-C<input_filters are 'Jifty::DBI::Filter::DateTime'>.  See
-L<Jifty::DBI::Filter>.
+C<output_filters are 'Jifty::DBI::Filter::DateTime'>.  See
+L<Jifty::DBI::Filter>.  You usually don't need to set this, as the
+output filters default to the input filters in reverse order.
 
 =cut
 
@@ -290,8 +291,10 @@ sub output_filters {
 =head2 filters
 
 Sets a list of filters on the data.  These are applied when reading
-B<and> writing to the database.  Correct usage is C<input_filters are
-'Jifty::DBI::Filter::DateTime'>.  See L<Jifty::DBI::Filter>.
+B<and> writing to the database.  Correct usage is C<filters are
+'Jifty::DBI::Filter::DateTime'>.  See L<Jifty::DBI::Filter>.  In
+actuality, this is the exact same as L</input_filters>, since output
+filters default to the input filters, reversed.
 
 =cut
 
