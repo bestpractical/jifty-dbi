@@ -988,7 +988,7 @@ sub _handle {
     return ( $self->{'DBIxHandle'} );
 }
 
-=for private refers_to
+=head2 PRIVATE refers_to
 
 used for the declarative syntax
 
