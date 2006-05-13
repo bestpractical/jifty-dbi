@@ -663,7 +663,7 @@ keys.
 The hash's keys are the columns to look at.
 
 The hash's values are either: scalar values to look for
-OR has references which contain 'operator' and 'value'
+OR hash references which contain 'operator' and 'value'
 
 =cut
 
