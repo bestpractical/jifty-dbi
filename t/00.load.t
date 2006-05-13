@@ -19,13 +19,12 @@ BEGIN { use_ok("Jifty::DBI::Handle::Sybase"); }
 BEGIN { use_ok("Jifty::DBI::Handle::SQLite"); }
 BEGIN { use_ok("Jifty::DBI::Record"); }
 BEGIN { use_ok("Jifty::DBI::Record::Cachable"); }
-BEGIN { use_ok("Jifty::DBI::Record::Memcached"); }
 
 # Commented out until ruslan sends code.
-#BEGIN {
-#    SKIP: {
-#        skip "Cache::Memcached is not installed", 1
-#          unless eval { require Cache::Memcached };
-#        use_ok("Jifty::DBI::Record::Memcached");
-#    }
-#}
+BEGIN {
+    SKIP: {
+        skip "Cache::Memcached is not installed", 1
+          unless eval { require Cache::Memcached };
+        use_ok("Jifty::DBI::Record::Memcached");
+    }
+}
