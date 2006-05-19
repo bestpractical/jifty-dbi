@@ -53,6 +53,9 @@ All these functions are exported.
 
 Set forth the description of a column in the data store.
 
+Note: If the column uses 'refers_to' to reference another class then you 
+should not name the column ending in '_id' as it has special meaning.
+
 =cut
 
 sub column {
@@ -119,6 +122,29 @@ sub column {
     $from->COLUMNS->{$name} = $column;
     $from->_init_methods_for_column($column);
 }
+
+=head2 refers_to
+
+Indicates that the column references an object or a collection of objects in another
+class.  You may refer to either a class that inherits from Jifty::Record by a primary
+key in that class or to a class that inherits from Jifty::Collection.
+
+Correct usage is C<refers_to Application::Model::OtherClass by 'column_name'>, where
+Application::Model::OtherClass is a valid Jifty model and C<'column_name'> is
+a column containing unique values in OtherClass.  You can omit C<by 'column_name'> and
+the column name 'id' will be used.
+
+If you are referring to a Jifty::Collection then you must specify C<by 'column_name'>.
+
+When accessing the value in the column the actual object referenced will be returned for
+refernces to Jifty::Records and a reference to a Jifty::Collection will be returned for
+columns referring to Jifty::Collections.
+
+For columns referring to Jifty::Records you can access the actual value of the column
+instead of the object reference by appending '_id' to the column name.  As a result,
+you may not end any column name which uses 'refers_to' using '_id'.
+
+=cut
 
 =head2 type
 
