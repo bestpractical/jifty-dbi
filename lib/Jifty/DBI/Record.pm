@@ -855,7 +855,6 @@ sub create {
         }
     }
 
-    warn YAML::Dump("Creting $self is ".YAML::Dump(\%attribs)) if ref $self eq "BTDT::Model::Task";
     my $ret = $self->_handle->insert( $self->table, %attribs );
     $self->after_create( \$ret ) if $self->can('after_create');
     return ($ret);
