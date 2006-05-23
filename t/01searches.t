@@ -8,7 +8,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 59;
+use constant TESTS_PER_DRIVER => 63;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -129,7 +129,7 @@ SKIP: {
 	is( $users_obj->count, 1, "found one user who name ends with 'Tang'" );
 	$first_rec = $users_obj->first;
 	isa_ok( $first_rec, 'Jifty::DBI::Record', 'First returns record object' );
-	is( $first_rec->login, 'autrijus', 'login is correct' );
+	is( $first_rec->login, 'audreyt', 'login is correct' );
 
 	# IS NULL
 	# XXX TODO FIXME: column => undef should be handled as NULL
@@ -137,12 +137,20 @@ SKIP: {
 	is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
 	$users_obj->limit( column => 'phone', operator => 'IS', value => 'NULL' );
 	is( $users_obj->count, 2, "found 2 users who has unknown phone number" );
+	$users_obj->clean_slate;
+	is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
+	$users_obj->limit( column => 'address', operator => 'IS', value => 'NULL' );
+	is( $users_obj->count, 0, "found 0 users who has unknown address" );
 	
 	# IS NOT NULL
 	$users_obj->clean_slate;
 	is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
 	$users_obj->limit( column => 'phone', operator => 'IS NOT', value => 'NULL', QOUTEvalue => 0 );
-	is( $users_obj->count, $count_all - 2, "found users who has phone number filled" );
+	is( $users_obj->count, $count_all - 2, "found users who have phone number filled" );
+	$users_obj->clean_slate;
+	is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
+	$users_obj->limit( column => 'address', operator => 'IS NOT', value => 'NULL', QOUTEvalue => 0 );
+	is( $users_obj->count, $count_all, "found users who have address filled" );
 	
 	# ORDER BY / GROUP BY
 	$users_obj->clean_slate;
@@ -171,6 +179,7 @@ CREATE TEMPORARY table users (
         login varchar(18) NOT NULL,
         name varchar(36),
 	phone varchar(18),
+	address varchar(18),
   	PRIMARY KEY (id))
 EOF
 
@@ -182,7 +191,8 @@ CREATE TEMPORARY table users (
         id serial PRIMARY KEY,
         login varchar(18) NOT NULL,
         name varchar(36),
-        phone varchar(18)
+        phone varchar(18),
+	address varchar(18)
 )
 EOF
 
@@ -195,7 +205,8 @@ CREATE table users (
 	id integer primary key,
 	login varchar(18) NOT NULL,
 	name varchar(36),
-	phone varchar(18))
+	phone varchar(18),
+	address varchar(18))
 EOF
 
 }
@@ -216,11 +227,11 @@ sub _init {
 
 sub init_data {
     return (
-	[ 'login',	'name',			'phone' ],
-	[ 'cubic',	'Ruslan U. Zakirov',	'+7-903-264-XX-XX' ],
-	[ 'obra',	'Jesse Vincent',	undef ],
-	[ 'glasser',	'David Glasser',	undef ],
-	[ 'autrijus',	'Autrijus Tang',	'+X-XXX-XXX-XX-XX' ],
+        [ 'login',      'name',                 'phone',            'address' ],
+        [ 'cubic',      'Ruslan U. Zakirov',    '+7-903-264-XX-XX', undef ],
+        [ 'obra',       'Jesse Vincent',        undef,              undef ],
+        [ 'glasser',    'David Glasser',        undef,              'somewhere' ],
+        [ 'audreyt',    'Audrey Tang',          '+X-XXX-XXX-XX-XX', 'someplace' ],
     );
 }
 
@@ -230,9 +241,10 @@ package TestApp::User::Schema;
 BEGIN {
     use Jifty::DBI::Schema;
 
-    column login => type is 'varchar(18)';
-    column name  => type is 'varchar(36)';
-    column phone => type is 'varchar(18)', default is '';
+    column login   => type is 'varchar(18)';
+    column name    => type is 'varchar(36)';
+    column phone   => type is 'varchar(18)', default is undef;
+    column address => type is 'varchar(18)', default is '';
 }
 
 1;

@@ -848,6 +848,14 @@ sub create {
             $attribs{$column_name} = $bhash;
         }
     }
+
+    for my $column ($self->columns) {
+        if (not defined $attribs{$column->name} and defined $column->default and not ref $column->default) {
+            $attribs{$column->name} = $column->default;
+        }
+    }
+
+    warn YAML::Dump("Creting $self is ".YAML::Dump(\%attribs)) if ref $self eq "BTDT::Model::Task";
     my $ret = $self->_handle->insert( $self->table, %attribs );
     $self->after_create( \$ret ) if $self->can('after_create');
     return ($ret);

@@ -8,7 +8,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 61;
+use constant TESTS_PER_DRIVER => 64;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -39,8 +39,8 @@ SKIP: {
 	is( $rec->_accessible('id'), undef, "any column is not accessible in undefined mode" );
 	is( $rec->_accessible('unexpected_column' => 'read'), undef, "column doesn't exist and can't be accessible for read" );
 
-	is_deeply( [sort($rec->readable_attributes)], [sort qw(employee_id id name phone)], 'readable attributes' );
-	is_deeply( [sort($rec->writable_attributes)], [sort qw(employee_id name phone)], 'writable attributes' );
+	is_deeply( [sort($rec->readable_attributes)], [sort qw(address employee_id id name phone)], 'readable attributes' );
+	is_deeply( [sort($rec->writable_attributes)], [sort qw(address employee_id name phone)], 'writable attributes' );
 
 	can_ok($rec,'create');
 
@@ -157,13 +157,22 @@ SKIP: {
 	ok( !$val, "couldn't load, missing PK column");
 	is( $msg, "Missing PK column: 'id'", "right error message" );
 
+# Defaults kick in
+	$rec = TestApp::Address->new($handle);
+	$id = $rec->create( name => 'Chmrr' );
+	ok( $id, "new record");
+	$rec = TestApp::Address->new($handle);
+	$rec->load_by_cols( name => 'Chmrr' );
+        is( $rec->id, $id, "loaded record by empty value" );
+        is( $rec->address, '', "Got default on create" );
+
 # load_by_cols and empty or NULL values
 	$rec = TestApp::Address->new($handle);
 	$id = $rec->create( name => 'Obra', phone => undef );
 	ok( $id, "new record");
 	$rec = TestApp::Address->new($handle);
 	$rec->load_by_cols( name => 'Obra', phone => undef, employee_id => '' );
-    is( $rec->id, $id, "loaded record by empty value" );
+        is( $rec->id, $id, "loaded record by empty value" );
 
 # __set error paths
 	$rec = TestApp::Address->new($handle);
@@ -214,6 +223,7 @@ CREATE TEMPORARY table addresses (
         id integer AUTO_INCREMENT,
         name varchar(36),
         phone varchar(18),
+        address varchar(50),
         employee_id int(8),
   	PRIMARY KEY (id))
 EOF
@@ -226,6 +236,7 @@ CREATE TEMPORARY table addresses (
         id serial PRIMARY KEY,
         name varchar,
         phone varchar,
+        address varchar,
         employee_id integer
 )
 EOF
@@ -239,6 +250,7 @@ CREATE table addresses (
         id  integer primary key,
         name varchar(36),
         phone varchar(18),
+        address varchar(50),
         employee_id int(8))
 EOF
 
@@ -251,17 +263,17 @@ BEGIN {
 use Jifty::DBI::Schema;
 
 column name =>
-  type is 'varchar(14)',
-  default is '';
+  type is 'varchar(14)';
 
 column phone =>
   type is 'varchar(18)',
-  length => 18,
+
+column address =>
+  type is 'varchar(50)',
   default is '';
 
 column employee_id =>
-  type is 'int(8)',
-  default is '';
+  type is 'int(8)';
 }
 1;
 
