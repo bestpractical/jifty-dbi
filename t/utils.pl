@@ -12,14 +12,14 @@ Array of all supported DBD drivers.
 =cut
 
 our @supported_drivers = qw(
-	SQLite
-	Informix
-	mysql
-	mysqlPP
-	ODBC
-	Oracle
-	Pg
-	Sybase
+        SQLite
+        Informix
+        mysql
+        mysqlPP
+        ODBC
+        Oracle
+        Pg
+        Sybase
 );
 
 =head2 @available_drivers
@@ -42,13 +42,13 @@ Other arguments uses to construct handle.
 
 sub get_handle
 {
-	my $type = shift;
-	my $class = 'Jifty::DBI::Handle::'. $type;
-	eval "require $class";
-	die $@ if $@;
-	my $handle;
-	$handle = $class->new( @_ );
-	return $handle;
+        my $type = shift;
+        my $class = 'Jifty::DBI::Handle::'. $type;
+        eval "require $class";
+        die $@ if $@;
+        my $handle;
+        $handle = $class->new( @_ );
+        return $handle;
 }
 
 =head2 handle_to_driver
@@ -59,9 +59,9 @@ Returns driver name which gets from C<$handle> object argument.
 
 sub handle_to_driver
 {
-	my $driver = ref($_[0]);
-	$driver =~ s/^.*:://;
-	return $driver;
+        my $driver = ref($_[0]);
+        $driver =~ s/^.*:://;
+        return $driver;
 }
 
 =head2 connect_handle
@@ -72,9 +72,9 @@ Connects C<$handle> object to DB.
 
 sub connect_handle
 {
-	my $call = "connect_". lc handle_to_driver( $_[0] );
-	return unless defined &$call;
-	goto &$call;
+        my $call = "connect_". lc handle_to_driver( $_[0] );
+        return unless defined &$call;
+        goto &$call;
 }
 
 =head2 connect_handle_with_driver($handle, $driver)
@@ -87,41 +87,41 @@ on C<Connect>.
 
 sub connect_handle_with_driver
 {
-	my $call = "connect_". lc $_[1];
-	return unless defined &$call;
-	@_ = $_[0];
-	goto &$call;
+        my $call = "connect_". lc $_[1];
+        return unless defined &$call;
+        @_ = $_[0];
+        goto &$call;
 }
 
 sub connect_sqlite
 {
-	my $handle = shift;
-	return $handle->connect(
-		driver => 'SQLite',
-		database => File::Spec->catfile(File::Spec->tmpdir(), "sb-test.$$")
-	);
+        my $handle = shift;
+        return $handle->connect(
+                driver => 'SQLite',
+                database => File::Spec->catfile(File::Spec->tmpdir(), "sb-test.$$")
+        );
 }
 
 sub connect_mysql
 {
-	my $handle = shift;
-	return $handle->connect(
-		driver => 'mysql',
-		database => $ENV{'JDBI_TEST_MYSQL'},
-		user => $ENV{'JDBI_TEST_MYSQL_USER'} || 'root',
-		password => $ENV{'JDBI_TEST_MYSQL_PASS'} || '',
-	);
+        my $handle = shift;
+        return $handle->connect(
+                driver => 'mysql',
+                database => $ENV{'JDBI_TEST_MYSQL'},
+                user => $ENV{'JDBI_TEST_MYSQL_USER'} || 'root',
+                password => $ENV{'JDBI_TEST_MYSQL_PASS'} || '',
+        );
 }
 
 sub connect_pg
 {
-	my $handle = shift;
-	return $handle->connect(
-		driver => 'Pg',
-		database => $ENV{'JDBI_TEST_PG'},
-		user => $ENV{'JDBI_TEST_PG_USER'} || 'postgres',
-		password => $ENV{'JDBI_TEST_PG_PASS'} || '',
-	);
+        my $handle = shift;
+        return $handle->connect(
+                driver => 'Pg',
+                database => $ENV{'JDBI_TEST_PG'},
+                user => $ENV{'JDBI_TEST_PG_USER'} || 'postgres',
+                password => $ENV{'JDBI_TEST_PG_PASS'} || '',
+        );
 }
 
 =head2 disconnect_handle
@@ -132,9 +132,9 @@ Disconnects C<$handle> object.
 
 sub disconnect_handle
 {
-	my $call = "disconnect_". lc handle_to_driver( $_[0] );
-	return unless defined &$call;
-	goto &$call;
+        my $call = "disconnect_". lc handle_to_driver( $_[0] );
+        return unless defined &$call;
+        goto &$call;
 }
 
 =head2 disconnect_handle_with_driver($handle, $driver)
@@ -145,33 +145,33 @@ Disconnects C<$handle> using driver C<$driver>.
 
 sub disconnect_handle_with_driver
 {
-	my $call = "disconnect_". lc $_[1];
-	return unless defined &$call;
-	@_ = $_[0];
-	goto &$call;
+        my $call = "disconnect_". lc $_[1];
+        return unless defined &$call;
+        @_ = $_[0];
+        goto &$call;
 }
 
 sub disconnect_sqlite
 {
-	my $handle = shift;
-	$handle->disconnect;
-	unlink File::Spec->catfile(File::Spec->tmpdir(), "sb-test.$$");
+        my $handle = shift;
+        $handle->disconnect;
+        unlink File::Spec->catfile(File::Spec->tmpdir(), "sb-test.$$");
 }
 
 sub disconnect_mysql
 {
-	my $handle = shift;
-	$handle->disconnect;
+        my $handle = shift;
+        $handle->disconnect;
 
-	# XXX: is there something we should do here?
+        # XXX: is there something we should do here?
 }
 
 sub disconnect_pg
 {
-	my $handle = shift;
-	$handle->disconnect;
+        my $handle = shift;
+        $handle->disconnect;
 
-	# XXX: is there something we should do here?
+        # XXX: is there something we should do here?
 }
 
 =head2 should_test $driver
@@ -184,10 +184,10 @@ Takes one argument C<$driver> name.
 
 sub should_test
 {
-	my $driver = shift;
-	return 1 if lc $driver eq 'sqlite';
-	my $env = 'JDBI_TEST_'. uc $driver;
-	return $ENV{$env};
+        my $driver = shift;
+        return 1 if lc $driver eq 'sqlite';
+        my $env = 'JDBI_TEST_'. uc $driver;
+        return $ENV{$env};
 }
 
 =head2 has_schema $class { $driver | $handle }
@@ -205,25 +205,25 @@ Returns empty value if couldn't find method.
 
 sub has_schema
 {
-	my ($class, $driver) = @_;
-	unless( UNIVERSAL::isa( $driver, 'Jifty::DBI::Handle' ) ) {
-		my $method = 'schema_'. lc $driver;
-		$method = '' unless UNIVERSAL::can( $class, $method );
-		return $method;
-	} else {
-		my $ver = $driver->database_version;
-		return has_schema( $class, handle_to_driver( $driver ) ) unless $ver;
+        my ($class, $driver) = @_;
+        unless( UNIVERSAL::isa( $driver, 'Jifty::DBI::Handle' ) ) {
+                my $method = 'schema_'. lc $driver;
+                $method = '' unless UNIVERSAL::can( $class, $method );
+                return $method;
+        } else {
+                my $ver = $driver->database_version;
+                return has_schema( $class, handle_to_driver( $driver ) ) unless $ver;
 
-		my $method = 'schema_'. lc handle_to_driver( $driver );
-		$ver =~ s/-.*$//;
-		my @nums = grep $_, map { int($_) } split /\./, $ver;
-		while( @nums ) {
-			my $m = $method ."_". join '_', @nums;
-			return $m if( UNIVERSAL::can( $class, $m ) );
-			pop @nums;
-		}
-		return has_schema( $class, handle_to_driver( $driver ) );
-	}
+                my $method = 'schema_'. lc handle_to_driver( $driver );
+                $ver =~ s/-.*$//;
+                my @nums = grep $_, map { int($_) } split /\./, $ver;
+                while( @nums ) {
+                        my $m = $method ."_". join '_', @nums;
+                        return $m if( UNIVERSAL::can( $class, $m ) );
+                        pop @nums;
+                }
+                return has_schema( $class, handle_to_driver( $driver ) );
+        }
 }
 
 =head2 init_schema
@@ -237,17 +237,17 @@ SimpleQuery method on error.
 
 sub init_schema
 {
-	my ($class, $handle) = @_;
-	my $call = has_schema( $class, $handle );
-	diag( "using '$class\:\:$call' schema for ". handle_to_driver( $handle ) ) if $ENV{TEST_VERBOSE};
-	my $schema = $class->$call();
-	$schema = ref( $schema )? $schema : [$schema];
-	my $ret;
-	foreach my $query( @$schema ) {
-		$ret = $handle->simple_query( $query );
-		return $ret unless UNIVERSAL::isa( $ret, 'DBI::st' );
-	}
-	return $ret;
+        my ($class, $handle) = @_;
+        my $call = has_schema( $class, $handle );
+        diag( "using '$class\:\:$call' schema for ". handle_to_driver( $handle ) ) if $ENV{TEST_VERBOSE};
+        my $schema = $class->$call();
+        $schema = ref( $schema )? $schema : [$schema];
+        my $ret;
+        foreach my $query( @$schema ) {
+                $ret = $handle->simple_query( $query );
+                return $ret unless UNIVERSAL::isa( $ret, 'DBI::st' );
+        }
+        return $ret;
 }
 
 =head2 cleanup_schema
@@ -260,14 +260,14 @@ Always returns undef.
 
 sub cleanup_schema
 {
-	my ($class, $handle) = @_;
-	my $call = "cleanup_schema_". lc handle_to_driver( $handle );
-	return unless UNIVERSAL::can( $class, $call );
-	my $schema = $class->$call();
-	$schema = ref( $schema )? $schema : [$schema];
-	foreach my $query( @$schema ) {
-		eval { $handle->simple_query( $query ) };
-	}
+        my ($class, $handle) = @_;
+        my $call = "cleanup_schema_". lc handle_to_driver( $handle );
+        return unless UNIVERSAL::can( $class, $call );
+        my $schema = $class->$call();
+        $schema = ref( $schema )? $schema : [$schema];
+        foreach my $query( @$schema ) {
+                eval { $handle->simple_query( $query ) };
+        }
 }
 
 =head2 init_data
@@ -276,21 +276,21 @@ sub cleanup_schema
 
 sub init_data
 {
-	my ($class, $handle) = @_;
-	my @data = $class->init_data();
-	my @columns = @{ shift @data };
-	my $count = 0;
-	foreach my $values ( @data ) {
-		my %args;
-		for( my $i = 0; $i < @columns; $i++ ) {
-			$args{ $columns[$i] } = $values->[$i];
-		}
-		my $rec = $class->new( $handle );
-		my $id = $rec->create( %args );
-		die "Couldn't create record" unless $id;
-		$count++;
-	}
-	return $count;
+        my ($class, $handle) = @_;
+        my @data = $class->init_data();
+        my @columns = @{ shift @data };
+        my $count = 0;
+        foreach my $values ( @data ) {
+                my %args;
+                for( my $i = 0; $i < @columns; $i++ ) {
+                        $args{ $columns[$i] } = $values->[$i];
+                }
+                my $rec = $class->new( $handle );
+                my $id = $rec->create( %args );
+                die "Couldn't create record" unless $id;
+                $count++;
+        }
+        return $count;
 }
 
 1;

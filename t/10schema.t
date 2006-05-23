@@ -32,7 +32,7 @@ foreach my $d ( @available_drivers ) {
     }
     
     unless( should_test( $d ) ) {
-    	skip "ENV is not defined for driver $d", TESTS_PER_DRIVER;
+        skip "ENV is not defined for driver $d", TESTS_PER_DRIVER;
     }
   
     my $handle = get_handle( $d );

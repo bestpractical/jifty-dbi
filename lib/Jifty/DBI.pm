@@ -184,13 +184,13 @@ operations, such that updates will only happen when "you" say so.
 
 Finally, adding a removing records from the database.  ::Record provides a 
 Create method which simply takes a hash of key=>value pairs.  The keys 
-exactly	map to database columns. 
+exactly map to database columns. 
 
  ## Get a new record object.
  $s1 = Simple->new($handle);
  my ($id, $status_msg) = $s1->create(id  => 4,
- 	           foo => 'Foooooo', 
- 	           bar => 'Barrrrr');
+                   foo => 'Foooooo', 
+                   bar => 'Barrrrr');
 
 Poof! A new row in the database has been created!  Now lets delete the 
 object! 
