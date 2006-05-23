@@ -199,9 +199,9 @@ sub _do_search {
         $item->load_from_hash($row);
         $self->add_record($item);
     }
-    return $self->_record_count if $records->err;
-
-    $self->{'must_redo_search'} = 0;
+    if ( $records->err ) {
+        $self->{'must_redo_search'} = 0;
+    }
 
     return $self->_record_count;
 }
@@ -210,11 +210,17 @@ sub _do_search {
 
 Adds a record object to this collection.
 
+This method automatically sets our "must redo search" flag to 0 and our "we have limits" flag to 1.
+
+Without those two flags, counting the number of items wouldn't work.
+
 =cut
 
 sub add_record {
     my $self   = shift;
     my $record = shift;
+    $self->_is_limited(1);
+    $self->{'must_redo_search'} = 0;
     push @{ $self->{'items'} }, $record;
 }
 
