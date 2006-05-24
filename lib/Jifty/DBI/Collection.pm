@@ -444,7 +444,7 @@ sub build_select_count_query {
 =head2 do_search
 
 C<Jifty::DBI::Collection> usually does searches "lazily". That is, it
-does a C<SELECT COUNT> or a C<SELELCT> on the fly the first time you ask
+does a C<SELECT COUNT> or a C<SELECT> on the fly the first time you ask
 for results that would need one or the other.  Sometimes, you need to
 display a count of results found before you iterate over a collection,
 but you know you're about to do that too. To save a bit of wear and tear
@@ -615,7 +615,7 @@ sub redo_search {
 
 =head2 unlimit
 
-unlimit clears all restrictions and causes this object to return all
+Clears all restrictions and causes this object to return all
 rows in the primary table.
 
 =cut
@@ -629,7 +629,7 @@ sub unlimit {
 
 =head2 limit
 
-limit takes a hash of parameters with the following keys:
+Takes a hash of parameters with the following keys:
 
 =over 4
 
