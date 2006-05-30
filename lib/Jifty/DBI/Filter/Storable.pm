@@ -48,8 +48,9 @@ sub decode {
     # Storable doesn't take Unicode strings.
     Encode::_utf8_off($$value_ref);
 
+    local $@;
     $Storable::Eval = 1;
-    $$value_ref = ${ Storable::thaw($$value_ref) };
+    $$value_ref = eval { ${ Storable::thaw($$value_ref) } };
 }
 
 =head1 SEE ALSO
