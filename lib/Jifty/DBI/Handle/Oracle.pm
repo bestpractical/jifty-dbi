@@ -27,12 +27,12 @@ sub connect {
     my $self = shift;
 
     my %args = (
-        Driver   => undef,
-        Database => undef,
-        User     => undef,
-        Password => undef,
-        SID      => undef,
-        Host     => undef,
+        driver   => undef,
+        database => undef,
+        user     => undef,
+        password => undef,
+        sid      => undef,
+        host     => undef,
         @_
     );
 
@@ -119,31 +119,31 @@ Builds a DSN suitable for an Oracle DBI connection
 sub build_dsn {
     my $self = shift;
     my %args = (
-        Driver     => undef,
-        Database   => undef,
-        Host       => undef,
-        Port       => undef,
-        SID        => undef,
-        RequireSSL => undef,
+        driver     => undef,
+        database   => undef,
+        host       => undef,
+        port       => undef,
+        sid        => undef,
+        requiressl => undef,
         @_
     );
 
-    my $dsn = "dbi:$args{'Driver'}:";
+    my $dsn = "dbi:$args{'driver'}:";
 
-    if (   defined $args{'Host'}
-        && $args{'Host'}
-        && defined $args{'SID'}
-        && $args{'SID'} )
+    if (   defined $args{'host'}
+        && $args{'host'}
+        && defined $args{'sid'}
+        && $args{'sid'} )
     {
-        $dsn .= "host=$args{'Host'};sid=$args{'SID'}";
+        $dsn .= "host=$args{'host'};sid=$args{'sid'}";
     } else {
-        $dsn .= "$args{'Database'}"
-            if ( defined $args{'Database'} && $args{'Database'} );
+        $dsn .= "$args{'database'}"
+            if ( defined $args{'database'} && $args{'database'} );
     }
-    $dsn .= ";port=$args{'Port'}"
-        if ( defined $args{'Port'} && $args{'Port'} );
+    $dsn .= ";port=$args{'port'}"
+        if ( defined $args{'port'} && $args{'port'} );
     $dsn .= ";requiressl=1"
-        if ( defined $args{'RequireSSL'} && $args{'RequireSSL'} );
+        if ( defined $args{'requiressl'} && $args{'requiressl'} );
 
     $self->{'dsn'} = $dsn;
 }
@@ -226,44 +226,36 @@ DISTINCT result set.
 =cut
 
 sub distinct_query {
-  my $self         = shift;
-  my $statementref = shift;
-  my $sb           = shift;
-  my $table        = $sb->Table;
+    my $self         = shift;
+    my $statementref = shift;
+    my $sb           = shift;
+    my $table        = $sb->Table;
 
-  # Wrapp select query in a subselect as Oracle doesn't allow
-  # DISTINCT against CLOB/BLOB column types.
-  if (
-    grep {
-      ( defined $_->{'alias'} and $_->{'alias'} ne 'main' )
-        || defined $_->{'function'}
-    } @{ $sb->order_by }
-    )
-  {
+    # Wrapp select query in a subselect as Oracle doesn't allow
+    # DISTINCT against CLOB/BLOB column types.
+    if ( $sb->_order_clause =~ /(?<!main)\./ ) {
 
-
-    # If we are ordering by something not in 'main', we need to GROUP
-    # BY and adjust the ORDER_BY accordingly
-    local $sb->{group_by}
-      = [ @{ $sb->{group_by} || [] }, { column => 'id' } ];
-    local $sb->{order_by} = [
-      map {
-            ( $_->{alias} and $_->{alias} ne "main" )
-          ? { %{$_}, column => "min(" . $_->{column} . ")" }
-          : $_
-        } @{ $sb->{order_by} }
-    ];
-    my $group = $sb->_group_clause;
-    my $order = $sb->_order_clause;
-    $$statementref
-      = "SELECT main.* FROM ( SELECT main.id FROM $$statementref $group $order ) distinctquery, $table main WHERE (main.id = distinctquery.id)";
-  }
-  else {
-    $$statementref
-      = "SELECT main.* FROM ( SELECT DISTINCT main.id FROM $$statementref ) distinctquery, $table main WHERE (main.id = distinctquery.id) ";
-    $$statementref .= $sb->_group_clause;
-    $$statementref .= $sb->_order_clause;
-  }
+        # If we are ordering by something not in 'main', we need to GROUP
+        # BY and adjust the ORDER_BY accordingly
+        local $sb->{group_by}
+            = [ @{ $sb->{group_by} || [] }, { column => 'id' } ];
+        local $sb->{order_by} = [
+            map {
+                      ( $_->{alias} and $_->{alias} ne "main" )
+                    ? { %{$_}, column => "min(" . $_->{column} . ")" }
+                    : $_
+                } @{ $sb->{order_by} }
+        ];
+        my $group = $sb->_group_clause;
+        my $order = $sb->_order_clause;
+        $$statementref
+            = "SELECT main.* FROM ( SELECT main.id FROM $$statementref $group $order ) distinctquery, $table main WHERE (main.id = distinctquery.id)";
+    } else {
+        $$statementref
+            = "SELECT main.* FROM ( SELECT DISTINCT main.id FROM $$statementref ) distinctquery, $table main WHERE (main.id = distinctquery.id) ";
+        $$statementref .= $sb->_group_clause;
+        $$statementref .= $sb->_order_clause;
+    }
 }
 
 1;
