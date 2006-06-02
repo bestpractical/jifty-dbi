@@ -156,80 +156,98 @@ sub _init_columns {
 }
 
 sub _init_methods_for_column {
-  my $self        = $_[0];
-  my $column      = $_[1];
-  my $column_name = ($column->aliased_as ?$column->aliased_as:$column->name);
-  my $package = ref($self)||$self;
-  no strict 'refs';    # We're going to be defining subs
-  if (  not $self->can($column_name)) {
-      
-    my $subref;
-    if ($column->readable) {
-    if ( UNIVERSAL::isa( $column->refers_to, "Jifty::DBI::Record" ) ) {
-      $subref = sub {
-        $_[0]->_to_record( $column_name, $_[0]->__value($column_name) );
-      };
-    }
-    elsif ( UNIVERSAL::isa( $column->refers_to, "Jifty::DBI::Collection" ) ) {
-      $subref = sub { $_[0]->_collection_value($column_name) };
-    }
-    else {
-      $subref = sub { return ( $_[0]->_value($column_name) ) };
-    }
-    } else {
-        $subref = sub { return '' }
-    }
-    *{$package."::".$column_name} = $subref;
+    my $self   = $_[0];
+    my $column = $_[1];
+    my $column_name
+        = ( $column->aliased_as ? $column->aliased_as : $column->name );
+    my $package = ref($self) || $self;
+    no strict 'refs';    # We're going to be defining subs
 
-  }
-  if ( not $self->can("set_".$column_name)) {
-    my $subref;
-    if ($column->writable) {
-    if ( UNIVERSAL::isa( $column->refers_to, "Jifty::DBI::Record" ) ) {
-      $subref = sub {
-        my $self = shift;
-        my $val  = shift;
+    if ( not $self->can($column_name) ) {
+        # Accessor
+        my $subref;
+        if ( $column->readable ) {
+            if ( UNIVERSAL::isa( $column->refers_to, "Jifty::DBI::Record" ) )
+            {
+                $subref = sub {
+                    $_[0]->_to_record( $column_name,
+                        $_[0]->__value($column_name) );
+                };
+            } elsif (
+                UNIVERSAL::isa(
+                    $column->refers_to, "Jifty::DBI::Collection"
+                )
+                )
+            {
+                $subref = sub { $_[0]->_collection_value($column_name) };
+            } else {
+                $subref = sub { return ( $_[0]->_value($column_name) ) };
+            }
+        } else {
+            $subref = sub { return '' }
+        }
+        *{ $package . "::" . $column_name } = $subref;
 
-        $val = $val->id
-          if UNIVERSAL::isa( $val, 'Jifty::DBI::Record' );
-        return ( $self->_set( column => $column_name, value => $val ) );
-      };
     }
-    elsif (
-        UNIVERSAL::isa( $column->refers_to, "Jifty::DBI::Collection" ) )
-    { # XXX elw: collections land here, now what?
-      my $ret = Class::ReturnValue->new();
-      my $message = "Collection column '$column_name' not writable";
-      $ret->as_array( 0, $message );
-      $ret->as_error(
-          errno        => 3,
-          do_backtrace => 0,
-          message      => $message
-      );
-      $subref = sub { return ( $ret->return_value ); };
+
+    if ( not $self->can( "set_" . $column_name ) ) {
+        # Mutator
+        my $subref;
+        if ( $column->writable ) {
+            if ( UNIVERSAL::isa( $column->refers_to, "Jifty::DBI::Record" ) )
+            {
+                $subref = sub {
+                    my $self = shift;
+                    my $val  = shift;
+
+                    $val = $val->id
+                        if UNIVERSAL::isa( $val, 'Jifty::DBI::Record' );
+                    return (
+                        $self->_set( column => $column_name, value => $val )
+                    );
+                };
+            } elsif (
+                UNIVERSAL::isa(
+                    $column->refers_to, "Jifty::DBI::Collection"
+                )
+                )
+            {    # XXX elw: collections land here, now what?
+                my $ret     = Class::ReturnValue->new();
+                my $message = "Collection column '$column_name' not writable";
+                $ret->as_array( 0, $message );
+                $ret->as_error(
+                    errno        => 3,
+                    do_backtrace => 0,
+                    message      => $message
+                );
+                $subref = sub { return ( $ret->return_value ); };
+            } else {
+                $subref = sub {
+                    return (
+                        $_[0]->_set( column => $column_name, value => $_[1] )
+                    );
+                };
+            }
+        } else {
+            my $ret     = Class::ReturnValue->new();
+            my $message = 'Immutable column';
+            $ret->as_array( 0, $message );
+            $ret->as_error(
+                errno        => 3,
+                do_backtrace => 0,
+                message      => $message
+            );
+            $subref = sub { return ( $ret->return_value ); };
+        }
+        *{ $package . "::" . "set_" . $column_name } = $subref;
     }
-    else {
-      $subref = sub {
-        return ( $_[0]->_set( column => $column_name, value => $_[1] ) );
-      };
-    } } 
-    else {
-      my $ret = Class::ReturnValue->new();
-      my $message = 'Immutable column';
-      $ret->as_array( 0, $message );
-      $ret->as_error(
-          errno        => 3,
-          do_backtrace => 0,
-          message      => $message
-      );
-      $subref = sub { return ( $ret->return_value ); };
+
+    if ( not $column->validator and not $self->can( "validate_" . $column_name ) ) {
+        # Validator
+        *{ $package . "::" . "validate_" . $column_name }
+            = sub { return ( $_[0]->_validate( $column_name, $_[1] ) ) };
     }
-    *{$package."::" . "set_" . $column_name } = $subref;
-  }
-  if (not $self->can("validate_".$column_name)) { 
-  *{ $package ."::" . "validate_" . $column_name }
-    = sub { return ( $_[0]->_validate( $column_name, $_[1] ) ) };
-    }
+    $column->validator( $self->can( "validate_" . $column_name ) ) unless $column->validator;
 }
 
 
