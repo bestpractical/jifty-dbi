@@ -2,7 +2,7 @@ build_requires:
   DBD::SQLite: 0
   Test::More: 0.52
 distribution_type: module
-generated_by: Module::Install version 0.61
+generated_by: Module::Install version 0.62
 license: perl
 name: Jifty-DBI
 no_index: 
@@ -26,4 +26,4 @@ requires:
   Lingua::EN::Inflect: 0
   UNIVERSAL::require: 0
   perl: 5.8.3
-version: 0.20
+version: 0.21

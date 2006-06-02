@@ -49,6 +49,7 @@ README
 ROADMAP
 SIGNATURE
 t/00.load.t
+t/01-version_checks.t
 t/01basics.t
 t/01records.t
 t/01searches.t
