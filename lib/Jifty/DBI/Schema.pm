@@ -256,8 +256,11 @@ sub not_null {
 =head2 distinct
 
 Declares that a column should only have distinct values.  This
-currently does nothing, due to not being implemented in
-L<DBIx::DBSchema>.  Correct usage is C<is distinct>.
+currently is implemented via database queries prior to updates
+and creates instead of constraints on the database columns
+themselves. This is because there is no support for distinct
+columns implemented in L<DBIx::DBSchema> at this time.  
+Correct usage is C<is distinct>.
 
 =cut
 

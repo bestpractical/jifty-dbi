@@ -589,6 +589,23 @@ sub __set {
         return ( $ret->return_value );
     }
 
+    # Implement 'is distinct' checking
+    if ( $column->distinct ) {
+        my $new_record = $self->new( $self->_handle );
+        $new_record->load_by_cols ( $column->name => $args{'value'} );
+        if( $new_record->id ) {
+            $ret->as_array( 0, 'Value already exists for distinct column ' . 
+                $column->name );
+            $ret->as_error(
+                errno        => 3,
+                do_backtrace => 0,
+                message      => 'Value already exists for distinct column ' .
+                    $column->name,
+            );
+            return ( $ret->return_value );
+        }
+    }
+
     # The blob handling will destroy $args{'value'}. But we assign
     # that back to the object at the end. this works around that
     my $unmunged_value = $args{'value'};
@@ -859,6 +876,24 @@ sub create {
             column    => $column,
             value_ref => \$attribs{$column_name},
         );
+
+        # Implement 'is distinct' checking
+        if ( $column->distinct ) {
+            my $new_record = $self->new( $self->_handle );
+            $new_record->load_by_cols ( $column_name => $attribs{$column_name} );
+            if( $new_record->id ) {
+                my $ret = Class::ReturnValue->new();
+                $ret->as_array( 0, 'Value already exists for distinct column ' . 
+                    $column->name );
+                $ret->as_error(
+                    errno        => 3,
+                    do_backtrace => 0,
+                    message      => 'Value already exists for distinct column ' .
+                        $column->name,
+                );
+                return ( $ret->return_value );
+            }
+        }
 
         if ( $column->type =~ /^(text|longtext|clob|blob|lob|bytea)$/i ) {
             my $bhash = $self->_handle->blob_params( $column_name, $column->type );
