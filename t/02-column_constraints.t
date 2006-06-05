@@ -45,7 +45,6 @@ SKIP: {
         ok(!$e_id2, "is_distinct prevents us from creating another record");
         my $obj = TestApp::Employee->new($handle);
         $obj->load( $e_id );
-        is($obj->id, $e_id, "Loaded the object");
         ok(!$obj->set_employee_num('123'), "is_distinct prevents us from modifying a record to a duplicate value");
 
         cleanup_schema( 'TestApp', $handle );

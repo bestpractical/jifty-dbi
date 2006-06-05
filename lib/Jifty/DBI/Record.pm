@@ -591,19 +591,8 @@ sub __set {
 
     # Implement 'is distinct' checking
     if ( $column->distinct ) {
-        my $new_record = $self->new( $self->_handle );
-        $new_record->load_by_cols ( $column->name => $args{'value'} );
-        if( $new_record->id ) {
-            $ret->as_array( 0, 'Value already exists for distinct column ' . 
-                $column->name );
-            $ret->as_error(
-                errno        => 3,
-                do_backtrace => 0,
-                message      => 'Value already exists for distinct column ' .
-                    $column->name,
-            );
-            return ( $ret->return_value );
-        }
+        my $ret = $self->is_distinct( $column->name, $args{'value'} );
+        return ( $ret ) if not ( $ret );
     }
 
     # The blob handling will destroy $args{'value'}. But we assign
@@ -879,20 +868,8 @@ sub create {
 
         # Implement 'is distinct' checking
         if ( $column->distinct ) {
-            my $new_record = $self->new( $self->_handle );
-            $new_record->load_by_cols ( $column_name => $attribs{$column_name} );
-            if( $new_record->id ) {
-                my $ret = Class::ReturnValue->new();
-                $ret->as_array( 0, 'Value already exists for distinct column ' . 
-                    $column->name );
-                $ret->as_error(
-                    errno        => 3,
-                    do_backtrace => 0,
-                    message      => 'Value already exists for distinct column ' .
-                        $column->name,
-                );
-                return ( $ret->return_value );
-            }
+            my $ret = $self->is_distinct( $column_name, $attribs{$column_name} );
+            return ( $ret ) if not ( $ret );
         }
 
         if ( $column->type =~ /^(text|longtext|clob|blob|lob|bytea)$/i ) {
@@ -1110,6 +1087,39 @@ sub _apply_filters {
 
         # XXX TODO error proof this
         $filter->$action();
+    }
+}
+
+=head2 is_distinct COLUMN_NAME, VALUE
+
+Checks to see if there is already a record in the database where
+COLUMN_NAME equals VALUE.  If no such record exists then the
+COLUMN_NAME and VALUE pair is considered distinct and it returns 1.
+If a value is already present the test is considered to have failed
+and it returns a L<Class::ReturnValue> with the error.
+
+=cut 
+
+sub is_distinct {
+    my $self = shift;
+    my $column = shift;
+    my $value = shift;
+
+    my $record = $self->new( $self->_handle );
+    $record->load_by_cols ( $column => $value );
+
+    my $ret = Class::ReturnValue->new();
+
+    if( $record->id ) {
+        $ret->as_array( 0, "Value already exists for unique column $column");
+        $ret->as_error(
+            errno        => 3,
+            do_backtrace => 0,
+            message      => "Value already exists for unique column $column",
+        );
+        return ( $ret->return_value );
+    } else {
+        return (1);
     }
 }
 
