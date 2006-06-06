@@ -31,7 +31,7 @@ SKIP: {
         isa_ok($ret,'DBI::st', "Inserted the schema. got a statement handle back");
 
         my $emp = TestApp::Employee->new($handle);
-        my $e_id = $emp->create( Name => 'RUZ', employee_num => '123' );
+        my $e_id = $emp->create( name => 'RUZ', employee_num => '123' );
         ok($e_id, "Got an id for the new employee");
 
         # Test 'is mandatory'
@@ -39,9 +39,9 @@ SKIP: {
         ok(!$e_id, "Did not get an id for second new employee, good");
 
         # Test 'is distinct'
-        $e_id = $emp->create( Name => 'Foo', employee_num => '456' );
+        $e_id = $emp->create( name => 'Foo', employee_num => '456' );
         ok($e_id, "Was able to create a second record successfully");
-        my $e_id2 = $emp->create( Name => 'Bar', employee_num => '123' );
+        my $e_id2 = $emp->create( name => 'Bar', employee_num => '123' );
         ok(!$e_id2, "is_distinct prevents us from creating another record");
         my $obj = TestApp::Employee->new($handle);
         $obj->load( $e_id );

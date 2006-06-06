@@ -883,6 +883,11 @@ sub create {
         if (not defined $attribs{$column->name} and defined $column->default and not ref $column->default) {
             $attribs{$column->name} = $column->default;
         }
+        if (not defined $attribs{$column->name} and $column->mandatory and $column->type ne "serial" ) {
+            # Enforce "mandatory"
+            warn "Did not supply value for mandatory column ".$column->name;
+            return ( 0 );
+        }
     }
 
     my $ret = $self->_handle->insert( $self->table, %attribs );
