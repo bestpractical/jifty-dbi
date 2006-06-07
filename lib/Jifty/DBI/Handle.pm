@@ -1006,7 +1006,7 @@ sub DESTROY {
 __END__
 
 
-=head DIAGNOSIS
+=head1 DIAGNOSIS
 
 Setting C<JIFTY_DBQUERY_CALLER> environment variable will make
 L<Jifty::DBI> dump the caller for the SQL queries matching it.  See
