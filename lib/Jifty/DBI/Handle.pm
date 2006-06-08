@@ -479,7 +479,9 @@ sub simple_query {
                 . $self->dbh->errstr . "\n";
 
         } else {
-            Carp::cluck "$self couldn't execute the query '$query_string'";
+            # XXX: This warn doesn't show up because we mask logging in Jifty::Test::END.
+            # and it usually fails because the test server is still running.
+            warn "$self couldn't execute the query '$query_string'";
 
             my $ret = Class::ReturnValue->new();
             $ret->as_error(
