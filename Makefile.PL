@@ -4,7 +4,7 @@ name ('Jifty-DBI');
 license ('perl');
 version_from('lib/Jifty/DBI.pm');
 requires('Cache::Simple::TimedExpiry' => '0.21');
-requires('Class::Accessor' => 0);
+requires('Class::Accessor::Fast' => 0);
 requires('Class::Data::Inheritable');
 requires('Class::ReturnValue', 0.40);
 requires('Clone');

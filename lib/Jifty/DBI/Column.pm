@@ -4,7 +4,7 @@ use strict;
 package Jifty::DBI::Column;
 
 our $VERSION = '0.01';
-use base qw/Class::Accessor Jifty::DBI::HasFilters/;
+use base qw/Class::Accessor::Fast Jifty::DBI::HasFilters/;
 use UNIVERSAL::require;
 
 __PACKAGE__->mk_accessors qw/

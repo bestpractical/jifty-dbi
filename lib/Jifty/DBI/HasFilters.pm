@@ -3,7 +3,7 @@ package Jifty::DBI::HasFilters;
 use warnings;
 use strict;
 
-use base qw/Class::Accessor/;
+use base qw/Class::Accessor::Fast/;
 __PACKAGE__->mk_accessors qw/
     input_filters
     output_filters

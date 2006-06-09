@@ -2,7 +2,7 @@ use warnings;
 use strict;
 
 package Jifty::DBI::Filter;
-use base 'Class::Accessor';
+use base 'Class::Accessor::Fast';
 
 __PACKAGE__->mk_accessors(qw(record column value_ref));
 

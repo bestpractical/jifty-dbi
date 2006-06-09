@@ -3,7 +3,7 @@ use warnings;
 
 package Jifty::DBI::SchemaGenerator;
 
-use base qw(Class::Accessor);
+use base qw(Class::Accessor::Fast);
 use DBIx::DBSchema;
 use Class::ReturnValue;
 
@@ -118,7 +118,7 @@ Requires no configuration files or environment variables.
 
 =head1 DEPENDENCIES
 
-Class::Accessor
+Class::Accessor::Fast
 
 DBIx::DBSchema
 

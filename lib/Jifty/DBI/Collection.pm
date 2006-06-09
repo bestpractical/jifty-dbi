@@ -53,7 +53,7 @@ use vars qw($VERSION);
 use Data::Page;
 use Clone;
 use Carp qw/croak/;
-use base qw/Class::Accessor/;
+use base qw/Class::Accessor::Fast/;
 __PACKAGE__->mk_accessors(qw/pager/);
 
 =head1 METHODS
