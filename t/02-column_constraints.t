@@ -30,7 +30,7 @@ SKIP: {
         my $ret = init_schema( 'TestApp', $handle );
         isa_ok($ret,'DBI::st', "Inserted the schema. got a statement handle back");
 
-        my $emp = TestApp::Employee->new($handle);
+        my $emp = TestApp::Employee->new( handle => $handle );
         my $e_id = $emp->create( name => 'RUZ', employee_num => '123' );
         ok($e_id, "Got an id for the new employee");
 
@@ -43,7 +43,7 @@ SKIP: {
         ok($e_id, "Was able to create a second record successfully");
         my $e_id2 = $emp->create( name => 'Bar', employee_num => '123' );
         ok(!$e_id2, "is_distinct prevents us from creating another record");
-        my $obj = TestApp::Employee->new($handle);
+        my $obj = TestApp::Employee->new( handle => $handle );
         $obj->load( $e_id );
         ok(!$obj->set_employee_num('123'), "is_distinct prevents us from modifying a record to a duplicate value");
 

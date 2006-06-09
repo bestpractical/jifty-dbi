@@ -30,7 +30,7 @@ SKIP: {
         my $ret = init_schema( 'TestApp', $handle );
         isa_ok($ret,'DBI::st', "Inserted the schema. got a statement handle back");
 
-        my $emp = TestApp::Employee->new($handle);
+        my $emp = TestApp::Employee->new( handle => $handle );
         my $e_id = $emp->create( Name => 'RUZ' );
         ok($e_id, "Got an id for the new employee: $e_id");
         $emp->load($e_id);
@@ -57,7 +57,7 @@ SKIP: {
             is($ph, undef, "No phones yet");
         }
         
-        my $phone = TestApp::Phone->new($handle);
+        my $phone = TestApp::Phone->new( handle => $handle );
         isa_ok( $phone, 'TestApp::Phone');
         my $p_id = $phone->create( employee => $e_id, phone => '+7(903)264-03-51');
         is($p_id, 1, "Loaded phone $p_id");
@@ -83,7 +83,7 @@ SKIP: {
         my $val = $phone->phone;
         is( $val, '+7(903)264-03-51', 'Non-object things still work');
         
-        my $emp2 = TestApp::Employee->new($handle);
+        my $emp2 = TestApp::Employee->new( handle => $handle );
         isa_ok($emp2, 'TestApp::Employee');
         my $e2_id = $emp2->create( name => 'Dave' );
         ok($e2_id, "Got an id for the new employee: $e2_id");
@@ -151,7 +151,7 @@ SKIP: {
             is($phone_collection->next, undef);
         }
         
-        my $phone2 = TestApp::Phone->new($handle);
+        my $phone2 = TestApp::Phone->new( handle => $handle );
         isa_ok( $phone2, 'TestApp::Phone');
         my $p2_id = $phone2->create( employee => $e_id, phone => '123456');
         ok($p2_id, "Loaded phone $p2_id");
@@ -171,7 +171,7 @@ SKIP: {
         }
         
         # Test Create with obj as argument
-        my $phone3 = TestApp::Phone->new($handle);
+        my $phone3 = TestApp::Phone->new( handle => $handle );
         isa_ok( $phone3, 'TestApp::Phone');
         my $p3_id = $phone3->create( employee => $emp, phone => '7890');
         ok($p3_id, "Loaded phone $p3_id");

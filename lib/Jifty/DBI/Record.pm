@@ -58,8 +58,10 @@ sub new {
 # Not yet documented here.  Should almost certainly be overloaded.
 sub _init {
     my $self   = shift;
-    my $handle = shift;
-    $self->_handle($handle);
+    my %args   = (@_);
+    if ( $args{'handle'} ) {
+        $self->_handle( $args{'handle'} );
+    }
 }
 
 =head2 id
@@ -278,7 +280,7 @@ sub _to_record {
 
     # XXX TODO FIXME we need to figure out the right way to call new here
     # perhaps the handle should have an initiializer for records/collections
-    my $object = $classname->new( $self->_handle );
+    my $object = $classname->new( handle => $self->_handle );
     $object->load_by_cols( $remote_column => $value );
     return $object;
 }
@@ -1110,7 +1112,7 @@ sub is_distinct {
     my $column = shift;
     my $value = shift;
 
-    my $record = $self->new( $self->_handle );
+    my $record = $self->new( handle => $self->_handle );
     $record->load_by_cols ( $column => $value );
 
     my $ret = Class::ReturnValue->new();

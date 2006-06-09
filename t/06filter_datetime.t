@@ -30,7 +30,7 @@ SKIP: {
         my $ret = init_schema( 'TestApp::User', $handle );
         isa_ok($ret,'DBI::st', "Inserted the schema. got a statement handle back");
 
-        my $rec = TestApp::User->new($handle);
+        my $rec = TestApp::User->new( handle => $handle );
         isa_ok($rec, 'Jifty::DBI::Record');
 
         my $now = time;

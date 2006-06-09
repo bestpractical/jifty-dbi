@@ -32,7 +32,7 @@ SKIP: {
         my $count_all = init_data( 'TestApp::User', $handle );
         ok( $count_all,  "init users data" );
 
-        my $users_obj = TestApp::UserCollection->new( $handle );
+        my $users_obj = TestApp::UserCollection->new( handle => $handle );
         isa_ok( $users_obj, 'Jifty::DBI::Collection' );
         is( $users_obj->_handle, $handle, "same handle as we used in constructor");
 
@@ -71,7 +71,7 @@ SKIP: {
 
 # try to use $users_obj for all tests, after each call to CleanSlate it should look like new obj.
 # and test $obj->new syntax
-        my $clean_obj = $users_obj->new( $handle );
+        my $clean_obj = $users_obj->new( handle => $handle );
         isa_ok( $clean_obj, 'Jifty::DBI::Collection' );
 
 # basic limits
@@ -220,9 +220,8 @@ use base qw/Jifty::DBI::Record/;
 
 sub _init {
     my $self = shift;
-    my $handle = shift;
     $self->table('users');
-    $self->_handle($handle);
+    $self->SUPER::_init(@_);
 }
 
 sub init_data {
@@ -256,7 +255,7 @@ use base qw/Jifty::DBI::Collection/;
 
 sub _init {
     my $self = shift;
-    $self->SUPER::_init( handle => shift );
+    $self->SUPER::_init(@_);
     $self->table('users');
 }
 

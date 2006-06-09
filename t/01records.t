@@ -29,7 +29,7 @@ SKIP: {
         my $ret = init_schema( 'TestApp::Address', $handle );
         isa_ok($ret,'DBI::st', "Inserted the schema. got a statement handle back");
 
-        my $rec = TestApp::Address->new($handle);
+        my $rec = TestApp::Address->new( handle => $handle );
         isa_ok($rec, 'Jifty::DBI::Record');
 
 
@@ -90,7 +90,7 @@ SKIP: {
         $rec->delete;
 
 # make sure we do truncation on create
-        my $newrec = TestApp::Address->new($handle);
+        my $newrec = TestApp::Address->new( handle => $handle );
         my $newid = $newrec->create( name => '1234567890123456789012345678901234567890',
                                      employee_id => '1234567890' );
 
@@ -101,26 +101,26 @@ SKIP: {
         is($newrec->employee_id, '1234567890', "Did not truncate id on create");
 
 # no prefetch feature and _load_from_sql sub checks
-        $newrec = TestApp::Address->new($handle);
+        $newrec = TestApp::Address->new( handle => $handle );
         ($val, $msg) = $newrec->_load_from_sql('SELECT id FROM addresses WHERE id = ?', $newid);
         is($val, 1, 'found object');
         is($newrec->name, '12345678901234', "autoloaded not prefetched column");
         is($newrec->employee_id, '1234567890', "autoloaded not prefetched column");
 
 # _load_from_sql and missing PK
-        $newrec = TestApp::Address->new($handle);
+        $newrec = TestApp::Address->new( handle => $handle );
         ($val, $msg) = $newrec->_load_from_sql('SELECT name FROM addresses WHERE name = ?', '12345678901234');
         is($val, 0, "didn't find object");
         is($msg, "Missing a primary key?", "reason is missing PK");
 
 # _load_from_sql and not existant row
-        $newrec = TestApp::Address->new($handle);
+        $newrec = TestApp::Address->new( handle => $handle );
         ($val, $msg) = $newrec->_load_from_sql('SELECT id FROM addresses WHERE id = ?', 0);
         is($val, 0, "didn't find object");
         is($msg, "Couldn't find row", "reason is wrong id");
 
 # _load_from_sql and wrong SQL
-        $newrec = TestApp::Address->new($handle);
+        $newrec = TestApp::Address->new( handle => $handle );
         {
                 local $SIG{__WARN__} = sub{return};
                 ($val, $msg) = $newrec->_load_from_sql('SELECT ...');
@@ -129,53 +129,53 @@ SKIP: {
         is($msg, "Couldn't execute query", "reason is bad SQL");
 
 # test load_* methods
-        $newrec = TestApp::Address->new($handle);
+        $newrec = TestApp::Address->new( handle => $handle );
         $newrec->load();
         is( $newrec->id, undef, "can't load record with undef id");
 
-        $newrec = TestApp::Address->new($handle);
+        $newrec = TestApp::Address->new( handle => $handle );
         $newrec->load_by_cols( name => '12345678901234' );
         is( $newrec->id, $newid, "load record by 'name' column value");
 
 # load_by_col with operator
-        $newrec = TestApp::Address->new($handle);
+        $newrec = TestApp::Address->new( handle => $handle );
         $newrec->load_by_cols( name => { value => '%45678%',
                                       operator => 'LIKE' } );
         is( $newrec->id, $newid, "load record by 'name' with LIKE");
 
 # load_by_primary_keys
-        $newrec = TestApp::Address->new($handle);
+        $newrec = TestApp::Address->new( handle => $handle );
         ($val, $msg) = $newrec->load_by_primary_keys( id => $newid );
         ok( $val, "load record by PK");
         is( $newrec->id, $newid, "loaded correct record");
-        $newrec = TestApp::Address->new($handle);
+        $newrec = TestApp::Address->new( handle => $handle );
         ($val, $msg) = $newrec->load_by_primary_keys( {id => $newid} );
         ok( $val, "load record by PK");
         is( $newrec->id, $newid, "loaded correct record" );
-        $newrec = TestApp::Address->new($handle);
+        $newrec = TestApp::Address->new( handle => $handle );
         ($val, $msg) = $newrec->load_by_primary_keys( phone => 'some' );
         ok( !$val, "couldn't load, missing PK column");
         is( $msg, "Missing PK column: 'id'", "right error message" );
 
 # Defaults kick in
-        $rec = TestApp::Address->new($handle);
+        $rec = TestApp::Address->new( handle => $handle );
         $id = $rec->create( name => 'Chmrr' );
         ok( $id, "new record");
-        $rec = TestApp::Address->new($handle);
+        $rec = TestApp::Address->new( handle => $handle );
         $rec->load_by_cols( name => 'Chmrr' );
         is( $rec->id, $id, "loaded record by empty value" );
         is( $rec->address, '', "Got default on create" );
 
 # load_by_cols and empty or NULL values
-        $rec = TestApp::Address->new($handle);
+        $rec = TestApp::Address->new( handle => $handle );
         $id = $rec->create( name => 'Obra', phone => undef );
         ok( $id, "new record");
-        $rec = TestApp::Address->new($handle);
+        $rec = TestApp::Address->new( handle => $handle );
         $rec->load_by_cols( name => 'Obra', phone => undef, employee_id => '' );
         is( $rec->id, $id, "loaded record by empty value" );
 
 # __set error paths
-        $rec = TestApp::Address->new($handle);
+        $rec = TestApp::Address->new( handle => $handle );
         $rec->load( $id );
         $val = $rec->set_name( 'Obra' );
         isa_ok( $val, 'Class::ReturnValue', "couldn't set same value, error returned");
@@ -193,10 +193,10 @@ SKIP: {
         is( $rec->name, undef, "new value is undef, NULL in DB");
 
 # deletes
-        $newrec = TestApp::Address->new($handle);
+        $newrec = TestApp::Address->new( handle => $handle );
         $newrec->load( $newid );
         is( $newrec->delete, 1, 'successfuly delete record');
-        $newrec = TestApp::Address->new($handle);
+        $newrec = TestApp::Address->new( handle => $handle );
         $newrec->load( $newid );
         is( $newrec->id, undef, "record doesn't exist any more");
 

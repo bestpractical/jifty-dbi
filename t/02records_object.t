@@ -30,17 +30,17 @@ SKIP: {
         my $ret = init_schema( 'TestApp', $handle );
         isa_ok($ret,'DBI::st', "Inserted the schema. got a statement handle back");
 
-        my $emp = TestApp::Employee->new($handle);
+        my $emp = TestApp::Employee->new( handle => $handle );
         my $e_id = $emp->create( Name => 'RUZ' );
         ok($e_id, "Got an id for the new emplyee");
-        my $phone = TestApp::Phone->new($handle);
+        my $phone = TestApp::Phone->new( handle => $handle );
         isa_ok( $phone, 'TestApp::Phone', "it's a TestApp::Phone");
         my $p_id = $phone->create( employee => $e_id, phone => '+7(903)264-03-51');
         # XXX: test fails if next string is commented
         is($p_id, 1, "Loaded record $p_id");
         $phone->load( $p_id );
 
-        my $obj = $phone->employee($handle);
+        my $obj = $phone->employee( handle => $handle );
         ok($obj, "Employee #$e_id has phone #$p_id");
         isa_ok( $obj, 'TestApp::Employee');
         is($obj->id, $e_id);

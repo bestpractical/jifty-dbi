@@ -285,7 +285,7 @@ sub init_data
                 for( my $i = 0; $i < @columns; $i++ ) {
                         $args{ $columns[$i] } = $values->[$i];
                 }
-                my $rec = $class->new( $handle );
+                my $rec = $class->new( handle => $handle );
                 my $id = $rec->create( %args );
                 die "Couldn't create record" unless $id;
                 $count++;

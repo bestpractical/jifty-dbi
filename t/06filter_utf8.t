@@ -33,7 +33,7 @@ SKIP: {
         $handle->input_filters( 'Jifty::DBI::Filter::utf8' );
         is( ($handle->input_filters)[0], 'Jifty::DBI::Filter::utf8', 'Filter was added' );
 
-        my $rec = TestApp::User->new($handle);
+        my $rec = TestApp::User->new( handle => $handle );
         isa_ok($rec, 'Jifty::DBI::Record');
 
         # "test" in Russian

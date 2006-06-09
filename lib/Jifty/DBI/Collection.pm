@@ -566,7 +566,7 @@ sub new_item {
         unless $class;
 
     $class->require();
-    return $class->new( $self->_handle );
+    return $class->new( handle => $self->_handle );
 }
 
 =head2 record_class
