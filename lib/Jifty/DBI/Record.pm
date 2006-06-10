@@ -34,9 +34,15 @@ object-relational mapper.
 
 =head1 METHODS
 
-=head2 new 
+=head2 new ARGS 
 
 Instantiate a new, empty record object.
+
+ARGS is a hash used to pass parameters to the _init() function.
+
+Unless it is overloaded, the _init() function expects one key of 
+'handle' with a value containing a reference to a Jifty::DBI::Handle
+object.
 
 =cut
 
@@ -50,7 +56,12 @@ sub new {
     $self->_init_columns() unless $self->COLUMNS;
     $self->input_filters('Jifty::DBI::Filter::Truncate');
 
-    $self->_init(@_);
+    if ( scalar(@_) == 1 ) {
+        Carp::cluck("new(\$handle) is deprecated, use new( handle => \$handle )");
+        $self->_init( handle => shift );
+    } else {
+        $self->_init(@_);
+    }
 
     return $self;
 }
