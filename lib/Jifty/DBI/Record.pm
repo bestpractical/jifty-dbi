@@ -919,9 +919,12 @@ This method has two hooks
 
 =item before_delete
 
-This method is called before the record deletion, if it exists. It
-returns a boolean value. If the return value is false, it aborts the
-create and returns the return value from the hook.
+This method is called before the record deletion, if it exists. On
+failure it returns a L<Class::ReturnValue> with the error.  On success
+it returns 1.
+
+If this method returns an error, it causes the delete to abort and return
+the return value from this hook.
 
 =item after_delete
 
