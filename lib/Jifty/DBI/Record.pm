@@ -334,8 +334,10 @@ sub add_column {
 sub column {
     my $self = shift;
     my $name = lc( shift || '' );
-    return undef unless $self->COLUMNS and $self->COLUMNS->{$name};
-    return $self->COLUMNS->{$name};
+    my $col = $self->COLUMNS;
+
+    return undef unless $col && exists $col->{$name};
+    return $col->{$name};
 
 }
 
@@ -475,12 +477,10 @@ sub __value {
           && $self->{'decoded'}{$column_name} );
 
     # If the requested column is actually an alias for another, resolve it.
-    if ( $self->column($column_name)
-        and defined $self->column($column_name)->alias_for_column ) {
-        $column_name = $self->column($column_name)->alias_for_column();
-    }
-
     my $column = $self->column($column_name);
+    if  ($column   and defined $column->alias_for_column ) {
+        $column = $self->column($column->alias_for_column());
+    }
 
     return unless ($column);
 
