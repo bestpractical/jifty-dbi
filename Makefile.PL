@@ -13,6 +13,7 @@ requires('DBIx::DBSchema' => '0.29');
 requires('Data::Page');
 requires('DateTime');
 requires('DateTime::Format::ISO8601');
+requires('DateTime::Format::Strptime');
 requires('Encode'  => 2.10);
 requires('Exporter::Lite');
 requires('Lingua::EN::Inflect');
