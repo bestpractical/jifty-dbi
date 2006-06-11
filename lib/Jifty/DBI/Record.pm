@@ -17,6 +17,9 @@ our $VERSION = '0.01';
 
 Jifty::DBI::Record->mk_classdata(qw/COLUMNS/);
 Jifty::DBI::Record->mk_classdata(qw/TABLE_NAME/ );
+Jifty::DBI::Record->mk_classdata(qw/_READABLE_COLS_CACHE/);
+Jifty::DBI::Record->mk_classdata(qw/_WRITABLE_COLS_CACHE/);
+Jifty::DBI::Record->mk_classdata(qw/_COLUMNS_CACHE/ );
 
 =head1 NAME
 
@@ -321,8 +324,14 @@ sub add_column {
     my $self = shift;
     my $name = shift;
     $name = lc $name;
+
+    
+
     $self->COLUMNS->{$name} = Jifty::DBI::Column->new()
         unless exists $self->COLUMNS->{$name};
+	$self->_READABLE_COLS_CACHE(undef);
+$self->_WRITABLE_COLS_CACHE(undef);
+$self->_COLUMNS_CACHE(undef );
     $self->COLUMNS->{$name}->name($name);
     return $self->COLUMNS->{$name};
 }
@@ -343,14 +352,17 @@ sub column {
 
 sub columns {
     my $self = shift;
-    return (
+    return @{$self->_COLUMNS_CACHE() || $self->_COLUMNS_CACHE([
         sort {
             ( ( ( $b->type || '' ) eq 'serial' )
                 <=> ( ( $a->type || '' ) eq 'serial' ) )
                 or ( ($a->sort_order || 0) <=> ($b->sort_order || 0))
                 or ( $a->name cmp $b->name )
             } values %{ $self->COLUMNS }
-    );
+
+
+	])}
+
 }
 
 # sub {{{ readable_attributes
@@ -363,7 +375,7 @@ Returns a list this table's readable columns
 
 sub readable_attributes {
     my $self = shift;
-    return sort map { $_->name } grep { $_->readable } $self->columns;
+    return @{$self->_READABLE_COLS_CACHE() || $self->_READABLE_COLS_CACHE([sort map { $_->name } grep { $_->readable } $self->columns])};
 }
 
 =head2 writable_attributes
@@ -375,7 +387,7 @@ Returns a list of this table's writable columns
 
 sub writable_attributes {
     my $self = shift;
-    return sort map { $_->name } grep { $_->writable } $self->columns;
+    return @{$self->_WRITABLE_COLS_CACHE() || $self->_WRITABLE_COLS_CACHE([sort map { $_->name } grep { $_->writable } $self->columns])};
 }
 
 =head2 record values
