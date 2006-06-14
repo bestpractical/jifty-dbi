@@ -8,7 +8,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 63;
+use constant TESTS_PER_DRIVER => 71;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -152,6 +152,26 @@ SKIP: {
         $users_obj->limit( column => 'address', operator => 'IS NOT', value => 'NULL', QOUTEvalue => 0 );
         is( $users_obj->count, $count_all, "found users who have address filled" );
         
+        # CASE SENSITIVITY, default is limits are not case sensitive
+        $users_obj->clean_slate;
+        is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
+        $users_obj->limit( column => 'name', value => 'Jesse Vincent' );
+        is( $users_obj->count, 1, "case insensitive, matching case, should find one row");
+        $users_obj->clean_slate;
+        is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
+        $users_obj->limit( column => 'name', value => 'jesse vincent' );
+        is( $users_obj->count, 1, "case insensitive, non-matched case, should find one row");
+
+        # CASE SENSITIVITY, testing with case_sensitive => 1
+        $users_obj->clean_slate;
+        is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
+        $users_obj->limit( column => 'name', value => 'Jesse Vincent', case_sensitive => 1 );
+        is( $users_obj->count, 1, "case sensitive search, should find one row");
+        $users_obj->clean_slate;
+        is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
+        $users_obj->limit( column => 'name', value => 'jesse vincent', case_sensitive => 1 );
+        is( $users_obj->count, 0, "case sensitive search, should find zero rows");
+
         # ORDER BY / GROUP BY
         $users_obj->clean_slate;
         is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
