@@ -53,6 +53,7 @@ t/01-version_checks.t
 t/01basics.t
 t/01records.t
 t/01searches.t
+t/02-column_constraints.t
 t/02records_object.t
 t/03rebless.t
 t/06filter.t
