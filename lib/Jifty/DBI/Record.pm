@@ -258,12 +258,8 @@ sub _init_methods_for_column {
         *{ $package . "::" . "set_" . $column_name } = $subref;
     }
 
-    if ( not $column->validator and not $self->can( "validate_" . $column_name ) ) {
-        # Validator
-        *{ $package . "::" . "validate_" . $column_name }
-            = sub { return ( $_[0]->_validate( $column_name, $_[1] ) ) };
-    }
-    $column->validator( $self->can( "validate_" . $column_name ) ) unless $column->validator;
+    $column->validator( $self->can( "validate_" . $column_name ) )
+      if not $column->validator and $self->can("validate_" . $column_name );
 }
 
 
@@ -602,17 +598,19 @@ sub __set {
         }
     }
 
-    my $method = "validate_" . $column->name;
-    my ( $ok, $msg ) = $self->$method( $args{'value'} );
-    unless ($ok) {
-        $ret->as_array( 0, 'Illegal value for ' . $column->name );
-        $ret->as_error(
-            errno        => 3,
-            do_backtrace => 0,
-            message      => "Illegal value for " . $column->name
-        );
-        return ( $ret->return_value );
+    if ( my $sub = $column->validator ) {
+        my ( $ok, $msg ) = $sub->( $self, $args{'value'} );
+        unless ($ok) {
+            $ret->as_array( 0, 'Illegal value for ' . $column->name );
+            $ret->as_error(
+                errno        => 3,
+                do_backtrace => 0,
+                message      => "Illegal value for " . $column->name
+            );
+            return ( $ret->return_value );
+        }
     }
+    
 
     # Implement 'is distinct' checking
     if ( $column->distinct ) {
@@ -661,32 +659,6 @@ sub __set {
     }
     $ret->as_array( 1, "The new value has been set." );
     return ( $ret->return_value );
-}
-
-=head2 _validate column VALUE
-
-Validate that value will be an acceptable value for column. 
-
-Currently, this routine does nothing whatsoever. 
-
-If it succeeds (which is always the case right now), returns true. Otherwise returns false.
-
-=cut
-
-sub _validate {
-    my $self   = shift;
-    my $column = shift;
-    my $value  = shift;
-
- #Check type of input
- #If it's null, are nulls permitted?
- #If it's an int, check the # of bits
- #If it's a string,
- #check length
- #check for nonprintables
- #If it's a blob, check for length
- #In an ideal world, if this is a link to another table, check the dependency.
-    return (1);
 }
 
 =head2 load
@@ -910,7 +882,7 @@ sub create {
         }
         if (not defined $attribs{$column->name} and $column->mandatory and $column->type ne "serial" ) {
             # Enforce "mandatory"
-            warn "Did not supply value for mandatory column ".$column->name;
+            Carp::carp "Did not supply value for mandatory column ".$column->name;
             return ( 0 );
         }
     }
