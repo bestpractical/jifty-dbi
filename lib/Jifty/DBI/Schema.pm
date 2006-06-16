@@ -370,7 +370,7 @@ sub label {
 
 A sentence or two to display in long-form user interfaces about what
 might go in this column.  Correct usage is C<hints is 'Used by the
-frobnicator to to strange things'>.
+frobnicator to do strange things'>.
 
 =cut
 
