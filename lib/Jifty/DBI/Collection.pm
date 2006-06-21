@@ -54,7 +54,7 @@ use Data::Page;
 use Clone;
 use Carp qw/croak/;
 use base qw/Class::Accessor::Fast/;
-__PACKAGE__->mk_accessors(qw/pager/);
+__PACKAGE__->mk_accessors(qw/pager preload_columns/);
 
 =head1 METHODS
 
@@ -384,7 +384,7 @@ sub build_select_query {
         # DISTINCT query only required for multi-table selects
         $self->_distinct_query( \$query_string );
     } else {
-        $query_string = "SELECT main.* FROM $query_string";
+        $query_string = "SELECT ".$self->_preload_columns." FROM $query_string";
         $query_string .= $self->_group_clause;
         $query_string .= $self->_order_clause;
     }
@@ -395,6 +395,19 @@ sub build_select_query {
 
 }
 
+=head2 preload_columns
+
+The columns that the query would load for result items.  By default it's everything.
+
+XXX TODO: in the case of distinct, it needs to work as well.
+
+=cut
+
+sub _preload_columns {
+    my $self = shift;
+    return 'main.*' unless $self->preload_columns;
+    return join(',', map { "main.$_" } @{$self->preload_columns});
+}
 
 =head2 distinct_required
 
