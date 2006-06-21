@@ -605,9 +605,9 @@ sub _make_clause_case_insensitive {
 
     if ( $value !~ /^\d+$/ ) {    # don't downcase integer values
         $column = "lower($column)";
-        $value  = lc($value);
+        $value  = "lower($value)";
     }
-    return ( $column, $operator, $value, undef );
+    return ( $column, $operator, $value );
 }
 
 =head2 begin_transaction

@@ -180,7 +180,7 @@ sub _make_clause_case_insensitive {
         $operator =~ s/LIKE/ILIKE/ig;
         return ( $column, $operator, $value );
     } elsif ( $operator =~ /=/ ) {
-        return ( "LOWER($column)", $operator, lc $value, "LOWER(?)" );
+        return ( "LOWER($column)", $operator, "LOWER($value)" );
     } else {
         $self->SUPER::_make_clause_case_insensitive( $column, $operator,
             $value );
