@@ -17,7 +17,7 @@ if (my $pattern = $ENV{JIFTY_DBQUERY_CALLER}) {
     require Hook::LexWrap;
     Hook::LexWrap::wrap('Jifty::DBI::Handle::simple_query', pre => sub {
         return unless $_[1] =~ m/$pattern/;
-        warn $_[1]."\n";
+        warn $_[1].'   '.join(',', @_[2..$#_])."\n";
         Carp::cluck;
     });
 }
