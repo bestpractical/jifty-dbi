@@ -33,18 +33,6 @@ or load methods without retrieving them from the database.
 
 my %_CACHES = ();
 
-# Function: new
-# Type    : class ctor
-# Args    : see Jifty::DBI::Record::new
-# Lvalue  : Jifty::DBI::Record::Cachable
-
-sub new () {
-    my ( $class, @args ) = @_;
-    my $self = $class->SUPER::new(@args);
-
-    return ($self);
-}
-
 sub _setup_cache {
     my $self  = shift;
     my $cache = shift;
