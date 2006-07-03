@@ -177,8 +177,9 @@ sub _fetch () {
         
         my $data = $self->_record_cache->fetch($cache_key);
 
-  unless ($data) {      $data
-      = $self->_record_cache->fetch( $self->_key_cache->fetch($cache_key) );
+  unless ($data) {
+    $cache_key = $self->_key_cache->fetch( $cache_key );
+    $data = $self->_record_cache->fetch( $cache_key ) if $cache_key;
   }
 
   return undef unless ($data);
