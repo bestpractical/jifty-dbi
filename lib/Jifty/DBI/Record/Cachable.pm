@@ -129,10 +129,10 @@ sub load_by_cols {
 # Lvalue  : ?
 
 sub __set () {
-    my ( $self, %attr ) = @_;
+    my $self = shift;
 
     $self->_expire();
-    return $self->SUPER::__set(%attr);
+    return $self->SUPER::__set(@_);
 
 }
 
@@ -142,10 +142,10 @@ sub __set () {
 # Lvalue  : ?
 
 sub __delete () {
-    my ($self) = @_;
+    my $self = shift;
 
     $self->_expire();
-    return $self->SUPER::__delete();
+    return $self->SUPER::__delete(@_);
 
 }
 
