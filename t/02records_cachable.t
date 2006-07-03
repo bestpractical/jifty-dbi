@@ -7,7 +7,7 @@ use File::Spec;
 use Test::More;
 BEGIN { require "t/utils.pl" }
 
-use constant TESTS_PER_DRIVER => 30;
+use constant TESTS_PER_DRIVER => 35;
 
 our (@available_drivers);
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
@@ -94,6 +94,20 @@ SKIP: {
 	ok($rec->load_by_cols( Phone => { operator => '=', value => 0 } ), "Loaded the record");
 	is($rec->name, 'ZeroPhone', "ZeroPhone record");
 	is($rec->phone, 0, "Phone number is zero");
+}
+
+    Jifty::DBI::Record::Cachable->flush_cache;
+
+{ # case insensetive columns names
+    my $rec = TestApp::Address->new( handle => $handle );
+	ok($rec->load_by_cols( Name => 'Jesse' ), "Loaded the record");
+	is($rec->name, 'Jesse', "loaded record");
+
+    my $rec_cache = TestApp::Address->new( handle => $handle );
+    my ($status, $msg) = $rec_cache->load_by_cols( name => 'Jesse' );
+    ok($status, 'loaded record');
+    is($rec_cache->id, $rec->id, 'the same record as we created');
+    is($msg, 'Fetched from cache', 'we fetched record from cache');
 }
 
     Jifty::DBI::Record::Cachable->flush_cache;
