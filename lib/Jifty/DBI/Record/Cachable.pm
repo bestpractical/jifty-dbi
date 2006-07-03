@@ -263,20 +263,17 @@ sub _fetch_record_cache_key {
 sub _primary_record_cache_key {
     my ($self) = @_;
 
-    return unless ( defined $self->id );
-
     unless ( $self->{'_jifty_cache_pkey'} ) {
 
-        my $primary_record_cache_key = $self->table() . ':';
         my @attributes;
-        foreach my $key ( @{ $self->_primary_keys } ) {
-            push @attributes, $key . '=' . $self->SUPER::__value($key);
+        my %pk = $self->primary_keys;
+        while ( my ($key, $value) = each %pk ) {
+            return unless defined $value;
+            push @attributes, lc( $key ) . '=' . $value;
         }
 
-        $primary_record_cache_key .= join( ',', @attributes );
-
-        $self->{'_jifty_cache_pkey'}
-            = $primary_record_cache_key;
+        $self->{'_jifty_cache_pkey'} = $self->table .':'
+            . join ',', @attributes;
     }
     return ( $self->{'_jifty_cache_pkey'} );
 
