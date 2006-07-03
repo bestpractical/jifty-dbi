@@ -91,8 +91,6 @@ sub load_from_hash {
     $self->{'_jifty_cache_pkey'} = undef;
     my ( $rvalue, $msg ) = $self->SUPER::load_from_hash(@_);
 
-    my $cache_key = $self->_primary_record_cache_key();
-
     ## Check the return value, if its good, cache it!
     if ($rvalue) {
         $self->_store();
