@@ -229,13 +229,15 @@ sub _gen_record_cache_key {
   my @cols;
 
   while ( my ( $key, $value ) = each %attr ) {
-    $key   ||= '__undef';
-    $value ||= '__undef';
-    if ( ref($value) eq "HASH" ) {
-      push @cols, $key . ( $value->{operator} || '=' ) . $value->{value};
+    unless ( defined $value ) {
+      push @cols, lc($key) . '=__undef';
+    }
+    elsif ( ref($value) eq "HASH" ) {
+      push @cols, lc($key) . ( $value->{operator} || '=' )
+          . defined $value->{value}? $value->{value}: '__undef';
     }
     else {
-      push @cols, $key . "=" . $value;
+      push @cols, lc($key) . "=" . $value;
     }
   }
   return ( $self->table() . ':' . join( ',', @cols ) );
