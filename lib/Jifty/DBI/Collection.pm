@@ -101,6 +101,7 @@ sub _init {
         @_
     );
     $self->_handle( $args{'handle'} ) if ( $args{'handle'} );
+    $self->table($self->new_item->table());
     $self->clean_slate();
 }
 
