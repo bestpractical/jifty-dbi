@@ -811,8 +811,6 @@ sub _load_from_sql {
 
 This method creates a new record with the values specified in the PARAMHASH.
 
-Keys that aren't known as columns for this record type are dropped.
-
 This method calls two hooks in your subclass:
 
 =over
