@@ -146,7 +146,6 @@ sub clean_slate {
         subclauses
         restrictions
         _open_parens
-        _close_parens
     );
 
     $self->implicit_clauses();
@@ -876,13 +875,33 @@ sub limit {
     }
 }
 
-sub _open_paren {
+=head2 open_paren CLAUSE
+
+Places an open paren at the current location in the given C<CLAUSE>.
+Note that this can be used for Deep Magic, and has a high likelyhood
+of allowing you to construct malformed SQL queries.  Its interface
+will probably change in the near future, but its presence allows for
+arbitrarily complex queries.
+
+=cut
+
+sub open_paren {
     my ( $self, $clause ) = @_;
     $self->{_open_parens}{$clause}++;
 }
 
+=head2 close_paren CLAUSE
+
+Places a close paren at the current location in the given C<CLAUSE>.
+Note that this can be used for Deep Magic, and has a high likelyhood
+of allowing you to construct malformed SQL queries.  Its interface
+will probably change in the near future, but its presence allows for
+arbitrarily complex queries.
+
+=cut
+
 # Immediate Action
-sub _close_paren {
+sub close_paren {
     my ( $self, $clause ) = @_;
     my $restriction = \$self->{'restrictions'}{"$clause"};
     if ( !$$restriction ) {
