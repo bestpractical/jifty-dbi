@@ -828,21 +828,18 @@ sub limit {
 
     # If it's a new value or we're overwriting this sort of restriction,
 
-    if (   $self->_handle->case_sensitive
-        # don't worry about case for numeric columns
-        && ! $self->new_item()->column($args{column})->is_numeric
+    if ($self->_handle->case_sensitive
         && defined $args{'value'}
-        && $args{'value'} ne ''
-        && $args{'value'} ne "''"
-        && ( $args{'operator'} !~ /IS/ && $args{'value'} !~ /^null$/i ) )
-    {
-
-        unless ( $args{'case_sensitive'} || !$args{'quote_value'} ) {
-            ( $qualified_column, $args{'operator'}, $args{'value'} )
-                = $self->_handle->_make_clause_case_insensitive(
-                $qualified_column, $args{'operator'}, $args{'value'} );
-        }
-
+        && $args{'quote_value'}
+        && ! $args{'case_sensitive'}) {
+      # don't worry about case for numeric columns_in_db
+      my $column_obj = $self->new_item()->column($args{column});
+      if (defined $column_obj ? ! $column_obj->is_numeric : 1) {
+        ( $qualified_column, $args{'operator'}, $args{'value'} ) =
+          $self->_handle->_make_clause_case_insensitive( $qualified_column,
+                                                         $args{'operator'},
+                                                         $args{'value'} );
+      }
     }
 
     my $clause = "($qualified_column $args{'operator'} $args{'value'})";

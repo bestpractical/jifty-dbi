@@ -62,7 +62,8 @@ sub insert {
 
 =head2 case_sensitive 
 
-Returns undef, since SQLite's searches are not case sensitive by default 
+Returns 1, since SQLite's searches are case sensitive by default.
+Note, however, SQLite's C<like> operator is case I<in>sensitive.
 
 =cut
 
