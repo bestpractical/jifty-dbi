@@ -698,7 +698,8 @@ Can be AND or OR (or anything else valid to aggregate two clauses in SQL)
 =item case_sensitive
 
 on some databases, such as postgres, setting case_sensitive to 1 will make
-this search case sensitive
+this search case sensitive.  Note that this flag is ignored if the column
+is numeric.
 
 =back
 
@@ -828,6 +829,8 @@ sub limit {
     # If it's a new value or we're overwriting this sort of restriction,
 
     if (   $self->_handle->case_sensitive
+        # don't worry about case for numeric columns
+        && ! $self->new_item()->column($args{column})->is_numeric
         && defined $args{'value'}
         && $args{'value'} ne ''
         && $args{'value'} ne "''"

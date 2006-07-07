@@ -603,7 +603,7 @@ sub _make_clause_case_insensitive {
     my $operator = shift;
     my $value    = shift;
 
-    if ( $value !~ /^\d+$/ ) {    # don't downcase integer values
+    if ( $value !~ /^['"]?\d+['"]?$/ ) {    # don't downcase integer values
         $column = "lower($column)";
         $value  = "lower($value)";
     }
