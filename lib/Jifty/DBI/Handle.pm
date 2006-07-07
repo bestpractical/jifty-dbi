@@ -597,20 +597,28 @@ Returns a column operator value triple.
 
 =cut
 
+sub _case_insensitivity_valid {
+    my $self     = shift;
+    my $column   = shift;
+    my $operator = shift;
+    my $value    = shift;
+
+    return $value ne ''
+      && $value   ne "''"
+      && ( $operator !~ /IS/ && $value !~ /^null$/i )
+      # don't downcase integer values
+      && $value !~ /^['"]?\d+['"]?$/;
+}
+
 sub _make_clause_case_insensitive {
     my $self     = shift;
     my $column   = shift;
     my $operator = shift;
     my $value    = shift;
 
-    if ($value ne ''
-        && $value ne "''"
-        && ($operator !~ /IS/ && $value !~ /^null$/i)
-        # don't downcase integer values
-        && $value !~ /^['"]?\d+['"]?$/) {
+    if ($self->_case_insensitivity_valid($column, $operator, $value)) {
       $column = "lower($column)";
       $value  = "lower($value)";
-
     }
     return ( $column, $operator, $value );
 }

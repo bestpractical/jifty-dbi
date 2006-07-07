@@ -171,20 +171,15 @@ sub _make_clause_case_insensitive {
     my $operator = shift;
     my $value    = shift;
 
-    if ( $value =~ /^['"]?\d+['"]?$/ )
-    {    # we don't need to downcase numeric values
-        return ( $column, $operator, $value );
+    if (! $self->_case_insensitivity_valid($column, $operator, $value)) {
+        if ( $operator =~ /LIKE/i ) {
+            $operator =~ s/LIKE/ILIKE/ig;
+        } elsif ( $operator =~ /=/ ) {
+            $column = "LOWER($column)";
+            $value = "LOWER($value)";
+        }
     }
-
-    if ( $operator =~ /LIKE/i ) {
-        $operator =~ s/LIKE/ILIKE/ig;
-        return ( $column, $operator, $value );
-    } elsif ( $operator =~ /=/ ) {
-        return ( "LOWER($column)", $operator, "LOWER($value)" );
-    } else {
-        $self->SUPER::_make_clause_case_insensitive( $column, $operator,
-            $value );
-    }
+    return ( $column, $operator, $value );
 }
 
 =head2 distinct_query STATEMENTREF
