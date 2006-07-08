@@ -13,8 +13,9 @@ Jifty::DBI::Filter::DateTime - DateTime object wrapper around date columns
 
 =head1 DESCRIPTION
 
-This filter allow you to work with DateTime objects instead of plain
-text dates.
+This filter allow you to work with DateTime objects instead of
+plain text dates.  If the column type is "date", then the hour,
+minute, and second information is discarded when encoding.
 
 =head2 encode
 
