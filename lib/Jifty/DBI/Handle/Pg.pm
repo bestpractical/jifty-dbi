@@ -171,7 +171,7 @@ sub _make_clause_case_insensitive {
     my $operator = shift;
     my $value    = shift;
 
-    if (! $self->_case_insensitivity_valid($column, $operator, $value)) {
+    if ($self->_case_insensitivity_valid($column, $operator, $value)) {
         if ( $operator =~ /LIKE/i ) {
             $operator =~ s/LIKE/ILIKE/ig;
         } elsif ( $operator =~ /=/ ) {
