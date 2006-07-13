@@ -9,8 +9,12 @@ Jifty::DBI::Schema - Use a simple syntax to describe a Jifty table.
 
 =head1 SYNOPSIS
 
-package Wifty::Model::Page::Schema;
-use Jifty::DBI::Schema;
+    package Wifty::Model::Page;
+    use Jifty::DBI::Schema;
+
+    schema {
+    # ... your columns here ...
+    };
 
 =cut
 
@@ -40,14 +44,38 @@ associations between classes.
 use Carp qw/croak carp/;
 use Exporter::Lite;
 our @EXPORT
-    = qw(column type default literal validator immutable unreadable length distinct mandatory not_null sort_order valid_values label hints render_as since input_filters output_filters filters virtual is by are on);
+    = qw(column type default literal validator immutable unreadable length distinct mandatory not_null sort_order valid_values label hints render_as since input_filters output_filters filters virtual is by are on schema);
 
 our $SCHEMA;
 our $SORT_ORDERS = {};
 
 =head1 FUNCTIONS
 
-All these functions are exported.
+All these functions are exported.  However, if you use the C<schema> helper function,
+they will be unimported at the end of the block passed to C<schema>.
+
+=head2 schema
+
+Takes a block with schema declarations.  Unimports all helper functions after
+executing the code block.
+
+=cut
+
+sub schema (&) {
+    my $code = shift;
+
+    # First we run the code as usual.
+    my $rv   = $code->();
+
+    # Unimport all our symbols from the calling package.
+    my $from = (caller)[0];
+    foreach my $sym (@EXPORT) {
+        no strict 'refs';
+        undef *{"$from\::$sym"};
+    }
+
+    return $rv;
+}
 
 =head2 column
 
