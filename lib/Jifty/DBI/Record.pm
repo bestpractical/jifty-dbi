@@ -434,6 +434,13 @@ not just a value.
 
 If before_set_I<column_name> returns false, the new value isn't set.
 
+=item after_set_I<column_name> PARAMHASH
+
+This hook will be called after a value is successfully set in the
+database. It will be called with a reference to a paramhash that
+contains C<column> and C<value> keys. If C<value> was a SQL function,
+it will now contain the actual value that was set.
+
 =item validate_I<column_name> VALUE
 
 This hook is called just before updating the database. It expects the
@@ -540,8 +547,17 @@ sub _set {
         return $before_set_ret
             unless ($before_set_ret);
     }
-    return $self->__set(%args);
 
+    my $ok $self->__set(%args);
+
+    return $ok unless $ok;
+
+    $method = "after_set_" . $args{column};
+    if( $self->can($method) ) {
+        # Fetch the value back to make sure we have the actual value
+        my $value = $self->_value($args{column});
+        $self->$method({column => $args{column}, value => $value});
+    }
 }
 
 sub __set {
