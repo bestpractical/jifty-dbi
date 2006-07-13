@@ -79,6 +79,18 @@ sub _init {
 
 }
 
+sub import {
+    my $class = shift;
+    my ($flag) = @_;
+    if ($class->isa(__PACKAGE__) and defined $flag and $flag eq '-base') {
+        my $descendant = (caller)[0];
+        no strict 'refs';
+        push @{$descendant . '::ISA'}, $class;
+        shift;
+    }
+    $class->SUPER::import(@_);
+}
+
 =head2 id
 
 Returns this row's primary key.

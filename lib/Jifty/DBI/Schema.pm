@@ -11,7 +11,7 @@ Jifty::DBI::Schema - Use a simple syntax to describe a Jifty table.
 
     package Wifty::Model::Page;
     use Jifty::DBI::Schema;
-    use base 'Jifty::DBI::Record' => schema {
+    use Jifty::DBI::Record schema {
     # ... your columns here ...
     };
 
@@ -58,7 +58,11 @@ they will be unimported at the end of the block passed to C<schema>.
 Takes a block with schema declarations.  Unimports all helper functions after
 executing the code block.  Usually used at C<BEGIN> time via this idiom:
 
-    use base 'Jifty::DBI::Record' => schema { ... };
+    use Jifty::DBI::Record schema { ... };
+
+If your application subclasses C<::Record>, then write this instead:
+
+    use MyApp::Record schema { ... };
 
 =cut
 
@@ -85,7 +89,7 @@ sub schema (&) {
         undef *{"$from\::$sym"};
     }
 
-    return ();
+    return '-base';
 }
 
 =head2 column

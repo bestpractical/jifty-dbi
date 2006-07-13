@@ -1,6 +1,6 @@
 package Sample::Employee;
 use Jifty::DBI::Schema;
-use base 'Jifty::DBI::Record' => schema {
+use Jifty::DBI::Record schema {
 
 column dexterity => type is 'integer';
 column name      => type is 'varchar';
@@ -9,7 +9,7 @@ column name      => type is 'varchar';
 
 package Sample::Address;
 use Jifty::DBI::Schema;
-use base 'Jifty::DBI::Record' => schema {
+use Jifty::DBI::Record schema {
 
 column employee_id =>
   refers_to Sample::Employee;
