@@ -672,7 +672,7 @@ sub __set {
     # really going on. (ex SET Cost = Cost+5)
     if ( $args{'is_sql_function'} ) {
 
-        .# XXX TODO primary_keys
+        # XXX TODO primary_keys
         $self->load_by_cols( id => $self->id );
     } else {
         $self->{'values'}{ $column->name } = $unmunged_value;
