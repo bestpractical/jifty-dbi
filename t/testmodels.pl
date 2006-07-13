@@ -1,8 +1,7 @@
 package Sample::Employee;
 use Jifty::DBI::Schema;
 use base qw/Jifty::DBI::Record/;
-
-schema {
+use base schema {
 
 column dexterity => type is 'integer';
 column name      => type is 'varchar';

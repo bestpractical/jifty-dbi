@@ -11,8 +11,7 @@ Jifty::DBI::Schema - Use a simple syntax to describe a Jifty table.
 
     package Wifty::Model::Page;
     use Jifty::DBI::Schema;
-
-    schema {
+    use base schema {
     # ... your columns here ...
     };
 
@@ -57,7 +56,9 @@ they will be unimported at the end of the block passed to C<schema>.
 =head2 schema
 
 Takes a block with schema declarations.  Unimports all helper functions after
-executing the code block.
+executing the code block.  Usually used at C<BEGIN> time via this idiom:
+
+    use base schema { ... };
 
 =cut
 
@@ -65,7 +66,7 @@ sub schema (&) {
     my $code = shift;
 
     # First we run the code as usual.
-    my $rv   = $code->();
+    $code->();
 
     # Unimport all our symbols from the calling package.
     my $from = (caller)[0];
@@ -74,7 +75,7 @@ sub schema (&) {
         undef *{"$from\::$sym"};
     }
 
-    return $rv;
+    return ();
 }
 
 =head2 column
