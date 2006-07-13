@@ -11,7 +11,7 @@ Jifty::DBI::Schema - Use a simple syntax to describe a Jifty table.
 
     package Wifty::Model::Page;
     use Jifty::DBI::Schema;
-    use base schema {
+    use base 'Jifty::DBI::Record' => schema {
     # ... your columns here ...
     };
 
@@ -58,18 +58,28 @@ they will be unimported at the end of the block passed to C<schema>.
 Takes a block with schema declarations.  Unimports all helper functions after
 executing the code block.  Usually used at C<BEGIN> time via this idiom:
 
-    use base schema { ... };
+    use base 'Jifty::DBI::Record' => schema { ... };
 
 =cut
 
 sub schema (&) {
     my $code = shift;
 
-    # First we run the code as usual.
-    $code->();
-
-    # Unimport all our symbols from the calling package.
     my $from = (caller)[0];
+
+    if ( UNIVERSAL::isa($from, 'Jifty::DBI::Record') ) {
+        # We run the code as usual if the caller is J::D::R.
+        $code->();
+    }
+    else {
+        # If the caller is not, we temporarily make it so.
+        require Jifty::DBI::Record;
+        no strict 'refs';
+        local @{"$from\::ISA"} = (@{"$from\::ISA"}, 'Jifty::DBI::Record');
+        $code->();
+    }
+    
+    # Unimport all our symbols from the calling package.
     foreach my $sym (@EXPORT) {
         no strict 'refs';
         undef *{"$from\::$sym"};
