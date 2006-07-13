@@ -1,19 +1,19 @@
 package Sample::Employee;
+use Jifty::DBI::Schema;
 use base qw/Jifty::DBI::Record/;
 
-package Sample::Employee::Schema;
-use Jifty::DBI::Schema;
+schema {
 
 column dexterity => type is 'integer';
 column name      => type is 'varchar';
 
-
+};
 
 package Sample::Address;
+use Jifty::DBI::Schema;
 use base qw/Jifty::DBI::Record/;
 
-package Sample::Address::Schema;
-use Jifty::DBI::Schema;
+schema {
 
 column employee_id =>
   refers_to Sample::Employee;
@@ -24,5 +24,7 @@ column name =>
 
 column phone =>
   type is 'varchar';
+
+};
 
 1;
