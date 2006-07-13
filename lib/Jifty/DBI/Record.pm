@@ -441,6 +441,8 @@ database. It will be called with a reference to a paramhash that
 contains C<column> and C<value> keys. If C<value> was a SQL function,
 it will now contain the actual value that was set.
 
+This hooks return value is ignored.
+
 =item validate_I<column_name> VALUE
 
 This hook is called just before updating the database. It expects the
@@ -548,7 +550,7 @@ sub _set {
             unless ($before_set_ret);
     }
 
-    my $ok $self->__set(%args);
+    my $ok = $self->__set(%args);
 
     return $ok unless $ok;
 
@@ -558,6 +560,8 @@ sub _set {
         my $value = $self->_value($args{column});
         $self->$method({column => $args{column}, value => $value});
     }
+
+    return $ok;
 }
 
 sub __set {
