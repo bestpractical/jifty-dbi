@@ -17,8 +17,7 @@ Jifty::DBI::Filter::Date - DateTime object wrapper around date columns
 
 This filter allow you to work with DateTime objects that represent "Dates",
 store everything in the database in GMT and not hurt yourself badly
-when you pull them out and put them in repeatedly
-text dates.
+when you pull them out and put them in repeatedly.
 
 =head2 encode
 

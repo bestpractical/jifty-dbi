@@ -76,6 +76,7 @@ sub _init {
     if ( $args{'handle'} ) {
         $self->_handle( $args{'handle'} );
     }
+
 }
 
 =head2 id
@@ -441,7 +442,7 @@ database. It will be called with a reference to a paramhash that
 contains C<column> and C<value> keys. If C<value> was a SQL function,
 it will now contain the actual value that was set.
 
-This hooks return value is ignored.
+This hook's return value is ignored.
 
 =item validate_I<column_name> VALUE
 
@@ -671,7 +672,7 @@ sub __set {
     # really going on. (ex SET Cost = Cost+5)
     if ( $args{'is_sql_function'} ) {
 
-        # XXX TODO primary_keys
+        .# XXX TODO primary_keys
         $self->load_by_cols( id => $self->id );
     } else {
         $self->{'values'}{ $column->name } = $unmunged_value;
@@ -683,8 +684,8 @@ sub __set {
 
 =head2 load
 
-Takes a single argument, $id. Calls load_by_cols to retrieve the row whose primary key
-is $id
+Takes a single argument, $id. Calls load_by_cols to retrieve the row 
+whose primary key is $id.
 
 =cut
 
@@ -750,6 +751,7 @@ sub load_by_cols {
 
 =head2 load_by_primary_keys 
 
+Loads records with a given set of primary keys. 
 
 =cut
 
