@@ -71,25 +71,17 @@ sub schema (&) {
 
     my $from = (caller)[0];
 
-    if ( UNIVERSAL::isa($from, 'Jifty::DBI::Record') ) {
-        # We run the code as usual if the caller is J::D::R.
+    my $new_code = sub {
         $code->();
-    }
-    else {
-        # If the caller is not, we temporarily make it so.
-        require Jifty::DBI::Record;
-        no strict 'refs';
-        local @{"$from\::ISA"} = (@{"$from\::ISA"}, 'Jifty::DBI::Record');
-        $code->();
-    }
-    
-    # Unimport all our symbols from the calling package.
-    foreach my $sym (@EXPORT) {
-        no strict 'refs';
-        undef *{"$from\::$sym"};
-    }
 
-    return '-base';
+        # Unimport all our symbols from the calling package.
+        foreach my $sym (@EXPORT) {
+            no strict 'refs';
+            undef *{"$from\::$sym"};
+        }
+    };
+
+    return('-base' => $new_code);
 }
 
 =head2 column

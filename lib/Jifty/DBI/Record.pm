@@ -87,6 +87,10 @@ sub import {
         no strict 'refs';
         push @{$descendant . '::ISA'}, $class;
         shift;
+
+        # run the schema callback
+        my $callback = shift;
+        $callback->() if $callback;
     }
     $class->SUPER::import(@_);
 }
