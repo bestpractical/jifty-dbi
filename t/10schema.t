@@ -99,8 +99,8 @@ END_SCHEMA
     CREATE TABLE employees (
       id serial NOT NULL ,
       dexterity integer ,
-      label varchar ,
       name varchar ,
+      label varchar ,
       type varchar ,
       PRIMARY KEY (id)
     ) ;
