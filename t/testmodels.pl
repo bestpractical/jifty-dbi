@@ -4,6 +4,8 @@ use Jifty::DBI::Record schema {
 
 column dexterity => type is 'integer';
 column name      => type is 'varchar';
+column label     => type is 'varchar';
+column type      => type is 'varchar';
 
 };
 

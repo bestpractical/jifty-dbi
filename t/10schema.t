@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl 
 
 use strict;
 use warnings;
@@ -81,6 +81,7 @@ END_SCHEMA
     my $employee = Sample::Employee->new;
     
     isa_ok($employee, 'Sample::Employee');
+    can_ok($employee, qw( label type dexterity ));
     
     $ret = $SG->add_model($employee);
 
@@ -98,7 +99,9 @@ END_SCHEMA
     CREATE TABLE employees (
       id serial NOT NULL ,
       dexterity integer ,
+      label varchar ,
       name varchar ,
+      type varchar ,
       PRIMARY KEY (id)
     ) ;
 END_SCHEMA
