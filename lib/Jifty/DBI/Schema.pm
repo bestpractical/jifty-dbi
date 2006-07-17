@@ -77,7 +77,13 @@ sub schema (&) {
         # Unimport all our symbols from the calling package.
         foreach my $sym (@EXPORT) {
             no strict 'refs';
-            undef *{"$from\::$sym"};
+            undef *{"$from\::$sym"}
+                if \&{"$from\::$sym"} == \&$sym;
+        }
+
+        # Then initialize all columns
+        foreach my $column (sort keys %{$from->COLUMNS}) {
+            $from->_init_methods_for_column($from->COLUMNS->{$column});
         }
     };
 
@@ -155,7 +161,14 @@ sub column {
 
 
     $from->COLUMNS->{$name} = $column;
-    $from->_init_methods_for_column($column);
+
+    # Heuristics: If we are called through Jifty::DBI::Schema, 
+    # then we know that we are going to initialize methods later
+    # through the &schema wrapper, so we defer initialization here
+    # to not upset column names such as "label" and "type".
+    return if caller(1) eq __PACKAGE__;
+
+    $from->_init_methods_for_column($column)
 }
 
 =head2 refers_to
