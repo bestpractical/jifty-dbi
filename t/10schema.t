@@ -9,7 +9,7 @@ our @available_drivers;
 
 BEGIN {
   require("t/utils.pl");
-  my $total = 3 + scalar(@available_drivers) * TESTS_PER_DRIVER;
+  my $total = 4 + scalar(@available_drivers) * TESTS_PER_DRIVER;
   if( not eval { require DBIx::DBSchema } ) {
     plan skip_all => "DBIx::DBSchema not installed";
   } else {
