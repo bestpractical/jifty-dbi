@@ -20,7 +20,7 @@ Jifty::DBI::Schema - Use a simple syntax to describe a Jifty table.
 =head1 DESCRIPTION
 
 Each Jifty Application::Model::Class module describes a record class
-for for a Jifty application.  Each column statement sets out the name
+for a Jifty application.  Each C<column> statement sets out the name
 and attributes used to describe the column in a backend database, in
 user interfaces, and other contexts.  For example:
 
@@ -29,8 +29,8 @@ user interfaces, and other contexts.  For example:
        label is 'Content',
        render_as 'textarea';
 
-defines a column called "content" that is of type "text".  It will be
-rendered with the label "Content" (note the capital) and as a "textarea" in
+defines a column called C<content> that is of type C<text>.  It will be
+rendered with the label C<Content> (note the capital) and as a C<textarea> in
 a HTML form.
 
 Jifty::DBI::Schema builds a L<Jifty::DBI::Column>.  That class defines
