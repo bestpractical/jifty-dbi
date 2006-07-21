@@ -75,7 +75,7 @@ See L<Jifty::DBI> for details about the first two parts.
 
 =item myscript.pl
 
-  #!/usr/bin/perl
+  #!/usr/bin/env perl
   # myscript.pl
 
   use strict;
