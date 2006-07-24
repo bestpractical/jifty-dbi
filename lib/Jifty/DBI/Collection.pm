@@ -675,6 +675,9 @@ operator is the SQL operator to use for this phrase.  Possible choices include:
 
 =item "!="
 
+Any other standard SQL comparision operators that your underlying
+database supports are also valid.
+
 =item "LIKE"
 
 In the case of LIKE, the string is surrounded in % signs.  Yes. this is a bug.
