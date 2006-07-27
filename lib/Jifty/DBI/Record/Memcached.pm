@@ -46,7 +46,7 @@ use vars qw/$MEMCACHED/;
 sub _init () {
     my ( $self, @args ) = @_;
     $MEMCACHED ||= Cache::Memcached->new( {$self->memcached_config} );
-    $self->SUPER::_init(@_);
+    $self->SUPER::_init(@args);
 }
 
 sub load_from_hash {
