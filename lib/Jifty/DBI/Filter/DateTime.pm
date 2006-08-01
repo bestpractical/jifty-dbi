@@ -6,6 +6,7 @@ use strict;
 use base qw|Jifty::DBI::Filter|;
 use DateTime                  ();
 use DateTime::Format::ISO8601 ();
+use DateTime::Format::Strptime ();
 
 =head1 NAME
 
@@ -61,7 +62,9 @@ sub decode {
 
     my $str = join('T', split ' ', $$value_ref, 2);
     my $dt = DateTime::Format::ISO8601->parse_datetime($str);
+
     if ($dt) {
+        $dt->set_formatter(DateTime::Format::Strptime->new(pattern => '%Y-%m-%d %H:%M:%S'));
         $$value_ref = $dt;
     } else {
         return;

@@ -38,10 +38,13 @@ sub encode {
     return unless $$value_ref;
 
     return unless UNIVERSAL::isa( $$value_ref, 'DateTime' );
-    $$value_ref->time_zone('floating');
+
+    # Clone the DateTime to avoid altering the object we're given
+    my $dt = $$value_ref->clone;
+    $dt->time_zone('floating');
 
     my $format = ($self->column->type eq "date" ? "%Y-%m-%d" : "%Y-%m-%d %H:%M:%S");
-    $$value_ref = $$value_ref->strftime($format);
+    $$value_ref = $dt->strftime($format);
     return 1;
 }
 
@@ -71,8 +74,8 @@ sub decode {
     my $str = join('T', split ' ', $$value_ref, 2);
     my $dt = DateTime::Format::ISO8601->parse_datetime($str);
     $dt->time_zone('floating');
-    $dt->set_formatter(DateTime::Format::Strptime->new(pattern => '%Y-%m-%d'));
     if ($dt) {
+        $dt->set_formatter(DateTime::Format::Strptime->new(pattern => '%Y-%m-%d'));
         $$value_ref = $dt;
     } else {
         return;
