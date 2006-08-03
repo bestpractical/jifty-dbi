@@ -488,8 +488,8 @@ sub _value {
     my $column = shift;
 
     my $value = $self->__value( $column => @_ );
-    my $method = "after_$column";
-    $self->$method( \$value ) if ( $self->can($method) );
+    my $method = $self->can("after_$column");
+    $method->( $self, \$value ) if $method;
     return $value;
 }
 
@@ -502,7 +502,16 @@ never override __value.
 
 sub __value {
     my $self        = shift;
+
     my $column_name = lc(shift);
+    # If the requested column is actually an alias for another, resolve it.
+    my $column = $self->column($column_name);
+    if  ($column   and defined $column->alias_for_column ) {
+        $column = $self->column($column->alias_for_column());
+        $column_name = $column->name;
+    }
+
+    return unless ($column);
 
     # In the default case of "yeah, we have a value", return it as
     # fast as we can.
@@ -510,18 +519,10 @@ sub __value {
         if ( $self->{'fetched'}{$column_name}
           && $self->{'decoded'}{$column_name} );
 
-    # If the requested column is actually an alias for another, resolve it.
-    my $column = $self->column($column_name);
-    if  ($column   and defined $column->alias_for_column ) {
-        $column = $self->column($column->alias_for_column());
-    }
-
-    return unless ($column);
-
-    if ( !$self->{'fetched'}{ $column->name } and my $id = $self->id() ) {
+    if ( !$self->{'fetched'}{ $column_name } and my $id = $self->id() ) {
         my $pkey         = $self->_primary_key();
         my $query_string = "SELECT "
-            . $column->name
+            . $column_name
             . " FROM "
             . $self->table
             . " WHERE $pkey = ?";
@@ -529,18 +530,18 @@ sub __value {
         my ($value) = eval { $sth->fetchrow_array() };
         warn $@ if $@;
 
-        $self->{'values'}{ $column->name }  = $value;
-        $self->{'fetched'}{ $column->name } = 1;
+        $self->{'values'}{ $column_name }  = $value;
+        $self->{'fetched'}{ $column_name } = 1;
     }
-    unless ( $self->{'decoded'}{ $column->name } ) {
+    unless ( $self->{'decoded'}{ $column_name } ) {
         $self->_apply_output_filters(
             column    => $column,
-            value_ref => \$self->{'values'}{ $column->name },
-        );
-        $self->{'decoded'}{ $column->name } = 1;
+            value_ref => \$self->{'values'}{ $column_name },
+        ) if exists $self->{'values'}{ $column_name };
+        $self->{'decoded'}{ $column_name } = 1;
     }
 
-    return $self->{'values'}{ $column->name };
+    return $self->{'values'}{ $column_name };
 }
 
 =head2 _set
