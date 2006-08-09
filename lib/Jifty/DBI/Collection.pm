@@ -663,7 +663,9 @@ Column to be checked against.
 
 =item value
 
-Should always be set and will always be quoted. 
+Should always be set and will always be quoted.  If the value is a
+subclass of Jifty::DBI::Object, the value will be interpreted to be
+the object's id.
 
 =item operator
 
@@ -731,6 +733,11 @@ sub limit {
         unless defined $args{column};
     croak "Must provide a value to limit to"
         unless defined $args{value};
+
+    # make passing in an object DTRT
+    if (ref($args{value}) && $args{value}->isa('Jifty::DBI::Record')) {
+        $args{value} = $args{value}->id;
+    }
 
     #since we're changing the search criteria, we need to redo the search
     $self->redo_search();
