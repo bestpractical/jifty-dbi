@@ -1,5 +1,8 @@
 Revision history for Perl extension Jifty::DBI.
 
+0.24 Tue Aug  8 23:33:34 EDT 2006
+ artificial version increment
+
 0.23 Thu Jun 15 14:12:20 CEST 2006
  * Add tests for case sensitivity in limits
  * Caching for columns and readable/writable attributes. Only gains us 2% performance. But hey. 2% free
