@@ -520,18 +520,17 @@ sub on {
 
 sub _list {
     defined wantarray
-        or die
-        "Cannot add traits in void context -- check for misspelled preceding comma as a semicolon";
+        or croak("Cannot add traits in void context -- check for misspelled preceding comma as a semicolon");
+
     wantarray
-        or die
-        "Cannot call list traits in scalar context -- check for unneccessary 'is'";
+        or croak("Cannot call list traits in scalar context -- check for unneccessary 'is'");
     _trait(@_);
 }
 
 sub _item {
     defined wantarray
-        or die
-        "Cannot add traits in void context -- check for misspelled preceding comma as a semicolon";
+        or croak("Cannot add traits in void context -- check for misspelled preceding comma as a semicolon");
+
     _trait(@_);
 }
 
@@ -571,7 +570,7 @@ sub apply {
 
     my ($method, $argument) = @{$self};
 
-    die "Illegal Jifty::DBI::Schema property '$method'"
+    croak("Illegal Jifty::DBI::Schema property '$method'")
       unless $column->can($method);
 
     $column->$method($argument);
