@@ -123,7 +123,7 @@ sub load_by_cols {
 
 }
 
-# Function: __Set
+# Function: __set
 # Type    : (overloaded) public instance
 # Args    : see Jifty::DBI::Record::_Set
 # Lvalue  : ?
@@ -136,7 +136,7 @@ sub __set () {
 
 }
 
-# Function: Delete
+# Function: delete
 # Type    : (overloaded) public instance
 # Args    : nil
 # Lvalue  : ?
