@@ -1,0 +1,14 @@
+Source: libjifty-dbi-perl
+Section: perl
+Priority: optional
+Maintainer: Bart Bunting <bart@debian.org>
+Build-Depends: 
+
+Package: libjifty-dbi-perl
+Section: perl
+Architecture: all
+Depends: ${perl:Depends}, libcache-simple-timedexpiry-perl, libclass-data-inheritable-perl, libclass-returnvalue-perl, libclone-perl, libdatetime-format-strptime-perl, libdbd-sqlite3-perl, libdbi-perl, libdbix-dbschema-perl (>> 0.29), libdata-page-perl, libdatetime-perl, libexporter-lite-perl, liblingua-en-inflect-perl, libuniversal-require-perl,
+Recommends: libcache-memcached-perl
+Description: Jifty DBI
+ Jifty DBI
+
