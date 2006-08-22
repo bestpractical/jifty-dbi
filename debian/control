@@ -2,7 +2,6 @@ Source: libjifty-dbi-perl
 Section: perl
 Priority: optional
 Maintainer: Bart Bunting <bart@debian.org>
-Build-Depends: 
 
 Package: libjifty-dbi-perl
 Section: perl

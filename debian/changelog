@@ -1,0 +1,6 @@
+libjifty-dbi-perl (0.24-1) unstable; urgency=low
+
+  * Initial debianisation.
+
+ -- Bart Bunting <bart@debian.org>  Mon, 21 Aug 2006 15:30:31 +1000
+
