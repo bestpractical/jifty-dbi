@@ -1,4 +1,4 @@
-package Jifty::DBI::Filter::Date;
+package Jifty::DBI::Filter::Time;
 
 use warnings;
 use strict;
@@ -6,7 +6,7 @@ use strict;
 use base qw|Jifty::DBI::Filter::DateTime|;
 
 use constant _time_zone => 'floating';
-use constant _strptime  => '%Y-%m-%d';
+use constant _strptime  => '%H:%M:%S';
 
 =head1 NAME
 
@@ -21,7 +21,7 @@ when you pull them out and put them in repeatedly.
 =head2 encode
 
 If value is a DateTime object then move it into a "floating" timezone
-and expand it into ISO 8601 format C<YYYY-MM-DD>.  By storing it in 
+and expand it into ISO 8601 format C<HH-MM-SS>.  By storing it in 
 the database as a floating timezone, it doesn't matter if the user's 
 desired timezone changes between lookups
 

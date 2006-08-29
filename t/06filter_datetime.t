@@ -6,7 +6,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 13;
+use constant TESTS_PER_DRIVER => 16;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -35,8 +35,9 @@ SKIP: {
 
         my $now = time;
         my $today = DateTime->from_epoch( epoch => $now )->truncate( to => 'day' )->epoch;
+        my $min_of_day = DateTime->from_epoch( epoch => $now )->truncate( to => 'minute' );
         my $dt = DateTime->from_epoch( epoch => $now );
-        my($id) = $rec->create( created => $dt, event_on => $dt );
+        my ($id) = $rec->create( created => $dt, event_on => $dt, event_stops => $min_of_day );
         ok($id, "Successfuly created ticket");
         ok($rec->load($id), "Loaded the record");
         is($rec->id, $id, "The record has its id");
@@ -44,6 +45,9 @@ SKIP: {
         is( $rec->created->epoch, $now, "Correct value");
         isa_ok($rec->event_on, 'DateTime' );
         is( $rec->event_on->epoch, $today, "Correct value");
+        isa_ok($rec->event_stops, 'DateTime' );
+        is( $rec->event_stops->minute, $min_of_day->minute, "Correct value");
+        is( $rec->event_stops->hour, $min_of_day->hour, "Correct value");
 
         # undef/NULL
         $rec->set_created;
@@ -71,7 +75,8 @@ sub schema_sqlite {
 CREATE table users (
         id integer primary key,
         created datetime,
-        event_on date
+        event_on date,
+        event_stops time
 )
 EOF
 
@@ -83,7 +88,8 @@ sub schema_mysql {
 CREATE TEMPORARY table users (
         id integer auto_increment primary key,
         created datetime,
-        event_on date
+        event_on date,
+        event_stops time
 )
 EOF
 
@@ -95,7 +101,8 @@ sub schema_pg {
 CREATE TEMPORARY table users (
         id serial primary key,
         created timestamp,
-        event_on date
+        event_on date,
+        event_stops time
 )
 EOF
 
@@ -111,7 +118,11 @@ BEGIN {
 
     column event_on =>
       type is 'date',
-      input_filters are qw/Jifty::DBI::Filter::DateTime/;
+      input_filters are qw/Jifty::DBI::Filter::Date/;
+
+    column event_stops =>
+      type is 'time',
+      input_filters are qw/Jifty::DBI::Filter::Time/;
 }
 
 1;
