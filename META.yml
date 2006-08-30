@@ -2,7 +2,7 @@ build_requires:
   DBD::SQLite: 0
   Test::More: 0.52
 distribution_type: module
-generated_by: Module::Install version 0.62
+generated_by: Module::Install version 0.64
 license: perl
 name: Jifty-DBI
 no_index: 
@@ -12,7 +12,7 @@ no_index:
     - t
 requires: 
   Cache::Simple::TimedExpiry: 0.21
-  Class::Accessor: 0
+  Class::Accessor::Fast: 0
   Class::Data::Inheritable: 0
   Class::ReturnValue: 0.4
   Clone: 0
@@ -21,9 +21,10 @@ requires:
   Data::Page: 0
   DateTime: 0
   DateTime::Format::ISO8601: 0
+  DateTime::Format::Strptime: 0
   Encode: 2.1
   Exporter::Lite: 0
   Lingua::EN::Inflect: 0
   UNIVERSAL::require: 0
   perl: 5.8.3
-version: 0.21
+version: 0.25
