@@ -1,7 +1,12 @@
 Revision history for Perl extension Jifty::DBI.
 
+ * cleaned up DSN generation. 
+ * Allowed arbitrary parameter specification in DSNs
+ * Corrected the method name "DSN" to "dsn" throughout.
+
+
 0.24 Tue Aug  8 23:33:34 EDT 2006
- artificial version increment
+ * artificial version increment
 
 0.23 Thu Jun 15 14:12:20 CEST 2006
  * Add tests for case sensitivity in limits
