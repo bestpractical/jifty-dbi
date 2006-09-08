@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use Test::More;
 
-use constant TESTS_PER_DRIVER => 14;
+use constant TESTS_PER_DRIVER => 15;
 our @available_drivers;
 
 BEGIN {

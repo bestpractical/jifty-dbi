@@ -112,7 +112,7 @@ Takes a bunch of parameters:
 Required: Driver, Database or Host/SID,
 Optional: Port and RequireSSL
 
-Builds a DSN suitable for an Oracle DBI connection
+Builds a dsn suitable for an Oracle DBI connection
 
 =cut
 

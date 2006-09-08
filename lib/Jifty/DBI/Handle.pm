@@ -95,17 +95,17 @@ sub connect {
         }
     }
 
-    my $dsn = $self->DSN || '';
+    my $dsn = $self->dsn || '';
 
 # Setting this actually breaks old RT versions in subtle ways. So we need to explicitly call it
 
     $self->build_dsn(%args);
 
     # Only connect if we're not connected to this source already
-    if ( ( !$self->dbh ) || ( !$self->dbh->ping ) || ( $self->DSN ne $dsn ) )
+    if ( ( !$self->dbh ) || ( !$self->dbh->ping ) || ( $self->dsn ne $dsn ) )
     {
         my $handle
-            = DBI->connect( $self->DSN, $args{'user'}, $args{'password'} )
+            = DBI->connect( $self->dsn, $args{'user'}, $args{'password'} )
             || Carp::croak "Connect Failed $DBI::errstr\n";
 
 #databases do case conversion on the name of columns returned.
@@ -143,12 +143,33 @@ sub _upgrade_handle {
 
 =head2 build_dsn PARAMHASH
 
-Takes a bunch of parameters:  
+Builds a dsn suitable for handing to DBI->connect.
 
-Required: Driver, Database,
-Optional: Host, Port and RequireSSL
+Mandatory arguments:
 
-Builds a DSN suitable for a DBI connection
+=over
+
+=item driver
+
+=item database
+
+=back
+
+Optional arguments:
+
+=over 
+
+=item host
+
+=item port
+
+=item sid
+
+=item requiressl
+
+=item and anything else your DBD lets you pass in
+
+=back
 
 =cut
 
@@ -164,25 +185,21 @@ sub build_dsn {
         @_
     );
 
-    my $dsn = "dbi:$args{'driver'}:dbname=$args{'database'}";
-    $dsn .= ";sid=$args{'sid'}" if ( defined $args{'sid'} && $args{'sid'} );
-    $dsn .= ";host=$args{'host'}"
-        if ( defined $args{'host'} && $args{'host'} );
-    $dsn .= ";port=$args{'port'}"
-        if ( defined $args{'port'} && $args{'port'} );
-    $dsn .= ";requiressl=1"
-        if ( defined $args{'requiressl'} && $args{'requiressl'} );
 
-    $self->{'dsn'} = $dsn;
+    my $driver = delete $args{'driver'};
+    $args{'dbname'} ||= delete $args{'database'};
+
+    $self->{'dsn'} =
+    "dbi:$driver:" . join(';', map { $_ ."=".$args{$_} } grep { defined $args{$_} } keys %args);
 }
 
-=head2 DSN
+=head2 dsn
 
-Returns the DSN for this database connection.
+Returns the dsn for this database connection.
 
 =cut
 
-sub DSN {
+sub dsn {
     my $self = shift;
     return ( $self->{'dsn'} );
 }

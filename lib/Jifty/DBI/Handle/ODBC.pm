@@ -32,30 +32,7 @@ sub case_sensitive {
     return (undef);
 }
 
-=head2 BuildDSN
-
-=cut
-
-sub build_dsn {
-    my $self = shift;
-    my %args = (
-        Driver   => undef,
-        Database => undef,
-        Host     => undef,
-        Port     => undef,
-        @_
-    );
-
-    my $dsn = "dbi:$args{'Driver'}:$args{'Database'}";
-    $dsn .= ";host=$args{'Host'}"
-        if ( defined $args{'Host'} && $args{'Host'} );
-    $dsn .= ";port=$args{'Port'}"
-        if ( defined $args{'Port'} && $args{'Port'} );
-
-    $self->{'dsn'} = $dsn;
-}
-
-=head2 ApplyLimits
+=head2 apply_limits
 
 =cut
 

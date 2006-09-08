@@ -57,32 +57,6 @@ sub case_sensitive {
     return (1);
 }
 
-=head2 build_dsn
-
-Builder for Informix DSNs.
-
-=cut
-
-sub build_dsn {
-    my $self = shift;
-    my %args = (
-        Driver     => undef,
-        Database   => undef,
-        Host       => undef,
-        Port       => undef,
-        SID        => undef,
-        RequireSSL => undef,
-        @_
-    );
-
-    my $dsn = "dbi:$args{'Driver'}:";
-
-    $dsn .= "$args{'Database'}"
-        if ( defined $args{'Database'} && $args{'Database'} );
-
-    $self->{'dsn'} = $dsn;
-}
-
 =head2 apply_limits STATEMENTREF ROWS_PER_PAGE FIRST_ROW
 
 takes an SQL SELECT statement and massages it to return ROWS_PER_PAGE starting with FIRST_ROW;

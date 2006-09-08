@@ -53,7 +53,7 @@ sub flush_cache {
 
 sub _key_cache {
     my $self  = shift;
-    my $cache = $self->_handle->DSN
+    my $cache = $self->_handle->dsn
         . "-KEYS--"
         . ( $self->{'_class'} ||= ref($self) );
     $self->_setup_cache($cache) unless exists( $_CACHES{$cache} );
@@ -69,7 +69,7 @@ Blow away this record type's key cache
 
 sub _flush_key_cache {
     my $self  = shift;
-    my $cache = $self->_handle->DSN
+    my $cache = $self->_handle->dsn
         . "-KEYS--"
         . ( $self->{'_class'} ||= ref($self) );
     $self->_setup_cache($cache);
@@ -78,7 +78,7 @@ sub _flush_key_cache {
 sub _record_cache {
     my $self = shift;
     my $cache
-        = $self->_handle->DSN . "--" . ( $self->{'_class'} ||= ref($self) );
+        = $self->_handle->dsn . "--" . ( $self->{'_class'} ||= ref($self) );
     $self->_setup_cache($cache) unless exists( $_CACHES{$cache} );
     return ( $_CACHES{$cache} );
 
