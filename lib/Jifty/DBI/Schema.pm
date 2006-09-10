@@ -82,7 +82,7 @@ sub schema (&) {
         }
 
         # Then initialize all columns
-        foreach my $column (sort keys %{$from->COLUMNS}) {
+        foreach my $column (sort keys %{$from->COLUMNS||{}}) {
             $from->_init_methods_for_column($from->COLUMNS->{$column});
         }
     };
