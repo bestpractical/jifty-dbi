@@ -744,6 +744,12 @@ sub load_by_cols {
                 $value = $hash{$key};
             }
 
+            if (ref $value && $value->isa('Jifty::DBI::Record') ) {
+                # XXX TODO: check for proper foriegn keyness here
+                $value = $value->id;
+            }
+
+
             push @phrases, "$key $op $function";
             push @bind,    $value;
         } else {
