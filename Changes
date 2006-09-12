@@ -1,9 +1,108 @@
 Revision history for Perl extension Jifty::DBI.
 
+0.25 Tue Sep 12 23:52:45 BST 2006
+
  * cleaned up DSN generation. 
  * Allowed arbitrary parameter specification in DSNs
  * Corrected the method name "DSN" to "dsn" throughout.
+ * ( If a user tries to load a record by columns that happen ot be foriegn keys, and values that are objects, do the right thing
+ * Propery cache DBI::Record entries when aliased.
+ * Fewer accessor calls.
+ * Only apply filters if we have values fetched.
+ * make passing a J:D:Collection as a value DTRT
+ * Jifty::DBI::Schema - s/die/croak/ to aid debugging.
+ * Refactor Jifty::DBI::Filter::Date to be a subclass of ::Filter::DateTime.
+ * New ::Filter::Time filter for time of day. ('time' sql type).
+ * Update to Module::Install 0.64 to fix auto_install() when Makefile.PL is
+   run from the command line and CPANPLUS is not installed.
+ * The number of fixed tests in t/10schema.t for Jifty::DBI was wrong.
+ * documented limit a bit more
+ 
+ * JDBI::Filter::Date clones dates before setting timezone, so that we
+   don't alter the object we're passed.
+ * Spelling fixes.
+ * Remove the @ISA-mocking code from Jifty::DBI::Schema, so that
+ 
+     use MyApp::Record schema {
+         ...;
+     }
+ 
+   can work even if MyApp::Record overrides Jifty::Record's column
+   building methods.  We do that by arranging the schema callback
+   to run after the @ISA chain is set up.
+ 
+ * Jifty::DBI::Schema - defer initialization for columns created via the
+  schema{} wrapper, so that users can continue to define column names
+  that overlaps with the helper functions, such as "label" and "type".
+ * attempt to test "label" and "type" column definitions.
+   however, as I don't have Pg, I cannot run this test; help welcome.
+ 
+ * cleaned up case sensitivity code
+ * fixed SQLite docs
+ * abstract out checking whether it's possible to make a clause case 
+    insensitive so that subclasses of Handle can use those tests
+ * doc'd Filter::DateTime special behavior when the column type is 'date'
+ * Adding a filter to salt and hash passwords
+ * Adding an after_set hook to Jifty::DBI::Record
+ * Jifty::DBI::Schema: Lift the restriction to use another ::Schema
+   package on the record model class; you can now directly write:
+ 
+     package Wifty::Model::Page;
+     use Jifty::DBI::Schema;
+ 
+     schema {
+     # ... your columns here ...
+     };
+ 
+   because &schema will unregister all symbols exported by Jifty::DBI::Schema
+   after it runs the column initialization code.  Backward compatibility is
+   preserved -- as long as you don't name your record model "Schema"...
+ 
+ * update the testmodels.pl to use new schema decl syntax
+ * Lift the call of schema to BEGIN time:
+ 
+ * fixed handling of case sensitivity and numeric columns so opertions 
+   like '>' do numeric instead of lexical comparisons
+ * Allow collection SELECTs to have preload_columns defined.
+ * Case insensitive searches should be, euh, case insensitive in Pg
+ * Mark case-sensitive tests as TODO for MySQL
+ * drop ::Cachable::new as it does nothing
+ * add cache tests: columns names are case insensetive so we should
+   generate cache key insenstive too
+ ::Cachable::_gen_record_cache_key
+  * hash key couldn't be undefined, but '' and 0 are different keys
+  * values undef, 0 and '' are different, use '__undef' only when it's
+    really undef
+  * apply the same logic when $value is hash reference
+  * use lower case for key part
+  
+ ::Cachable::load_from_cache
+  * don't generate PK cache key, we do that in subcequent _store call
+ 
+ ::Cachable::__set
+  * don't create local arguments hash, just pass @_ throught
+ 
+ ::Cachable::__delete
+  * don't eat arguments, may be somebody wants to subclass
+    and pass arguments to delete.
+ 
+ ::Cachable::_fetch 
+  * fetch again only when we found something in cache with
+    keys' aliases
+ ::Cachable::_primary_record_cache_key
+  * avoid check for $self->id definess as if it's undef then
+    record couldn't have pk cache key
+  * use $self->primary_keys to get columns of the PK and its
+    values, as result we get support for compound PKs here
+ 
+  * Mark undef PK loading as TODO
 
+  * Only mark the one failing test under mysql as TODO
+ 
+  * make Collection smart about guessing table names
+ 
+  * removed a lie from create() pod
+  * Make _open_paren and _close_paren into public methods open_paren and close_paren
 
 0.24 Tue Aug  8 23:33:34 EDT 2006
  * artificial version increment
