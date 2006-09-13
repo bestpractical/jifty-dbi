@@ -12,8 +12,10 @@ our (@available_drivers);
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 # plan tests => $total;
 
-eval { use Cache::Memcached; };
-plan skip_all => 'Cache::Memcached not available' if $@;
+BEGIN {
+    eval { require Cache::Memcached; Cache::Memcached->import; };
+    plan skip_all => 'Cache::Memcached not available' if $@;
+}
 
 my $memd = Cache::Memcached->new({TestApp::Address->memcached_config});
 
