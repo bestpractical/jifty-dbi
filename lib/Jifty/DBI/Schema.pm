@@ -199,6 +199,14 @@ you may not end any column name which uses 'refers_to' using '_id'.
 type passed to our database abstraction layer, which should resolve it
 to a database-specific type.  Correct usage is C<type is 'text'>.
 
+Currently type is passed directly to the database.  There is no
+intermediary mapping from abstract type names to database specific
+types.
+
+The impact of this is that not all column types are portable between
+databases.  For example blobs have different names between
+mysql and postgres.
+
 =cut
 
 sub type {
@@ -520,7 +528,7 @@ sub on {
 
 sub _list {
     defined wantarray
-        or croak("Cannot add traits in void context -- check for misspelled preceding comma as a semicolon");
+        or croak("Cannot add traits in void context -- check for misspelled preceding comma as a semicolon or missing use statements for models you refer_to.");
 
     wantarray
         or croak("Cannot call list traits in scalar context -- check for unneccessary 'is'");
