@@ -11,7 +11,7 @@ requires('Clone');
 requires('DBI');
 requires('DBIx::DBSchema' => '0.29');
 requires('Data::Page');
-requires('DateTime');
+requires('DateTime' => 0.34);
 requires('DateTime::Format::ISO8601');
 requires('DateTime::Format::Strptime');
 requires('Encode'  => 2.10);
