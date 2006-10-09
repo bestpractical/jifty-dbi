@@ -1,3 +1,6 @@
+ * avoid a warning in Jifty::DBI::Schema when our user is executing a
+   .pm file
+ 
 Revision history for Perl extension Jifty::DBI.
 
 0.25 Tue Sep 12 23:52:45 BST 2006

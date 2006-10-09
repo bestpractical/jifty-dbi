@@ -166,7 +166,9 @@ sub column {
     # then we know that we are going to initialize methods later
     # through the &schema wrapper, so we defer initialization here
     # to not upset column names such as "label" and "type".
-    return if caller(1) eq __PACKAGE__;
+    # (We may not *have* a caller(1) if the user is executing a .pm file.)
+    my $caller1 = caller(1);
+    return if defined $caller1 && $caller1 eq __PACKAGE__;
 
     $from->_init_methods_for_column($column)
 }
