@@ -216,10 +216,10 @@ sub distinct_query {
     my $group = $sb->_group_clause;
     my $order = $sb->_order_clause;
     $$statementref
-      = "SELECT main.* FROM ( SELECT main.id FROM $$statementref $group $order ) distinctquery, $table main WHERE (main.id = distinctquery.id)";
+      = "SELECT ".$sb->_preload_columns." FROM ( SELECT main.id FROM $$statementref $group $order ) distinctquery, $table main WHERE (main.id = distinctquery.id)";
   }
   else {
-    $$statementref = "SELECT DISTINCT main.* FROM $$statementref";
+    $$statementref = "SELECT DISTINCT ".$sb->_preload_columns." FROM $$statementref";
     $$statementref .= $sb->_group_clause;
     $$statementref .= $sb->_order_clause;
   }
