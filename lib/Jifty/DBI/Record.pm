@@ -41,7 +41,7 @@ object-relational mapper.
 
 Instantiate a new, empty record object.
 
-ARGS is a hash used to pass parameters to the _init() function.
+ARGS is a hash used to pass parameters to the C<_init()> function.
 
 Unless it is overloaded, the _init() function expects one key of 
 'handle' with a value containing a reference to a Jifty::DBI::Handle
@@ -409,7 +409,7 @@ As you've probably already noticed, C<Jifty::DBI::Record> autocreates methods fo
 standard get/set accessors. It also provides you with some hooks to massage the values
 being loaded or stored.
 
-When you fetch a record value by calling C<$my_record->some_field>, C<Jifty::DBI::Record>
+When you fetch a record value by calling C<$my_record-E<gt>some_field>, C<Jifty::DBI::Record>
 provides the following hook
 
 =over

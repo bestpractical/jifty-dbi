@@ -1568,7 +1568,7 @@ sub refers_to {
     return ( Jifty::DBI::Schema::Trait->new(refers_to => $class), @_ );
 }
 
-=head2 Clone
+=head2 clone
 
 Returns copy of the current object with all search restrictions.
 

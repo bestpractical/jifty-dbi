@@ -12,12 +12,12 @@ use Cache::Memcached;
 
 =head1 NAME
 
-Jifty::DBI::Record::Cachable - records with caching behavior
+Jifty::DBI::Record::Memcached - records with caching behavior
 
 =head1 SYNOPSIS
 
   package Myrecord;
-  use base qw/Jifty::DBI::Record::Cachable/;
+  use base qw/Jifty::DBI::Record::Memcached/;
 
 =head1 DESCRIPTION
 

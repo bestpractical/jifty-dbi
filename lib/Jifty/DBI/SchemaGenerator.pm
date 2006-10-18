@@ -124,6 +124,8 @@ DBIx::DBSchema
 
 Class::ReturnValue
 
+=head1 METHODS
+
 =head2 new HANDLE
 
 Creates a new C<Jifty::DBI::SchemaGenerator> object.  The single
@@ -285,7 +287,7 @@ None reported.
 No bugs have been reported.
 
 Please report any bugs or feature requests to
-C<bug-<RT NAME>@rt.cpan.org>, or through the web interface at
+C<bug-E<lt>RT NAMEE<gt>@rt.cpan.org>, or through the web interface at
 L<http://rt.cpan.org>.
 
 =head1 AUTHOR
