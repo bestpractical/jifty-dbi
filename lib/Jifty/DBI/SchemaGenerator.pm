@@ -5,6 +5,8 @@ package Jifty::DBI::SchemaGenerator;
 
 use base qw(Class::Accessor::Fast);
 use DBIx::DBSchema;
+use DBIx::DBSchema::Column;
+use DBIx::DBSchema::Table;
 use Class::ReturnValue;
 
 our $VERSION = '0.01';
