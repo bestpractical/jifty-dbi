@@ -1,8 +1,8 @@
 package Jifty::DBI::Record::Cachable;
 
-use Jifty::DBI::Record;
+use base qw(Jifty::DBI::Record);
+
 use Jifty::DBI::Handle;
-@ISA = qw (Jifty::DBI::Record);
 
 use Cache::Simple::TimedExpiry;
 
