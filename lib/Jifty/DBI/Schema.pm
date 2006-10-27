@@ -27,7 +27,7 @@ user interfaces, and other contexts.  For example:
     column content =>
        type is 'text',
        label is 'Content',
-       render_as 'textarea';
+       render as 'textarea';
 
 defines a column called C<content> that is of type C<text>.  It will be
 rendered with the label C<Content> (note the capital) and as a C<textarea> in
@@ -43,7 +43,7 @@ associations between classes.
 use Carp qw/croak carp/;
 use Exporter::Lite;
 our @EXPORT
-    = qw(column type default literal validator immutable unreadable length distinct mandatory not_null sort_order valid_values label hints render_as since input_filters output_filters filters virtual is by are on schema);
+    = qw(column type default literal validator immutable unreadable length distinct mandatory not_null sort_order valid_values label hints render_as render since input_filters output_filters filters virtual is as by are on schema);
 
 our $SCHEMA;
 our $SORT_ORDERS = {};
@@ -413,6 +413,16 @@ sub valid_values {
     _list( valid_values => @_ );
 }
 
+=head2 valid
+
+Alias for C<valid_values>.
+
+=cut
+
+sub valid {
+    _list( valid_values => @_ );
+}
+
 =head2 label
 
 Designates a human-readable label for the column, for use in user
@@ -485,6 +495,16 @@ sub render_as {
     _list( render_as => @_ );
 }
 
+=head2 render
+
+Alias for C<render_as>.
+
+=cut
+
+sub render {
+    _list( render_as => @_ );
+}
+
 =head2 by
 
 Helper method to improve readability.
@@ -502,6 +522,17 @@ Helper method to improve readability.
 =cut
 
 sub is {
+    my $thing = shift;
+    ref $thing eq "ARRAY" ? ( @{$thing}, @_ ) : ($thing, @_);
+}
+
+=head2 as
+
+Helper method to improve readability.
+
+=cut
+
+sub as {
     my $thing = shift;
     ref $thing eq "ARRAY" ? ( @{$thing}, @_ ) : ($thing, @_);
 }
