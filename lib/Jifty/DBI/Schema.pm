@@ -346,7 +346,7 @@ columns in the order they are defined.
 =cut
 
 sub sort_order {
-    _item ( sort_order => 0, @_);
+    _item ( sort_order => (shift @_ || 0));
 }
 
 
