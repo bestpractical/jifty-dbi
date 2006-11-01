@@ -407,6 +407,14 @@ autoconstruct a validator for you.  This list may also be used to
 generate the user interface.  Correct usage is C<valid_values are
 qw/foo bar baz/>.
 
+If you want to display different values than are stored in the DB 
+you can pass a list of hashrefs, each containing two keys, display 
+and value.
+
+ valid_values are
+  { display => 'Blue', value => 'blue' },
+  { display => 'Red', value => 'red' }
+
 =cut
 
 sub valid_values {
