@@ -27,8 +27,10 @@ SKIP: {
         connect_handle( $handle );
         isa_ok($handle->dbh, 'DBI::db');
 
-        my $ret = init_schema( 'TestApp', $handle );
-        isa_ok($ret,'DBI::st', "Inserted the schema. got a statement handle back");
+        {{my $ret = init_schema( 'TestApp', $handle );
+        isa_ok($ret,'DBI::st', "Inserted the schema. got a statement handle back" );}
+        }
+
 
         my $emp = TestApp::Employee->new( handle => $handle );
         my $e_id = $emp->create( name => 'RUZ', employee_num => '123' );

@@ -26,8 +26,8 @@ SKIP: {
         connect_handle( $handle );
         isa_ok($handle->dbh, 'DBI::db');
 
-        my $ret = init_schema( 'TestApp::Address', $handle );
-        isa_ok($ret,'DBI::st', "Inserted the schema. got a statement handle back");
+        {my $ret = init_schema( 'TestApp::Address', $handle );
+        isa_ok($ret,'DBI::st', "Inserted the schema. got a statement handle back" );}
 
         my $rec = TestApp::Address->new( handle => $handle );
         isa_ok($rec, 'Jifty::DBI::Record');

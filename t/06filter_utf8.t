@@ -27,8 +27,8 @@ SKIP: {
         connect_handle( $handle );
         isa_ok($handle->dbh, 'DBI::db');
 
-        my $ret = init_schema( 'TestApp::User', $handle );
-        isa_ok($ret,'DBI::st', "Inserted the schema. got a statement handle back");
+        {my $ret = init_schema( 'TestApp::User', $handle );
+        isa_ok($ret,'DBI::st', "Inserted the schema. got a statement handle back" );}
 
         $handle->input_filters( 'Jifty::DBI::Filter::utf8' );
         is( ($handle->input_filters)[0], 'Jifty::DBI::Filter::utf8', 'Filter was added' );

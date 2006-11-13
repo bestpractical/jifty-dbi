@@ -25,8 +25,8 @@ SKIP: {
                 skip "No schema for '$d' driver", TESTS_PER_DRIVER - 1;
         }
 
-        my $ret = init_schema( 'TestApp::User', $handle );
-        isa_ok($ret,'DBI::st', "Inserted the schema. got a statement handle back");
+        {my $ret = init_schema( 'TestApp::User', $handle );
+        isa_ok($ret,'DBI::st', "Inserted the schema. got a statement handle back" );}
 
         my $rec = TestApp::User->new( handle => $handle );
         isa_ok($rec, 'Jifty::DBI::Record');

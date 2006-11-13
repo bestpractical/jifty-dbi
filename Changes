@@ -1,4 +1,5 @@
- * avoid a warning in Jifty::DBI::Schema when our user is executing a
+* Tests updated to make sure we don't have statement handles in scope when we close the database handle.
+* avoid a warning in Jifty::DBI::Schema when our user is executing a
    .pm file
  
 Revision history for Perl extension Jifty::DBI.
