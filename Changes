@@ -1,8 +1,46 @@
-* Tests updated to make sure we don't have statement handles in scope when we close the database handle.
-* avoid a warning in Jifty::DBI::Schema when our user is executing a
-   .pm file
+
+
  
 Revision history for Perl extension Jifty::DBI.
+
+0.26 Mon Nov 13 11:11:31 EST 2006
+
+Usability
+
+ * avoid a warning in Jifty::DBI::Schema when our user is executing
+   a .pm file. When that is the case, caller(1) is not defined. --gaal
+ * Small error string change to suggest looking for missing use lines in models where refer_to is used --bartb
+
+Core code
+
+ * fixed sort_order setting in Jifty::DBI::Schema  --wolfgang
+ * Don't use main.*, ever. --clkao
+ * Jifty::DBI::Schema - Backport "valid are qw(...)" and "render as '...'"
+   support from Jifty::Param::Schema as aliases to "valid_values are" and
+   "render_as".  --audreyt
+ * added as_hash to Jifty::DBI::Record --jesse
+ * @ISA => use base --schwern
+ * Use DBIx::DBScehma::Column and ::Table rather than trust that DBIx::DBScehma
+   will load them. --schwern
+
+Installation
+
+ * Bump DateTime dependency, as older versions didn't provide the API 
+   we're using. (0.22 is known bad) --jesse (Thanks to Matt Trout)
+
+Testing
+
+ * make sure to skip 04memcached.t if you don't have Cache::Memcached --ishigaki
+ * Tests updated to not have $sth in scope when we $dbh->disconnect
+
+
+Doc
+ * demonstrate the valid_values alternate syntax that allows display and value to be separate 
+ * Document columns and column --schwern
+ * Minor changes to pod --evdb
+
+
+
 
 0.25 Tue Sep 12 23:52:45 BST 2006
 
