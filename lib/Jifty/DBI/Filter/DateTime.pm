@@ -7,6 +7,7 @@ use base qw|Jifty::DBI::Filter|;
 use DateTime                  ();
 use DateTime::Format::ISO8601 ();
 use DateTime::Format::Strptime ();
+use Carp ();
 
 use constant _time_zone => '';
 use constant _strptime  => '%Y-%m-%d %H:%M:%S';
@@ -67,7 +68,13 @@ sub decode {
 # but we need Jifty::DBI::Handle here to get DB type
 
     my $str = join('T', split ' ', $$value_ref, 2);
-    my $dt = DateTime::Format::ISO8601->parse_datetime($str);
+    my $dt;
+    eval { $dt  = DateTime::Format::ISO8601->parse_datetime($str) };
+
+    if ($@) { # if datetime can't decode this, scream loudly with a useful error message
+        Carp::cluck($@);
+        return;
+    }
 
     if ($dt) {
 	my $tz = $self->_time_zone;
