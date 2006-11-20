@@ -54,7 +54,7 @@ use Data::Page;
 use Clone;
 use Carp qw/croak/;
 use base qw/Class::Accessor::Fast/;
-__PACKAGE__->mk_accessors(qw/pager preload_columns/);
+__PACKAGE__->mk_accessors(qw/pager preload_columns preload_related/);
 
 =head1 METHODS
 
@@ -101,7 +101,7 @@ sub _init {
         @_
     );
     $self->_handle( $args{'handle'} ) if ( $args{'handle'} );
-    $self->table($self->new_item->table());
+    $self->table( $self->new_item->table() );
     $self->clean_slate();
 }
 
@@ -193,11 +193,80 @@ sub _do_search {
 
     my $records = $self->_handle->simple_query($query_string);
     return 0 unless $records;
+    my @names = @{ $records->{NAME_lc} };
+    my $data = {};
+    my $column_map = {};
+    foreach my $column (@names) {
+        if ($column =~ /^(.*?)\_(.*)$/) {
+            $column_map->{$1}->{$2} =$column;
+        }
+    }
+    my @tables = keys %$column_map;
 
-    while ( my $row = $records->fetchrow_hashref() ) {
-        my $item = $self->new_item();
-        $item->load_from_hash($row);
+
+    my @order;
+    while ( my $base_row = $records->fetchrow_hashref() ) {
+        my $main_pkey = $base_row->{$names[0]};
+        push @order, $main_pkey unless ( $order[0] && $order[-1] eq $main_pkey);
+
+            # let's chop the row into subrows;
+        foreach my $table (@tables) {
+            for ( keys %$base_row ) {
+                if ( $_ =~ /$table\_(.*)$/ ) {
+                    $data->{$main_pkey}->{$table} ->{ ($base_row->{ $table . '_id' } ||$main_pkey )}->{$1} = $base_row->{$_};
+                }
+            }
+        }
+
+    }
+
+    # For related "record" values, we can simply prepopulate the
+    # Jifty::DBI::Record cache and life will be good. (I suspect we want
+    # to do this _before_ doing the initial primary record load on the
+    # off chance that the primary record will try to do the relevant
+    # prefetch manually For related "collection" values, our job is a bit
+    # harder. we need to create a new empty collection object, set it's
+    # "must search" to 0 and manually add the records to it for each of
+    # the items we find. Then we need to ram it into place.
+
+    foreach my $row_id ( @order) {
+        my $item;
+        foreach my $row ( values %{ $data->{$row_id}->{'main'} } ) {
+            $item = $self->new_item();
+            $item->load_from_hash($row);
+        }
+        foreach my $alias ( grep { $_ ne 'main' } keys %{ $data->{$row_id} } ) {
+
+            my $related_rows = $data->{$row_id}->{$alias};
+            my ( $class, $col_name ) = $self->class_and_column_for_alias($alias);
+            if ($class) {
+
+            if ( $class->isa('Jifty::DBI::Collection') ) {
+                my $collection = $class->new( handle => $self->_handle );
+                foreach my $row( sort { $a->{id} <=> $b->{id} }  values %$related_rows ) {
+                    my $entry
+                        = $collection->new_item( handle => $self->_handle );
+                    $entry->load_from_hash($row);
+                    $collection->add_record($entry);
+                }
+
+                $item->_prefetched_collection( $col_name => $collection );
+            } elsif ( $class->isa('Jifty::DBI::Record') ) {
+                foreach my $related_row ( values %$related_rows ) {
+                    my $item = $class->new( handle => $self->_handle );
+                    $item->load_from_hash($related_row);
+                }
+            } else {
+                Carp::cluck(
+                    "Asked to preload $alias as a $class. Don't know how to handle $class"
+                );
+            }
+            }
+
+
+        }
         $self->add_record($item);
+
     }
     if ( $records->err ) {
         $self->{'must_redo_search'} = 0;
@@ -278,10 +347,6 @@ sub _apply_limits {
     $self->_handle->apply_limits( $statementref, $self->rows_per_page,
         $self->first_row );
 
-# XXX TODO: refactor me, once we figure out the last place that columns could be set
-    $$statementref =~ s/main\.\*/CORE::join(', ', @{$self->{columns}})/eg
-        if $self->{columns}
-        and @{ $self->{columns} };
 }
 
 =head2 _distinct_query STATEMENTREF
@@ -384,7 +449,8 @@ sub build_select_query {
         # DISTINCT query only required for multi-table selects
         $self->_distinct_query( \$query_string );
     } else {
-        $query_string = "SELECT ".$self->_preload_columns." FROM $query_string";
+        $query_string
+            = "SELECT " . $self->_preload_columns . " FROM $query_string";
         $query_string .= $self->_group_clause;
         $query_string .= $self->_order_clause;
     }
@@ -405,8 +471,106 @@ XXX TODO: in the case of distinct, it needs to work as well.
 
 sub _preload_columns {
     my $self = shift;
-    return 'main.*' unless $self->preload_columns;
-    return join(',', map { "main.$_" } @{$self->preload_columns});
+
+    my @cols            = ();
+    my $item            = $self->new_item;
+    if( $self->{columns} and @{ $self->{columns} } ) {
+         push @cols, @{$self->{columns}};
+         # push @cols, map { warn "Preloading $_"; "main.$_ as main_" . $_ } @{$preload_columns};
+    } else {
+        push @cols, $self->_qualified_record_columns( 'main' => $item );
+    }
+    my %preload_related = %{ $self->preload_related || {} };
+    foreach my $alias ( keys %preload_related ) {
+        my $related_obj = $preload_related{$alias};
+        if ( my $col_obj = $item->column($related_obj) ) {
+            my $reference_type = $col_obj->refers_to;
+
+            my $reference_item;
+
+            if ( !$reference_type ) {
+                Carp::cluck(
+                    "Asked to prefetch $col_obj->name for $self. But $col_obj->name isn't a known reference"
+                );
+            } elsif ( $reference_type->isa('Jifty::DBI::Collection') ) {
+                $reference_item = $reference_type->new->new_item();
+            } elsif ( $reference_type->isa('Jifty::DBI::Record') ) {
+                $reference_item = $reference_type->new;
+            } else {
+                Carp::cluck(
+                    "Asked to prefetch $col_obj->name for $self. But $col_obj->name isn't a known type"
+                );
+            }
+
+            push @cols,
+                $self->_qualified_record_columns( $alias => $reference_item );
+        }
+
+   #     push @cols, map { $_ . ".*" } keys %{ $self->preload_related || {} };
+
+    }
+    return join( ', ', @cols );
+}
+
+=head2 class_and_column_for_alias
+
+Takes the alias you've assigned to a prefetched related object. Returns the class
+of the column we've declared that alias preloads.
+
+=cut
+
+sub class_and_column_for_alias {
+    my $self            = shift;
+    my $alias           = shift;
+    my %preload_related = %{ $self->preload_related || {} };
+    my $related_colname = $preload_related{$alias};
+    if ( my $col_obj = $self->new_item->column($related_colname) ) {
+        return ( $col_obj->refers_to => $related_colname );
+    }
+    return undef;
+}
+
+sub _qualified_record_columns {
+    my $self  = shift;
+    my $alias = shift;
+    my $item  = shift;
+    grep {$_} map {
+        my $col = $_;
+        if ( $col->virtual ) {
+            undef;
+        } else {
+            $col = $col->name;
+            $alias . "." . $col . " as " . $alias . "_" . $col;
+        }
+    } $item->columns;
+}
+
+=head2  prefetch ALIAS_NAME ATTRIBUTE
+
+prefetches all related rows from alias ALIAS_NAME into the record attribute ATTRIBUTE of the
+sort of item this collection is.
+
+If you have employees who have many phone numbers, this method will let you search for all your employees
+    and prepopulate their phone numbers.
+
+Right now, in order to make this work, you need to do an explicit join between your primary table and the subsidiary tables AND then specify the name of the attribute you want to prefetch related data into.
+This method could be a LOT smarter. since we already know what the relationships between our tables are, that could all be precomputed.
+
+XXX TODO: in the future, this API should be extended to let you specify columns.
+
+=cut
+
+sub prefetch {
+    my $self           = shift;
+    my $alias          = shift;
+    my $into_attribute = shift;
+
+    my $preload_related = $self->preload_related() || {};
+
+    $preload_related->{$alias} = $into_attribute;
+
+    $self->preload_related($preload_related);
+
 }
 
 =head2 distinct_required
@@ -420,7 +584,6 @@ feel free to override this method in your subclass.
 XXX TODO: it should be possible to create a better heuristic than the simple "is it joined?" question we're asking now. Something along the lines of "are we joining this table to something that is not the other table's primary key"
 
 =cut
-
 
 sub distinct_required {
     my $self = shift;
@@ -735,7 +898,7 @@ sub limit {
         unless defined $args{value};
 
     # make passing in an object DTRT
-    if (ref($args{value}) && $args{value}->isa('Jifty::DBI::Record')) {
+    if ( ref( $args{value} ) && $args{value}->isa('Jifty::DBI::Record') ) {
         $args{value} = $args{value}->id;
     }
 
@@ -838,18 +1001,19 @@ sub limit {
 
     # If it's a new value or we're overwriting this sort of restriction,
 
-    if ($self->_handle->case_sensitive
+    if (   $self->_handle->case_sensitive
         && defined $args{'value'}
         && $args{'quote_value'}
-        && ! $args{'case_sensitive'}) {
-      # don't worry about case for numeric columns_in_db
-      my $column_obj = $self->new_item()->column($args{column});
-      if (defined $column_obj ? ! $column_obj->is_numeric : 1) {
-        ( $qualified_column, $args{'operator'}, $args{'value'} ) =
-          $self->_handle->_make_clause_case_insensitive( $qualified_column,
-                                                         $args{'operator'},
-                                                         $args{'value'} );
-      }
+        && !$args{'case_sensitive'} )
+    {
+
+        # don't worry about case for numeric columns_in_db
+        my $column_obj = $self->new_item()->column( $args{column} );
+        if ( defined $column_obj ? !$column_obj->is_numeric : 1 ) {
+            ( $qualified_column, $args{'operator'}, $args{'value'} )
+                = $self->_handle->_make_clause_case_insensitive(
+                $qualified_column, $args{'operator'}, $args{'value'} );
+        }
     }
 
     my $clause = "($qualified_column $args{'operator'} $args{'value'})";
@@ -948,7 +1112,8 @@ sub _where_clause {
         push @subclauses, $self->{'subclauses'}{"$subclause"};
     }
 
-    $where_clause = " WHERE " . CORE::join( ' AND ', @subclauses ) if (@subclauses);
+    $where_clause = " WHERE " . CORE::join( ' AND ', @subclauses )
+        if (@subclauses);
 
     return ($where_clause);
 
@@ -1020,17 +1185,17 @@ Returns the current list of columns.
 =cut
 
 sub order_by {
-  my $self = shift;
-  if (@_) {
-    my @args = @_;
+    my $self = shift;
+    if (@_) {
+        my @args = @_;
 
-    unless ( UNIVERSAL::isa( $args[0], 'HASH' ) ) {
-      @args = {@args};
+        unless ( UNIVERSAL::isa( $args[0], 'HASH' ) ) {
+            @args = {@args};
+        }
+        $self->{'order_by'} = \@args;
+        $self->redo_search();
     }
-    $self->{'order_by'} = \@args;
-    $self->redo_search();
-  }
-  return $self->{'order_by'};
+    return $self->{'order_by'};
 }
 
 =head2 _order_clause
@@ -1270,7 +1435,7 @@ sub set_page_info {
         ->current_page( $args{'current_page'} );
 
     $self->rows_per_page( $args{'per_page'} );
-    $self->first_row( $self->pager->first ||1 );
+    $self->first_row( $self->pager->first || 1 );
 
 }
 
@@ -1482,6 +1647,7 @@ sub column {
 
     my $column = "col" . @{ $self->{columns} ||= [] };
     $column = $args{column} if $table eq $self->table and !$args{alias};
+    $column = ($args{'alias'}||'main')."_".$column;
     push @{ $self->{columns} }, "$name AS \L$column";
     return $column;
 }
@@ -1565,7 +1731,7 @@ Private convenience method needed for the declarative schema generation.
 
 sub refers_to {
     my $class = shift;
-    return ( Jifty::DBI::Schema::Trait->new(refers_to => $class), @_ );
+    return ( Jifty::DBI::Schema::Trait->new( refers_to => $class ), @_ );
 }
 
 =head2 clone

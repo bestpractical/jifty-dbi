@@ -275,7 +275,7 @@ sub clear_sql_statement_log {
 
 =head2 sql_statement_log
 
-Returns the current SQL statement log as an array of arrays. Each entry is a triple of 
+Returns the current SQL statement log as an array of arrays. Each entry is a list of 
 
 (Time, Statement, [Bindings], Duration)
 
@@ -984,7 +984,7 @@ sub distinct_query {
     my $sb           = shift;
 
     # Prepend select query for DBs which allow DISTINCT on all column types.
-    $$statementref = "SELECT DISTINCT main.* FROM $$statementref";
+    $$statementref = "SELECT DISTINCT ".$sb->_preload_columns." FROM $$statementref";
 
     $$statementref .= $sb->_group_clause;
     $$statementref .= $sb->_order_clause;
