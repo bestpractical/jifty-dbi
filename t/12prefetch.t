@@ -106,7 +106,7 @@ SKIP: {
 
         is (scalar @statements, 1, "all that. just one sql statement");
 
-#        cleanup_schema( 'TestApp', $handle );
+        cleanup_schema( 'TestApp', $handle );
         disconnect_handle( $handle );
 }} # SKIP, foreach blocks
 

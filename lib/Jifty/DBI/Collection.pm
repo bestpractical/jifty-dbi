@@ -197,7 +197,7 @@ sub _do_search {
     my $data = {};
     my $column_map = {};
     foreach my $column (@names) {
-        if ($column =~ /^(.*?)\_(.*)$/) {
+        if ($column =~ /^((\w+)_?(?:\d*))_(.*?)$/) {
             $column_map->{$1}->{$2} =$column;
         }
     }

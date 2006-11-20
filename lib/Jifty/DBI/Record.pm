@@ -325,11 +325,9 @@ sub _collection_value {
     return unless UNIVERSAL::isa( $classname, 'Jifty::DBI::Collection' );
 
     if ( my $prefetched_col = $self->_prefetched_collection($method_name)) {
-        warn "We have a preetch for $method_name";
         return $prefetched_col;
     }
 
-    warn "no prefetch";
     my $coll = $classname->new( handle => $self->_handle );
     $coll->limit( column => $column->by(), value => $self->id );
     return $coll;
@@ -339,10 +337,8 @@ sub _prefetched_collection {
     my $self =shift;
     my $column_name = shift;
     if (@_) {
-        warn "Setting up a prefetch collection for $column_name";
         $self->{'_prefetched_collections'}->{$column_name} = shift;
     } else {
-        warn "We'll load a prefetch collection for $column_name";
         return $self->{'_prefetched_collections'}->{$column_name};
     }
 
