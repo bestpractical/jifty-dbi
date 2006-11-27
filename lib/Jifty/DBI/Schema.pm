@@ -607,6 +607,7 @@ under the same terms as Perl itself.
 package Jifty::DBI::Schema::Trait;
 
 use overload "!" => \&negation;
+use Carp qw/croak/;
 
 sub new {
     my $class = shift;
