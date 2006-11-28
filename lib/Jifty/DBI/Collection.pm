@@ -102,7 +102,7 @@ sub _init {
     );
     $self->_handle( $args{'handle'} ) if ( $args{'handle'} );
     $self->table( $self->new_item->table() );
-    $self->clean_slate();
+    $self->clean_slate(%args);
 }
 
 sub _init_pager {
@@ -125,6 +125,7 @@ cleaner to accomplish that in a different way, though.
 
 sub clean_slate {
     my $self = shift;
+    my %args = (@_);
     $self->redo_search();
     $self->_init_pager();
     $self->{'itemscount'}       = 0;
@@ -148,14 +149,15 @@ sub clean_slate {
         _open_parens
     );
 
-    $self->implicit_clauses();
+    $self->implicit_clauses(%args);
     $self->_is_limited(0);
 }
 
 =head2 implicit_clauses
 
 Called by L</clean_slate> to set up any implicit clauses that the
-collection B<always> has.  Defaults to doing nothing.
+collection B<always> has.  Defaults to doing nothing. Is passed the
+paramhash passed into L</new>.
 
 =cut
 
@@ -1195,7 +1197,7 @@ sub order_by {
         $self->{'order_by'} = \@args;
         $self->redo_search();
     }
-    return $self->{'order_by'};
+    return ( $self->{'order_by'} || []);
 }
 
 =head2 _order_clause
