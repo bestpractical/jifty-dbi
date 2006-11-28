@@ -1,3 +1,9 @@
+libjifty-dbi-perl (0.26-1) unstable; urgency=low
+
+  * New cpan release
+
+ -- AGOSTINI Yves <agostini@univ-metz.fr>  Wed, 24 Nov 2006 21:08:26 +0200
+
 libjifty-dbi-perl (0.24-1) unstable; urgency=low
 
   * Initial debianisation.
