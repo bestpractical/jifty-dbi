@@ -235,6 +235,7 @@ sub _db_schema_table_from_model {
     my @columns    = $model->columns;
 
     my @cols;
+    my @indexes;
 
     for my $column (@columns) {
 
@@ -250,12 +251,17 @@ sub _db_schema_table_from_model {
                 default  => $column->default,
             }
             );
+
+        if ($column->indexed) {
+            push @indexes,[$column->name];
+        }
     }
 
     my $table = DBIx::DBSchema::Table->new(
         {   name        => $table_name,
             primary_key => "id",
             columns     => \@cols,
+            (@indexes) ? (index => DBIx::DBSchema::ColGroup->new(\@indexes)) : ()
         }
     );
 

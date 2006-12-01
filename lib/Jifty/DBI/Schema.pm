@@ -43,7 +43,7 @@ associations between classes.
 use Carp qw/croak carp/;
 use Exporter::Lite;
 our @EXPORT
-    = qw(column type default literal validator immutable unreadable length distinct mandatory not_null sort_order valid_values label hints render_as render since input_filters output_filters filters virtual is as by are on schema);
+    = qw(column type default literal validator immutable unreadable length distinct mandatory not_null sort_order valid_values label hints render_as render since input_filters output_filters filters virtual is as by are on schema indexed);
 
 our $SCHEMA;
 our $SORT_ORDERS = {};
@@ -511,6 +511,17 @@ Alias for C<render_as>.
 
 sub render {
     _list( render_as => @_ );
+}
+
+=head2 indexed
+
+An index will be built on this column
+Correct usage is C<is indexed>
+
+=cut
+
+sub indexed {
+    _list( indexed => 1, @_ );
 }
 
 =head2 by

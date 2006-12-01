@@ -3,7 +3,9 @@ use Jifty::DBI::Schema;
 use Jifty::DBI::Record schema {
 
 column dexterity => type is 'integer';
-column name      => type is 'varchar';
+column name      => 
+    type is 'varchar',
+    is indexed;
 column label     => type is 'varchar';
 column type      => type is 'varchar';
 
@@ -18,6 +20,7 @@ sub schema_sqlite {
       label varchar   ,
       type varchar
     ) ;
+    CREATE INDEX employees1 ON employees (name) ;
     };
 }
 
@@ -31,6 +34,7 @@ sub schema_pg {
       type varchar ,
       PRIMARY KEY (id)
     ) ;
+    CREATE INDEX employees1 ON employees (name) ;
     };
 
 }
