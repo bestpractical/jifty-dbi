@@ -9,6 +9,32 @@ column type      => type is 'varchar';
 
 };
 
+sub schema_sqlite {
+    return q{
+    CREATE TABLE employees (
+      id INTEGER PRIMARY KEY NOT NULL  ,
+      dexterity integer   ,
+      name varchar   ,
+      label varchar   ,
+      type varchar
+    ) ;
+    };
+}
+
+sub schema_pg {
+    return q{
+    CREATE TABLE employees (
+      id serial NOT NULL ,
+      dexterity integer ,
+      name varchar ,
+      label varchar ,
+      type varchar ,
+      PRIMARY KEY (id)
+    ) ;
+    };
+
+}
+
 package Sample::Address;
 use Jifty::DBI::Schema;
 use Jifty::DBI::Record schema {
@@ -24,5 +50,28 @@ column phone =>
   type is 'varchar';
 
 };
+
+sub schema_sqlite {
+    return q{
+    CREATE TABLE addresses (
+     id INTEGER PRIMARY KEY NOT NULL  ,
+     employee_id integer   ,
+     name varchar  DEFAULT 'Frank' ,
+     phone varchar
+    ) ;
+    }
+}
+
+sub schema_pg {
+    return q{
+    CREATE TABLE addresses ( 
+      id serial NOT NULL , 
+      employee_id integer  ,
+      name varchar DEFAULT 'Frank' ,
+      phone varchar ,
+      PRIMARY KEY (id)
+    ) ;
+    };
+}
 
 1;
