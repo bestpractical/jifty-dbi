@@ -203,8 +203,7 @@ the models added to the SchemaGenerator.
 sub create_table_sql_statements {
     my $self = shift;
 
-    # The sort here is to make it predictable, so that we can write tests.
-    return sort $self->_db_schema->sql( $self->handle->dbh );
+    return $self->_db_schema->sql( $self->handle->dbh );
 }
 
 =head2 create_table_sql_text
