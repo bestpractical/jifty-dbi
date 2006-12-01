@@ -511,7 +511,7 @@ sub _preload_columns {
    #     push @cols, map { $_ . ".*" } keys %{ $self->preload_related || {} };
 
     }
-    return join( ', ', @cols );
+    return CORE::join( ', ', @cols );
 }
 
 =head2 class_and_column_for_alias
