@@ -26,6 +26,7 @@ __PACKAGE__->mk_accessors qw/
     label hints render_as
     valid_values
     indexed
+    autocompleted
     /;
 
 =head1 NAME
