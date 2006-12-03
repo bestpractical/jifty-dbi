@@ -1598,13 +1598,38 @@ sub DEBUG {
     return ( $self->{'DEBUG'} );
 }
 
-=head2 column { column => undef } 
+=head2 column
 
-Specify that we want to load the column  column. 
+Normally a collection object contains record objects populated with all columns
+in the database, but you can restrict the records to only contain some
+particular columns, by calling the C<column> method once for each column you
+are interested in.
 
-Other parameters are table alias AND function.
+Takes a hash of parameters; the C<column>, C<table> and C<alias> keys means
+the same as in the C<limit> method.  A special C<function> key may contain
+one of several possible kinds of expressions:
 
-Autrijus and Ruslan owe docs.
+=over 4
+
+=item C<DISTINCT COUNT>
+
+Same as C<COUNT(DISTINCT ?)>.
+
+=item Expression with C<?> in it
+
+The C<?> is substituted with the column name, then passed verbatim to the
+underlying C<SELECT> statement.
+
+=item Expression with C<(> in it
+
+The expression is passed verbatim to the underlying C<SELECT>.
+
+=item Any other expression
+
+The expression is taken to be a function name.  For example, C<SUM> means
+the same thing as C<SUM(?)>.
+
+=back
 
 =cut
 
@@ -1656,7 +1681,7 @@ sub column {
 
 =head2 columns LIST
 
-Specify that we want to load only the columns in LIST
+Specify that we want to load only the columns in LIST, which is a 
 
 =cut
 
