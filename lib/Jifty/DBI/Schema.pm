@@ -43,7 +43,7 @@ associations between classes.
 use Carp qw/croak carp/;
 use Exporter::Lite;
 our @EXPORT
-    = qw(column type default literal validator immutable unreadable length distinct mandatory not_null sort_order valid_values label hints render_as render since input_filters output_filters filters virtual is as by are on schema indexed valid order);
+    = qw(column type default literal validator autocompleted immutable unreadable length distinct mandatory not_null sort_order valid_values label hints render_as render since input_filters output_filters filters virtual is as by are on schema indexed valid order);
 
 our $SCHEMA;
 our $SORT_ORDERS = {};
@@ -301,7 +301,7 @@ sub mandatory {
 
 =head2 not_null
 
-Same as L</mandatory>.  This is depricated.  Currect usage would be
+Same as L</mandatory>.  This is deprecated.  Currect usage would be
 C<is not_null>.
 
 =cut
@@ -309,6 +309,17 @@ C<is not_null>.
 sub not_null {
     carp "'is not_null' is deprecated in favor of 'is mandatory'";
     _item( mandatory => 1, @_ );
+}
+
+=head2 autocompleted
+
+Mark as an autocompleted column.  May be used for generating user
+interfaces.  Correct usage is C<is autocompleted>.
+
+=cut
+
+sub autocompleted {
+    _item( autocompleted => 1, @_ );
 }
 
 =head2 distinct
