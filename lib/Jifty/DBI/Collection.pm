@@ -579,18 +579,20 @@ sub prefetch {
 
 Returns true if Jifty::DBI expects that this result set will end up
 with repeated rows and should be "condensed" down to a single row for
-each unique primary key.  Out of the box, this method returns true if
-you've joined to another table.  If you're smarter than Jifty::DBI,
-feel free to override this method in your subclass.
+each unique primary key.
 
-XXX TODO: it should be possible to create a better heuristic than the simple "is it joined?" question we're asking now. Something along the lines of "are we joining this table to something that is not the other table's primary key"
+Out of the box, this method returns true if you've joined to another table.
+To add additional logic, feel free to override this method in your subclass.
+
+XXX TODO: it should be possible to create a better heuristic than the simple
+"is it joined?" question we're asking now. Something along the lines of "are we
+joining this table to something that is not the other table's primary key"
 
 =cut
 
 sub distinct_required {
     my $self = shift;
-    return $self->_is_joined ? 1 : 0;
-
+    return( $self->_is_joined ? 1 : 0 );
 }
 
 =head2 build_select_count_query
@@ -1660,7 +1662,7 @@ sub column {
 
         # If we want to substitute
         elsif ( $func =~ /\?/ ) {
-            $name = CORE::join( $name, split( /\?/, $func ) );
+            $name =~ s/\?/$name/g;
         }
 
         # If we want to call a simple function on the column
