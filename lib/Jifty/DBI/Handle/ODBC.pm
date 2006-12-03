@@ -21,7 +21,7 @@ compensates for some of the idiosyncrasies of ODBC.
 
 =cut
 
-=head2 CaseSensitive
+=head2 case_sensitive
 
 Returns a false value.
 
@@ -47,7 +47,7 @@ sub apply_limits {
     $$statementref =~ s/SELECT\b/SELECT $limit_clause/;
 }
 
-=head2 DistinctQuery
+=head2 distinct_query
 
 =cut
 
@@ -71,7 +71,7 @@ __END__
 
 =head1 AUTHOR
 
-Autrijus Tang
+Audrey Tang C<cpan@audreyt.org>
 
 =head1 SEE ALSO
 
