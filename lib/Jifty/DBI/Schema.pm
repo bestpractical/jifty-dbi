@@ -9,7 +9,7 @@ Jifty::DBI::Schema - Use a simple syntax to describe a Jifty table.
 
 =head1 SYNOPSIS
 
-    package Wifty::Model::Page;
+    package MyApp::Model::Page;
     use Jifty::DBI::Schema;
     use Jifty::DBI::Record schema {
     # ... your columns here ...
@@ -43,7 +43,7 @@ associations between classes.
 use Carp qw/croak carp/;
 use Exporter::Lite;
 our @EXPORT
-    = qw(column type default literal validator immutable unreadable length distinct mandatory not_null sort_order valid_values label hints render_as render since input_filters output_filters filters virtual is as by are on schema indexed);
+    = qw(column type default literal validator immutable unreadable length distinct mandatory not_null sort_order valid_values label hints render_as render since input_filters output_filters filters virtual is as by are on schema indexed valid order);
 
 our $SCHEMA;
 our $SORT_ORDERS = {};
@@ -348,6 +348,14 @@ columns in the order they are defined.
 sub sort_order {
     _item ( sort_order => (shift @_ || 0));
 }
+
+=head2 order
+
+Alias for C<sort_order>.
+
+=cut
+
+sub order { sort_order(@_) }
 
 
 =head2 input_filters
