@@ -32,6 +32,29 @@ sub case_sensitive {
     return (undef);
 }
 
+=head2 build_dsn
+
+=cut
+
+sub build_dsn {
+    my $self = shift;
+    my %args = (
+        driver     => undef,
+        database   => undef,
+        host       => undef,
+        port       => undef,
+        @_
+    );
+
+    $args{dbname} ||= delete $args{database};
+
+    my $dsn = "dbi:$args{driver}:$args{dbname}";
+    $dsn .= ";host=$args{'host'}" if $args{'host'};
+    $dsn .= ";port=$args{'port'}" if $args{'port'};
+
+    $self->{'dsn'} = $dsn;
+}
+
 =head2 apply_limits
 
 =cut
@@ -61,6 +84,10 @@ sub distinct_query {
     $$statementref .= $sb->_group_clause;
     $$statementref .= $sb->_order_clause;
 }
+
+=head2 encoding
+
+=cut
 
 sub encoding {
 }
