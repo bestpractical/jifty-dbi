@@ -1233,12 +1233,12 @@ sub _order_clause {
             $clause .= $rowhash{'function'} . ' ';
             $clause .= $rowhash{'order'};
 
-        } elsif ( ( $rowhash{'alias'} )
+        } elsif ( (defined $rowhash{'alias'} )
             and ( $rowhash{'column'} ) )
         {
 
             $clause .= ( $clause ? ", " : " " );
-            $clause .= $rowhash{'alias'} . ".";
+            $clause .= $rowhash{'alias'} . "." if $rowhash{'alias'};
             $clause .= $rowhash{'column'} . " ";
             $clause .= $rowhash{'order'};
         }

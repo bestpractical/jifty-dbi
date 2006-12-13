@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 3;
+use Test::More tests => 4;
 
 my $package;
 BEGIN { 
@@ -82,6 +82,6 @@ $obj = bless {
     ],
 }, $package;
 
-#is $obj->_order_clause,
-#   ' ORDER BY name ASC, sent ASC, ab.msg_session ASC ',
-#   'asc works';
+is $obj->_order_clause,
+   ' ORDER BY name ASC, sent ASC, ab.msg_session ASC ',
+   'asc works';
