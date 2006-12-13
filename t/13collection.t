@@ -84,4 +84,4 @@ $obj = bless {
 
 is $obj->_order_clause,
    ' ORDER BY name ASC, sent ASC, ab.msg_session ASC ',
-   'asc works';
+   'empty and false aliases';
