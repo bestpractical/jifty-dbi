@@ -1,3 +1,5 @@
+# Test methods in Jifty::DBI::Collection.
+
 use strict;
 use warnings;
 

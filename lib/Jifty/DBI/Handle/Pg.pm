@@ -206,9 +206,13 @@ sub distinct_query {
       = [ @{ $sb->{group_by} || [] }, { column => 'id' } ];
     local $sb->{order_by} = [
       map {
-            ( $_->{alias} and $_->{alias} ne "main" )
-          ? { %{$_}, column => "min(" . $_->{column} . ")" }
-          : $_
+          my $alias = $_->{alias} || '';
+          my $column = $_->{column};
+          $alias .= '.' if $alias;
+          #warn "alias $alias => column $column\n";
+            ((!$alias or $alias eq 'main.') and $column eq 'id')
+          ? $_
+          : { %{$_}, alias => '', column => "min($alias$column)" }
         } @{ $sb->{order_by} }
     ];
     my $group = $sb->_group_clause;
