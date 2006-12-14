@@ -1009,7 +1009,10 @@ sub __create {
         # Implement 'is distinct' checking
         if ( $column->distinct ) {
             my $ret = $self->is_distinct( $column_name, $attribs{$column_name} );
-            return ( $ret ) if not ( $ret );
+            if (not $ret ) {
+                Carp::cluck("$self failed a 'is_distinct' check for $column_name on ".$attribs{$column_name});
+            return ( $ret ) 
+            }
         }
 
         if ( $column->type =~ /^(text|longtext|clob|blob|lob|bytea)$/i ) {
