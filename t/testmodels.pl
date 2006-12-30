@@ -48,7 +48,7 @@ column employee_id =>
 
 column name =>
   type is 'varchar',
-  default is 'Frank',;
+  default is 'Frank';
 
 column phone =>
   type is 'varchar';
