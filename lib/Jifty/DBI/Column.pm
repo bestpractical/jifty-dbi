@@ -27,6 +27,7 @@ __PACKAGE__->mk_accessors qw/
     indexed
     autocompleted
     _validator
+    _checked_for_validate_sub
     record_class
     /;
 
@@ -60,11 +61,12 @@ sub validator {
     if ( @_ ) {
         $self->_validator( shift );
     }
-    elsif ( not $self->_validator ) {
+    elsif ( not $self->_checked_for_validate_sub and not $self->_validator ) {
         my $name = ( $self->aliased_as ? $self->aliased_as : $self->name );
         my $can  = $self->record_class->can( "validate_" . $name );
         
         $self->_validator( $can ) if $can;
+        $self->_checked_for_validate_sub( 1 );
     }
 
     return $self->_validator;
