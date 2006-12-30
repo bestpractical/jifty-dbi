@@ -40,7 +40,7 @@ foreach my $d ( @available_drivers ) {
     # correctly.
     ok( Sample::Address->can('validate_name'), 'found validate_name' );
     my $validator = Sample::Address->column('name')->validator;
-    ok( $validator, 'found validator' );
+    ok( $validator, 'found $column->validator' );
     is( $validator, \&Sample::Address::validate_name, 'validators match' );
 
     my $handle = get_handle( $d );
