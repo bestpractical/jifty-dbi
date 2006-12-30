@@ -48,12 +48,14 @@ column employee_id =>
 
 column name =>
   type is 'varchar',
-  default is 'Frank';
+  default is 'Frank',;
 
 column phone =>
   type is 'varchar';
 
 };
+
+sub validate_name { 1 }
 
 sub schema_sqlite {
     return q{

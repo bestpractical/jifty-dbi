@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use Test::More;
 
-use constant TESTS_PER_DRIVER => 15;
+use constant TESTS_PER_DRIVER => 18;
 our @available_drivers;
 
 BEGIN {
@@ -35,7 +35,14 @@ foreach my $d ( @available_drivers ) {
     unless( should_test( $d ) ) {
         skip "ENV is not defined for driver $d", TESTS_PER_DRIVER;
     }
-  
+
+    # Test that declarative schema syntax automagically sets validators
+    # correctly.
+    ok( Sample::Address->can('validate_name'), 'found validate_name' );
+    my $validator = Sample::Address->column('name')->validator;
+    ok( $validator, 'found validator' );
+    is( $validator, \&Sample::Address::validate_name, 'validators match' );
+
     my $handle = get_handle( $d );
     connect_handle( $handle );
     isa_ok($handle, "Jifty::DBI::Handle::$d");
