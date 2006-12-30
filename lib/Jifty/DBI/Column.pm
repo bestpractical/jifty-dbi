@@ -11,7 +11,6 @@ __PACKAGE__->mk_accessors qw/
     name
     type
     default
-    validator
     readable writable
     length
     mandatory
@@ -27,6 +26,8 @@ __PACKAGE__->mk_accessors qw/
     valid_values
     indexed
     autocompleted
+    _validator
+    record_class
     /;
 
 =head1 NAME
@@ -51,7 +52,22 @@ sub is_numeric {
         return 1;
     }
     return 0;
+}
 
+sub validator {
+    my $self = shift;
+
+    if ( @_ ) {
+        $self->_validator( shift );
+    }
+    elsif ( not $self->_validator ) {
+        my $name = ( $self->aliased_as ? $self->aliased_as : $self->name );
+        my $can  = $self->record_class->can( "validate_" . $name );
+        
+        $self->_validator( $can ) if $can;
+    }
+
+    return $self->_validator;
 }
 
 # Aliases for compatibility with searchbuilder code

@@ -194,6 +194,11 @@ sub _init_methods_for_column {
     my $column_name
         = ( $column->aliased_as ? $column->aliased_as : $column->name );
     my $package = ref($self) || $self;
+
+    # Make sure column has a record_class set as not all columns are added
+    # through add_column
+    $column->record_class( $package ) if not $column->record_class;
+
     no strict 'refs';    # We're going to be defining subs
 
     if ( not $self->can($column_name) ) {
@@ -274,9 +279,6 @@ sub _init_methods_for_column {
         }
         *{ $package . "::" . "set_" . $column_name } = $subref;
     }
-
-    $column->validator( $self->can( "validate_" . $column_name ) )
-      if not $column->validator and $self->can("validate_" . $column_name );
 }
 
 
@@ -353,15 +355,17 @@ sub add_column {
     my $self = shift;
     my $name = shift;
     $name = lc $name;
-
     
-
     $self->COLUMNS->{$name} = Jifty::DBI::Column->new()
-        unless exists $self->COLUMNS->{$name};
-	$self->_READABLE_COLS_CACHE(undef);
-$self->_WRITABLE_COLS_CACHE(undef);
-$self->_COLUMNS_CACHE(undef );
+    unless exists $self->COLUMNS->{$name};
+    $self->_READABLE_COLS_CACHE(undef);
+    $self->_WRITABLE_COLS_CACHE(undef);
+    $self->_COLUMNS_CACHE(undef );
     $self->COLUMNS->{$name}->name($name);
+
+    my $class = ref( $self ) || $self;
+    $self->COLUMNS->{$name}->record_class( $class );
+
     return $self->COLUMNS->{$name};
 }
 
