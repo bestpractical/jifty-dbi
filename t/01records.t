@@ -71,7 +71,7 @@ SKIP: {
         }
         ok (!eval { $rec->set_some_unexpected_column( 'foo' )}, "Can't call nonexistent columns");
         ($val, $msg) = $rec->_set(column =>'some_unexpected_column', value =>'foo');
-        ok(!$val, "$msg");
+        ok(!$val, defined $msg ? $msg : "");
 
 
 # Validate truncation on update
