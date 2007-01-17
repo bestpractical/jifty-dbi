@@ -72,6 +72,8 @@ t/06filter_utf8.t
 t/10schema.t
 t/11schema_records.t
 t/12prefetch.t
+t/13collection.t
+t/14handle-pg.t
 t/pod.t
 t/testmodels.pl
 t/utils.pl

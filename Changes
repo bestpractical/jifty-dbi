@@ -1,5 +1,40 @@
 Revision history for Perl extension Jifty::DBI.
 
+0.30 Wed Jan 17 15:29:44 EST 2007
+
+- update version dependency on DateTime to 0.34
+- fixed a "use of uninitialized value" warning in the tests.  [t/01records.t]
+- Make sure we don't go looking for the validate_COLUMN sub everytime for columns without validators (thanks to Alex for pointing that out)
+- Fix bug where validator_COLUMN subs weren't getting set as validators (thanks to Audrey for help)
+-  Test that the declarative syntax automagically sets validators as it should (these fail at the moment, though a fix should be forthcoming)
+- fixed the "order_by" bug in sub distinct_query.  [Jifty::DBI::Handle::Pg]
+- added unit tests for the Handle::Pg patch.  [t/14handle-pg.t]
+- fixed the desc string in the last test.  [t/13collection.t]
+- made _order_clause more flexible by dealing with empty aliases [lib/Jifty/DBI/Collection.pm]
+- added one test for it.  [t/13collection.t]
+- added t/13collection.t to test methods in Jifty::DBI::Collection.
+- Jifty::DBI::Handle::ODBC - Bring in the missing build_dsn method from
+  DBIx::SearchBuilder such that this backend can work again.
+  Requested by: agentzh++
+- Jifty::DBI::Column - Recognize "is autocompleted".
+- Jifty::DBI::Collection - The "function" argument to the "column" method
+  was broken when passed with trailing "?" characters.
+- Also clean up the documentation about ->distinct_required.
+- Jifty::DBI::Collection - Document the long-undocumented ->column method.
+- Jifty::DBI::Handle::ODBC - Doc fixup and author name fixup.
+- Jifty::DBI::Schema - Add "is autocompleted".
+- Jifty::DBI::Schema - Backport "order is 3" as alias of "sort_order is 3"
+  from Jifty::Param land.
+- Make "valid are ..." an alias for "valid_values are ..." for real.
+-  add 'is indexed' syntax to the declaritive schema generator
+- remove sort, it causes CREATE INDEX to run before CREATE TABLE
+- add sqlite sql so that these tests run without needing postgres configured
+- reorganize the code so its easier to add more databases later, and uses util.pl more
+- Jifty::DBI::Collection - More CORE::join() to avoid warnings.
+- Jifty::DBI::Collection: Pass through the arguments to L</new> to  L<clean_slate> and on to L<implicit_clauses>
+- import Carp::croak so the error message in apply works
+
+
 0.28, 0.29 Thu Nov 23 22:11:37 EST 2006
 
 * The last upload didn't take
