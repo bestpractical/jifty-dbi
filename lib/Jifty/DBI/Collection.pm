@@ -849,9 +849,11 @@ database supports are also valid.
 
 =item "LIKE"
 
-In the case of LIKE, the string is surrounded in % signs.  Yes. this is a bug.
-
 =item "NOT LIKE"
+
+=item "MATCHES"
+
+MATCHES is like LIKE, except it surrounds the value with % signs.
 
 =item "STARTSWITH"
 
