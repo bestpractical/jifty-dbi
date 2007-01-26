@@ -138,7 +138,6 @@ sub _accessible {
     my $self        = shift;
     my $column_name = shift;
     my $attribute   = lc( shift || '' );
-
     my $col = $self->column($column_name);
     return undef unless ( $col and $col->can($attribute) );
     return $col->$attribute();
@@ -381,7 +380,6 @@ sub column {
     my $self = shift;
     my $name = lc( shift || '' );
     my $col = $self->COLUMNS;
-
     return undef unless $col && exists $col->{$name};
     return $col->{$name};
 
@@ -1166,6 +1164,7 @@ used for the declarative syntax
 
 sub refers_to {
     my $class = shift;
+    die 'broken';
     return ( Jifty::DBI::Schema::Trait->new(refers_to => $class), @_ );
 }
 
