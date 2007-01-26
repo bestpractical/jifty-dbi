@@ -1,3 +1,11 @@
+libjifty-dbi-perl (0.31-1) unstable; urgency=low
+
+  * - load, load_by_cols, load_from_hash and create are now optionally class methods.
+  - "length is 42" in schema declarations is deprecated; please write "max_length is 42" instead.
+  - Jifty::DBI::Collection - document the "LIKE" and "MATCHES" limit operators correctly.
+
+ -- AGOSTINI Yves <agostini@univ-metz.fr>  Fri, 26 Jan 2007 12:44:23 +0100
+
 libjifty-dbi-perl (0.30-1) unstable; urgency=low
 
   * New cpan release
