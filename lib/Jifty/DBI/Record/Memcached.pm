@@ -53,33 +53,51 @@ sub load_from_hash {
     my $self = shift;
 
     # Blow away the primary cache key since we're loading.
-    my ( $rvalue, $msg ) = $self->SUPER::load_from_hash(@_);
+    if ( ref($self) ) {
+        my ( $rvalue, $msg ) = $self->SUPER::load_from_hash(@_);
+        ## Check the return value, if its good, cache it!
+        $self->_store() if ($rvalue);
+        return ( $rvalue, $msg );
+    } else {
+        $self = $self->SUPER::load_from_hash(@_);
+        ## Check the return value, if its good, cache it!
+        $self->_store() if ( $self->id );
+        return $self;
 
-    ## Check the return value, if its good, cache it!
-    $self->_store() if ($rvalue);
-
-    return ( $rvalue, $msg );
+    }
 }
 
 sub load_by_cols {
-    my ( $self, %attr ) = @_;
+    my ( $class, %attr ) = @_;
+
+    my ($self);
+    if ( ref($class) ) {
+        ( $self, $class ) = ( $class, undef );
+    } else {
+        $self = $self->new( handle => ( delete $attr{'_handle'} || undef ) );
+    }
 
     ## Generate the cache key
     my $key = $self->_gen_load_by_cols_key(%attr);
-        return ( 1, "Fetched from cache" ) if ( $self->_get($key)  );
-
+    if ( $self->_get($key) ) {
+        if ($class) { return $self }
+        else { return ( 1, "Fetched from cache" ) }
+    }
     ## Fetch from the DB!
     my ( $rvalue, $msg ) = $self->SUPER::load_by_cols(%attr);
     ## Check the return value, if its good, cache it!
     if ($rvalue) {
         $self->_store();
-        if ($key ne $self->_primary_key) {
-            $MEMCACHED->add( $key, $self->_primary_cache_key, $self->_cache_config->{'cache_for_sec'} );
+        if ( $key ne $self->_primary_key ) {
+            $MEMCACHED->add( $key, $self->_primary_cache_key,
+                $self->_cache_config->{'cache_for_sec'} );
             $self->{'loaded_by_cols'} = $key;
         }
     }
-    return ( $rvalue, $msg );
-
+    if ($class) { return $self }
+    else {
+        return ( $rvalue, $msg );
+    }
 }
 
 # Function: __set

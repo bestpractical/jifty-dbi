@@ -1,5 +1,7 @@
 Revision history for Perl extension Jifty::DBI.
 
+- load, load_by_cols, load_from_hash and create are now optionally class methods.
+
 0.30 Wed Jan 17 15:29:44 EST 2007
 
 - update version dependency on DateTime to 0.34

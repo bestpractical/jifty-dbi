@@ -87,26 +87,43 @@ sub _record_cache {
 sub load_from_hash {
     my $self = shift;
 
-    # Blow away the primary cache key since we're loading.
-    $self->{'_jifty_cache_pkey'} = undef;
-    my ( $rvalue, $msg ) = $self->SUPER::load_from_hash(@_);
+    my ( $rvalue, $msg );
+    if ( ref($self) ) {
 
-    ## Check the return value, if its good, cache it!
-    if ($rvalue) {
-        $self->_store();
+        # Blow away the primary cache key since we're loading.
+        $self->{'_jifty_cache_pkey'} = undef;
+        ( $rvalue, $msg ) = $self->SUPER::load_from_hash(@_);
+
+        ## Check the return value, if its good, cache it!
+        $self->_store() if ($rvalue);
+        return ( $rvalue, $msg );
+    } else {    # Called as a class method;
+        $self = $self->SUPER::load_from_hash(@_);
+        ## Check the return value, if its good, cache it!
+        $self->_store() if ( $self->id );
+        return ($self);
     }
 
-    return ( $rvalue, $msg );
 }
 
 sub load_by_cols {
-    my ( $self, %attr ) = @_;
-    ## Generate the cache key
+    my ( $class, %attr ) = @_;
 
-    my $alt_key =$self->_gen_record_cache_key(%attr);
-    if ($self->_fetch($alt_key)) {
-        return ( 1, "Fetched from cache" );
+    my ($self);
+    if ( ref($class) ) {
+        ( $self, $class ) = ( $class, undef );
+    } else {
+        $self = $class->new(
+            handle => ( delete $attr{'_handle'} || undef ) );
     }
+
+    ## Generate the cache key
+    my $alt_key = $self->_gen_record_cache_key(%attr);
+    if ( $self->_fetch($alt_key) ) {
+        if ($class) { return $self }
+        else { return ( 1, "Fetched from cache" ) }
+    }
+
     # Blow away the primary cache key since we're loading.
     $self->{'_jifty_cache_pkey'} = undef;
 
@@ -116,11 +133,14 @@ sub load_by_cols {
     if ($rvalue) {
         ## Only cache the object if its okay to do so.
         $self->_store();
-        $self->_key_cache->set( $alt_key => $self->_primary_record_cache_key );
+        $self->_key_cache->set(
+            $alt_key => $self->_primary_record_cache_key );
 
     }
-    return ( $rvalue, $msg );
-
+    if ($class) { return $self }
+    else {
+        return ( $rvalue, $msg );
+    }
 }
 
 # Function: __set

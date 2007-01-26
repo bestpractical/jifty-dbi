@@ -748,6 +748,8 @@ sub __set {
 
 =head2 load
 
+C<load> can be called as a class or object method.
+
 Takes a single argument, $id. Calls load_by_cols to retrieve the row 
 whose primary key is $id.
 
@@ -755,13 +757,14 @@ whose primary key is $id.
 
 sub load {
     my $self = shift;
-
     return unless @_ and defined $_[0];
 
     return $self->load_by_cols( id => shift );
 }
 
 =head2 load_by_cols
+
+C<load_by_cols> can be called as a class or object method.
 
 Takes a hash of columns and values. Loads the first record that matches all
 keys.
@@ -774,8 +777,15 @@ OR hash references which contain 'operator' and 'value'
 =cut
 
 sub load_by_cols {
-    my $self = shift;
+    my $class    = shift;
     my %hash = (@_);
+    my ($self);
+    if (ref($class)) {
+            ($self,$class) = ($class,undef);
+    } else {
+            $self = $class->new( handle => (delete $hash{'_handle'} || undef));
+    }
+
     my ( @bind, @phrases );
     foreach my $key ( keys %hash ) {
         if ( defined $hash{$key} && $hash{$key} ne '' ) {
@@ -816,7 +826,9 @@ sub load_by_cols {
         . $self->table
         . " WHERE "
         . join( ' AND ', @phrases );
-    return ( $self->_load_from_sql( $query_string, @bind ) );
+    if ($class) { $self->_load_from_sql( $query_string, @bind ); return $self}
+    else {return $self->_load_from_sql( $query_string, @bind );}
+
 }
 
 =head2 load_by_primary_keys 
@@ -845,8 +857,16 @@ loaded values hash.
 =cut
 
 sub load_from_hash {
-    my $self    = shift;
+    my $class    = shift;
     my $hashref = shift;
+    my ($self);
+
+    if (ref($class)) {
+            ($self,$class) = ($class,undef);
+    } else {
+            $self = $class->new( handle => (delete $hashref->{'_handle'} || undef));
+    }
+    
 
     foreach my $f ( keys %$hashref ) {
         $self->{'fetched'}{ lc $f } = 1;
@@ -901,6 +921,8 @@ sub _load_from_sql {
 
 =head2 create PARAMHASH
 
+C<create> can be called as either a class or object method
+
 This method creates a new record with the values specified in the PARAMHASH.
 
 This method calls two hooks in your subclass:
@@ -926,8 +948,17 @@ insert. That'll either be a true value or a L<Class::ReturnValue>
 =cut 
 
 sub create {
-    my $self    = shift;
+    my $class    = shift;
     my %attribs = @_;
+
+    my ($self);
+    if (ref($class)) {
+            ($self,$class) = ($class,undef);
+    } else {
+            $self = $class->new( handle => (delete $attribs{'_handle'} || undef));
+    }
+
+
 
     if ( $self->can('before_create') ) {
         my $before_ret = $self->before_create( \%attribs );
@@ -979,7 +1010,13 @@ sub create {
 
     my $ret = $self->_handle->insert( $self->table, %attribs );
     $self->after_create( \$ret ) if $self->can('after_create');
-    return ($ret);
+    if ($class) {
+        $self->load_by_cols(id => $ret);
+        return ($self);
+    }
+    else {
+     return ($ret);
+    }
 }
 
 =head2 delete

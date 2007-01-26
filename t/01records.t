@@ -8,7 +8,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 64;
+use constant TESTS_PER_DRIVER => 70;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -44,10 +44,26 @@ SKIP: {
 
         can_ok($rec,'create');
 
+        # Test create and load as class methods
+    
+        my $record2 = TestApp::Address->create( _handle => $handle, name => 'Enoch', phone => '123 456 7890');
+        isa_ok($record2, 'TestApp::Address');
+        ok($record2->id, "Created a record with a class method");
+
+        my $clone2 = TestApp::Address->load_by_cols( _handle => $handle, name => 'Enoch');
+        isa_ok($clone2, 'TestApp::Address');
+        is($clone2->phone, '123 456 7890');
+
+        { 
+            local *TestApp::Address::_handle = sub { return $handle};
+        my $clone_by_id = TestApp::Address->load($record2->id);
+        isa_ok($clone_by_id, 'TestApp::Address');
+        is($clone_by_id->phone, '123 456 7890');
+        }
+
         my ($id) = $rec->create( name => 'Jesse', phone => '617 124 567');
         ok($id,"Created record ". $id);
         ok($rec->load($id), "Loaded the record");
-
 
         is($rec->id, $id, "The record has its id");
         is ($rec->name, 'Jesse', "The record's name is Jesse");
