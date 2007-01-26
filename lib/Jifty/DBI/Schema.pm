@@ -103,7 +103,29 @@ sub column {
     my $name = lc(shift);
 
     my $from = (caller)[0];
-    $from =~ s/::Schema//;
+    if ($from =~ s/::Schema$//) {
+        no strict 'refs';
+
+        carp << "." unless $from->{_seen_column_warning}++;
+
+*********************************************************
+
+ Calling 'column' within a schema class is deprecated:
+ 
+    package $from\::Schema;
+    column $name => ...;        # NOT VALID
+
+ Please write this instead:
+
+    package $from;
+    use Jifty::DBI::Schema;
+    use @{[${"$from\::ISA"}[0] || "Jifty::DBI::Record"]} schema {
+        column $name => ...;    # VALID
+    };
+
+*********************************************************
+.
+    }
 
     croak "Base of schema class $from is not a Jifty::DBI::Record"
       unless UNIVERSAL::isa($from, "Jifty::DBI::Record");
@@ -296,7 +318,28 @@ next version.
 =cut
 
 sub length {
-    Carp::carp("'length is ...' is deprecated; use 'length is ...' instead");
+    no strict 'refs';
+    carp << "." unless caller()->{_seen_length_warning}++;
+
+*********************************************************
+
+ Due to an incompatible API change, the "length" field in
+ Jifty::DBI columns has been renamed to "max_length":
+ 
+     column foo =>
+         length is $_[0];       # NOT VALID 
+
+ Please write this instead:
+ 
+     column foo =>
+         max_length is $_[0]    # VALID
+
+ Sorry for the inconvenience.
+
+**********************************************************
+
+
+.
     _list( max_length => @_ );
 }
 
