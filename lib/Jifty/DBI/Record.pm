@@ -330,7 +330,6 @@ sub _collection_value {
         return $prefetched_col;
     }
 
-    use Devel::SimpleTrace;
     my $coll = $classname->new( handle => $self->_handle );
     $coll->limit( column => $column->by(), value => $self->id );
     return $coll;
