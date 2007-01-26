@@ -356,6 +356,7 @@ this are truncated before being inserted into the database, using
 L<Jifty::DBI::Filter::Truncate>.  Note that this is in B<bytes>, not
 B<characters>.  Correct usage is C<max_length is 42>.
 
+
 =head2 mandatory
 
 Mark as a required column.  May be used for generating user

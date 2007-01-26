@@ -84,22 +84,20 @@ The table looks like so:
 
 First, let's define our record class in a new module named "Simple.pm".
 
-
   use warnings;
   use strict;
-   
-  package Simple::Schema;
+
+  package Simple;
   use Jifty::DBI::Schema;
-  
-  column foo => type is 'text';
-  column bar => type is 'text';
-  
-  package Simple; 
-  use base qw(Jifty::DBI::Record);
+  use Jifty::DBI::Record schema {
+    column foo => type is 'text';
+    column bar => type is 'text';
+  };
 
   # your custom code goes here.
 
   1;
+
 Like all perl modules, this needs to end with a true value. 
 
 Now, on to the code that will actually *do* something with this object. 
@@ -111,7 +109,7 @@ This code would be placed in your Perl script.
 Use two packages, the first is where I get the DB handle from, the latter 
 is the object I just created. 
 
-  
+
   my $handle = Jifty::DBI::Handle->new();
   $handle->connect(
       driver   => 'Pg',
@@ -120,15 +118,15 @@ is the object I just created.
       user     => 'mhat',
       password => ''
   );
-  
+
 Creates a new Jifty::DBI::Handle, and then connects to the database using 
 that handle.  Pretty straight forward, the password '' is what I use 
 when there is no password.  I could probably leave it blank, but I find 
 it to be more clear to define it.
 
- 
+
  my $s = Simple->new( handle => $handle );
- 
+
  $s->load_by_cols(id=>1); 
 
 
@@ -207,4 +205,5 @@ ever else I think of.
 
 =cut
 
+h
 1;
