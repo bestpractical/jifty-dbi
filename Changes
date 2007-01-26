@@ -1,5 +1,9 @@
 Revision history for Perl extension Jifty::DBI.
 
+0.39_9999 Fri Jan 26 21:30:48 CST 2007
+
+- Removed unneccessary use of Devel::SimpleTrace.
+
 0.39_999 Fri Jan 26 21:30:48 CST 2007
 
 - Improved error message for "length is 42":
