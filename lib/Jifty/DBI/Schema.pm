@@ -52,24 +52,71 @@ use Object::Declare (
         valid       => 'valid_values',
         render      => 'render_as',
         order       => 'sort_order',
-        max_length  => 'length',
         filters     => 'input_filters',
     },
     copula  => {
-        is      => '',
-        are     => '',
-        as      => '',
-        by      => '',
-        ajax    => 'ajax_',
+        is          => '',
+        are         => '',
+        as          => '',
+        ajax        => 'ajax_',
+        refers_to   => sub { refers_to => @_ },
+        refers      => sub { refers_to => @_ },
     }
 );
-use Exporter::Lite;
 use Class::Data::Inheritable;
 
-our @EXPORT = qw( defer lazy column schema );
+our @EXPORT = qw( defer lazy column schema by );
 
 our $SCHEMA;
 our $SORT_ORDERS = {};
+
+use Exporter::Lite ();
+# TODO - This "sub import" is strictly here to catch the deprecated "length is 40".
+#        Once the deprecation cycle is over we should take this away and rever to
+#        "use Exporter::Lite" in the line above.
+sub import {
+    my $old_sig_die = $SIG{__DIE__};
+
+    $SIG{__DIE__} = sub {
+        if (!@_) {
+            # Calling it by hand means we restore the old sighandler.
+            $SIG{__DIE__} = $old_sig_die;
+            return;
+        }
+
+        if ($_[0] =~ /near "is (\d+)"/) {
+            push @_, << ".";
+
+*********************************************************
+
+ Due to an incompatible API change, the "length" field in
+ Jifty::DBI columns has been renamed to "max_length".
+ 
+ Instead of this:
+
+     column foo =>
+         length is $1;       # NOT VALID 
+
+ Please write this instead:
+ 
+     column foo =>
+         max_length is $1    # VALID
+
+ Sorry for the inconvenience.
+
+**********************************************************
+
+
+.
+        }
+
+        die @_;
+    };
+
+    goto &Exporter::Lite::import;
+}
+
+sub by { @_ }
 
 =head1 FUNCTIONS
 
@@ -100,19 +147,18 @@ sub schema (&) {
 
 	my @columns = &declare($code);
 
-	foreach my $column (@columns) {
-	    next if !ref($column);
-	    _init_column($column);
-	}
-
-	# XXX: merge superclasses' columns?
-
 	# Unimport all our symbols from the calling package.
 	foreach my $sym (@EXPORT) {
 	    no strict 'refs';
 	    undef *{"$from\::$sym"}
 		if \&{"$from\::$sym"} == \&$sym;
 	}
+
+	foreach my $column (@columns) {
+	    next if !ref($column);
+	    _init_column($column);
+	}
+
 	# Then initialize all columns
 	foreach my $column ( sort keys %{ $from->COLUMNS || {} } ) {
 	    $from->_init_methods_for_column( $from->COLUMNS->{$column} );
@@ -127,15 +173,15 @@ use Hash::Merge ();
 no warnings 'uninitialized';
 use constant MERGE_PARAM_BEHAVIOUR => {
     SCALAR => {
-            SCALAR => sub { length($_[1]) ? $_[1] : $_[0] },
+            SCALAR => sub { CORE::length($_[1]) ? $_[1] : $_[0] },
             ARRAY  => sub { [ @{$_[1]} ] },
             HASH   => sub { $_[1] } },
     ARRAY => {
-            SCALAR => sub { length($_[1]) ? $_[1] : $_[0] },
+            SCALAR => sub { CORE::length($_[1]) ? $_[1] : $_[0] },
             ARRAY  => sub { [ @{$_[1]} ] },
             HASH   => sub { $_[1] } },
     HASH => {
-            SCALAR => sub { length($_[1]) ? $_[1] : $_[0] },
+            SCALAR => sub { CORE::length($_[1]) ? $_[1] : $_[0] },
             ARRAY  => sub { [ @{$_[1]} ] },
             HASH   => sub { Hash::Merge::_merge_hashes( $_[0], $_[1] ) } }
 };
@@ -184,9 +230,15 @@ sub _init_column {
 
     $column->sort_order($SORT_ORDERS->{$from}++);
 
-    if (0) {
-#    if ( my $refclass = $column->refers_to ) {
-        my $refclass;
+    $column->input_filters($column->{input_filters} || []);
+    $column->output_filters($column->{output_filters} || []);
+
+    if ( my $refclass = $column->refers_to ) {
+        if (ref($refclass) eq 'ARRAY') {
+            $column->by($refclass->[1]);
+            $column->refers_to($refclass = $refclass->[0]);
+        }
+
         $refclass->require();
         $column->type('integer') unless ( $column->type );
 
@@ -297,12 +349,12 @@ using C<< $record->column >>; this is useful for password columns and
 the like.  The data is still accessible via C<< $record->_value('') >>.
 Correct usage is C<is unreadable>.
 
-=head2 length
+=head2 max_length
 
-Sets a maximum length to store in the database; values longer than
+Sets a maximum max_length to store in the database; values longer than
 this are truncated before being inserted into the database, using
 L<Jifty::DBI::Filter::Truncate>.  Note that this is in B<bytes>, not
-B<characters>.  Correct usage is C<length is 42>.
+B<characters>.  Correct usage is C<max_length is 42>.
 
 =head2 mandatory
 

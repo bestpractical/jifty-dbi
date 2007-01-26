@@ -15,8 +15,8 @@ sub encode {
     my $column = $self->column();
 
     my $truncate_to;
-    if ( $column->length && !$column->is_numeric ) {
-        $truncate_to = $column->length;
+    if ( $column->max_length && !$column->is_numeric ) {
+        $truncate_to = $column->max_length;
     } elsif ( $column->type && $column->type =~ /char\((\d+)\)/ ) {
         $truncate_to = $1;
     }

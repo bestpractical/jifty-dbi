@@ -12,7 +12,7 @@ __PACKAGE__->mk_accessors qw/
     type
     default
     readable writable
-    length
+    max_length
     mandatory
     virtual
     distinct
@@ -75,5 +75,7 @@ sub validator {
 # Aliases for compatibility with searchbuilder code
 *read  = \&readable;
 *write = \&writable;
+
+sub length { Carp::croak('$column->length is no longer supported; use $column->max_length instead') }
 
 1;
