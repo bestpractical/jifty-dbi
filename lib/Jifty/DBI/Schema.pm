@@ -78,22 +78,19 @@ sub import {
     my $old_sig_die = $SIG{__DIE__};
 
     $SIG{__DIE__} = sub {
-        if (!@_) {
-            # Calling it by hand means we restore the old sighandler.
-            $SIG{__DIE__} = $old_sig_die;
-            return;
-        }
+        # Calling it by hand means we restore the old sighandler.
+        $SIG{__DIE__} = (($old_sig_die == $SIG{__DIE__}) ? undef : $old_sig_die);
+        return unless @_;
 
+        local $SIG{__DIE__} = sub { 1 };
         if ($_[0] =~ /near "is (\d+)"/) {
-            push @_, << ".";
+            carp @_, << ".";
 
 *********************************************************
 
  Due to an incompatible API change, the "length" field in
- Jifty::DBI columns has been renamed to "max_length".
+ Jifty::DBI columns has been renamed to "max_length":
  
- Instead of this:
-
      column foo =>
          length is $1;       # NOT VALID 
 
@@ -107,6 +104,34 @@ sub import {
 **********************************************************
 
 
+.
+            exit 1;
+        }
+        elsif ($_[0] =~ /Undefined subroutine &Jifty::DBI::Schema::column|Can't locate object method "type" via package "(?:is|are)"/) {
+            my $from = (caller)[0];
+            $from =~ s/::Schema$//;
+            my $base = $INC{'Jifty/Record.pm'} ? "Jifty::Record" : "Jifty::DBI::Record";
+
+            no strict 'refs';
+            carp @_, << ".";
+*********************************************************
+
+ Calling 'column' within a schema class is an error:
+ 
+    package $from\::Schema;
+    column foo => ...;        # NOT VALID
+
+ Please write this instead:
+
+    package $from;
+    use Jifty::DBI::Schema;
+    use @{[(${"$from\::ISA"} || [$base])->[0] || $base]} schema {
+        column foo => ...;    # VALID
+    };
+
+ Sorry for the inconvenience.
+
+*********************************************************
 .
         }
 

@@ -17,7 +17,7 @@ requires('DateTime::Format::Strptime');
 requires('Encode'  => 2.10);
 requires('Exporter::Lite');
 requires('Lingua::EN::Inflect');
-requires('Object::Declare');
+requires('Object::Declare' => 0.21);
 requires('UNIVERSAL::require');
 build_requires('Test::More' => 0.52);
 build_requires('DBD::SQLite');
