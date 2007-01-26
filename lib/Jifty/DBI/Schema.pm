@@ -65,7 +65,7 @@ use Object::Declare (
 );
 use Class::Data::Inheritable;
 
-our @EXPORT = qw( defer lazy column schema by );
+our @EXPORT = qw( defer lazy column schema by render_as );
 
 our $SCHEMA;
 our $SORT_ORDERS = {};
@@ -143,6 +143,9 @@ sub filter_die {
 
 
 sub by { @_ }
+sub render_as ($) {
+    as->render(@_);
+}
 
 =head1 FUNCTIONS
 
