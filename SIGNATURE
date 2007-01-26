@@ -40,7 +40,7 @@ SHA1 aa4a3d87cedc972e3dc0d5d156809624e6db9416 inc/Module/Install/Makefile.pm
 SHA1 f1d4e1bbcb40bb269f36e6dc011b3ca25d3829b7 inc/Module/Install/Metadata.pm
 SHA1 0c2118868ef82ac517eb6d9c3bd93e6eb9bbf83e inc/Module/Install/Win32.pm
 SHA1 e827d6d43771032fa3df35c0ad5e5698d0e54cda inc/Module/Install/WriteAll.pm
-SHA1 b66e9de7e2358ff95c17b5d14e6b5a61838ccf13 lib/Jifty/DBI.pm
+SHA1 185c7497ac25bc21084a4ac6bd6173cf42a303b2 lib/Jifty/DBI.pm
 SHA1 8c257d0dfcd1f5e033a96cc51413150a72456b91 lib/Jifty/DBI/Collection.pm
 SHA1 ecfae7430da875a856113e0c233daa0e31073000 lib/Jifty/DBI/Collection/Union.pm
 SHA1 07115934091da72e0025c9c754714fc0ceedbef5 lib/Jifty/DBI/Collection/Unique.pm
@@ -95,7 +95,7 @@ SHA1 9b6cf7d135201f3f5ac4e29eaf180c85ba2e2bbf t/utils.pl
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.3 (Darwin)
 
-iD8DBQFFueu5tLPdNzw1AaARAjsnAJ9e7qFzL+bkIn0Y2xUHlDT5C7R41gCfYzE+
-2AJKwZ629IgOIsEefbGp/KE=
-=c7DO
+iD8DBQFFuevZtLPdNzw1AaARAoIoAJ975+MJcaBwzFyQqbddZXVDgtxfSQCgpxj5
+elXyBVPg712hau/ysL8b4jw=
+=CtBF
 -----END PGP SIGNATURE-----
