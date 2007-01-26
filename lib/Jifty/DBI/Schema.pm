@@ -123,6 +123,8 @@ sub column {
         column $name => ...;    # VALID
     };
 
+ Sorry for the inconvenience.
+
 *********************************************************
 .
     }
