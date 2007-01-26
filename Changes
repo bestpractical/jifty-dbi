@@ -1,5 +1,7 @@
 Revision history for Perl extension Jifty::DBI.
 
+0.31 Fri Jan 26 19:52:08 CST 2007
+
 - load, load_by_cols, load_from_hash and create are now optionally class methods.
 - "length is 42" in schema declarations is deprecated; please write "max_length is 42" instead.
 - Jifty::DBI::Collection - document the "LIKE" and "MATCHES" limit operators correctly.
