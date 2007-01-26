@@ -79,7 +79,7 @@ sub import {
 
     $SIG{__DIE__} = sub {
         # Calling it by hand means we restore the old sighandler.
-        no warnings 'uninitialized';
+        no warnings qw( uninitialized numeric );
         $SIG{__DIE__} = (($old_sig_die == $SIG{__DIE__}) ? undef : $old_sig_die);
         return unless @_;
 
