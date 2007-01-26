@@ -74,17 +74,20 @@ use Exporter::Lite ();
 # TODO - This "sub import" is strictly here to catch the deprecated "length is 40".
 #        Once the deprecation cycle is over we should take this away and rever to
 #        "use Exporter::Lite" in the line above.
+my $old_sig_die;
+
 sub import {
-    my $old_sig_die = $SIG{__DIE__};
+    no warnings qw( uninitialized numeric );
+    $old_sig_die ||= $SIG{__DIE__};
+    $SIG{__DIE__} = \&filter_die unless $SIG{__DIE__} and $SIG{__DIE__} == \&filter_die;
+    goto &Exporter::Lite::import;
+}
 
-    $SIG{__DIE__} = sub {
-        # Calling it by hand means we restore the old sighandler.
-        no warnings qw( uninitialized numeric );
-        $SIG{__DIE__} = (($old_sig_die == $SIG{__DIE__}) ? undef : $old_sig_die);
-        return unless @_;
-
-        if ($_[0] =~ /near "is (\d+)"/) {
-            carp @_, << ".";
+sub filter_die {
+    # Calling it by hand means we restore the old sighandler.
+    $SIG{__DIE__} = $old_sig_die;
+    if ($_[0] =~ /near "is (\d+)"/) {
+        carp @_, << ".";
 
 *********************************************************
 
@@ -105,15 +108,15 @@ sub import {
 
 
 .
-            exit 1;
-        }
-        elsif ($_[0] =~ /Undefined subroutine &Jifty::DBI::Schema::column|Can't locate object method "type" via package "(?:is|are)"/) {
-            my $from = (caller)[0];
-            $from =~ s/::Schema$//;
-            my $base = $INC{'Jifty/Record.pm'} ? "Jifty::Record" : "Jifty::DBI::Record";
+        exit 1;
+    }
+    elsif ($_[0] =~ /Undefined subroutine &Jifty::DBI::Schema::column|Can't locate object method "type" via package "(?:is|are)"/) {
+        my $from = (caller)[0];
+        $from =~ s/::Schema$//;
+        my $base = $INC{'Jifty/Record.pm'} ? "Jifty::Record" : "Jifty::DBI::Record";
 
-            no strict 'refs';
-            carp @_, << ".";
+        no strict 'refs';
+        carp @_, << ".";
 *********************************************************
 
  Calling 'column' within a schema class is an error:
@@ -133,13 +136,11 @@ sub import {
 
 *********************************************************
 .
-        }
+    }
 
-        die @_;
-    };
-
-    goto &Exporter::Lite::import;
+    die @_;
 }
+
 
 sub by { @_ }
 
