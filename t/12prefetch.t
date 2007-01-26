@@ -4,15 +4,15 @@
 use strict;
 use warnings;
 use File::Spec;
-use Test::More 'no_plan';
+use Test::More;
 
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
-
-use constant TESTS_PER_DRIVER => 67;
+use constant TESTS_PER_DRIVER => 41;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 #plan tests => $total;
+plan tests => TESTS_PER_DRIVER;
 
 foreach my $d ('SQLite'){ # @available_drivers ) {
 SKIP: {
@@ -160,17 +160,6 @@ CREATE TEMPORARY table phones (
 } ]
 }
 
-package TestApp::Employee;
-use base qw/Jifty::DBI::Record/;
-
-sub _value  {
-  my $self = shift;
-  my $x =  ($self->__value(@_));
-  return $x;
-}
-
-package TestApp::Phone;
-use base qw/Jifty::DBI::Record/;
 
 package TestApp::PhoneCollection;
 use base qw/Jifty::DBI::Collection/;
@@ -182,20 +171,33 @@ sub table {
 }
 
 
-package TestApp::Phone::Schema;
-BEGIN {
-    use Jifty::DBI::Schema;
-    column employee => refers_to TestApp::Employee;
-    column phone    => type 'varchar';
+package TestApp::Employee;
+use base qw/Jifty::DBI::Record/;
+
+sub _value  {
+  my $self = shift;
+  my $x =  ($self->__value(@_));
+  return $x;
 }
 
-package TestApp::Employee::Schema;
 BEGIN {
     use Jifty::DBI::Schema;
+    use Jifty::DBI::Record schema {
     column name => type 'varchar';
     column phones => refers_to TestApp::PhoneCollection by 'employee';
+    }
 }
 
+package TestApp::Phone;
+use base qw/Jifty::DBI::Record/;
+
+BEGIN {
+    use Jifty::DBI::Schema;
+    use Jifty::DBI::Record schema {
+    column employee => refers_to TestApp::Employee;
+    column phone    => type 'varchar';
+    }
+}
 
 package TestApp::EmployeeCollection;
 

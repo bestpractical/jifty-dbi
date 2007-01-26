@@ -131,10 +131,10 @@ EOF
 
 1;
 
-package TestApp::User::Schema;
 BEGIN {
     use Jifty::DBI::Schema;
 
+    use Jifty::DBI::Record schema {
     # special small lengths to test truncation
     column login =>
       type is 'varchar(5)',
@@ -149,6 +149,7 @@ BEGIN {
       type is 'int(4)',
       length is 4,
       default is 0;
+    }
 }
 
 1;

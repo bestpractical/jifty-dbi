@@ -126,12 +126,12 @@ EOF
 
 }
 
-package TestApp::User::Schema;
 BEGIN {
     use Jifty::DBI::Schema;
-
+    use Jifty::DBI::Record schema {
     column name      => type is 'varchar(5)';
     column signature => type is 'varchar(100)';
+    }
 }
 
 1;

@@ -4,7 +4,7 @@
 use strict;
 use warnings;
 use File::Spec;
-use Test::More;
+use Test::More;# import => [qw(isa_ok skip plan)];
 
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
@@ -91,13 +91,10 @@ CREATE TEMPORARY table employees (
 
 
 package TestApp::Employee;
-use base qw/Jifty::DBI::Record/;
 
-1;
-
-package TestApp::Employee::Schema;
 BEGIN {
     use Jifty::DBI::Schema;
+    use Jifty::DBI::Record schema {
 
     column name => type is 'varchar(18)',
         is mandatory;
@@ -105,6 +102,7 @@ BEGIN {
     column employee_num =>
         type is 'int(8)',
         is distinct;
+    }
 }
 
 1;

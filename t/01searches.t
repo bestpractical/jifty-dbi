@@ -259,14 +259,14 @@ sub init_data {
 
 1;
 
-package TestApp::User::Schema;
 BEGIN {
     use Jifty::DBI::Schema;
-
+    use Jifty::DBI::Record schema {
     column login   => type is 'varchar(18)';
     column name    => type is 'varchar(36)';
     column phone   => type is 'varchar(18)', default is undef;
     column address => type is 'varchar(18)', default is '';
+    }
 }
 
 1;

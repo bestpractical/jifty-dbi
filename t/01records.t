@@ -274,9 +274,9 @@ EOF
 
 1;
 
-package TestApp::Address::Schema;
 BEGIN {
 use Jifty::DBI::Schema;
+use Jifty::DBI::Record schema {
 
 column name =>
   type is 'varchar(14)';
@@ -290,6 +290,7 @@ column address =>
 
 column employee_id =>
   type is 'int(8)';
+}
 }
 1;
 

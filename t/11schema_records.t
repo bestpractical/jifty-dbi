@@ -250,18 +250,6 @@ CREATE TEMPORARY table phones (
 } ]
 }
 
-package TestApp::Employee;
-use base qw/Jifty::DBI::Record/;
-
-sub _value  {
-  my $self = shift;
-  my $x =  ($self->__value(@_));
-  return $x;
-}
-
-package TestApp::Phone;
-use base qw/Jifty::DBI::Record/;
-
 package TestApp::PhoneCollection;
 use base qw/Jifty::DBI::Collection/;
 
@@ -271,19 +259,32 @@ sub table {
     return $tab;
 }
 
+package TestApp::Employee;
+use base qw/Jifty::DBI::Record/;
 
-package TestApp::Phone::Schema;
 BEGIN {
     use Jifty::DBI::Schema;
-    column employee => refers_to TestApp::Employee;
-    column phone    => type 'varchar';
+    use Jifty::DBI::Record schema {
+    column name => type is 'varchar';
+    column phones => refers_to TestApp::PhoneCollection by 'employee';
+    }
 }
 
-package TestApp::Employee::Schema;
+sub _value  {
+  my $self = shift;
+  my $x =  ($self->__value(@_));
+  return $x;
+}
+
+
+package TestApp::Phone;
+
 BEGIN {
     use Jifty::DBI::Schema;
-    column name => type 'varchar';
-    column phones => refers_to TestApp::PhoneCollection by 'employee';
+    use Jifty::DBI::Record schema {;
+    column employee => refers_to TestApp::Employee;
+    column phone    => type is 'varchar';
+    }
 }
 
 

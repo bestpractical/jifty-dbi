@@ -108,10 +108,10 @@ EOF
 
 }
 
-package TestApp::User::Schema;
 BEGIN {
     use Jifty::DBI::Schema;
-    
+
+    use Jifty::DBI::Record schema {
     column created =>
       type is 'datetime',
       input_filters are qw/Jifty::DBI::Filter::DateTime/;
@@ -123,9 +123,8 @@ BEGIN {
     column event_stops =>
       type is 'time',
       input_filters are qw/Jifty::DBI::Filter::Time/;
+    }
 }
-
-1;
 
 1;
 

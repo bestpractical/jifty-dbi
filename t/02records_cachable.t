@@ -173,11 +173,12 @@ EOF
 
 1;
 
-package TestApp::Address::Schema;
+package TestApp::Address;
 
 BEGIN {
     use Jifty::DBI::Schema;
 
+    use Jifty::DBI::Record schema {
     column name => type is 'varchar(14)';
 
     column phone => type is 'varchar(18)';
@@ -187,5 +188,6 @@ BEGIN {
         default is '';
 
     column employee_id => type is 'int(8)';
+    }
 }
 1;

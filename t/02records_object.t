@@ -103,15 +103,12 @@ CREATE TEMPORARY table phones (
 
 
 package TestApp::Employee;
-use base qw/Jifty::DBI::Record/;
 
-1;
-
-package TestApp::Employee::Schema;
 BEGIN {
     use Jifty::DBI::Schema;
-
+    use Jifty::DBI::Record schema {
     column name => type is 'varchar(18)';
+    }
 }
 
 1;
@@ -119,16 +116,12 @@ BEGIN {
 
 
 package TestApp::Phone;
-use base qw/Jifty::DBI::Record/;
-
-1;
-
-package TestApp::Phone::Schema;
 BEGIN {
     use Jifty::DBI::Schema;
-
+    use Jifty::DBI::Record schema {
     column employee => refers_to TestApp::Employee;
-    column phone    => type 'varchar(18)';
+    column phone    => type is 'varchar(18)';
+    }
 }
 
 1;
