@@ -43,7 +43,7 @@ associations between classes.
 use Carp qw/croak carp/;
 use Exporter::Lite;
 our @EXPORT
-    = qw(column type default literal validator autocompleted immutable unreadable length distinct mandatory not_null sort_order valid_values label hints render_as render since input_filters output_filters filters virtual is as by are on schema indexed valid order);
+    = qw(column type default literal validator autocompleted immutable unreadable max_length length distinct mandatory not_null sort_order valid_values label hints render_as render since input_filters output_filters filters virtual is as by are on schema indexed valid order);
 
 our $SCHEMA;
 our $SORT_ORDERS = {};
@@ -275,18 +275,31 @@ sub unreadable {
     _item( readable => 0, @_ );
 }
 
-=head2 length
+=head2 max_length
 
 Sets a maximum length to store in the database; values longer than
 this are truncated before being inserted into the database, using
 L<Jifty::DBI::Filter::Truncate>.  Note that this is in B<bytes>, not
-B<characters>.  Correct usage is C<length is 42>.
+B<characters>.  Correct usage is C<max_length is 42>.
+
+=cut
+
+sub max_length {
+    _list( max_length => @_ );
+}
+
+=head2 length
+
+DEPRECATED alias for C<max_length>.  Do not use; this will go away in the
+next version.
 
 =cut
 
 sub length {
-    _list( length => @_ );
+    Carp::carp("'length is ...' is deprecated; use 'length is ...' instead");
+    _list( max_length => @_ );
 }
+
 
 =head2 mandatory
 

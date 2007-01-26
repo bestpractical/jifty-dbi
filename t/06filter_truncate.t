@@ -142,12 +142,12 @@ BEGIN {
 
     column name =>
       type is 'varchar(10)',
-      length is 10,
+      max_length is 10,
       default is '';
 
     column disabled =>
       type is 'int(4)',
-      length is 4,
+      max_length is 4,
       default is 0;
     }
 }
