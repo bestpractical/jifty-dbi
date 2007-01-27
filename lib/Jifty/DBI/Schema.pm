@@ -74,6 +74,7 @@ use Object::Declare (
     },
 );
 use Class::Data::Inheritable;
+use UNIVERSAL::require ();
 
 our @EXPORT = qw( defer lazy column schema by render_as since till );
 
