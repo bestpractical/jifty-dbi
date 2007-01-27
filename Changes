@@ -39,6 +39,34 @@ Revision history for Perl extension Jifty::DBI.
 - Switch to Object::Declare for schema declaration, fixing many annoyances such as the inability for two modules to refer to each other in their columns.
 - "refers Foo::Bar", a new alias to "refers_to Foo::Bar".
 
+0.32 Fri Jan 26 20:51:12 CST 2007
+
+- Improved deprecation warning for "length is 42":
+
+ Due to an incompatible API change, the "length" field in
+ Jifty::DBI columns has been renamed to "max_length":
+ 
+     column foo =>
+         length is 10;       # NOT VALID 
+
+ Please write this instead:
+ 
+     column foo =>
+         max_length is 10    # VALID
+
+- Calling 'column' within a schema class is deprecated:
+ 
+    package TestApp::Address::Schema;
+    column address => ...;        # NOT VALID
+
+  Please write this instead:
+
+    package TestApp::Address;
+    use Jifty::DBI::Schema;
+    use Jifty::DBI::Record schema {
+        column address => ...;    # VALID
+    };
+
 0.31 Fri Jan 26 19:52:08 CST 2007
 
 - load, load_by_cols, load_from_hash and create are now optionally class methods.

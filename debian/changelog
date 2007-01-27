@@ -1,3 +1,10 @@
+libjifty-dbi-perl (0.32-1) unstable; urgency=low
+
+  * deprecated use of length
+  * deprecated use of column whitout schema
+
+ -- AGOSTINI Yves <agostini@univ-metz.fr>  Fri, 26 Jan 2007 14:47:37 +0100
+
 libjifty-dbi-perl (0.31-1) unstable; urgency=low
 
   * - load, load_by_cols, load_from_hash and create are now optionally class methods.

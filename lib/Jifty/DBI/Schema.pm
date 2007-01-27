@@ -253,7 +253,31 @@ sub _init_column {
     my $name   = $column->name;
 
     my $from = (caller(2))[0];
-    $from =~ s/::Schema//;
+    if ($from =~ s/::Schema$//) {
+        no strict 'refs';
+
+        carp << "." unless $from->{_seen_column_warning}++;
+
+*********************************************************
+
+ Calling 'column' within a schema class is deprecated:
+ 
+    package $from\::Schema;
+    column $name => ...;        # NOT VALID
+
+ Please write this instead:
+
+    package $from;
+    use Jifty::DBI::Schema;
+    use @{[${"$from\::ISA"}[0] || "Jifty::DBI::Record"]} schema {
+        column $name => ...;    # VALID
+    };
+
+ Sorry for the inconvenience.
+
+*********************************************************
+.
+    }
 
     croak "Base of schema class $from is not a Jifty::DBI::Record"
       unless UNIVERSAL::isa($from, "Jifty::DBI::Record");
@@ -466,6 +490,17 @@ filters default to the input filters, reversed.
 
 What application version this column was last changed.  Correct usage
 is C<since '0.1.5'>.
+
+=head2 till
+
+What application version this column was last supported.  Correct usage
+is C<till '0.2.5'>.
+
+=cut
+
+sub till {
+    _list( till => @_ );
+}
 
 =head2 valid_values
 
