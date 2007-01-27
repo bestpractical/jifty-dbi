@@ -42,6 +42,9 @@ associations between classes.
 
 use Carp qw/croak carp/;
 use Scalar::Defer;
+use base qw(Class::Data::Inheritable);
+__PACKAGE__->mk_classdata('TYPES' => {});
+
 use Object::Declare (
     mapping => {
         column => sub { Jifty::DBI::Column->new({@_}) } ,
@@ -55,7 +58,14 @@ use Object::Declare (
         filters     => 'input_filters',
     },
     copula  => {
-        is          => '',
+        is          => sub { return @_ if $#_;
+                             my $typehandler = __PACKAGE__->TYPES->{$_[0]};
+                             # XXX: when we have a type name
+                             # convention, give a warning when it
+                             # looks like a type name but not found
+                             return ($_[0] => 1) unless $typehandler;
+                             return $typehandler->();
+			 },
         are         => '',
         as          => '',
         ajax        => 'ajax_',
@@ -307,6 +317,13 @@ sub _init_column {
     # through the &schema wrapper, so we defer initialization here
     # to not upset column names such as "label" and "type".
     # (We may not *have* a caller(1) if the user is executing a .pm file.)
+}
+
+sub register_types {
+    my $class = shift;
+    while (my ($type, $sub) = splice(@_, 0, 2)) {
+        $class->TYPES->{$type} = $sub;
+    }
 }
 
 1;
