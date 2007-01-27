@@ -69,15 +69,23 @@ use Object::Declare (
         are         => '',
         as          => '',
         ajax        => 'ajax_',
-        since       => sub { since => @_},
-        until       => sub { until => @_},
         refers_to   => sub { refers_to => @_ },
         refers      => sub { refers_to => @_ },
-    }
+    },
+    helpers => {
+        render_as   => sub ($) { render as @_ },
+        since       => sub ($) { since is @_ },
+        'until'     => sub ($) { is->until(@_) },
+    },
 );
 use Class::Data::Inheritable;
 
-our @EXPORT = qw( defer lazy column schema by render_as );
+our @EXPORT = qw( defer lazy column schema by render_as since until );
+
+sub by { @_ }
+sub render_as ($) { render as @_ }
+sub since ($)     { since is @_ }
+sub until ($)     { is->until(@_) }
 
 our $SCHEMA;
 our $SORT_ORDERS = {};
@@ -153,11 +161,6 @@ sub filter_die {
     die @_;
 }
 
-
-sub by { @_ }
-sub render_as ($) {
-    as->render(@_);
-}
 
 =head1 FUNCTIONS
 
