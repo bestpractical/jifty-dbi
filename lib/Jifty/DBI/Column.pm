@@ -20,7 +20,7 @@ __PACKAGE__->mk_accessors qw/
     refers_to by
     alias_for_column
     aliased_as
-    since until
+    since till
 
     label hints render_as
     valid_values

@@ -72,20 +72,15 @@ use Object::Declare (
         refers_to   => sub { refers_to => @_ },
         refers      => sub { refers_to => @_ },
     },
-    helpers => {
-        render_as   => sub ($) { render as @_ },
-        since       => sub ($) { since is @_ },
-        'until'     => sub ($) { is->until(@_) },
-    },
 );
 use Class::Data::Inheritable;
 
-our @EXPORT = qw( defer lazy column schema by render_as since until );
+our @EXPORT = qw( defer lazy column schema by render_as since till );
 
-sub by { @_ }
+sub by ($) { @_ }
 sub render_as ($) { render as @_ }
-sub since ($)     { since is @_ }
-sub until ($)     { is->until(@_) }
+sub since ($) { since is @_ }
+sub till ($) { till is @_ }
 
 our $SCHEMA;
 our $SORT_ORDERS = {};

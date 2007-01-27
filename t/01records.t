@@ -278,6 +278,7 @@ use Jifty::DBI::Schema;
 use Jifty::DBI::Record schema {
 
 column name =>
+  till 999,
   type is 'varchar(14)';
 
 column phone =>
