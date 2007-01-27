@@ -310,15 +310,14 @@ sub _init_column {
                 my $aliased_as = $1;
                 my $virtual_column = $from->add_column($aliased_as);
 
-                # XXX FIXME I think the next line is wrong, but things
-                # explode without it -- mostly because we unique-key
-                # on name instead of some conbination of name and
-                # alias_for_column in a couple places
-                $virtual_column->name( $name );
-                $virtual_column->aliased_as($aliased_as);
-#                $_->apply($virtual_column) for @args;
+                # Clone ourselves into the virtual column
+                %$virtual_column = %$column;
+
                 $column->refers_to(undef);
+
+                $virtual_column->aliased_as($aliased_as);
                 $virtual_column->alias_for_column($name);
+
                 $from->_init_methods_for_column($virtual_column);
             }
             $column->by('id') unless $column->by;
