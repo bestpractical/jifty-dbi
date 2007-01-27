@@ -77,5 +77,6 @@ sub validator {
 *write = \&writable;
 
 sub length { Carp::croak('$column->length is no longer supported; use $column->max_length instead') }
+sub until { Carp::croak('$column->until is no longer supported; use $column->till instead') }
 
 1;
