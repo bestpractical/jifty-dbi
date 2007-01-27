@@ -20,7 +20,7 @@ __PACKAGE__->mk_accessors qw/
     refers_to by
     alias_for_column
     aliased_as
-    since until
+    since till
 
     label hints render_as
     valid_values
@@ -80,6 +80,12 @@ sub length {
     Carp::carp('$column->length is deprecated; use $column->max_length instead');
     my $self = shift;
     $self->max_length(@_);
+}
+
+sub until {
+    Carp::carp('$column->until is deprecated; use $column->till instead');
+    my $self = shift;
+    $self->till(@_);
 }
 
 1;

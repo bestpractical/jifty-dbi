@@ -43,7 +43,7 @@ associations between classes.
 use Carp qw/croak carp/;
 use Exporter::Lite;
 our @EXPORT
-    = qw(column type default literal validator autocompleted immutable unreadable max_length length distinct mandatory not_null sort_order valid_values label hints render_as render since input_filters output_filters filters virtual is as by are on schema indexed valid order);
+    = qw(column type default literal validator autocompleted immutable unreadable max_length length distinct mandatory not_null sort_order valid_values label hints render_as render since till input_filters output_filters filters virtual is as by are on schema indexed valid order);
 
 our $SCHEMA;
 our $SORT_ORDERS = {};
@@ -475,6 +475,17 @@ is C<since '0.1.5'>.
 
 sub since {
     _list( since => @_ );
+}
+
+=head2 till
+
+What application version this column was last supported.  Correct usage
+is C<till '0.2.5'>.
+
+=cut
+
+sub till {
+    _list( till => @_ );
 }
 
 =head2 valid_values
