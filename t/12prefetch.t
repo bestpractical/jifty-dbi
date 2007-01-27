@@ -184,7 +184,7 @@ BEGIN {
     use Jifty::DBI::Schema;
     use Jifty::DBI::Record schema {
     column name => type is 'varchar';
-    column phones => refers_to TestApp::PhoneCollection by 'employee';
+    column phones => references TestApp::PhoneCollection by 'employee';
     }
 }
 
@@ -194,7 +194,7 @@ use base qw/Jifty::DBI::Record/;
 BEGIN {
     use Jifty::DBI::Schema;
     use Jifty::DBI::Record schema {
-    column employee => refers_to TestApp::Employee;
+    column employee => references TestApp::Employee;
     column phone    => type is 'varchar';
     }
 }

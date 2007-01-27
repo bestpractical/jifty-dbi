@@ -119,7 +119,7 @@ package TestApp::Phone;
 BEGIN {
     use Jifty::DBI::Schema;
     use Jifty::DBI::Record schema {
-    column employee => refers_to TestApp::Employee;
+    column employee => references TestApp::Employee;
     column phone    => type is 'varchar(18)';
     }
 }

@@ -70,16 +70,13 @@ use Object::Declare (
         as          => '',
         ajax        => 'ajax_',
         refers_to   => sub { refers_to => @_ },
+        references  => sub { refers_to => @_ },
     },
 );
 use Class::Data::Inheritable;
 use UNIVERSAL::require ();
 
 our @EXPORT = qw( defer lazy column schema by render_as since till );
-
-### We could export these two and make "refers to Foo::Bar" work, but it breaks when "by" is given. 
-# sub refers ($) { $_[0]->refers_to }
-# sub to (*) { $_[0] }
 
 sub by ($) { @_ }
 sub render_as ($) { render as @_ }
@@ -357,13 +354,13 @@ sub register_types {
 
 __END__
 
-=head2 refers_to
+=head2 references
 
 Indicates that the column references an object or a collection of objects in another
 class.  You may refer to either a class that inherits from Jifty::Record by a primary
 key in that class or to a class that inherits from Jifty::Collection.
 
-Correct usage is C<refers_to Application::Model::OtherClass by 'column_name'>, where
+Correct usage is C<references Application::Model::OtherClass by 'column_name'>, where
 Application::Model::OtherClass is a valid Jifty model and C<'column_name'> is
 a column containing unique values in OtherClass.  You can omit C<by 'column_name'> and
 the column name 'id' will be used.
@@ -376,7 +373,11 @@ columns referring to Jifty::Collections.
 
 For columns referring to Jifty::Records you can access the actual value of the column
 instead of the object reference by appending '_id' to the column name.  As a result,
-you may not end any column name which uses 'refers_to' using '_id'.
+you may not end any column name which uses 'references' using '_id'.
+
+=head2 refers_to
+
+Synonym for C<references>.
 
 =cut
 
