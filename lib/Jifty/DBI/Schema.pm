@@ -69,6 +69,8 @@ use Object::Declare (
         are         => '',
         as          => '',
         ajax        => 'ajax_',
+        since       => sub { since => @_},
+        until       => sub { until => @_},
         refers_to   => sub { refers_to => @_ },
         refers      => sub { refers_to => @_ },
     }
