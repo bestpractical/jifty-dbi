@@ -70,13 +70,16 @@ use Object::Declare (
         as          => '',
         ajax        => 'ajax_',
         refers_to   => sub { refers_to => @_ },
-        refers      => sub { refers_to => @_ },
     },
 );
 use Class::Data::Inheritable;
 use UNIVERSAL::require ();
 
 our @EXPORT = qw( defer lazy column schema by render_as since till );
+
+### We could export these two and make "refers to Foo::Bar" work, but it breaks when "by" is given. 
+# sub refers ($) { $_[0]->refers_to }
+# sub to (*) { $_[0] }
 
 sub by ($) { @_ }
 sub render_as ($) { render as @_ }

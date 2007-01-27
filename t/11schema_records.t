@@ -266,7 +266,7 @@ BEGIN {
     use Jifty::DBI::Schema;
     use Jifty::DBI::Record schema {
     column name => type is 'varchar';
-    column phones => refers TestApp::PhoneCollection by 'employee';
+    column phones => refers_to TestApp::PhoneCollection by 'employee';
     }
 }
 
