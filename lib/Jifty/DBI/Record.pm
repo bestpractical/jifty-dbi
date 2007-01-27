@@ -93,6 +93,10 @@ sub import {
         $callback->() if $callback;
     }
     $class->SUPER::import(@_);
+
+    # Turn off redefinition warnings in the caller's scope
+    @_ = (warnings => 'redefine');
+    goto &warnings::unimport;
 }
 
 =head2 id
