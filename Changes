@@ -1,5 +1,9 @@
 Revision history for Perl extension Jifty::DBI.
 
+0.34 Sun Jan 28 21:28:00 CST 2007
+
+- Added a method to the schema generator to output the SQL for a single column
+
 0.32 Fri Jan 26 20:51:12 CST 2007
 
 - Improved deprecation warning for "length is 42":
