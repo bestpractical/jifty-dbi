@@ -407,7 +407,7 @@ sub columns {
                 <=> ( ( $a->type || '' ) eq 'serial' ) )
                 or ( ($a->sort_order || 0) <=> ($b->sort_order || 0))
                 or ( $a->name cmp $b->name )
-            } values %{ $self->COLUMNS }
+            } values %{ $self->COLUMNS || {} }
 
 
 	])}
