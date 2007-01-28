@@ -156,7 +156,7 @@ thereof.  It may also be a string which is the name of such a
 class/subclass; in the latter case, C<add_model> will instantiate an
 object of the class.
 
-The model must define the instance methods C<Schema> and C<Table>.
+The model must define the instance methods C<schema> and C<table>.
 
 Returns true if the model was added successfully; returns a false
 C<Class::ReturnValue> error otherwise.
@@ -190,7 +190,22 @@ sub add_model {
 
     $self->_db_schema->addtable($table_obj);
 
-    1;
+    return 1;
+}
+
+=head2 column_definition_sql TABLENAME COLUMNNAME
+
+Given a tablename and a column name, returns the SQL fragment 
+describing that column for the current database.
+
+=cut
+
+sub column_definition_sql {
+    my $self = shift;
+    my $table = shift;
+    my $col = shift;
+    my $table_obj = $self->_db_schema->table($table);
+    return $table_obj->column( $col )->line( $self->handle->dbh )
 }
 
 =head2 create_table_sql_statements
@@ -211,6 +226,7 @@ sub create_table_sql_statements {
 Returns a string containing a sequence of SQL statements to create tables for all of
 the models added to the SchemaGenerator.
 
+This is just a trivial wrapper around L</create_Table_sql_statements>.
 
 =cut
 
