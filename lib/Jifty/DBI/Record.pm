@@ -406,7 +406,7 @@ sub columns {
                 <=> ( ( $a->type || '' ) eq 'serial' ) )
                 or ( ($a->sort_order || 0) <=> ($b->sort_order || 0))
                 or ( $a->name cmp $b->name )
-            } values %{ $self->COLUMNS }
+            } values %{ $self->COLUMNS || {} }
 
 
 	])}
@@ -968,6 +968,19 @@ sub create {
         return ($before_ret) unless ($before_ret);
     }
 
+    my $ret = $self->__create(%attribs);
+    $self->after_create( \$ret ) if $self->can('after_create');
+    if ($class) {
+        $self->load_by_cols(id => $ret);
+        return ($self);
+    }
+    else {
+     return ($ret);
+    }
+}
+
+sub __create {
+    my ($self, %attribs) = @_;
     foreach my $column_name ( keys %attribs ) {
         my $column = $self->column($column_name);
         unless ($column) {
@@ -1011,15 +1024,7 @@ sub create {
         }
     }
 
-    my $ret = $self->_handle->insert( $self->table, %attribs );
-    $self->after_create( \$ret ) if $self->can('after_create');
-    if ($class) {
-        $self->load_by_cols(id => $ret);
-        return ($self);
-    }
-    else {
-     return ($ret);
-    }
+    return $self->_handle->insert( $self->table, %attribs );
 }
 
 =head2 delete

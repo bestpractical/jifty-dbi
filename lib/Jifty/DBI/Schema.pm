@@ -254,7 +254,7 @@ sub _init_column {
     my $name   = $column->name;
 
     my $from = (caller(2))[0];
-    if ($from =~ s/::Schema$//) {
+    if ($from =~ s/::Schema$// && $from !~ /Script/) {
         no strict 'refs';
 
         carp << "." unless $from->{_seen_column_warning}++;

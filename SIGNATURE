@@ -1,12 +1,12 @@
 This file contains message digests of all files listed in MANIFEST,
-signed via the Module::Signature module, version 0.55.
+signed via the Module::Signature module, version 0.41.
 
 To verify the content in this distribution, first make sure you have
 Module::Signature installed, then type:
 
     % cpansign -v
 
-It will check each file's integrity, as well as the signature's
+It would check each file's integrity, as well as the signature's
 validity.  If "==> Signature verified OK! <==" is not displayed,
 the distribution may already have been compromised, and you should
 not run its Makefile.PL or Build.PL.
@@ -21,7 +21,7 @@ SHA1 45d5f1856267d73c7a4a21f8f584b15cfd1bae9b Makefile.PL
 SHA1 d0943ab047f543c92405564ab77ba008052544e6 README
 SHA1 82d6ac3f6def48558d09f8b6e3b53ed4194d8c81 ROADMAP
 SHA1 9d304f35438f847863969f6a069598379f5a9db2 debian/README
-SHA1 9fd83b906fae49f559fe5d6f8a6912b63dd34154 debian/changelog
+SHA1 9c58e250307d4ff61d3aa2e6f2250fbacf094d07 debian/changelog
 SHA1 5d9474c0309b7ca09a182d888f73b37a8fe1362c debian/compat
 SHA1 24cc11618a487ebaa24b7538eca0c066a51ad513 debian/control
 SHA1 c1085db4f95bd6e7e7470ccab55f8adba10d5024 debian/rules
@@ -93,7 +93,7 @@ SHA1 e9c6a5881fc60173fbc8d479c1afd2ce3b43bef1 t/pod.t
 SHA1 2f14a9a3247219233d5406ecb5e1950c757bc33b t/testmodels.pl
 SHA1 9b6cf7d135201f3f5ac4e29eaf180c85ba2e2bbf t/utils.pl
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.3 (Darwin)
+Version: GnuPG v1.4.3 (GNU/Linux)
 
 iD8DBQFFugMLtLPdNzw1AaARAke3AKCaJeRcBcCuOf5DEFLK+q9JgVaa7gCdFeH5
 zofu7nWSY/r9+A4aXHcIhfQ=
