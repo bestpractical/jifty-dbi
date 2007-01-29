@@ -61,9 +61,10 @@ sub new {
     return $self;
 }
 
-=head2 connect PARAMHASH: Driver, Database, Host, User, Password
+=head2 connect PARAMHASH
 
-Takes a paramhash and connects to your DBI datasource. 
+Takes a paramhash and connects to your DBI datasource, with the keys C<driver>,
+C<database>, C<host>, C<user> and C<password>.
 
 If you created the handle with 
      Jifty::DBI::Handle->new
@@ -134,6 +135,8 @@ sub _upgrade_handle {
 
     my $driver = shift;
     my $class  = 'Jifty::DBI::Handle::' . $driver;
+
+    local $@;
     eval "require $class";
     return if $@;
 
@@ -332,6 +335,27 @@ sub dbh {
     return ( $DBIHandle{$self} ||= $PrevHandle );
 }
 
+=head2 delete $table_NAME @KEY_VALUE_PAIRS
+
+Takes a table name and a set of key-value pairs in an array. splits the key value pairs, constructs an DELETE statement and performs the delete. Returns the row_id of this row.
+
+=cut
+
+sub delete {
+    my ( $self, $table, @pairs ) = @_;
+
+    my @bind  = ();
+    my $where = 'WHERE ';
+    while (my $key = shift @pairs) {
+        $where .= $key . "=?" . " AND ";
+        push( @bind, shift(@pairs) );
+    }
+
+    $where =~ s/AND $//;
+    my $query_string = "DELETE FROM " . $table . ' ' . $where;
+    $self->simple_query( $query_string, @bind );
+}
+
 =head2 insert $table_NAME @KEY_VALUE_PAIRS
 
 Takes a table name and a set of key-value pairs in an array. splits the key value pairs, constructs an INSERT statement and performs the insert. Returns the row_id of this row.
@@ -363,13 +387,13 @@ sub insert {
 
 =head2 update_record_value 
 
-Takes a hash with columns: Table, Column, Value PrimaryKeys, and 
-IsSQLFunction.  Table, and Column should be obvious, Value is where you 
-set the new value you want the column to have. The primary_keys column should 
-be the lvalue of Jifty::DBI::Record::PrimaryKeys().  Finally 
-IsSQLFunction is set when the Value is a SQL function.  For example, you 
-might have ('Value'=>'PASSWORD(string)'), by setting IsSQLFunction that 
-string will be inserted into the query directly rather then as a binding. 
+Takes a hash with columns: C<table>, C<column>, C<value>, C<primary_keys>, and
+C<is_sql_function>.  The first two should be obvious; C<value> is where you 
+set the new value you want the column to have. The C<primary_keys> column should 
+be the lvalue of Jifty::DBI::Record::PrimaryKeys().  Finally ,
+C<is_sql_function> is set when the Value is a SQL function.  For example, you 
+might have C<< value => 'PASSWORD(string)' >>, by setting C<is_sql_function> to true,
+that string will be inserted into the query directly rather then as a binding. 
 
 =cut
 
@@ -411,8 +435,9 @@ sub update_record_value {
 
 =head2 update_table_value table COLUMN NEW_value RECORD_ID IS_SQL
 
-Update column COLUMN of table table where the record id = RECORD_ID.  if IS_SQL is set,
-don\'t quote the NEW_VALUE
+Update column COLUMN of table table where the record id = RECORD_ID.
+
+If IS_SQL is set, don't quote the NEW_VALUE.
 
 =cut
 
@@ -480,6 +505,8 @@ sub simple_query {
         $basetime = Time::HiRes::time();
     }
     my $executed;
+
+    local $@;
     {
         no warnings 'uninitialized';    # undef in bind_values makes DBI sad
         eval { $executed = $sth->execute(@bind_values) };
