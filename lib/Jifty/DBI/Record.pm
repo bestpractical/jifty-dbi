@@ -968,19 +968,6 @@ sub create {
         return ($before_ret) unless ($before_ret);
     }
 
-    my $ret = $self->__create(%attribs);
-    $self->after_create( \$ret ) if $self->can('after_create');
-    if ($class) {
-        $self->load_by_cols(id => $ret);
-        return ($self);
-    }
-    else {
-     return ($ret);
-    }
-}
-
-sub __create {
-    my ($self, %attribs) = @_;
     foreach my $column_name ( keys %attribs ) {
         my $column = $self->column($column_name);
         unless ($column) {
@@ -1024,7 +1011,15 @@ sub __create {
         }
     }
 
-    return $self->_handle->insert( $self->table, %attribs );
+    my $ret = $self->_handle->insert( $self->table, %attribs );
+    $self->after_create( \$ret ) if $self->can('after_create');
+    if ($class) {
+        $self->load_by_cols(id => $ret);
+        return ($self);
+    }
+    else {
+     return ($ret);
+    }
 }
 
 =head2 delete
@@ -1073,17 +1068,8 @@ sub __delete {
     #TODO Update internal data structure
 
     ## Constructs the where clause.
-    my @bind  = ();
     my %pkeys = $self->primary_keys();
-    my $where = 'WHERE ';
-    foreach my $key ( keys %pkeys ) {
-        $where .= $key . "=?" . " AND ";
-        push( @bind, $pkeys{$key} );
-    }
-
-    $where =~ s/AND\s$//;
-    my $query_string = "DELETE FROM " . $self->table . ' ' . $where;
-    my $return       = $self->_handle->simple_query( $query_string, @bind );
+    my $return       = $self->_handle->delete( $self->table, $self->primary_keys );
 
     if ( UNIVERSAL::isa( 'Class::ReturnValue', $return ) ) {
         return ($return);
