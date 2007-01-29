@@ -987,6 +987,9 @@ sub __create {
     foreach my $column_name ( keys %attribs ) {
         my $column = $self->column($column_name);
         unless ($column) {
+            # "Virtual" columns beginning with __ is passed through to handle without munging.
+            next if $column_name =~ /^__/;
+
             Carp::confess "$column_name isn't a column we know about";
         }
         if (    $column->readable
