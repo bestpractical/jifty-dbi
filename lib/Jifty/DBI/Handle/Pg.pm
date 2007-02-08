@@ -125,7 +125,7 @@ sub blob_params {
     my $type = shift;
 
     # Don't assign to key 'value' as it is defined later.
-    return ( { pg_type => DBD::Pg::PG_BYTEA() } ) if $type eq "blob";
+    return ( { pg_type => DBD::Pg::PG_BYTEA() } ) if $type =~ /^(?:blob|bytea)$/;
     return ( {} );
 }
 
