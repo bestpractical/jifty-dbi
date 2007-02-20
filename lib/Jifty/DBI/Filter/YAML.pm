@@ -4,8 +4,19 @@ use warnings;
 package Jifty::DBI::Filter::YAML;
 use base qw/ Jifty::DBI::Filter /;
 
-eval "use YAML::Syck";
-if ($@) { use YAML; }
+my ($Dump, $Load);
+
+eval "use YAML::Syck ()";
+if ($@) { 
+    use YAML (); 
+    $Dump = \&YAML::Dump;
+    $Load = \&YAML::Load;
+}
+
+else {
+    $Dump = \&YAML::Syck::Dump;
+    $Load = \&YAML::Syck::Load;
+}
 
 =head1 NAME
 
@@ -47,7 +58,7 @@ sub encode {
     my $value_ref = $self->value_ref;
     return unless defined $$value_ref;
 
-    $$value_ref = Dump($$value_ref);
+    $$value_ref = $Dump->($$value_ref);
 }
 
 =head2 decode
@@ -62,7 +73,7 @@ sub decode {
     my $value_ref = $self->value_ref;
     return unless defined $$value_ref;
 
-    $$value_ref = Load($$value_ref);
+    $$value_ref = $Load->($$value_ref);
 }
 
 =head1 IMPLEMENTATION
