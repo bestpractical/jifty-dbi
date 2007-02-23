@@ -116,7 +116,6 @@ EOF
 BEGIN {
     use Jifty::DBI::Schema;
 
-    use Scalar::Defer qw/ defer /;
 
     use Jifty::DBI::Record schema {
     column created =>
