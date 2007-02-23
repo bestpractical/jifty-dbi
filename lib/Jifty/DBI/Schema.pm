@@ -81,10 +81,7 @@ sub schema (&) {
                 if \&{"$from\::$sym"} == \&$sym;
         }
 
-        # Then initialize all columns
-        foreach my $column (sort keys %{$from->COLUMNS||{}}) {
-            $from->_init_methods_for_column($from->COLUMNS->{$column});
-        }
+        $from->_init_methods_for_columns;
     };
 
     return('-base' => $new_code);
@@ -479,8 +476,10 @@ sub since {
 
 =head2 till
 
-What application version this column was last supported.  Correct usage
-is C<till '0.2.5'>.
+The version after this column was supported. The column is not available in
+the version named, but would have been in the version immediately prior.
+
+Correct usage is C<till '0.2.5'>. This indicates that the column is not available in version C<0.2.5>, but was available in C<0.2.4>. The value specified for L</since> must be less than this version.
 
 =cut
 

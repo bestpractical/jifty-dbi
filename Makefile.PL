@@ -18,6 +18,7 @@ requires('Encode'  => 2.10);
 requires('Exporter::Lite');
 requires('Lingua::EN::Inflect');
 requires('UNIVERSAL::require');
+requires('version');
 build_requires('Test::More' => 0.52);
 build_requires('DBD::SQLite');
 no_index directory => 'ex';

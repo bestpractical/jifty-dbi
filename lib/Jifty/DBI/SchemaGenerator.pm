@@ -8,6 +8,7 @@ use DBIx::DBSchema;
 use DBIx::DBSchema::Column;
 use DBIx::DBSchema::Table;
 use Class::ReturnValue;
+use version;
 
 our $VERSION = '0.01';
 
@@ -258,6 +259,24 @@ sub _db_schema_table_from_model {
         # Skip "Virtual" columns - (foreign keys to collections)
         next if $column->virtual;
         next if defined $column->alias_for_column;
+
+        # If schema_version is defined, make sure columns are for that version
+        if ($model->can('schema_version') and defined $model->schema_version) {
+
+            # Skip it if the app version is earlier than the column version
+            next if defined $column->since 
+                and $model->schema_version <  version->new($column->since);
+
+            # Skip it if the app version is the same as or later than the 
+            # column version
+            next if defined $column->till
+                and $model->schema_version >= version->new($column->till);
+
+        }
+
+        # Otherwise, assume the latest version and eliminate till columns
+        next if (!$model->can('schema_version') or !defined $model->schema_version)
+            and defined $column->till;
 
         push @cols,
             DBIx::DBSchema::Column->new(

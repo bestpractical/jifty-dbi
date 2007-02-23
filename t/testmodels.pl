@@ -53,9 +53,22 @@ column name =>
 column phone =>
   type is 'varchar';
 
+column street =>
+  type is 'varchar',
+  since '0.2.4',
+  till '0.2.8';
+
 };
 
 sub validate_name { 1 }
+
+my $schema_version = undef;
+sub schema_version {
+    my $class = shift;
+    my $new_schema_version = shift;
+    $schema_version = $new_schema_version if defined $new_schema_version;
+    return $schema_version;
+}
 
 sub schema_sqlite {
     return q{
@@ -68,6 +81,18 @@ sub schema_sqlite {
     }
 }
 
+sub schema_sqlite_024 {
+    return q{
+    CREATE TABLE addresses (
+     id INTEGER PRIMARY KEY NOT NULL  ,
+     employee_id integer   ,
+     name varchar  DEFAULT 'Frank' ,
+     phone varchar ,
+     street varchar
+    ) ;
+    }
+}
+
 sub schema_pg {
     return q{
     CREATE TABLE addresses ( 
@@ -75,6 +100,19 @@ sub schema_pg {
       employee_id integer  ,
       name varchar DEFAULT 'Frank' ,
       phone varchar ,
+      PRIMARY KEY (id)
+    ) ;
+    };
+}
+
+sub schema_pg_024 {
+    return q{
+    CREATE TABLE addresses ( 
+      id serial NOT NULL , 
+      employee_id integer  ,
+      name varchar DEFAULT 'Frank' ,
+      phone varchar ,
+      street varchar ,
       PRIMARY KEY (id)
     ) ;
     };

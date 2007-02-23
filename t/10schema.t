@@ -3,8 +3,9 @@
 use strict;
 use warnings;
 use Test::More;
+use version;
 
-use constant TESTS_PER_DRIVER => 18;
+use constant TESTS_PER_DRIVER => 48;
 our @available_drivers;
 
 BEGIN {
@@ -90,6 +91,40 @@ foreach my $d ( @available_drivers ) {
      is_ignoring_space($SG->create_table_sql_text, 
                        $manually_make_text, 
                        'create_table_sql_text is the statements in create_table_sql_statements');
+
+    my $version_024_min = version->new('0.2.4');
+    my $version_024_max = version->new('0.2.8');
+
+    for my $version (qw/ 0.2.0 0.2.4 0.2.6 0.2.8 0.2.9 /) {
+
+        Sample::Address->schema_version($version);
+
+        my $SG = Jifty::DBI::SchemaGenerator->new($handle, $version);
+        $SG->add_model('Sample::Address');
+
+        my $street_added
+            = version->new($version) >= $version_024_min
+           && version->new($version) <  $version_024_max;
+
+        ok(Sample::Address->COLUMNS->{id}->active, 'id active');
+        ok(Sample::Address->COLUMNS->{employee_id}->active, 'employee_id active');
+        ok(Sample::Address->COLUMNS->{name}->active, 'name active');
+        ok(Sample::Address->COLUMNS->{phone}->active, 'phone active');
+        if ($street_added) {
+            ok(Sample::Address->COLUMNS->{street}->active, 'street active');
+        }
+
+        else {
+            ok(!Sample::Address->COLUMNS->{street}->active, 'street not active');
+        }
+
+        my $address_version_schema = $street_added ? "${address_schema}_024"
+            :                                         $address_schema;
+
+        is_ignoring_space($SG->create_table_sql_text,
+                        Sample::Address->$address_version_schema,
+                        "got the right Address schema for $d version $version");
+    }
 
     cleanup_schema( 'TestApp', $handle );
     disconnect_handle( $handle );
