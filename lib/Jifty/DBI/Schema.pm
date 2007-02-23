@@ -200,21 +200,6 @@ sub schema (&) {
 
 	my @columns = &declare($code);
 
-	# Unimport all our symbols from the calling package,
-        # except for "lazy" and "defer".
-	foreach my $sym (@EXPORT) {
-            next if $sym eq 'lazy' or $sym eq 'defer';
-
-	    no strict 'refs';
-	    undef *{"$from\::$sym"}
-		if \&{"$from\::$sym"} == \&$sym;
-	}
-
-	foreach my $column (@columns) {
-	    next if !ref($column);
-	    _init_column($column);
-	}
-
         $from->_init_methods_for_columns;
     };
 

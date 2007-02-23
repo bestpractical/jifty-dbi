@@ -468,7 +468,7 @@ sub columns {
                 <=> ( ( $a->type || '' ) eq 'serial' ) )
                 or ( ($a->sort_order || 0) <=> ($b->sort_order || 0))
                 or ( $a->name cmp $b->name )
-            } grep { $_->active } values %{ $self->_columns_hashref }
+            } grep { $_->active } values %{ $self->COLUMNS || {} }
 	])}
 }
 
@@ -490,7 +490,7 @@ sub all_columns {
                 <=> ( ( $a->type || '' ) eq 'serial' ) )
                 or ( ($a->sort_order || 0) <=> ($b->sort_order || 0))
                 or ( $a->name cmp $b->name )
-            } values %{ $self->_columns_hashref || {} }
+            } values %{ $self->COLUMNS || {} }
 }
 
 sub _columns_hashref {
