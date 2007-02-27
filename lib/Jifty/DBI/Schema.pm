@@ -76,12 +76,17 @@ use Object::Declare (
 use Class::Data::Inheritable;
 use UNIVERSAL::require ();
 
-our @EXPORT = qw( defer lazy column schema by render_as since till );
+our @EXPORT = qw( defer lazy column schema by render_as since till literal);
 
 sub by ($) { @_ }
 sub render_as ($) { render as @_ }
 sub since ($) { since is @_ }
 sub till ($) { till is @_ }
+
+sub literal($) {
+    my $value = shift;
+    return \$value;
+}
 
 our $SCHEMA;
 our $SORT_ORDERS = {};
