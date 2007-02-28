@@ -2,7 +2,10 @@ package Jifty::DBI::Record::Plugin;
 
 use warnings;
 use strict;
-use Carp;
+
+
+use base qw/Exporter/;
+
 
 sub import {
     my $self = shift;
@@ -11,7 +14,9 @@ sub import {
             $caller->COLUMNS->{$_->name} = $_ ;
             $caller->_init_methods_for_column($_);
     }
- return 1;
+    $self->export_to_level(1,undef);
 }
+
+
 
 1;
