@@ -19,12 +19,19 @@ requires('Exporter::Lite');
 requires('Lingua::EN::Inflect');
 requires('Object::Declare' => 0.22);
 requires('UNIVERSAL::require');
+requires('version');
 build_requires('Test::More' => 0.52);
 build_requires('DBD::SQLite');
 no_index directory => 'ex';
-features( 'Memcached support' => [
-    -default => 1,
-    Cache::Memcached => '']
+features( 
+    'Memcached support' => [
+        -default => 1,
+        Cache::Memcached => ''
+    ],
+    'YAML filter' => [
+        -default => 1,
+        (can_cc() ? requires('YAML::Syck') : requires('YAML')),
+    ],
 );
 auto_install();
 &WriteAll;

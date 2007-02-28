@@ -8,7 +8,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 70;
+use constant TESTS_PER_DRIVER => 71;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -48,6 +48,13 @@ SKIP: {
         my $record2 = TestApp::Address->create( _handle => $handle, name => 'Enoch', phone => '123 456 7890');
         isa_ok($record2, 'TestApp::Address');
         ok($record2->id, "Created a record with a class method");
+        is_deeply({ $record2->as_hash }, {
+            id          => $record2->id,
+            employee_id => undef,
+            name        => 'Enoch',
+            address     => '',
+            phone       => '123 456 7890',
+        }, 'as_hash works');
 
         my $clone2 = TestApp::Address->load_by_cols( _handle => $handle, name => 'Enoch');
         isa_ok($clone2, 'TestApp::Address');

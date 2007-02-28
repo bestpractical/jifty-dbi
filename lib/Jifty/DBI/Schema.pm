@@ -204,10 +204,7 @@ sub schema (&) {
 	    _init_column($column);
 	}
 
-	# Then initialize all columns
-	foreach my $column ( sort keys %{ $from->_columns_hashref } ) {
-	    $from->_init_methods_for_column( $from->_columns_hashref->{$column} );
-	}
+        $from->_init_methods_for_columns;
     };
 
     return ('-base' => $new_code);
@@ -502,8 +499,10 @@ is C<since '0.1.5'>.
 
 =head2 till
 
-What application version this column was last supported.  Correct usage
-is C<till '0.2.5'>.
+The version after this column was supported. The column is not available in
+the version named, but would have been in the version immediately prior.
+
+Correct usage is C<till '0.2.5'>. This indicates that the column is not available in version C<0.2.5>, but was available in C<0.2.4>. The value specified for L</since> must be less than this version.
 
 =cut
 

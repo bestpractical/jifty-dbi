@@ -6,7 +6,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 16;
+use constant TESTS_PER_DRIVER => 18;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -52,6 +52,11 @@ SKIP: {
         # undef/NULL
         $rec->set_created;
         is($rec->created, undef, "Set undef value" );
+
+        # Create using default undef
+        my $rec2 = TestApp::User->new( handle => $handle );
+        isa_ok($rec2, 'Jifty::DBI::Record');
+        is($rec2->created, undef, 'Default of undef');
 
         # from string
         require POSIX;
@@ -111,18 +116,20 @@ EOF
 BEGIN {
     use Jifty::DBI::Schema;
 
+
     use Jifty::DBI::Record schema {
     column created =>
       type is 'datetime',
-      input_filters are qw/Jifty::DBI::Filter::DateTime/;
+      filters are qw/Jifty::DBI::Filter::DateTime/,
+      default is undef;
 
     column event_on =>
       type is 'date',
-      input_filters are qw/Jifty::DBI::Filter::Date/;
+      filters are qw/Jifty::DBI::Filter::Date/;
 
     column event_stops =>
       type is 'time',
-      input_filters are qw/Jifty::DBI::Filter::Time/;
+      filters are qw/Jifty::DBI::Filter::Time/;
     }
 }
 

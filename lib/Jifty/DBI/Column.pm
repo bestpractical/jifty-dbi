@@ -6,6 +6,7 @@ package Jifty::DBI::Column;
 our $VERSION = '0.01';
 use base qw/Class::Accessor::Fast Jifty::DBI::HasFilters/;
 use UNIVERSAL::require;
+use version;
 
 __PACKAGE__->mk_accessors qw/
     name
@@ -78,5 +79,48 @@ sub validator {
 
 sub length { Carp::croak('$column->length is no longer supported; use $column->max_length instead') }
 sub until { Carp::croak('$column->until is no longer supported; use $column->till instead') }
+
+=head2 active
+
+Returns the a true value if the column method exists for the current application
+version. The current application version is determined by checking the L<Jifty::DBI::Record/schema_version> of the column's L</record_class>. This method returns a false value if the column is not yet been added or has been dropped.
+
+This method returns a false value under these circumstances:
+
+=over
+
+=item *
+
+Both the C<since> trait and C<schema_version> method are defined and C<schema_version> is less than the version set on C<since>.
+
+=item *
+
+Both the C<till> trait and C<schema_version> method are defined and C<schema_version> is greater than or equal to the version set on C<till>.
+
+=back
+
+Otherwise, this method returns true.
+
+=cut
+
+sub active {
+    my $self    = shift;
+
+    return 1 unless $self->record_class->can('schema_version');
+    return 1 unless defined $self->record_class->schema_version;
+
+    my $version = version->new($self->record_class->schema_version);
+
+    # The application hasn't yet started using this column
+    return 0 if defined $self->since
+            and $version < version->new($self->since);
+
+    # The application stopped using this column
+    return 0 if defined $self->till
+            and $version >= version->new($self->till);
+
+    # The application currently uses this column
+    return 1;
+}
 
 1;

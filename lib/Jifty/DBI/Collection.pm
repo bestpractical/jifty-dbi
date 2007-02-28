@@ -32,7 +32,7 @@ perl objects
 =head1 DESCRIPTION
 
 This module provides an object-oriented mechanism for retrieving and
-updating data in a DBI-accesible database.
+updating data in a DBI-accessible database.
 
 In order to use this module, you should create a subclass of
 L<Jifty::DBI::Collection> and a subclass of L<Jifty::DBI::Record> for

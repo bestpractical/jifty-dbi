@@ -190,7 +190,40 @@ sub _init_columns {
 
         $self->_init_methods_for_column($column);
     }
+
 }
+
+=head2 _init_methods_for_columns
+
+This is an internal method responsible for calling L</_init_methods_for_column> for each column that has been configured.
+
+=cut
+
+sub _init_methods_for_columns {
+    my $self = shift;
+
+    for my $column (sort keys %{ $self->COLUMNS || {} }) {
+        $self->_init_methods_for_column($self->COLUMNS->{ $column });
+    }
+}
+
+=head2 schema_version
+
+If present, this method must return a string in '1.2.3' format to be used to determine which columns are currently active in the schema. That is, this value is used to determine which columns are defined, based upon comparison to values set in C<till> and C<since>.
+
+If no implementation is present, the "latest" schema version is assumed, meaning that any column defining a C<till> is not active and all others are.
+
+=head2 _init_methods_for_column COLUMN
+
+This method is used internally to update the symbol table for the record class to include an accessor and mutator for each column based upon the column's name.
+
+In addition, if your record class defines the method L</schema_version>, it will automatically generate methods according to whether the column currently exists for the current application schema version returned by that method. The C<schema_version> method must return a value in the same form used by C<since> and C<till>.
+
+If the column doesn't currently exist, it will create the methods, but they will die with an error message stating that the column does not exist for the current version of the application. If it does exist, a normal accessor and mutator will be created.
+
+See also L<Jifty::DBI::Column/active>, L<Jifty::DBI::Schema/since>, L<Jifty::DBI::Schema/till> for more information.
+
+=cut
 
 sub _init_methods_for_column {
     my $self   = $_[0];
@@ -203,30 +236,49 @@ sub _init_methods_for_column {
     # through add_column
     $column->record_class( $package ) if not $column->record_class;
 
+    # Check for the correct column type when the Storable filter is in use
+    if ( grep { $_ eq 'Jifty::DBI::Filter::Storable' }
+              ($column->input_filters, $column->output_filters)
+         and $column->type !~ /^(blob|bytea)$/i)
+    {
+        die "Column '$column_name' in @{[$column->record_class]} ".
+            "uses the Storable filter but is not of type 'blob'.\n";
+    }
+
     no strict 'refs';    # We're going to be defining subs
 
     if ( not $self->can($column_name) ) {
         # Accessor
         my $subref;
-        if ( $column->readable ) {
-            if ( UNIVERSAL::isa( $column->refers_to, "Jifty::DBI::Record" ) )
-            {
-                $subref = sub {
-                    $_[0]->_to_record( $column_name,
-                        $_[0]->__value($column_name) );
-                };
-            } elsif (
-                UNIVERSAL::isa(
-                    $column->refers_to, "Jifty::DBI::Collection"
-                )
-                )
-            {
-                $subref = sub { $_[0]->_collection_value($column_name) };
+        if ( $column->active ) {
+            
+
+            if ( $column->readable ) {
+                if ( UNIVERSAL::isa( $column->refers_to, "Jifty::DBI::Record" ) )
+                {
+                    $subref = sub {
+                        $_[0]->_to_record( $column_name,
+                            $_[0]->__value($column_name) );
+                    };
+                } elsif (
+                    UNIVERSAL::isa(
+                        $column->refers_to, "Jifty::DBI::Collection"
+                    )
+                    )
+                {
+                    $subref = sub { $_[0]->_collection_value($column_name) };
+                } else {
+                    $subref = sub { return ( $_[0]->_value($column_name) ) };
+                }
             } else {
-                $subref = sub { return ( $_[0]->_value($column_name) ) };
+                $subref = sub { return '' }
             }
-        } else {
-            $subref = sub { return '' }
+        }
+        else {
+            # XXX sterling: should this be done with Class::ReturnValue instead
+            $subref = sub {
+                Carp::croak("column $column_name is not available for $package for schema version ".$self->schema_version);
+            };
         }
         *{ $package . "::" . $column_name } = $subref;
 
@@ -235,27 +287,45 @@ sub _init_methods_for_column {
     if ( not $self->can( "set_" . $column_name ) ) {
         # Mutator
         my $subref;
-        if ( $column->writable ) {
-            if ( UNIVERSAL::isa( $column->refers_to, "Jifty::DBI::Record" ) )
-            {
-                $subref = sub {
-                    my $self = shift;
-                    my $val  = shift;
+        if ( $column->active ) {
+            if ( $column->writable ) {
+                if ( UNIVERSAL::isa( $column->refers_to, "Jifty::DBI::Record" ) )
+                {
+                    $subref = sub {
+                        my $self = shift;
+                        my $val  = shift;
 
-                    $val = $val->id
-                        if UNIVERSAL::isa( $val, 'Jifty::DBI::Record' );
-                    return (
-                        $self->_set( column => $column_name, value => $val )
+                        $val = $val->id
+                            if UNIVERSAL::isa( $val, 'Jifty::DBI::Record' );
+                        return (
+                            $self->_set( column => $column_name, value => $val )
+                        );
+                    };
+                } elsif (
+                    UNIVERSAL::isa(
+                        $column->refers_to, "Jifty::DBI::Collection"
+                    )
+                    )
+                {    # XXX elw: collections land here, now what?
+                    my $ret     = Class::ReturnValue->new();
+                    my $message = "Collection column '$column_name' not writable";
+                    $ret->as_array( 0, $message );
+                    $ret->as_error(
+                        errno        => 3,
+                        do_backtrace => 0,
+                        message      => $message
                     );
-                };
-            } elsif (
-                UNIVERSAL::isa(
-                    $column->refers_to, "Jifty::DBI::Collection"
-                )
-                )
-            {    # XXX elw: collections land here, now what?
+                    $subref = sub { return ( $ret->return_value ); };
+                } else {
+                    $subref = sub {
+                        return (
+                            $_[0]->_set( column => $column_name, value => $_[1] )
+                        );
+                    };
+                }
+            } else {
                 my $ret     = Class::ReturnValue->new();
-                my $message = "Collection column '$column_name' not writable";
+                my $message = 'Immutable column';
                 $ret->as_array( 0, $message );
                 $ret->as_error(
                     errno        => 3,
@@ -263,23 +333,13 @@ sub _init_methods_for_column {
                     message      => $message
                 );
                 $subref = sub { return ( $ret->return_value ); };
-            } else {
-                $subref = sub {
-                    return (
-                        $_[0]->_set( column => $column_name, value => $_[1] )
-                    );
-                };
             }
-        } else {
-            my $ret     = Class::ReturnValue->new();
-            my $message = 'Immutable column';
-            $ret->as_array( 0, $message );
-            $ret->as_error(
-                errno        => 3,
-                do_backtrace => 0,
-                message      => $message
-            );
-            $subref = sub { return ( $ret->return_value ); };
+        }
+        else {
+            # XXX sterling: should this be done with Class::ReturnValue instead
+            $subref = sub {
+                Carp::croak("column $column_name is not available for $package for schema version ".$self->schema_version);
+            };
         }
         *{ $package . "::" . "set_" . $column_name } = $subref;
     }
@@ -406,11 +466,29 @@ sub columns {
                 <=> ( ( $a->type || '' ) eq 'serial' ) )
                 or ( ($a->sort_order || 0) <=> ($b->sort_order || 0))
                 or ( $a->name cmp $b->name )
-            } values %{ $self->_columns_hashref }
-
-
+            } grep { $_->active } values %{ $self->_columns_hashref }
 	])}
+}
 
+=head2 all_columns
+
+  my @all_columns = $record->all_columns;
+
+Returns all the columns for the table, even those that are inactive.
+
+=cut
+
+sub all_columns {
+    my $self = shift;
+
+    # Not cached because it's not expected to be used often
+    return
+        sort {
+            ( ( ( $b->type || '' ) eq 'serial' )
+                <=> ( ( $a->type || '' ) eq 'serial' ) )
+                or ( ($a->sort_order || 0) <=> ($b->sort_order || 0))
+                or ( $a->name cmp $b->name )
+            } values %{ $self->_columns_hashref || {} }
 }
 
 sub _columns_hashref {
@@ -595,8 +673,8 @@ Returns a version of this object's readable columns rendered as a hash of key =>
 sub as_hash {
     my $self = shift;
     my %values;
-     map {$values{$_} = $self->$_()} $self->readable_attributes  ;
-     return %values;
+    $values{$_} = $self->$_() for $self->readable_attributes;
+    return %values;
 }
 
 
@@ -1015,7 +1093,10 @@ sub __create {
         # Implement 'is distinct' checking
         if ( $column->distinct ) {
             my $ret = $self->is_distinct( $column_name, $attribs{$column_name} );
-            return ( $ret ) if not ( $ret );
+            if (not $ret ) {
+                Carp::cluck("$self failed a 'is_distinct' check for $column_name on ".$attribs{$column_name});
+            return ( $ret ) 
+            }
         }
 
         if ( $column->type =~ /^(text|longtext|clob|blob|lob|bytea)$/i ) {
