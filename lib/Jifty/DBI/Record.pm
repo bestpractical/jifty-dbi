@@ -384,7 +384,7 @@ Returns the $value of a $column.
 sub column {
     my $self = shift;
     my $name = lc( shift || '' );
-    my $col = $self->COLUMNS;
+    my $col = $self->_columns_hashref;
     return undef unless $col && exists $col->{$name};
     return $col->{$name};
 
@@ -406,12 +406,19 @@ sub columns {
                 <=> ( ( $a->type || '' ) eq 'serial' ) )
                 or ( ($a->sort_order || 0) <=> ($b->sort_order || 0))
                 or ( $a->name cmp $b->name )
-            } values %{ $self->COLUMNS || {} }
+            } values %{ $self->_columns_hashref }
 
 
 	])}
 
 }
+
+sub _columns_hashref {
+    my $self = shift;
+
+      return ($self->COLUMNS||{});
+}
+
 
 # sub {{{ readable_attributes
 
