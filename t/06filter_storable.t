@@ -66,7 +66,7 @@ sub schema_sqlite {
 <<EOF;
 CREATE table users (
     id integer primary key,
-    my_data text
+    my_data blob
 )
 EOF
 
@@ -77,7 +77,7 @@ sub schema_mysql {
 <<EOF;
 CREATE TEMPORARY table users (
     id integer auto_increment primary key,
-    my_data text
+    my_data blob
 )
 EOF
 
@@ -88,7 +88,7 @@ sub schema_pg {
 <<EOF;
 CREATE TEMPORARY table users (
     id serial primary key,
-    my_data text
+    my_data bytea
 )
 EOF
 
@@ -99,7 +99,7 @@ BEGIN {
 
     use Jifty::DBI::Record schema {
     column my_data =>
-        type is 'text',
+        type is 'blob',
         filters are qw/ Jifty::DBI::Filter::Storable /;
     }
 }
