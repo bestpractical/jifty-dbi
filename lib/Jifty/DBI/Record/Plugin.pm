@@ -9,7 +9,7 @@ sub import {
     my $caller = caller;
     for ($self->columns) {
             $caller->COLUMNS->{$_->name} = $_ ;
-            $self->_init_methods_for_column($_);
+            $caller->_init_methods_for_column($_);
     }
  return 1;
 }
