@@ -7,6 +7,8 @@ use Class::ReturnValue  ();
 use Lingua::EN::Inflect ();
 use Jifty::DBI::Column  ();
 use UNIVERSAL::require  ();
+use Class::Trigger qw/add_trigger call_trigger/;
+
 
 use base qw/
     Class::Data::Inheritable
@@ -608,8 +610,8 @@ sub _value {
     my $column = shift;
 
     my $value = $self->__value( $column => @_ );
-    my $method = $self->can("after_$column");
-    $method->( $self, \$value ) if $method;
+    $self->_run_callback( name => "after_".$column,
+                          args => \$value);
     return $value;
 }
 
@@ -696,23 +698,18 @@ sub _set {
         @_
     );
 
-    my $method = "before_set_" . $args{column};
-    if ( $self->can($method) ) {
-        my $before_set_ret = $self->$method( \%args );
-        return $before_set_ret
-            unless ($before_set_ret);
-    }
 
-    my $ok = $self->__set(%args);
+    my $ok = $self->_run_callback( name => "before_set_" . $args{column},
+                           args => \%args);
+    return $ok if not ($ok);
 
-    return $ok unless $ok;
+    $ok = $self->__set(%args);
+    return $ok if not $ok;
 
-    $method = "after_set_" . $args{column};
-    if( $self->can($method) ) {
         # Fetch the value back to make sure we have the actual value
         my $value = $self->_value($args{column});
-        $self->$method({column => $args{column}, value => $value});
-    }
+        my $after_set_ret = $self->_run_callback( name => "after_set_" . $args{column}, args => 
+        {column => $args{column}, value => $value});
 
     return $ok;
 }
@@ -1048,14 +1045,16 @@ sub create {
 
 
 
-    if ( $self->can('before_create') ) {
-        my $before_ret = $self->before_create( \%attribs );
-        return ($before_ret) unless ($before_ret);
-    }
+    my $ok = $self->_run_callback( name => "before_create",
+                           args => \%attribs);
+    return $ok if not ($ok);
 
     my $ret = $self->__create(%attribs);
 
-    $self->after_create( \$ret ) if $self->can('after_create');
+    $ok = $self->_run_callback( name => "after_create",
+                           args => \$ret);
+    return $ok if not ($ok);
+    
     if ($class) {
         $self->load_by_cols(id => $ret);
         return ($self);
@@ -1149,12 +1148,13 @@ value from the delete operation.
 
 sub delete {
     my $self = shift;
-    if ( $self->can('before_delete') ) {
-        my $before_ret = $self->before_delete();
-        return $before_ret unless ($before_ret);
-    }
+    my $before_ret = $self->_run_callback( name => 'before_delete' );
+    return $before_ret unless ($before_ret);
     my $ret = $self->__delete;
-    $self->after_delete( \$ret ) if $self->can('after_delete');
+
+    my $after_ret
+        = $self->_run_callback( name => 'after_delete', args => \$ret );
+    return $after_ret unless ($after_ret);
     return ($ret);
 
 }
@@ -1340,6 +1340,19 @@ sub is_distinct {
     } else {
         return (1);
     }
+}
+
+
+sub _run_callback {
+    my $self = shift;
+    my %args = ( name => undef,
+                 args => undef,
+                 @_);
+    my $method = $args{'name'};
+    if ( $self->can($method) ) {
+        return $self->$method( $args{args} );
+    }
+    else { return 1};
 }
 
 1;
