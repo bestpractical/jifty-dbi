@@ -1343,6 +1343,69 @@ sub is_distinct {
 }
 
 
+=head2 run_canonicalization_for_column
+
+=cut
+
+sub run_canonicalization_for_column {
+    my $self = shift;
+    my %args = ( column => undef,
+                 value => undef,
+                 @_);
+        my $key = $args{column};
+        my $attr = $args{value};
+        my $method = "canonicalize_$key";
+        my $func = $self->can($method) or return $attr;
+        return ($self->$func( $attr));
+}
+
+sub has_canonicalizer_for_column {
+    my $self = shift;
+    my $key = shift;
+        my $method = "canonicalize_$key";
+     if( $self->can($method) ) {
+         return 1;
+     } else {
+         return undef;
+     }
+}
+
+
+=head2 run_canonicalization_for_column
+
+=cut
+
+sub run_validation_for_column {
+    my $self = shift;
+    my %args = ( column => undef,
+                 value => undef,
+                 @_);
+        my $key = $args{'column'};
+        my $attr = $args{'value'};
+        my $method = "validate_$key";
+        if (my $func = $self->can($method)) {
+        my ( $val, $msg ) = $func->($self, $attr);
+        return ($val,$msg);
+    }
+
+    else {
+        return (1, 'Validation ok');
+    }
+}
+
+sub has_validator_for_column {
+    my $self = shift;
+    my $key = shift;
+        my $method = "validate_$key";
+     if( $self->can($method) ) {
+         return 1;
+     } else {
+         return undef;
+     }
+}
+
+
+
 sub _run_callback {
     my $self = shift;
     my %args = ( name => undef,
@@ -1352,7 +1415,10 @@ sub _run_callback {
     if ( $self->can($method) ) {
         return $self->$method( $args{args} );
     }
-    else { return 1};
+
+    my @return = $self->call_trigger($args{'name'} => $args{args});
+
+ return 1;
 }
 
 1;
