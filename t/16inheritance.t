@@ -169,7 +169,7 @@ EOF
 sub schema_pg {
 
 <<EOF;
-CREATE TEMPORARY table users (
+CREATE TEMPORARY table crazy_users (
         id serial primary key,
         craziness varchar(16),
         created timestamp,
