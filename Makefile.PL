@@ -20,7 +20,7 @@ requires('Lingua::EN::Inflect');
 requires('Object::Declare' => 0.22);
 requires('UNIVERSAL::require');
 requires('version');
-requires('Class::Trigger');
+#requires('Class::Trigger');
 build_requires('Test::More' => 0.52);
 build_requires('DBD::SQLite');
 no_index directory => 'ex';

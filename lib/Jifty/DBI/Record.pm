@@ -7,7 +7,7 @@ use Class::ReturnValue  ();
 use Lingua::EN::Inflect ();
 use Jifty::DBI::Column  ();
 use UNIVERSAL::require  ();
-use Class::Trigger qw/add_trigger call_trigger/;
+use Jifty::DBI::Class::Trigger; # exports by default
 
 
 use base qw/
@@ -701,7 +701,7 @@ sub _set {
 
     my $ok = $self->_run_callback( name => "before_set_" . $args{column},
                            args => \%args);
-    return $ok if not ($ok);
+    return $ok if( not defined $ok);
 
     $ok = $self->__set(%args);
     return $ok if not $ok;
@@ -1045,15 +1045,14 @@ sub create {
 
 
 
-    my $ok = $self->_run_callback( name => "before_create",
-                           args => \%attribs);
-    return $ok if not ($ok);
+    my $ok = $self->_run_callback( name => "before_create", args => \%attribs);
+    return $ok if ( not defined $ok);
 
     my $ret = $self->__create(%attribs);
 
     $ok = $self->_run_callback( name => "after_create",
                            args => \$ret);
-    return $ok if not ($ok);
+    return $ok if (not defined $ok);
     
     if ($class) {
         $self->load_by_cols(id => $ret);
@@ -1149,12 +1148,12 @@ value from the delete operation.
 sub delete {
     my $self = shift;
     my $before_ret = $self->_run_callback( name => 'before_delete' );
-    return $before_ret unless ($before_ret);
+    return $before_ret unless (defined $before_ret);
     my $ret = $self->__delete;
 
     my $after_ret
         = $self->_run_callback( name => 'after_delete', args => \$ret );
-    return $after_ret unless ($after_ret);
+    return $after_ret unless (defined $after_ret);
     return ($ret);
 
 }
@@ -1352,11 +1351,10 @@ sub run_canonicalization_for_column {
     my %args = ( column => undef,
                  value => undef,
                  @_);
-        my $key = $args{column};
-        my $attr = $args{value};
-        my $method = "canonicalize_$key";
-        my $func = $self->can($method) or return $attr;
-        return ($self->$func( $attr));
+
+    my ($ret,$value_ref) = $self->_run_callback ( name => "canonicalize_".$args{'column'}, args => $args{'value'});
+    return unless defined $ret;
+    return ( exists $value_ref->[-1]->[0] ? $value_ref->[-1]->[0] : $args{'value'});
 }
 
 sub has_canonicalizer_for_column {
@@ -1377,48 +1375,54 @@ sub has_canonicalizer_for_column {
 
 sub run_validation_for_column {
     my $self = shift;
-    my %args = ( column => undef,
-                 value => undef,
-                 @_);
-        my $key = $args{'column'};
-        my $attr = $args{'value'};
-        my $method = "validate_$key";
-        if (my $func = $self->can($method)) {
-        my ( $val, $msg ) = $func->($self, $attr);
-        return ($val,$msg);
-    }
+    my %args = (
+        column => undef,
+        value  => undef,
+        @_
+    );
+    my $key    = $args{'column'};
+    my $attr   = $args{'value'};
 
-    else {
-        return (1, 'Validation ok');
+
+    my ($ret, $results)  = $self->_run_callback( name => "validate_".$key, args => $attr );
+
+    if (defined $ret) {
+        return ( 1, 'Validation ok' );
     }
+    else {
+        return @{$results->[-1]};
+    }
+    
 }
 
 sub has_validator_for_column {
     my $self = shift;
-    my $key = shift;
-        my $method = "validate_$key";
-     if( $self->can($method) ) {
-         return 1;
-     } else {
-         return undef;
-     }
+    my $key  = shift;
+    if ( $self->can( "validate_" . $key ) ) {
+        return 1;
+    } else {
+        return undef;
+    }
 }
-
 
 
 sub _run_callback {
     my $self = shift;
-    my %args = ( name => undef,
-                 args => undef,
-                 @_);
+    my %args = (
+        name => undef,
+        args => undef,
+        @_
+    );
+
+    my $ret;
     my $method = $args{'name'};
-    if ( $self->can($method) ) {
-        return $self->$method( $args{args} );
+    my @results;
+    if ( my $func = $self->can($method) ) {
+   @results =  $func->($self, $args{args} );
+        return(wantarray  ?  (undef, [@results]) : undef) unless $results[0];
     }
-
-    my @return = $self->call_trigger($args{'name'} => $args{args});
-
- return 1;
+    $ret =  $self->call_trigger( $args{'name'} => $args{args} );
+    return (wantarray ? ($ret, [[@results],@{$self->last_trigger_results}]) : $ret);
 }
 
 1;

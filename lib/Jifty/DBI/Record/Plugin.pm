@@ -15,6 +15,10 @@ sub import {
             $caller->_init_methods_for_column($_);
     }
     $self->export_to_level(1,undef);
+    
+    if (my $triggers =  $self->can('register_triggers') ) {
+        $triggers->($caller)
+    }
 }
 
 
