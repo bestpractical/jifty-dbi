@@ -183,8 +183,8 @@ sub _value  {
 BEGIN {
     use Jifty::DBI::Schema;
     use Jifty::DBI::Record schema {
-    column name => type 'varchar';
-    column phones => refers_to TestApp::PhoneCollection by 'employee';
+    column name => type is 'varchar';
+    column phones => references TestApp::PhoneCollection by 'employee';
     }
 }
 
@@ -194,8 +194,8 @@ use base qw/Jifty::DBI::Record/;
 BEGIN {
     use Jifty::DBI::Schema;
     use Jifty::DBI::Record schema {
-    column employee => refers_to TestApp::Employee;
-    column phone    => type 'varchar';
+    column employee => references TestApp::Employee;
+    column phone    => type is 'varchar';
     }
 }
 

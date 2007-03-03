@@ -44,7 +44,7 @@ use Jifty::DBI::Schema;
 use Jifty::DBI::Record schema {
 
 column employee_id =>
-  refers_to Sample::Employee;
+  references Sample::Employee;
 
 column name =>
   type is 'varchar',

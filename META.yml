@@ -29,6 +29,7 @@ requires:
   Encode: 2.1
   Exporter::Lite: 0
   Lingua::EN::Inflect: 0
+  Object::Declare: 0.22
   UNIVERSAL::require: 0
   perl: 5.8.3
-version: 0.32
+version: 0.39_9999

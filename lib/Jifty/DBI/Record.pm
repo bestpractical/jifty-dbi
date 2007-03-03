@@ -7,6 +7,8 @@ use Class::ReturnValue  ();
 use Lingua::EN::Inflect ();
 use Jifty::DBI::Column  ();
 use UNIVERSAL::require  ();
+use Jifty::DBI::Class::Trigger; # exports by default
+
 
 use base qw/
     Class::Data::Inheritable
@@ -142,7 +144,6 @@ sub _accessible {
     my $self        = shift;
     my $column_name = shift;
     my $attribute   = lc( shift || '' );
-
     my $col = $self->column($column_name);
     return undef unless ( $col and $col->can($attribute) );
     return $col->$attribute();
@@ -188,6 +189,7 @@ sub _init_columns {
         $column->readable(1);
         $column->type('serial');
         $column->mandatory(1);
+
         $self->_init_methods_for_column($column);
     }
 
@@ -444,8 +446,7 @@ Returns the $value of a $column.
 sub column {
     my $self = shift;
     my $name = lc( shift || '' );
-    my $col = $self->COLUMNS;
-
+    my $col = $self->_columns_hashref;
     return undef unless $col && exists $col->{$name};
     return $col->{$name};
 
@@ -467,7 +468,7 @@ sub columns {
                 <=> ( ( $a->type || '' ) eq 'serial' ) )
                 or ( ($a->sort_order || 0) <=> ($b->sort_order || 0))
                 or ( $a->name cmp $b->name )
-            } grep { $_->active } values %{ $self->COLUMNS || {} }
+            } grep { $_->active } values %{ $self->_columns_hashref }
 	])}
 }
 
@@ -489,8 +490,15 @@ sub all_columns {
                 <=> ( ( $a->type || '' ) eq 'serial' ) )
                 or ( ($a->sort_order || 0) <=> ($b->sort_order || 0))
                 or ( $a->name cmp $b->name )
-            } values %{ $self->COLUMNS || {} }
+            } values %{ $self->_columns_hashref || {} }
 }
+
+sub _columns_hashref {
+    my $self = shift;
+
+      return ($self->COLUMNS||{});
+}
+
 
 # sub {{{ readable_attributes
 
@@ -602,8 +610,8 @@ sub _value {
     my $column = shift;
 
     my $value = $self->__value( $column => @_ );
-    my $method = $self->can("after_$column");
-    $method->( $self, \$value ) if $method;
+    $self->_run_callback( name => "after_".$column,
+                          args => \$value);
     return $value;
 }
 
@@ -690,23 +698,18 @@ sub _set {
         @_
     );
 
-    my $method = "before_set_" . $args{column};
-    if ( $self->can($method) ) {
-        my $before_set_ret = $self->$method( \%args );
-        return $before_set_ret
-            unless ($before_set_ret);
-    }
 
-    my $ok = $self->__set(%args);
+    my $ok = $self->_run_callback( name => "before_set_" . $args{column},
+                           args => \%args);
+    return $ok if( not defined $ok);
 
-    return $ok unless $ok;
+    $ok = $self->__set(%args);
+    return $ok if not $ok;
 
-    $method = "after_set_" . $args{column};
-    if( $self->can($method) ) {
         # Fetch the value back to make sure we have the actual value
         my $value = $self->_value($args{column});
-        $self->$method({column => $args{column}, value => $value});
-    }
+        my $after_set_ret = $self->_run_callback( name => "after_set_" . $args{column}, args => 
+        {column => $args{column}, value => $value});
 
     return $ok;
 }
@@ -1042,14 +1045,15 @@ sub create {
 
 
 
-    if ( $self->can('before_create') ) {
-        my $before_ret = $self->before_create( \%attribs );
-        return ($before_ret) unless ($before_ret);
-    }
+    my $ok = $self->_run_callback( name => "before_create", args => \%attribs);
+    return $ok if ( not defined $ok);
 
     my $ret = $self->__create(%attribs);
 
-    $self->after_create( \$ret ) if $self->can('after_create');
+    $ok = $self->_run_callback( name => "after_create",
+                           args => \$ret);
+    return $ok if (not defined $ok);
+    
     if ($class) {
         $self->load_by_cols(id => $ret);
         return ($self);
@@ -1143,12 +1147,13 @@ value from the delete operation.
 
 sub delete {
     my $self = shift;
-    if ( $self->can('before_delete') ) {
-        my $before_ret = $self->before_delete();
-        return $before_ret unless ($before_ret);
-    }
+    my $before_ret = $self->_run_callback( name => 'before_delete' );
+    return $before_ret unless (defined $before_ret);
     my $ret = $self->__delete;
-    $self->after_delete( \$ret ) if $self->can('after_delete');
+
+    my $after_ret
+        = $self->_run_callback( name => 'after_delete', args => \$ret );
+    return $after_ret unless (defined $after_ret);
     return ($ret);
 
 }
@@ -1250,11 +1255,6 @@ used for the declarative syntax
 
 =cut
 
-sub refers_to {
-    my $class = shift;
-    return ( Jifty::DBI::Schema::Trait->new(refers_to => $class), @_ );
-}
-
 sub _filters {
     my $self = shift;
     my %args = ( direction => 'input', column => undef, @_ );
@@ -1339,6 +1339,90 @@ sub is_distinct {
     } else {
         return (1);
     }
+}
+
+
+=head2 run_canonicalization_for_column
+
+=cut
+
+sub run_canonicalization_for_column {
+    my $self = shift;
+    my %args = ( column => undef,
+                 value => undef,
+                 @_);
+
+    my ($ret,$value_ref) = $self->_run_callback ( name => "canonicalize_".$args{'column'}, args => $args{'value'});
+    return unless defined $ret;
+    return ( exists $value_ref->[-1]->[0] ? $value_ref->[-1]->[0] : $args{'value'});
+}
+
+sub has_canonicalizer_for_column {
+    my $self = shift;
+    my $key = shift;
+        my $method = "canonicalize_$key";
+     if( $self->can($method) ) {
+         return 1;
+     } else {
+         return undef;
+     }
+}
+
+
+=head2 run_canonicalization_for_column
+
+=cut
+
+sub run_validation_for_column {
+    my $self = shift;
+    my %args = (
+        column => undef,
+        value  => undef,
+        @_
+    );
+    my $key    = $args{'column'};
+    my $attr   = $args{'value'};
+
+
+    my ($ret, $results)  = $self->_run_callback( name => "validate_".$key, args => $attr );
+
+    if (defined $ret) {
+        return ( 1, 'Validation ok' );
+    }
+    else {
+        return @{$results->[-1]};
+    }
+    
+}
+
+sub has_validator_for_column {
+    my $self = shift;
+    my $key  = shift;
+    if ( $self->can( "validate_" . $key ) ) {
+        return 1;
+    } else {
+        return undef;
+    }
+}
+
+
+sub _run_callback {
+    my $self = shift;
+    my %args = (
+        name => undef,
+        args => undef,
+        @_
+    );
+
+    my $ret;
+    my $method = $args{'name'};
+    my @results;
+    if ( my $func = $self->can($method) ) {
+   @results =  $func->($self, $args{args} );
+        return(wantarray  ?  (undef, [@results]) : undef) unless $results[0];
+    }
+    $ret =  $self->call_trigger( $args{'name'} => $args{args} );
+    return (wantarray ? ($ret, [[@results],@{$self->last_trigger_results}]) : $ret);
 }
 
 1;

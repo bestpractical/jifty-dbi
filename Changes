@@ -1,5 +1,44 @@
 Revision history for Perl extension Jifty::DBI.
 
+0.39_9999 Fri Jan 26 21:30:48 CST 2007
+
+- Removed unneccessary use of Devel::SimpleTrace.
+
+0.39_999 Fri Jan 26 21:30:48 CST 2007
+
+- Improved error message for "length is 42":
+
+ Due to an incompatible API change, the "length" field in
+ Jifty::DBI columns has been renamed to "max_length":
+ 
+     column foo =>
+         length is 10;       # NOT VALID 
+
+ Please write this instead:
+ 
+     column foo =>
+         max_length is 10    # VALID
+
+- Calling 'column' within a schema class is an error:
+ 
+    package TestApp::Address::Schema;
+    column address => ...;        # NOT VALID
+
+  Please write this instead:
+
+    package TestApp::Address;
+    use Jifty::DBI::Schema;
+    use Jifty::DBI::Record schema {
+        column address => ...;    # VALID
+    };
+
+
+0.39_99 Fri Jan 26 19:57:48 CST 2007
+
+- INCOMPATIBLE API CHANGE: "length is 42" must be written as "max_length is 42" instead.
+- Switch to Object::Declare for schema declaration, fixing many annoyances such as the inability for two modules to refer to each other in their columns.
+- "refers Foo::Bar", a new alias to "refers_to Foo::Bar".
+
 0.34 Sun Jan 28 21:28:00 CST 2007
 
 - Added a method to the schema generator to output the SQL for a single column

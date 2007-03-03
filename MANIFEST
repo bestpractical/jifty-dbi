@@ -74,6 +74,8 @@ t/11schema_records.t
 t/12prefetch.t
 t/13collection.t
 t/14handle-pg.t
+t/15types.t
+t/16inheritance.t
 t/pod.t
 t/testmodels.pl
 t/utils.pl

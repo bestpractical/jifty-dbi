@@ -77,17 +77,8 @@ sub validator {
 *read  = \&readable;
 *write = \&writable;
 
-sub length {
-    Carp::carp('$column->length is deprecated; use $column->max_length instead');
-    my $self = shift;
-    $self->max_length(@_);
-}
-
-sub until {
-    Carp::carp('$column->until is deprecated; use $column->till instead');
-    my $self = shift;
-    $self->till(@_);
-}
+sub length { Carp::croak('$column->length is no longer supported; use $column->max_length instead') }
+sub until { Carp::croak('$column->until is no longer supported; use $column->till instead') }
 
 =head2 active
 
