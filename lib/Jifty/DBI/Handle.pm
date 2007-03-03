@@ -753,13 +753,13 @@ sub force_rollback {
     $self->rollback(1);
 }
 
-=head2 transaction_depthh
+=head2 transaction_depth
 
 Return the current depth of the faked nested transaction stack.
 
 =cut
 
-sub transaction_depthh {
+sub transaction_depth {
     my $self = shift;
     return ($TRANSDEPTH);
 }
