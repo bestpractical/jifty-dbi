@@ -1390,7 +1390,7 @@ sub run_validation_for_column {
         return ( 1, 'Validation ok' );
     }
     else {
-        return @{$results->[-1]};
+        return (@{ $results->[-1]});
     }
     
 }
@@ -1418,11 +1418,15 @@ sub _run_callback {
     my $method = $args{'name'};
     my @results;
     if ( my $func = $self->can($method) ) {
-   @results =  $func->($self, $args{args} );
-        return(wantarray  ?  (undef, [@results]) : undef) unless $results[0];
+        @results = $func->( $self, $args{args} );
+        return ( wantarray ? ( undef, [[@results]] ) : undef )
+            unless $results[0];
     }
-    $ret =  $self->call_trigger( $args{'name'} => $args{args} );
-    return (wantarray ? ($ret, [[@results],@{$self->last_trigger_results}]) : $ret);
+    $ret = $self->call_trigger( $args{'name'} => $args{args} );
+    return (
+        wantarray
+        ? ( $ret, [ [@results], @{ $self->last_trigger_results } ] )
+        : $ret );
 }
 
 1;
