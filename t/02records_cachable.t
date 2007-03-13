@@ -76,16 +76,9 @@ SKIP: {
             Jifty::DBI::Record::Cachable->flush_cache;
 
             ok( $rec->load_by_cols( Phone => undef ), "Loaded the record" );
-        TODO:
-            {
-                local $TODO = "Loading undef PKs doesn't work properly";
-                is( $rec->name, 'UndefPhone', "UndefPhone record" );
-            }
+	    is( $rec->name, 'UndefPhone', "UndefPhone record" );
 
-            # XXX: JDBI turns undef into '' which makes me really sad //ruz
-            # test should be:
-            # is($rec->phone, undef, "Phone number is undefined");
-            is( $rec->phone, '', "Phone number is undefined" );
+            is( $rec->phone, undef, "Phone number is undefined" );
 
             ok( $rec->load_by_cols( Phone => '' ), "Loaded the record" );
             is( $rec->name,  'EmptyPhone', "EmptyPhone record" );

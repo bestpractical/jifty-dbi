@@ -894,6 +894,8 @@ sub load_by_cols {
 
             push @phrases, "$key $op $function";
             push @bind,    $value;
+	} elsif (!defined $hash{$key}) {
+            push @phrases, "$key IS NULL";
         } else {
             push @phrases, "($key IS NULL OR $key = ?)";
             my $column = $self->column($key);
