@@ -6,7 +6,7 @@ Maintainer: Yves Agostini <agostini@univ-metz.fr>
 Package: libjifty-dbi-perl
 Section: perl
 Architecture: all
-Depends: ${perl:Depends}, libcache-simple-timedexpiry-perl, libclass-data-inheritable-perl, libclass-returnvalue-perl, libclone-perl, libdatetime-format-strptime-perl, libdbd-sqlite3-perl, libdbi-perl, libdbix-dbschema-perl (>> 0.29), libdata-page-perl, libdatetime-perl (>> 0.34), libexporter-lite-perl, liblingua-en-inflect-perl, libuniversal-require-perl,
+Depends: ${perl:Depends}, libcache-simple-timedexpiry-perl, libclass-data-inheritable-perl, libclass-returnvalue-perl, libclone-perl, libdatetime-format-strptime-perl, libdbd-sqlite3-perl, libdbi-perl, libdbix-dbschema-perl (>> 0.29), libdata-page-perl, libdatetime-perl (>> 0.34), libexporter-lite-perl, liblingua-en-inflect-perl, libobject-declare-perl (>> 0.22), libuniversal-require-perl,
 Recommends: libcache-memcached-perl
 Description: Jifty DBI
  Jifty DBI
