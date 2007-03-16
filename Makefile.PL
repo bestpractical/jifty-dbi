@@ -19,6 +19,7 @@ requires('Exporter::Lite');
 requires('Lingua::EN::Inflect');
 requires('Object::Declare' => 0.22);
 requires('UNIVERSAL::require');
+requires('Scalar::Defer' => 0.10);
 requires('version');
 #requires('Class::Trigger');
 build_requires('Test::More' => 0.52);
@@ -27,7 +28,7 @@ no_index directory => 'ex';
 features( 
     'Memcached support' => [
         -default => 1,
-        Cache::Memcached => ''
+        'Cache::Memcached' => ''
     ],
     'YAML filter' => [
         -default => 1,
