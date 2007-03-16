@@ -38,6 +38,14 @@ other attributes for database structure that are not exposed directly
 here.  One example of this is the "refers_to" method used to create
 associations between classes.
 
+It re-exports C<defer> and C<lazy> from L<Scalar::Defer>, for setting
+parameter fields that must be recomputed at request-time:
+
+    column name =>
+        default is defer { Jifty->web->current_user->name };
+
+See L<Scalar::Defer> for more information about C<defer>.
+
 =cut
 
 use Carp qw/croak carp/;
@@ -76,7 +84,7 @@ use Object::Declare (
 use Class::Data::Inheritable;
 use UNIVERSAL::require ();
 
-our @EXPORT = qw( lazy column schema by render_as since till literal);
+our @EXPORT = qw( defer lazy column schema by render_as since till literal);
 
 sub by ($) { @_ }
 sub render_as ($) { render as @_ }
@@ -192,8 +200,11 @@ sub schema (&) {
 
 	my @columns = &declare($code);
 
-	# Unimport all our symbols from the calling package.
+	# Unimport all our symbols from the calling package,
+        # except for "lazy" and "defer".
 	foreach my $sym (@EXPORT) {
+            next if $sym eq 'lazy' or $sym eq 'defer';
+
 	    no strict 'refs';
 	    undef *{"$from\::$sym"}
 		if \&{"$from\::$sym"} == \&$sym;
