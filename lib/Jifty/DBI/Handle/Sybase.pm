@@ -77,13 +77,13 @@ sub case_sensitive {
     return (1);
 }
 
-sub apply_limits {
-    my $self         = shift;
-    my $statementref = shift;
-    my $per_page     = shift;
-    my $first        = shift;
-
-}
+# sub apply_limits {
+#     my $self         = shift;
+#     my $statementref = shift;
+#     my $per_page     = shift;
+#     my $first        = shift;
+# 
+# }
 
 =head2 distinct_query STATEMENTREF
 
