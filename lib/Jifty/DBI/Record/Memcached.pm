@@ -49,6 +49,12 @@ sub _init () {
     $self->SUPER::_init(@args);
 }
 
+=head2 load_from_hash
+
+Overrides the implementation from L<Jifty::DBI::Record> to add support for caching.
+
+=cut
+
 sub load_from_hash {
     my $self = shift;
 
@@ -66,6 +72,12 @@ sub load_from_hash {
 
     }
 }
+
+=head2 load_by_cols
+
+Overrides the implementation from L<Jifty::DBI::Record> to add support for caching.
+
+=cut
 
 sub load_by_cols {
     my ( $class, %attr ) = @_;
@@ -251,6 +263,28 @@ sub _cache_config {
         'cache_for_sec' => 180,
     };
 }
+
+=head2 memcached_config
+
+Returns a hash containing arguments to pass to L<Cache::Memcached> during construction. The defaults are like:
+
+  (
+      services => [ '127.0.0.1:11211' ],
+      debug    => 0,
+  )
+
+You may want to override this method if you want a customized cache configuration:
+
+  sub memcached_config {
+      (
+          servers => [ '10.0.0.15:11211', '10.0.0.15:11212',
+                       '10.0.0.17:11211', [ '10.0.0.17:11211', 3 ] ],
+          debug   => 0,
+          compress_threshold => 10_000,
+      );
+  }
+
+=cut
 
 
 sub memcached_config {
