@@ -84,6 +84,13 @@ sub _record_cache {
 
 }
 
+=head2 load_from_hash
+
+Overrides the implementation from L<Jifty::DBI::Record> to add caching.
+
+=cut
+
+
 sub load_from_hash {
     my $self = shift;
 
@@ -105,6 +112,12 @@ sub load_from_hash {
     }
 
 }
+
+=head2 load_by_cols
+
+Overrides the implementation from L<Jifty::DBI::Record> to add caching.
+
+=cut
 
 sub load_by_cols {
     my ( $class, %attr ) = @_;
