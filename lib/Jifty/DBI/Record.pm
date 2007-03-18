@@ -7,6 +7,7 @@ use Class::ReturnValue  ();
 use Lingua::EN::Inflect ();
 use Jifty::DBI::Column  ();
 use UNIVERSAL::require  ();
+use Scalar::Util      qw(blessed);
 use Jifty::DBI::Class::Trigger; # exports by default
 
 
@@ -468,7 +469,7 @@ sub columns {
                 <=> ( ( $a->type || '' ) eq 'serial' ) )
                 or ( ($a->sort_order || 0) <=> ($b->sort_order || 0))
                 or ( $a->name cmp $b->name )
-            } grep { $_->active } values %{ $self->COLUMNS || {} }
+            } grep { $_->active } values %{ $self->_columns_hashref }
 	])}
 }
 
@@ -490,7 +491,7 @@ sub all_columns {
                 <=> ( ( $a->type || '' ) eq 'serial' ) )
                 or ( ($a->sort_order || 0) <=> ($b->sort_order || 0))
                 or ( $a->name cmp $b->name )
-            } values %{ $self->COLUMNS || {} }
+            } values %{ $self->_columns_hashref || {} }
 }
 
 sub _columns_hashref {
@@ -886,7 +887,7 @@ sub load_by_cols {
                 $value = $hash{$key};
             }
 
-            if (ref $value && $value->isa('Jifty::DBI::Record') ) {
+            if (blessed $value && $value->isa('Jifty::DBI::Record') ) {
                 # XXX TODO: check for proper foriegn keyness here
                 $value = $value->id;
             }
