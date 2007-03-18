@@ -76,6 +76,12 @@ sub apply_limits {
     }
 }
 
+=head2 disconnect
+
+Disconnects and completely unreferences the handle for Informix.
+
+=cut
+
 sub disconnect {
     my $self = shift;
     if ( $self->dbh ) {
@@ -87,7 +93,7 @@ sub disconnect {
     }
 }
 
-=head2 DistinctQuery STATEMENTREF
+=head2 distinct_query STATEMENTREF
 
 takes an incomplete SQL SELECT statement and massages it to return a DISTINCT result set.
 
