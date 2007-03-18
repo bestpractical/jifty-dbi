@@ -8,23 +8,23 @@ use Encode ();
 
 =head1 NAME
 
-Jifty::DBI::Filter::Truncate - Truncates column values
+Jifty::DBI::Filter::Truncate - Filter used to enforce max_length column trait
 
 =head1 DESCRIPTION
 
-This filter truncates column values to the correct length for their
-type or to a defined max_length (for non-numeric columns).
+You do not need to use this filter explicitly. This filter is used internally to enforce the L<Jifty::DBI::Schema/max_length> retrictions on columns:
+
+  column name =>
+      type is 'text',
+      max_length is 10;
+
+In this case, the filter would be automatically added to the column named C<name> and any value put into the column longer than 10 characters would be truncated to 10 characters.
+
+=head1 METHODS
 
 =head2 encode
 
-If the column is a non-numeric type and has a max_length defined,
-encode will truncate to that length.  If the column is of a
-type limited by definition (e.g. C<char(13)>), encode will truncate
-the value to fit.
-
-=head1 SEE ALSO
-
-L<Jifty::DBI::Filter>
+This method performs the work of performing truncation, when necessary.
 
 =cut
 
@@ -57,5 +57,12 @@ sub encode {
         $$value_ref = Encode::decode_utf8( $$value_ref, Encode::FB_QUIET );
     }
 }
+
+=head1 LICENSE
+
+Jifty::DBI is Copyright 2005-2007 Best Practical Solutions, LLC.
+Jifty::DBI is distributed under the same terms as Perl itself.
+
+=cut
 
 1;
