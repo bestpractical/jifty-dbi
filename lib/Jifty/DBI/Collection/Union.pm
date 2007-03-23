@@ -172,6 +172,13 @@ sub goto_first_item {
     $self->goto_item(0);
 }
 
+=head2 goto_item
+
+Unlike L<Jifty::DBI::Collection/goto_item>, Union only supports going to the
+first item in the collection.
+
+=cut
+
 sub goto_item {
     my $self = shift;
     my $item = shift;

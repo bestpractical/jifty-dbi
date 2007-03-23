@@ -6,6 +6,12 @@ use base 'Exporter';
 our @EXPORT  = qw(AddRecord);
 our $VERSION = "0.01";
 
+=head2 add_record
+
+Overrides add_record to ensure uniqueness.
+
+=cut
+
 sub add_record {
     my $self   = shift;
     my $record = shift;

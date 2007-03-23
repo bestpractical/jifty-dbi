@@ -112,6 +112,10 @@ sub import {
     goto &Exporter::Lite::import;
 }
 
+=head2 filter_die
+
+=cut
+
 sub filter_die {
     # Calling it by hand means we restore the old sighandler.
     $SIG{__DIE__} = $old_sig_die;
@@ -186,6 +190,13 @@ executing the code block.  Usually used at C<BEGIN> time via this idiom:
 If your application subclasses C<::Record>, then write this instead:
 
     use MyApp::Record schema { ... };
+
+=cut
+
+=head2 column
+
+DEPRECATED.  This method of defining columns will not work anymore.  Please
+use the C<schema {}> method documented above.
 
 =cut
 
@@ -356,6 +367,10 @@ sub _init_column {
     # (We may not *have* a caller(1) if the user is executing a .pm file.)
 }
 
+=head2 register_types
+
+=cut
+
 sub register_types {
     my $class = shift;
     while (my ($type, $sub) = splice(@_, 0, 2)) {
@@ -393,6 +408,11 @@ you may not end any column name which uses 'references' using '_id'.
 Synonym for C<references>.
 
 =cut
+
+=head2 by
+
+Helper for C<references>.  Used to specify what column name should be
+used in the referenced model.  See the documentation for C<references>e
 
 =head2 type
 

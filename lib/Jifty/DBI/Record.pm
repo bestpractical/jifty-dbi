@@ -1345,7 +1345,9 @@ sub is_distinct {
 }
 
 
-=head2 run_canonicalization_for_column
+=head2 run_canonicalization_for_column column => 'COLUMN', value => 'VALUE'
+
+Runs all canonicalizers for the specified column.
 
 =cut
 
@@ -1360,6 +1362,12 @@ sub run_canonicalization_for_column {
     return ( exists $value_ref->[-1]->[0] ? $value_ref->[-1]->[0] : $args{'value'});
 }
 
+=head2 has_canonicalizer_for_column COLUMN
+
+Returns true if COLUMN has a canonicalizer, otherwise returns undef.
+
+=cut
+
 sub has_canonicalizer_for_column {
     my $self = shift;
     my $key = shift;
@@ -1372,7 +1380,9 @@ sub has_canonicalizer_for_column {
 }
 
 
-=head2 run_canonicalization_for_column
+=head2 run_validation_for_column column => 'COLUMN', value => 'VALUE'
+
+Runs all validators for the specified column.
 
 =cut
 
@@ -1397,6 +1407,12 @@ sub run_validation_for_column {
     }
     
 }
+
+=head2 has_validator_for_column COLUMN
+
+Returns true if COLUMN has a validator, otherwise returns undef.
+
+=cut
 
 sub has_validator_for_column {
     my $self = shift;

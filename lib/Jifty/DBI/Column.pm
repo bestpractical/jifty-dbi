@@ -48,6 +48,12 @@ refers_to readable writable length>.
 
 =cut
 
+=head2 is_numeric
+
+Returns true if the column is of some numeric type, otherwise returns false.
+
+=cut
+
 sub is_numeric {
     my $self = shift;
     if ( $self->type =~ /INT|NUMERIC|DECIMAL|REAL|DOUBLE|FLOAT/i ) {
@@ -55,6 +61,12 @@ sub is_numeric {
     }
     return 0;
 }
+
+=head2 validator
+
+Gets/sets the validator coderef for the column.
+
+=cut
 
 sub validator {
     my $self = shift;
@@ -76,6 +88,16 @@ sub validator {
 # Aliases for compatibility with searchbuilder code
 *read  = \&readable;
 *write = \&writable;
+
+=head2 length
+
+DEPRECATED.  Use C<< $column->max_length >> instead.
+
+=head2 until
+
+DEPRECATED.  Use C<< $column->till >> instead.
+
+=cut
 
 sub length { Carp::croak('$column->length is no longer supported; use $column->max_length instead') }
 sub until { Carp::croak('$column->until is no longer supported; use $column->till instead') }

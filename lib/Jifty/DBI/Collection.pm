@@ -738,6 +738,13 @@ sub items_array_ref {
     return ( $self->{'items'} || [] );
 }
 
+=head2 new_item
+
+Should return a new object of the correct type for the current collection.
+Must be overridden by a subclassed.
+
+=cut
+
 sub new_item {
     my $self  = shift;
     my $class = $self->record_class();
@@ -1593,6 +1600,12 @@ sub is_last {
         return (0);
     }
 }
+
+=head2 DEBUG
+
+Gets/sets the DEBUG flag.
+
+=cut
 
 sub DEBUG {
     my $self = shift;

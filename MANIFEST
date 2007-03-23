@@ -28,7 +28,6 @@ lib/Jifty/DBI/Filter.pm
 lib/Jifty/DBI/Filter/base64.pm
 lib/Jifty/DBI/Filter/Date.pm
 lib/Jifty/DBI/Filter/DateTime.pm
-lib/Jifty/DBI/Filter/JiftyRecord.pm
 lib/Jifty/DBI/Filter/SaltHash.pm
 lib/Jifty/DBI/Filter/Storable.pm
 lib/Jifty/DBI/Filter/Time.pm

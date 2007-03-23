@@ -1033,7 +1033,7 @@ sub distinct_count {
 
 }
 
-=head2 Log MESSAGE
+=head2 log MESSAGE
 
 Takes a single argument, a message to log.
 
