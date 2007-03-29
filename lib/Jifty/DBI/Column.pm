@@ -62,6 +62,26 @@ sub is_numeric {
     return 0;
 }
 
+
+
+=head2 is_string
+
+Returns true if this column is a text field
+
+=cut
+
+
+sub is_string {
+    my $self = shift;
+    if ( $self->type =~ /CHAR/i ){ 
+        return 1;
+    }
+    return 0;
+}
+
+
+
+
 =head2 validator
 
 Gets/sets the validator coderef for the column.

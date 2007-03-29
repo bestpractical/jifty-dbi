@@ -1022,7 +1022,7 @@ sub limit {
 
         # don't worry about case for numeric columns_in_db
         my $column_obj = $self->new_item()->column( $args{column} );
-        if ( defined $column_obj ? !$column_obj->is_numeric : 1 ) {
+        if ( defined $column_obj ? $column_obj->is_string : 1 ) {
             ( $qualified_column, $args{'operator'}, $args{'value'} )
                 = $self->_handle->_make_clause_case_insensitive(
                 $qualified_column, $args{'operator'}, $args{'value'} );
