@@ -1019,12 +1019,35 @@ This method calls two hooks in your subclass:
 
 =item before_create
 
+  sub before_create {
+      my $self = shift;
+      my $args = shift;
+
+      # Do any checks and changes on $args here.
+      $args->{first_name} = ucfirst $args->{first_name};
+
+      return;      # false return vallue will abort the create
+      return 1;    # true return value will allow create to continue
+  }
+
 This method is called before trying to create our row in the
 database. It's handed a reference to your paramhash. (That means it
 can modify your parameters on the fly).  C<before_create> returns a
 true or false value. If it returns false, the create is aborted.
 
 =item after_create
+
+  sub after_create {
+      my $self                    = shift;
+      my $insert_return_value_ref = shift;
+
+      return unless $$insert_return_value_ref;    # bail if insert failed
+      $self->load($$insert_return_value_ref);     # load ourselves from db
+
+      # Do whatever needs to be done here
+
+      return; # return value is ignored
+  }
 
 This method is called after attempting to insert the record into the
 database. It gets handed a reference to the return value of the
