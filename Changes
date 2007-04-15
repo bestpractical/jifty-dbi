@@ -1,5 +1,59 @@
 Revision history for Perl extension Jifty::DBI.
 
+0.40 Sun Apr 15 11:19:45 EDT 2007
+
+ * Added sample code to POD for 'before_create' and 'after_create' to make it easier for users to implement by copy and pasting. -evdb
+ 
+ * Better non-lower()ing of non-string types on search. -jesse
+ 
+ * Fix up and add POD so that POD coverage tests pass -trs
+ 
+ * Kill unused JiftyRecord filter -trs
+ 
+ * Fixed documentation coverage for Jifty::DBI::Handle::Informix. -sterling
+ 
+ * Commented out incomplete apply_limits method in the Sybase handle. -sterling
+ 
+ * Fixed documentation coverage in Jifty::DBI::Record::Cachable. -sterling
+ 
+ * Fixed documentation coverage for Jifty::DBI::Record::Memcached. -sterling
+ 
+ * Added pod-coverage.t to encourage better documentation. Added documentation to Jifty::DBI::Record::Plugin. -sterling
+ 
+ * Added better handling of schema versioning -sterling
+ 
+ * Added _init_methods_for_columns to explicitly handle accessor/mutator creation for all columns attached to a record -sterling
+ 
+ * Applications employing JDBI can specify schema_version() in a sub-class of record to add better handling of "since" and "till" in both schema and code generation -sterling
+ 
+ * Modified columns() on records to only return active columns -sterling
+ 
+ * Added all_columns() to retrieve all columns on a record, even inactive ones -sterling
+ 
+ * Added the active() method to columns to test to see if a column is active for the current schema version -sterling
+ 
+ * Jifty::DBI now requires on Scalar::Defer 0.10. -audreyt
+ 
+ * Jifty::DBI::Schema - Don't rescind &defer and &lazy after the schema{...} block and talks about how to use it. -sterling
+ 
+ * debian changes -yves
+ 
+ * export of defer in Jifty::DB::Schema kills symbols for other use (thx audreyt) -yves
+ 
+ * Make load_by_cols work when a given value is undef by turning the query into IS NULL. -clkao
+ 
+ * Completely finish porting Jifty::DBI::Schema to use Object::Declare.  clkao, audreyt
+ 
+ Visible differences are: 
+   
+     - "refers App::Class" is now an alias for "refers_to App::Class".
+ 
+     - In refers/refers_to it is no longer neccessary to load App::Class
+       beforehand; therefore circular references can now be expressed.
+ 
+     - "length is 30" is now invalid; a compile-time exception will be
+       raised that tells the user to use "maxlength is 40" instead.
+ 
 0.39_9999 Fri Jan 26 21:30:48 CST 2007
 
 - Removed unneccessary use of Devel::SimpleTrace.

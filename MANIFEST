@@ -20,6 +20,7 @@ inc/Module/Install/Metadata.pm
 inc/Module/Install/Win32.pm
 inc/Module/Install/WriteAll.pm
 lib/Jifty/DBI.pm
+lib/Jifty/DBI/Class/Trigger.pm
 lib/Jifty/DBI/Collection.pm
 lib/Jifty/DBI/Collection/Union.pm
 lib/Jifty/DBI/Collection/Unique.pm
@@ -33,6 +34,7 @@ lib/Jifty/DBI/Filter/Storable.pm
 lib/Jifty/DBI/Filter/Time.pm
 lib/Jifty/DBI/Filter/Truncate.pm
 lib/Jifty/DBI/Filter/utf8.pm
+lib/Jifty/DBI/Filter/YAML.pm
 lib/Jifty/DBI/Handle.pm
 lib/Jifty/DBI/Handle/Informix.pm
 lib/Jifty/DBI/Handle/mysql.pm
@@ -46,6 +48,7 @@ lib/Jifty/DBI/HasFilters.pm
 lib/Jifty/DBI/Record.pm
 lib/Jifty/DBI/Record/Cachable.pm
 lib/Jifty/DBI/Record/Memcached.pm
+lib/Jifty/DBI/Record/Plugin.pm
 lib/Jifty/DBI/Schema.pm
 lib/Jifty/DBI/SchemaGenerator.pm
 Makefile.PL
@@ -66,8 +69,10 @@ t/03rebless.t
 t/04memcached.t
 t/06filter.t
 t/06filter_datetime.t
+t/06filter_storable.t
 t/06filter_truncate.t
 t/06filter_utf8.t
+t/06filter_yaml.t
 t/10schema.t
 t/11schema_records.t
 t/12prefetch.t
@@ -75,6 +80,7 @@ t/13collection.t
 t/14handle-pg.t
 t/15types.t
 t/16inheritance.t
+t/pod-coverage.t
 t/pod.t
 t/testmodels.pl
 t/utils.pl
