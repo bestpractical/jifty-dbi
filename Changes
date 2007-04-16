@@ -1,5 +1,8 @@
 Revision history for Perl extension Jifty::DBI.
 
+0.41 Mon Apr 16 16:16:12 EDT 2007
+ * Fixed a broken dependency. Thanks to SAPER
+
 0.40 Sun Apr 15 11:19:45 EDT 2007
 
  * Added sample code to POD for 'before_create' and 'after_create' to make it easier for users to implement by copy and pasting. -evdb

@@ -137,10 +137,8 @@ sub write {
     }
 
     my %args = map { ( $_ => $args->{$_} ) } grep {defined($args->{$_})} keys %$args;
-
-    my $user_preop = delete $args{dist}->{PREOP};
-    if (my $preop = $self->admin->preop($user_preop)) {
-        $args{dist} = $preop;
+    if ($self->admin->preop) {
+        $args{dist} = $self->admin->preop;
     }
 
     my $mm = ExtUtils::MakeMaker::WriteMakefile(%args);
@@ -207,4 +205,4 @@ sub postamble {
 
 __END__
 
-#line 336
+#line 334

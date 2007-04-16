@@ -14,14 +14,14 @@ not run its Makefile.PL or Build.PL.
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA1
 
-SHA1 c75bb322c18f8549aa07f18da5dc5adceff0c48d Changes
+SHA1 340b2aa0d4522603ae1fc8477e92693b06d76026 Changes
 SHA1 59f221e6d6cbc2ba7d2a2f5c83115478d52ee18d MANIFEST
-SHA1 eece448e6f8738d5f9ecb0eb6a121ddee99a1d42 META.yml
-SHA1 e31bff7164109c3bb4ed1ea05eb2e6fa06ee0425 Makefile.PL
+SHA1 c958110f917af76f91efe84aa272c701065f5d41 META.yml
+SHA1 f395ee7217d1e0243a1353d3289dbb71a8c2e082 Makefile.PL
 SHA1 d0943ab047f543c92405564ab77ba008052544e6 README
 SHA1 82d6ac3f6def48558d09f8b6e3b53ed4194d8c81 ROADMAP
 SHA1 9d304f35438f847863969f6a069598379f5a9db2 debian/README
-SHA1 81a512363ab486707897241134179cdd53e59116 debian/changelog
+SHA1 9fc3eb1a0e3cf5b81a689fd78c2cffb8316b945d debian/changelog
 SHA1 5d9474c0309b7ca09a182d888f73b37a8fe1362c debian/compat
 SHA1 c77ea854fe4acc7f8d63cf249b331f67cf41a030 debian/control
 SHA1 c1085db4f95bd6e7e7470ccab55f8adba10d5024 debian/rules
@@ -36,11 +36,11 @@ SHA1 abe32855d75ab13747cf65765af9947b7a8c3057 inc/Module/Install/Base.pm
 SHA1 95b81d1e91bd634467bf633571eff4420e9c04eb inc/Module/Install/Can.pm
 SHA1 1fe98c63cf9d7271c8cb4183ba230f152df69e26 inc/Module/Install/Fetch.pm
 SHA1 0606a8b02a420600bc3e2b65ab82f70266784926 inc/Module/Install/Include.pm
-SHA1 aa4a3d87cedc972e3dc0d5d156809624e6db9416 inc/Module/Install/Makefile.pm
-SHA1 f1d4e1bbcb40bb269f36e6dc011b3ca25d3829b7 inc/Module/Install/Metadata.pm
+SHA1 2249171a2b72cd73ff2c0a06597d29f86e5df456 inc/Module/Install/Makefile.pm
+SHA1 381bb98ea3877bba49ae85e7a7ea130645fd3dbf inc/Module/Install/Metadata.pm
 SHA1 0c2118868ef82ac517eb6d9c3bd93e6eb9bbf83e inc/Module/Install/Win32.pm
 SHA1 e827d6d43771032fa3df35c0ad5e5698d0e54cda inc/Module/Install/WriteAll.pm
-SHA1 b07fccc963d411c16138a417cfc524590abe9c93 lib/Jifty/DBI.pm
+SHA1 7f3e3f4b65b7c2252b3b4143526c26b4fb3e607f lib/Jifty/DBI.pm
 SHA1 46d3dafdc13341ffe1230c654a66eeb329f96093 lib/Jifty/DBI/Class/Trigger.pm
 SHA1 fcbea0817e692158efa1090c85feaf6e6cbea7d3 lib/Jifty/DBI/Collection.pm
 SHA1 da7059734dc429040250589d704a8ad5d786c916 lib/Jifty/DBI/Collection/Union.pm
@@ -66,7 +66,7 @@ SHA1 483de5eefde5ef2d194d18ad81a44b411122ad27 lib/Jifty/DBI/Handle/Sybase.pm
 SHA1 e6041a34c3044ed8b9691a5629ecf146fed95257 lib/Jifty/DBI/Handle/mysql.pm
 SHA1 f2cc4fcce79c9a88a023d4e6bd96c2089eef1ced lib/Jifty/DBI/Handle/mysqlPP.pm
 SHA1 0e975f9ec5480ca09025c592c06d484058e637df lib/Jifty/DBI/HasFilters.pm
-SHA1 52f177e8a33484f91c6ff505bbe0aaf80e3d3ee2 lib/Jifty/DBI/Record.pm
+SHA1 8be6ef39a3145d46f0b236d038908d8f86fb8427 lib/Jifty/DBI/Record.pm
 SHA1 968bc51f282bfe9f9b069a0db6830b49fef99941 lib/Jifty/DBI/Record/Cachable.pm
 SHA1 f4ec61cd857cb1cead8c9c5551047dc78734b73a lib/Jifty/DBI/Record/Memcached.pm
 SHA1 85342548af141aa7121e261faaf294c8485df718 lib/Jifty/DBI/Record/Plugin.pm
@@ -102,7 +102,7 @@ SHA1 9b6cf7d135201f3f5ac4e29eaf180c85ba2e2bbf t/utils.pl
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.3 (Darwin)
 
-iD8DBQFGIkNTEi9d9xCOQEYRApRiAJ43s+rFHBpQMYB2aj+PFKLwRTrD2QCgmN4y
-RMu4DmzGnpTJCUFgbks43Vc=
-=PbbA
+iD8DBQFGI9peEi9d9xCOQEYRAmCEAKCME/cKRb9dxCNR/pw9Qlmahv2M1wCfTLz5
+mctzPoTKU8ZwPWChyZQ74h8=
+=HdZT
 -----END PGP SIGNATURE-----
