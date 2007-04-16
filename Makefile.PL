@@ -16,6 +16,7 @@ requires('DateTime::Format::ISO8601');
 requires('DateTime::Format::Strptime');
 requires('Encode'  => 2.10);
 requires('Exporter::Lite');
+requires('Hash::Merge');
 requires('Lingua::EN::Inflect');
 requires('Object::Declare' => 0.22);
 requires('UNIVERSAL::require');
