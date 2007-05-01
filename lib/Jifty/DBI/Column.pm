@@ -25,6 +25,7 @@ __PACKAGE__->mk_accessors qw/
 
     label hints render_as
     valid_values
+    available_values
     indexed
     autocompleted
     _validator
