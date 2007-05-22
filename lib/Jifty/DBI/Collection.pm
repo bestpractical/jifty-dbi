@@ -12,21 +12,27 @@ perl objects
 
   use Jifty::DBI::Collection;
   
-  package My::Things;
+  package My::ThingCollection;
   use base qw/Jifty::DBI::Collection/;
+
+  package My::Thing;
+  use Jifty::DBI::Schema;
+  use Jifty::DBI::Record schema {
+    column column_1 => type is 'text';
+  };
   
   package main;
 
   use Jifty::DBI::Handle;
   my $handle = Jifty::DBI::Handle->new();
-  $handle->connect( Driver => 'SQLite', Database => "my_test_db" );
+  $handle->connect( driver => 'SQLite', database => "my_test_db" );
 
-  my $sb = My::Things->new( handle => $handle );
+  my $sb = My::ThingCollection->new( handle => $handle );
 
   $sb->limit( column => "column_1", value => "matchstring" );
 
   while ( my $record = $sb->next ) {
-      print $record->my_column_name();
+      print $record->id;
   }
 
 =head1 DESCRIPTION
