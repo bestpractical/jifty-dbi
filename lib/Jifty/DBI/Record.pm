@@ -514,6 +514,39 @@ sub readable_attributes {
     return @{$self->_READABLE_COLS_CACHE() || $self->_READABLE_COLS_CACHE([sort map { $_->name } grep { $_->readable } $self->columns])};
 }
 
+=head2 serialize_metadata
+
+Returns a hash which describes how this class is stored in the database. 
+Right now, the keys are C<class>, C<table>, and C<columns>. C<class> and C<table>
+return simple scalars, but C<columns> returns a hash of C<name =&gt; value> pairs
+for all the columns in this model. See C<Jifty::DBI::Column/serialize_metadata> for 
+the format of that hash.
+
+
+=cut
+
+sub serialize_metadata {
+    my $self = shift;
+    return {
+            class => (ref($self) || $self),
+            table => $self->table,
+            columns => { $self->_serialize_columns },
+    }
+}
+
+sub _serialize_columns {
+    my $self = shift;
+    my %serialized_columns;
+    foreach my $column ( $self->columns  ) {
+        $serialized_columns{ $column->name } = $column->serialize_metadata();
+    }
+
+    return %serialized_columns;
+}
+
+
+
+
 =head2 writable_attributes
 
 Returns a list of this table's writable columns
@@ -669,7 +702,7 @@ sub __value {
 
 =head2 as_hash 
 
-Returns a version of this object's readable columns rendered as a hash of key => value pairs
+Returns a version of this record's readable columns rendered as a hash of key => value pairs
 
 =cut
 
