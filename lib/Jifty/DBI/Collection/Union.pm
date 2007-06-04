@@ -207,7 +207,7 @@ sub is_last {
 
 =head2 items_array_ref
 
-Return a refernece to an array containing all objects found by this search.
+Return a reference to an array containing all objects found by this search.
 
 Will destroy any positional state.
 

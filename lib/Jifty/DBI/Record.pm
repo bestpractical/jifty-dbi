@@ -35,7 +35,7 @@ Jifty::DBI::Record - Superclass for records loaded by Jifty::DBI::Collection
 
 =head1 DESCRIPTION
 
-Jifty::DBI::Record encapuslates records and tables as part of the L<Jifty::DBI>
+Jifty::DBI::Record encapsulates records and tables as part of the L<Jifty::DBI>
 object-relational mapper.
 
 =head1 METHODS
