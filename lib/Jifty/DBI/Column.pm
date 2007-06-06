@@ -78,7 +78,7 @@ Returns true if this column is a text field
 
 sub is_string {
     my $self = shift;
-    if ( $self->type =~ /CHAR/i ){ 
+    if ( $self->type =~ /CHAR|TEXT/i ){ 
         return 1;
     }
     return 0;
