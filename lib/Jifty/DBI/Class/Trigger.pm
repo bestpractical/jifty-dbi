@@ -25,18 +25,28 @@ sub add_trigger {
 
     my $triggers = __fetch_triggers($proto);
 
-    if ( $#_ == 1 && ref( $_[1] ) eq 'CODE' ) {
-        @_ = ( name => $_[0], callback => $_[1] );
+    if (ref($_[1]) eq 'CODE') { 
+
+    while (my($when, $code) = splice @_, 0, 2) {
+        __validate_triggerpoint($proto, $when);
+        Carp::croak('add_trigger() needs coderef') unless ref($code) eq 'CODE';
+        push @{$triggers->{$when}}, [$code, undef];
     }
+    }
+    elsif (grep {'name'} @_) {
+        my %args = ( name => undef, callback => undef, abortable => undef, @_);
+        my $when= $args{'name'};
+        my $code = $args{'callback'};
+        my $abortable = $args{'abortable'};
+        __validate_triggerpoint($proto, $when);
+        Carp::croak('add_trigger() needs coderef') unless ref($code) eq 'CODE';
+        push @{$triggers->{$when}}, [$code, $abortable];
 
-    my %args = ( name => undef, callback => undef, abortable => undef, @_ );
-    my $when = $args{'name'};
-    my $code = $args{'callback'};
-    my $abortable = $args{'abortable'};
-    __validate_triggerpoint( $proto, $when );
-    Carp::croak('add_trigger() needs coderef') unless ref($code) eq 'CODE';
-    push @{ $triggers->{$when} }, [ $code, $abortable ];
 
+    } else {
+        Carp::croak('add_trigger() needs coderef');
+
+    }
     1;
 }
 
@@ -62,7 +72,8 @@ sub call_trigger {
               my @return = $trig->[0]->($self, @_);
                 push @{$result_store->{'_class_trigger_results'}}, \@return;
                 return undef if ($trig->[1] and not $return[0]); # only abort on false values.
-        }
+         
+    }
     }
     else {
         # if validation is enabled we can only add valid trigger points
