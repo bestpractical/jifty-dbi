@@ -25,27 +25,18 @@ sub add_trigger {
 
     my $triggers = __fetch_triggers($proto);
 
-    if ($#_ == 1 && ref($_[1]) eq 'CODE') { 
-	while (my($when, $code) = splice @_, 0, 2) {
-            __validate_triggerpoint($proto, $when);
-            Carp::croak('add_trigger() needs coderef') unless ref($code) eq 'CODE';
-            push @{$triggers->{$when}}, [$code, undef];
-        }
+    if ( $#_ == 1 && ref( $_[1] ) eq 'CODE' ) {
+        @_ = ( name => $_[0], callback => $_[1] );
     }
-    elsif (grep {'name'} @_) {
-        my %args = ( name => undef, callback => undef, abortable => undef, @_);
-        my $when= $args{'name'};
-        my $code = $args{'callback'};
-        my $abortable = $args{'abortable'};
-        __validate_triggerpoint($proto, $when);
-        Carp::croak('add_trigger() needs coderef') unless ref($code) eq 'CODE';
-        push @{$triggers->{$when}}, [$code, $abortable];
 
+    my %args = ( name => undef, callback => undef, abortable => undef, @_ );
+    my $when = $args{'name'};
+    my $code = $args{'callback'};
+    my $abortable = $args{'abortable'};
+    __validate_triggerpoint( $proto, $when );
+    Carp::croak('add_trigger() needs coderef') unless ref($code) eq 'CODE';
+    push @{ $triggers->{$when} }, [ $code, $abortable ];
 
-    } else {
-        Carp::croak('add_trigger() needs coderef');
-
-    }
     1;
 }
 
