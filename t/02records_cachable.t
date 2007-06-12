@@ -76,7 +76,7 @@ SKIP: {
             Jifty::DBI::Record::Cachable->flush_cache;
 
             ok( $rec->load_by_cols( Phone => undef ), "Loaded the record" );
-	    is( $rec->name, 'UndefPhone', "UndefPhone record" );
+            is( $rec->name, 'UndefPhone', "UndefPhone record" );
 
             is( $rec->phone, undef, "Phone number is undefined" );
 
@@ -163,6 +163,21 @@ CREATE table addresses (
 EOF
 
 }
+
+sub schema_oracle { [
+    "CREATE SEQUENCE addresses_seq",
+    "CREATE TABLE addresses (
+        id integer CONSTRAINT addresses_key PRIMARY KEY,
+        name varchar(36),
+        phone varchar(18),
+        employee_id integer
+    )",
+] }
+
+sub cleanup_schema_oracle { [
+    "DROP SEQUENCE addresses_seq",
+    "DROP TABLE addresses", 
+] }
 
 1;
 
