@@ -8,7 +8,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 71;
+use constant TESTS_PER_DRIVER => 78;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -69,7 +69,7 @@ SKIP: {
         isa_ok( $items_ref, 'ARRAY', 'items_array_ref always returns array reference' );
         is( scalar @{$items_ref}, $count_all, 'items_array_ref returns same number of records as was inserted' );
 
-# try to use $users_obj for all tests, after each call to CleanSlate it should look like new obj.
+# try to use $users_obj for all tests, after each call to clean_slate it should look like new obj.
 # and test $obj->new syntax
         my $clean_obj = $users_obj->new( handle => $handle );
         isa_ok( $clean_obj, 'Jifty::DBI::Collection' );
@@ -103,7 +103,7 @@ SKIP: {
         isa_ok( $items_ref, 'ARRAY', 'items_array_ref always returns array reference' );
         is( scalar @{$items_ref}, 1, 'items_array_ref has only 1 record' );
 
-# similar basic limit, but with different operatorS and less first/next/last tests
+# similar basic limit, but with different operators and less first/next/last tests
         # LIKE
         $users_obj->clean_slate;
         is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
@@ -145,11 +145,11 @@ SKIP: {
         # IS NOT NULL
         $users_obj->clean_slate;
         is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
-        $users_obj->limit( column => 'phone', operator => 'IS NOT', value => 'NULL', QOUTEvalue => 0 );
+        $users_obj->limit( column => 'phone', operator => 'IS NOT', value => 'NULL', quotevalue => 0 );
         is( $users_obj->count, $count_all - 2, "found users who have phone number filled" );
         $users_obj->clean_slate;
         is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
-        $users_obj->limit( column => 'address', operator => 'IS NOT', value => 'NULL', QOUTEvalue => 0 );
+        $users_obj->limit( column => 'address', operator => 'IS NOT', value => 'NULL', quotevalue => 0 );
         is( $users_obj->count, $count_all, "found users who have address filled" );
        
         # CASE SENSITIVITY, default is limits are not case sensitive
@@ -186,6 +186,38 @@ SKIP: {
         $first_rec = $users_obj->first;
         isa_ok( $first_rec, 'Jifty::DBI::Record', 'First returns record object' );
         is( $first_rec->login, 'obra', 'login is correct' );
+
+        $users_obj->clean_slate;
+        TODO: {
+            local $TODO = 'we leave order_by after clean slate, fixing this results in many RT failures';
+            is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
+            $users_obj = TestApp::UserCollection->new( handle => $handle );
+        }
+ 
+# Let's play a little with 'entry_aggregator'
+        # EA defaults to OR for the same field
+        $users_obj->limit( column => 'phone', operator => 'IS', value => 'NULL', quote_value => 0 );
+        $users_obj->limit( column => 'phone', operator => 'LIKE', value => '%X%' );
+        is( $users_obj->count, 4, "found users who has no phone or it has X char" );
+
+        # set AND for the same field
+        $users_obj->clean_slate;
+        is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
+        $users_obj->limit( column => 'Login', operator => 'NOT LIKE', value => '%c%' );
+        $users_obj->limit(
+            entry_aggregator => 'AND', column => 'Login', operator => 'LIKE', value => '%u%'
+        );
+        is( $users_obj->count, 1, "found users who has no phone or it has X char" );
+
+        # default is AND for different fields
+        $users_obj->clean_slate;
+        is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
+        $users_obj->limit( column => 'phone', operator => 'IS', value => 'NULL', quote_value => 0 );
+        $users_obj->limit( column => 'login', operator => 'LIKE', value => '%r%' );
+        is( $users_obj->count, 2, "found users who has no phone number or login has 'r' char" );
+
+        $users_obj->clean_slate;
+        is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object'); 
 
         cleanup_schema( 'TestApp', $handle );
         disconnect_handle( $handle );
@@ -233,6 +265,21 @@ CREATE table users (
 EOF
 
 }
+
+sub schema_oracle { [
+    "CREATE SEQUENCE Users_seq",
+    "CREATE TABLE Users (
+        id integer CONSTRAINT Users_Key PRIMARY KEY,
+        Login varchar(18) NOT NULL,
+        Name varchar(36),
+        Phone varchar(18)
+    )",
+] }
+
+sub cleanup_schema_oracle { [
+    "DROP SEQUENCE Users_seq",
+    "DROP TABLE Users", 
+] }
 
 
 1;
