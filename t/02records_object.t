@@ -102,6 +102,28 @@ CREATE TEMPORARY table phones (
 
 
 
+sub schema_oracle { [
+    "CREATE SEQUENCE employees_seq",
+    "CREATE TABLE employees (
+        id integer CONSTRAINT employees_key PRIMARY KEY,
+        Name varchar(36)
+    )",
+    "CREATE SEQUENCE phones_seq",
+    "CREATE TABLE phones (
+        id integer CONSTRAINT phones_key PRIMARY KEY,
+        employee integer NOT NULL,
+        phone varchar(18)
+    )",
+] }
+
+sub cleanup_schema_oracle { [
+    "DROP SEQUENCE employees_seq",
+    "DROP TABLE employees", 
+    "DROP SEQUENCE phones_seq",
+    "DROP TABLE phones", 
+] }
+
+
 package TestApp::Employee;
 
 BEGIN {
