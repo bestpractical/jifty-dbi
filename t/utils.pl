@@ -124,6 +124,17 @@ sub connect_pg
         );
 }
 
+sub connect_oracle
+{
+        my $handle = shift;
+        return $handle->Connect(
+                driver   => 'Oracle',
+#                database => $ENV{'JDBI_TEST_ORACLE'},
+                user     => $ENV{'JDBI_TEST_ORACLE_USER'} || 'test',
+                password => $ENV{'JDBI_TEST_RACLE_PASS'} || 'test',
+        );
+}
+
 =head2 disconnect_handle
 
 Disconnects C<$handle> object.
