@@ -278,6 +278,21 @@ EOF
 
 }
 
+sub schema_oracle { [
+    "CREATE SEQUENCE addresses_seq",
+    "CREATE TABLE addresses (
+        id integer CONSTRAINT address_key PRIMARY KEY,
+        Name varchar(36),
+        Phone varchar(18),
+        EmployeeId integer
+    )",
+] }
+
+sub cleanup_schema_oracle { [
+    "DROP SEQUENCE addresses_seq",
+    "DROP TABLE addresses",
+] }
+
 1;
 
 BEGIN {
