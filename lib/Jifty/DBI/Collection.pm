@@ -946,18 +946,14 @@ sub limit {
     if ( $args{'column'} ) {
 
         #If it's a like, we supply the %s around the search term
-        if ( $args{'operator'} =~ /LIKE/i ) {
-            $args{'value'} = $args{'value'};
-        } elsif ( $args{'operator'} =~ /MATCHES/i ) {
+        if ( $args{'operator'} =~ /MATCHES/i ) {
             $args{'value'}    = "%" . $args{'value'} . "%";
-            $args{'operator'} = "LIKE";
         } elsif ( $args{'operator'} =~ /STARTSWITH/i ) {
             $args{'value'}    = $args{'value'} . "%";
-            $args{'operator'} = "LIKE";
         } elsif ( $args{'operator'} =~ /ENDSWITH/i ) {
             $args{'value'}    = "%" . $args{'value'};
-            $args{'operator'} = "LIKE";
         }
+        $args{'operator'} =~ s/(?:MATCHES|ENDSWITH|STARTSWITH)/LIKE/i;
 
         #if we're explicitly told not to to quote the value or
         # we're doing an IS or IS NOT (null), don't quote the operator.
