@@ -1,6 +1,6 @@
 package Jifty::DBI::Handle::Oracle;
 use base qw/Jifty::DBI::Handle/;
-use DBD::Oracle qw(:ora_types);
+use DBD::Oracle qw(:ora_types ORA_OCI);
 
 use vars qw($VERSION $DBIHandle $DEBUG);
 
@@ -46,6 +46,17 @@ sub connect {
 
     return ($DBIHandle);
 }
+
+=head2 database_version
+
+Returns value of ORA_OCI constant, see L<DBD::Oracle/Constants>.
+
+=cut
+
+sub database_version {
+    return ''. ORA_OCI;
+}
+
 
 =head2 insert
 
