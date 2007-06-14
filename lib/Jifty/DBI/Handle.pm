@@ -921,11 +921,11 @@ sub _normal_join {
 
     if ( $args{'type'} =~ /LEFT/i ) {
         my $alias = $sb->_get_alias( $args{'table2'} );
-
-        $sb->{'leftjoins'}{"$alias"}{'alias_string'}
-            = " LEFT JOIN $args{'table2'} $alias ";
-
-        $sb->{'leftjoins'}{"$alias"}{'criteria'}{'base_criterion'}
+        my $meta  = $sb->{'leftjoins'}{ $alias } ||= {};
+        $meta->{'alias_string'} = " LEFT JOIN $args{'table2'} $alias ";
+        $meta->{'depends_on'}   = $args{'alias1'};
+        $meta->{'type'}         = 'LEFT';
+        $meta->{'base_criterion'}
             = " $args{'alias1'}.$args{'column1'} $args{'operator'} $alias.$args{'column2'}";
 
         return ($alias);
