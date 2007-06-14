@@ -833,7 +833,7 @@ sub join {
         my @aliases = @{ $args{'collection'}->{'aliases'} };
         my @new_aliases;
         foreach my $old_alias (@aliases) {
-            if ( $old_alias =~ /^(.*?) ($args{'alias2'})$/ ) {
+            if ( $old_alias =~ /^(.*?) (\Q$args{'alias2'}\E)$/ ) {
                 $args{'table2'} = $1;
                 $alias = $2;
 
