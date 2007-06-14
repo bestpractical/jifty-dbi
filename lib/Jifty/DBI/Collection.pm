@@ -153,6 +153,7 @@ sub clean_slate {
         subclauses
         restrictions
         _open_parens
+        criteria_count
     );
 
     $self->implicit_clauses(%args);
