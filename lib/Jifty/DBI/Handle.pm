@@ -818,8 +818,6 @@ sub join {
         @_
     );
 
-    my $string;
-
     my $alias;
 
     #If we're handed in an alias2, we need to go remove it from the
@@ -879,15 +877,18 @@ sub join {
 
     }
 
+    my $meta = $args{'collection'}->{'leftjoins'}{ $alias } ||= {};
     if ( $args{'type'} =~ /LEFT/i ) {
-
-        $string = " LEFT JOIN " . $args{'table2'} . " $alias ";
+        $meta->{'alias_string'} = " LEFT JOIN " . $args{'table2'} . " $alias ";
+        $meta->{'type'} = 'LEFT';
 
     } else {
-
-        $string = " JOIN " . $args{'table2'} . " $alias ";
-
+        $meta->{'alias_string'} = " JOIN " . $args{'table2'} . " $alias ";
+        $meta->{'type'} = 'NORMAL';
     }
+    $meta->{'depends_on'} = $args{'alias1'};
+    $meta->{'entry_aggregator'} = $args{'entry_aggregator'}
+        if $args{'entry_aggregator'};
 
     my $criterion;
     if ( $args{'expression'} ) {
@@ -895,15 +896,7 @@ sub join {
     } else {
         $criterion = $args{'alias1'} . "." . $args{'column1'};
     }
-
-    $args{'collection'}->{'leftjoins'}{"$alias"}{'alias_string'} = $string;
-    $args{'collection'}->{'leftjoins'}{"$alias"}{'entry_aggregator'}
-        = $args{'entry_aggregator'}
-        if ( $args{'entry_aggregator'} );
-    $args{'collection'}->{'leftjoins'}{"$alias"}{'depends_on'}
-        = $args{'alias1'};
-    $args{'collection'}->{'leftjoins'}{"$alias"}{'criteria'}
-        { 'criterion' . $args{'collection'}->{'criteria_count'}++ }
+    $meta->{'criteria'}{ 'criterion' . $args{'collection'}->{'criteria_count'}++ }
         = " $criterion $args{'operator'} $alias.$args{'column2'}";
 
     return ($alias);
