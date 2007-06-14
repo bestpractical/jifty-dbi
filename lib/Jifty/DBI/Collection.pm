@@ -1803,7 +1803,7 @@ the list.
 sub _cloned_attributes {
     return qw(
         aliases
-        left_joins
+        leftjoins
         subclauses
         restrictions
     );
