@@ -808,11 +808,11 @@ sub join {
     my %args = (
         collection => undef,
         type       => 'normal',
-        column1    => 'main',
-        alias1     => undef,
+        alias1     => 'main',
+        column1    => undef,
         table2     => undef,
-        column2    => undef,
         alias2     => undef,
+        column2    => undef,
         expression => undef,
         operator   => '=',
         @_
