@@ -662,13 +662,37 @@ sub next {
 
     $self->_do_search() if $self->{'must_redo_search'};
 
+    my $item = $self->peek;
+
+    if ( $self->{'itemscount'} < $self->_record_count )
+    {
+        $self->{'itemscount'}++;
+    } else {    #we've gone through the whole list. reset the count.
+        $self->goto_first_item();
+    }
+
+    return ($item);
+}
+
+=head2 peek
+
+Exactly the same as next, only it doesn't move the iterator.
+
+=cut
+
+sub peek {
+    my $self = shift;
+    my @row;
+
+    return (undef) unless ( $self->_is_limited );
+
+    $self->_do_search() if $self->{'must_redo_search'};
+
     if ( $self->{'itemscount'} < $self->_record_count )
     {    #return the next item
         my $item = ( $self->{'items'}[ $self->{'itemscount'} ] );
-        $self->{'itemscount'}++;
         return ($item);
-    } else {    #we've gone through the whole list. reset the count.
-        $self->goto_first_item();
+    } else {    #no more items!
         return (undef);
     }
 }

@@ -8,7 +8,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 78;
+use constant TESTS_PER_DRIVER => 82;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -45,6 +45,7 @@ SKIP: {
         is( $users_obj->last, undef, 'last returns undef on not limited obj' );
         is( $users_obj->is_last, undef, 'is_last returns undef on not limited obj after last' );
         $users_obj->goto_first_item;
+        is( $users_obj->peek, undef, 'peek returns undef on not limited obj' );
         is( $users_obj->next, undef, 'next returns undef on not limited obj' );
         is( $users_obj->is_last, undef, 'is_last returns undef on not limited obj after next' );
         # XXX TODO FIXME: may be this methods should be implemented
@@ -60,6 +61,7 @@ SKIP: {
         isa_ok( $users_obj->first, 'Jifty::DBI::Record', 'first returns record object' );
         isa_ok( $users_obj->last, 'Jifty::DBI::Record', 'last returns record object' );
         $users_obj->goto_first_item;
+        isa_ok( $users_obj->peek, 'Jifty::DBI::Record', 'peek returns record object' );
         isa_ok( $users_obj->next, 'Jifty::DBI::Record', 'next returns record object' );
         $items_ref = $users_obj->items_array_ref;
         isa_ok( $items_ref, 'ARRAY', 'items_array_ref always returns array reference' );
@@ -91,9 +93,12 @@ SKIP: {
         is( $last_rec, $first_rec, 'last returns same object as first' );
         is( $users_obj->is_last, 1, 'is_last always returns 1 after last call');
         $users_obj->goto_first_item;
+        my $peek_rec = $users_obj->peek;
         my $next_rec = $users_obj->next;
+        is( $next_rec, $peek_rec, 'peek returns same object as next' );
         is( $next_rec, $first_rec, 'next returns same object as first' );
         is( $users_obj->is_last, 1, 'is_last returns 1 after fetch first record with next method');
+        is( $users_obj->peek, undef, 'only one record in the collection' );
         is( $users_obj->next, undef, 'only one record in the collection' );
         TODO: {
                 local $TODO = 'require discussion';
