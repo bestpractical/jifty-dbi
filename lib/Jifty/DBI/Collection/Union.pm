@@ -114,6 +114,10 @@ sub next {
     return undef unless defined $self->{data}[ $self->{curp} ];
 
     my $cur = $self->{data}[ $self->{curp} ];
+
+    # do the search to avoid the count query and then search
+    $cur->_do_search if $cur->{'must_redo_search'};
+
     if ( $cur->_items_counter == $cur->count ) {
 
         # move to the next element
