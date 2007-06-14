@@ -1806,7 +1806,8 @@ sub clone {
 
     $obj->redo_search();    # clean out the object of data
 
-    $obj->{$_} = Clone::clone( $obj->{$_} ) for ( $self->_cloned_attributes );
+    $obj->{$_} = Clone::clone( $obj->{$_} ) for
+        grep exists $self->{ $_ }, $self->_cloned_attributes;
     return $obj;
 }
 
