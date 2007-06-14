@@ -927,8 +927,6 @@ sub limit {
         @_    # get the real argumentlist
     );
 
-    my ($Alias);
-
     # We need to be passed a column and a value, at very least
     croak "Must provide a column to limit"
         unless defined $args{column};
@@ -972,8 +970,6 @@ sub limit {
         }
     }
 
-    my ( $Clause, $qualified_column );
-
     #TODO: $args{'value'} should take an array of values and generate
     # the proper where clause.
 
@@ -1010,27 +1006,18 @@ sub limit {
     # Set this to the name of the column and the alias, unless we've been
     # handed a subclause name
 
-    $qualified_column = $args{'alias'} . "." . $args{'column'};
-
-    if ( $args{'subclause'} ) {
-        $Clause = $args{'subclause'};
-    } else {
-        $Clause = $qualified_column;
-    }
-
-    warn "$self->_generic_restriction qualified_column=$qualified_column\n"
-        if ( $self->DEBUG );
-
-    my ($restriction);
+    my $qualified_column = $args{'alias'} . "." . $args{'column'};
+    my $clause_id = $args{'subclause'} || $qualified_column;
 
     # If we're trying to get a leftjoin restriction, lets set
     # $restriction to point htere. otherwise, lets construct normally
 
+    my $restriction;
     if ( $args{'leftjoin'} ) {
-        $restriction = \$self->{'leftjoins'}{ $args{'leftjoin'} }{'criteria'}
-            {"$Clause"};
+        $restriction = $self->{'leftjoins'}{ $args{'leftjoin'} }{'criteria'}
+            { $clause_id } ||= [];
     } else {
-        $restriction = \$self->{'restrictions'}{"$Clause"};
+        $restriction = $self->{'restrictions'}{ $clause_id } ||= [];
     }
 
     # If it's a new value or we're overwriting this sort of restriction,
@@ -1050,26 +1037,22 @@ sub limit {
         }
     }
 
-    my $clause = "($qualified_column $args{'operator'} $args{'value'})";
+    my $clause = {
+        column   => $qualified_column,
+        operator => $args{'operator'},
+        value    => $args{'value'},
+    };
 
     # Juju because this should come _AFTER_ the EA
-    my $prefix = "";
-    if ( $self->{_open_parens}{$Clause} ) {
-        $prefix = " ( " x $self->{_open_parens}{$Clause};
-        delete $self->{_open_parens}{$Clause};
+    my @prefix;
+    if ( $self->{'_open_parens'}{ $clause_id } ) {
+        @prefix = ('(') x delete $self->{'_open_parens'}{ $clause_id };
     }
 
-    if ((       ( exists $args{'entry_aggregator'} )
-            and ( $args{'entry_aggregator'} || "" ) eq 'none'
-        )
-        or ( !$$restriction )
-        )
-    {
-
-        $$restriction = $prefix . $clause;
-
+    if ( lc( $args{'entry_aggregator'} || "" ) eq 'none' || !@$restriction ) {
+        @$restriction = (@prefix, $clause);
     } else {
-        $$restriction .= $args{'entry_aggregator'} . $prefix . $clause;
+        push @$restriction, $args{'entry_aggregator'}, @prefix , $clause;
     }
 
     # We're now limited. people can do searches.
@@ -1111,12 +1094,8 @@ arbitrarily complex queries.
 # Immediate Action
 sub close_paren {
     my ( $self, $clause ) = @_;
-    my $restriction = \$self->{'restrictions'}{"$clause"};
-    if ( !$$restriction ) {
-        $$restriction = " ) ";
-    } else {
-        $$restriction .= " ) ";
-    }
+    my $restriction = $self->{'restrictions'}{ $clause } ||= [];
+    push @$restriction, ')';
 }
 
 sub _add_subclause {
@@ -1154,18 +1133,25 @@ sub _where_clause {
 
 sub _compile_generic_restrictions {
     my $self = shift;
-    my ($restriction);
 
     delete $self->{'subclauses'}{'generic_restrictions'};
 
-  #Go through all the restrictions of this type. Buld up the generic subclause
-    foreach $restriction ( sort keys %{ $self->{'restrictions'} } ) {
-        if ( defined $self->{'subclauses'}{'generic_restrictions'} ) {
-            $self->{'subclauses'}{'generic_restrictions'} .= " AND ";
+    # Go through all the restrictions of this type. Buld up the generic subclause
+    my $result = '';
+    foreach my $restriction ( grep $_ && @$_, values %{ $self->{'restrictions'} } ) {
+        $result .= ' AND ' if $result;
+        $result .= '(';
+        foreach my $entry ( @$restriction ) {
+            unless ( ref $entry ) {
+                $result .= ' '. $entry . ' ';
+            }
+            else {
+                $result .= join ' ', @{$entry}{qw(column operator value)};
+            }
         }
-        $self->{'subclauses'}{'generic_restrictions'}
-            .= "(" . $self->{'restrictions'}{"$restriction"} . ")";
+        $result .= ')';
     }
+    return ($self->{'subclauses'}{'generic_restrictions'} = $result);
 }
 
 # set $self->{$type .'_clause'} to new value
