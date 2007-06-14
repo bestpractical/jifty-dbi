@@ -1141,10 +1141,7 @@ sub _where_clause {
     #Go through all restriction types. Build the where clause from the
     #Various subclauses.
 
-    my @subclauses;
-    foreach my $subclause ( sort keys %{ $self->{'subclauses'} } ) {
-        push @subclauses, $self->{'subclauses'}{"$subclause"};
-    }
+    my @subclauses = grep defined && length, values %{ $self->{'subclauses'} };
 
     $where_clause = " WHERE " . CORE::join( ' AND ', @subclauses )
         if (@subclauses);
