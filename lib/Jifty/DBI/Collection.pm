@@ -394,7 +394,7 @@ together.
 
 sub _is_joined {
     my $self = shift;
-    if ( %{ $self->{'leftjoins'} } ) {
+    if ( $self->{'leftjoins'} && keys %{ $self->{'leftjoins'} } ) {
         return (1);
     } else {
         return ( @{ $self->{'aliases'} } );
