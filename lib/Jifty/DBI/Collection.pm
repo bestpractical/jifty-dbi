@@ -656,11 +656,6 @@ database.
 
 sub next {
     my $self = shift;
-    my @row;
-
-    return (undef) unless ( $self->_is_limited );
-
-    $self->_do_search() if $self->{'must_redo_search'};
 
     my $item = $self->peek;
 
@@ -682,7 +677,6 @@ Exactly the same as next, only it doesn't move the iterator.
 
 sub peek {
     my $self = shift;
-    my @row;
 
     return (undef) unless ( $self->_is_limited );
 
