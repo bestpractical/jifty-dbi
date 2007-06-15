@@ -351,7 +351,7 @@ sub _init_column {
             $column->by('id') unless $column->by;
             $column->virtual('1');
         } else {
-            warn "Error: $refclass neither Record nor Collection";
+            warn "Error in $from: $refclass neither Record nor Collection";
         }
     } else {
         $column->type('varchar(255)') unless $column->type;
