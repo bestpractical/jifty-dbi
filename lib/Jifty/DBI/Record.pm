@@ -260,6 +260,7 @@ sub _init_methods_for_column {
                 if ( UNIVERSAL::isa( $column->refers_to, "Jifty::DBI::Record" ) )
                 {
                     $subref = sub {
+                        if ( @_ > 1 ) { Carp::carp "Value passed to column accessor.  You probably want to use the mutator." }
                         $_[0]->_to_record( $column_name,
                             $_[0]->__value($column_name) );
                     };
@@ -271,7 +272,10 @@ sub _init_methods_for_column {
                 {
                     $subref = sub { $_[0]->_collection_value($column_name) };
                 } else {
-                    $subref = sub { return ( $_[0]->_value($column_name) ) };
+                    $subref = sub {
+                        if ( @_ > 1 ) { Carp::carp "Value passed to column accessor.  You probably want to use the mutator." }
+                        return ( $_[0]->_value($column_name) );
+                    };
                 }
             } else {
                 $subref = sub { return '' }
