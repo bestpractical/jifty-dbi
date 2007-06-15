@@ -949,6 +949,8 @@ sub _build_joins {
     my $self = shift;
     my $sb   = shift;
 
+    $self->_optimize_joins( collection => $sb );
+
     my $join_clause = CORE::join " CROSS JOIN ", ($sb->table ." main"), @{ $sb->{'aliases'} };
     my %processed = map { /^\S+\s+(\S+)$/; $1 => 1 } @{ $sb->{'aliases'} };
     $processed{'main'} = 1;
@@ -983,6 +985,167 @@ sub _build_joins {
         die "Unsatisfied dependency chain in joins @not_processed";
     }
     return $join_clause;
+}
+
+sub _optimize_joins {
+    my $self = shift;
+    my %args = ( collection => undef, @_ );
+    my $joins = $args{'collection'}->{'leftjoins'};
+
+    my %processed = map { /^\S+\s+(\S+)$/; $1 => 1 } @{ $args{'collection'}->{'aliases'} };
+    $processed{ $_ }++ foreach grep $joins->{ $_ }{'type'} ne 'LEFT', keys %$joins;
+    $processed{'main'}++;
+
+    my @ordered;
+    # get a @list of joins that have not been processed yet, but depend on processed join
+    # if we are talking about forest then we'll get the second level of the forest,
+    # but we should process nodes on this level at the end, so we build FILO ordered list.
+    # finally we'll get ordered list with leafes in the beginning and top most nodes at
+    # the end.
+    while ( my @list = grep !$processed{ $_ }
+            && $processed{ $joins->{ $_ }{'depends_on'} }, keys %$joins )
+    {
+        unshift @ordered, @list;
+        $processed{ $_ }++ foreach @list;
+    }
+
+    foreach my $join ( @ordered ) {
+        next if $self->may_be_null( collection => $args{'collection'}, alias => $join );
+
+        $joins->{ $join }{'alias_string'} =~ s/^\s*LEFT\s+/ /i;
+        $joins->{ $join }{'type'} = 'NORMAL';
+    }
+
+}
+
+=head2 may_be_null
+
+Takes a C<collection> and C<alias> in a hash and returns
+true if restrictions of the query allow NULLs in a table joined with
+the alias, otherwise returns false value which means that you can
+use normal join instead of left for the aliased table.
+
+Works only for queries have been built with L<Jifty::DBI::Collection/join> and
+L<Jifty::DBI::Collection/limit> methods, for other cases return true value to
+avoid fault optimizations.
+
+=cut
+
+sub may_be_null {
+    my $self = shift;
+    my %args = (collection => undef, alias => undef, @_);
+    # if we have at least one subclause that is not generic then we should get out
+    # of here as we can't parse subclauses
+    return 1 if grep $_ ne 'generic_restrictions', keys %{ $args{'collection'}->{'subclauses'} };
+
+    # build full list of generic conditions
+    my @conditions;
+    foreach ( grep @$_, values %{ $args{'collection'}->{'restrictions'} } ) {
+        push @conditions, 'AND' if @conditions;
+        push @conditions, '(', @$_, ')';
+    }
+
+    # find tables that depends on this alias and add their join conditions
+    foreach my $join ( values %{ $args{'collection'}->{'leftjoins'} } ) {
+        # left joins on the left side so later we'll get 1 AND x expression
+        # which equal to x, so we just skip it
+        next if $join->{'type'} eq 'LEFT';
+        next unless $join->{'depends_on'} eq $args{'alias'};
+
+        my @tmp = map { ('(', @$_, ')', $join->{'entry_aggregator'}) } values %{ $join->{'criteria'} };
+        pop @tmp;
+
+        @conditions = ('(', @conditions, ')', 'AND', '(', @tmp ,')');
+
+    }
+    return 1 unless @conditions;
+
+    # replace conditions with boolean result: 1 - allow nulls, 0 - doesn't
+    foreach ( splice @conditions ) {
+        unless ( ref $_ ) {
+            push @conditions, $_;
+        } elsif ( $_->{'column'} =~ /^\Q$args{'alias'}./ ) {
+            # only operator IS allows NULLs in the aliased table
+            push @conditions, lc $_->{'operator'} eq 'is';
+        } elsif ( $_->{'value'} && $_->{'value'} =~ /^\Q$args{'alias'}./ ) {
+            # right operand is our alias, such condition don't allow NULLs
+            push @conditions, 0;
+        } else {
+            # conditions on other aliases
+            push @conditions, 1;
+        }
+    }
+
+    # returns index of closing paren by index of openning paren
+    my $closing_paren = sub {
+        my $i = shift;
+        my $count = 0;
+        for ( ; $i < @conditions; $i++ ) {
+            if ( $conditions[$i] eq '(' ) {
+                $count++;
+            }
+            elsif ( $conditions[$i] eq ')' ) {
+                $count--;
+            }
+            return $i unless $count;
+        }
+        die "lost in parens";
+    };
+
+    # solve boolean expression we have, an answer is our result
+    my @tmp = ();
+    while ( defined ( my $e = shift @conditions ) ) {
+        #warn "@tmp >>>$e<<< @conditions";
+        return $e if !@conditions && !@tmp;
+
+        unless ( $e ) {
+            if ( $conditions[0] eq ')' ) {
+                push @tmp, $e;
+                next;
+            }
+
+            my $aggreg = uc shift @conditions;
+            if ( $aggreg eq 'OR' ) {
+                # 0 OR x == x
+                next;
+            } elsif ( $aggreg eq 'AND' ) {
+                # 0 AND x == 0
+                my $close_p = $closing_paren->(0);
+                splice @conditions, 0, $close_p + 1, (0);
+            } else {
+                die "lost @tmp >>>$e $aggreg<<< @conditions";
+            }
+        } elsif ( $e eq '1' ) {
+            if ( $conditions[0] eq ')' ) {
+                push @tmp, $e;
+                next;
+            }
+
+            my $aggreg = uc shift @conditions;
+            if ( $aggreg eq 'OR' ) {
+                # 1 OR x == 1
+                my $close_p = $closing_paren->(0);
+                splice @conditions, 0, $close_p + 1, (1);
+            } elsif ( $aggreg eq 'AND' ) {
+                # 1 AND x == x
+                next;
+            } else {
+                die "lost @tmp >>>$e $aggreg<<< @conditions";
+            }
+        } elsif ( $e eq '(' ) {
+            if ( $conditions[1] eq ')' ) {
+                splice @conditions, 1, 1;
+            } else {
+                push @tmp, $e;
+            }
+        } elsif ( $e eq ')' ) {
+            unshift @conditions, @tmp, $e;
+            @tmp = ();
+        } else {
+            die "lost: @tmp >>>$e<<< @conditions";
+        }
+    }
+    return 1;
 }
 
 =head2 distinct_query STATEMENTREF 
