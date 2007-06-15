@@ -126,7 +126,7 @@ diag "main <- alias <- join" if $ENV{'TEST_VERBOSE'};
     ok( my $groups_alias = $users_obj->join(
             alias1 => $alias,
             column1 => 'group_id',
-            table2 => 'Groups',
+            table2 => 'groups',
             column2 => 'id',
         ),
         "joined table"
@@ -143,7 +143,7 @@ diag "main <- alias <- join into main" if $ENV{'TEST_VERBOSE'};
     is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
     ok( !$users_obj->_is_joined, "new object isn't joined");
 
-    ok( my $groups_alias = $users_obj->new_alias( 'Groups' ), "new alias" );
+    ok( my $groups_alias = $users_obj->new_alias( 'groups' ), "new alias" );
     ok( my $g2u_alias = $users_obj->join(
             alias1 => 'main',
             column1 => 'id',
@@ -174,7 +174,7 @@ diag "cascaded LEFT JOIN optimization" if $ENV{'TEST_VERBOSE'};
         type   => 'LEFT',
         alias1 => $alias,
         column1 => 'group_id',
-        table2 => 'Groups',
+        table2 => 'groups',
         column2 => 'id'
     );
     $users_obj->limit( alias => $alias, column => 'id', operator => 'IS NOT', value => 'NULL' );
@@ -244,9 +244,9 @@ CREATE table groups (
 sub schema_mysql {
 [
 q{
-CREATE TEMPORARY table Users (
+CREATE TEMPORARY table users (
     id integer primary key AUTO_INCREMENT,
-    Login varchar(36)
+    login varchar(36)
 ) },
 q{
 CREATE TEMPORARY table user_to_groups (
@@ -255,9 +255,9 @@ CREATE TEMPORARY table user_to_groups (
     group_id integer
 ) },
 q{
-CREATE TEMPORARY table Groups (
+CREATE TEMPORARY table groups (
     id integer primary key AUTO_INCREMENT,
-    Name varchar(36)
+    name varchar(36)
 ) },
 ]
 }
@@ -265,9 +265,9 @@ CREATE TEMPORARY table Groups (
 sub schema_pg {
 [
 q{
-CREATE TEMPORARY table Users (
+CREATE TEMPORARY table users (
     id serial primary key,
-    Login varchar(36)
+    login varchar(36)
 ) },
 q{
 CREATE TEMPORARY table user_to_groups (
@@ -276,18 +276,18 @@ CREATE TEMPORARY table user_to_groups (
     group_id integer
 ) },
 q{
-CREATE TEMPORARY table Groups (
+CREATE TEMPORARY table groups (
     id serial primary key,
-    Name varchar(36)
+    name varchar(36)
 ) },
 ]
 }
 
 sub schema_oracle { [
-    "CREATE SEQUENCE Users_seq",
-    "CREATE table Users (
-        id integer CONSTRAINT Users_Key PRIMARY KEY,
-        Login varchar(36)
+    "CREATE SEQUENCE users_seq",
+    "CREATE table users (
+        id integer CONSTRAINT users_Key PRIMARY KEY,
+        login varchar(36)
     )",
     "CREATE SEQUENCE user_to_groups_seq",
     "CREATE table user_to_groups (
@@ -295,18 +295,18 @@ sub schema_oracle { [
         user_id integer,
         group_id integer
     )",
-    "CREATE SEQUENCE Groups_seq",
-    "CREATE table Groups (
-        id integer CONSTRAINT Groups_Key PRIMARY KEY,
-        Name varchar(36)
+    "CREATE SEQUENCE groups_seq",
+    "CREATE table groups (
+        id integer CONSTRAINT groups_Key PRIMARY KEY,
+        name varchar(36)
     )",
 ] }
 
 sub cleanup_schema_oracle { [
-    "DROP SEQUENCE Users_seq",
-    "DROP table Users", 
-    "DROP SEQUENCE Groups_seq",
-    "DROP table Groups", 
+    "DROP SEQUENCE users_seq",
+    "DROP table users", 
+    "DROP SEQUENCE groups_seq",
+    "DROP table groups", 
     "DROP SEQUENCE user_to_groups_seq",
     "DROP table user_to_groups", 
 ] }
