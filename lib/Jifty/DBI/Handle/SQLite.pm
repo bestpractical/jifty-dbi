@@ -90,61 +90,6 @@ sub distinct_count {
 
 }
 
-=head2 _build_joins
-
-Adjusts syntax of join queries for SQLite.
-
-=cut
-
-#SQLite can't handle
-# SELECT DISTINCT main.*     FROM (Groups main          LEFT JOIN Principals Principals_2  ON ( main.id = Principals_2.id)) ,     GroupMembers GroupMembers_1      WHERE ((GroupMembers_1.MemberId = '70'))     AND ((Principals_2.Disabled = '0'))     AND ((main.Domain = 'UserDefined'))     AND ((main.id = GroupMembers_1.GroupId))
-#     ORDER BY main.Name ASC
-#     It needs
-# SELECT DISTINCT main.*     FROM Groups main           LEFT JOIN Principals Principals_2  ON ( main.id = Principals_2.id) ,      GroupMembers GroupMembers_1      WHERE ((GroupMembers_1.MemberId = '70'))     AND ((Principals_2.Disabled = '0'))     AND ((main.Domain = 'UserDefined'))     AND ((main.id = GroupMembers_1.GroupId)) ORDER BY main.Name ASC
-
-sub _build_joins {
-    my $self = shift;
-    my $sb   = shift;
-    my %seen_aliases;
-
-    $seen_aliases{'main'} = 1;
-
-    # We don't want to get tripped up on a dependency on a simple alias.
-    foreach my $alias ( @{ $sb->{'aliases'} } ) {
-        if ( $alias =~ /^(.*?)\s+(.*?)$/ ) {
-            $seen_aliases{$2} = 1;
-        }
-    }
-
-    my $join_clause = $sb->table . " main ";
-
-    my @keys = ( keys %{ $sb->{'leftjoins'} } );
-    my %seen;
-
-    while ( my $join = shift @keys ) {
-        if ( !$sb->{'leftjoins'}{$join}{'depends_on'}
-            || $seen_aliases{ $sb->{'leftjoins'}{$join}{'depends_on'} } )
-        {
-
-            #$join_clause = "(" . $join_clause;
-            $join_clause
-                .= $sb->{'leftjoins'}{$join}{'alias_string'} . " ON (";
-            $join_clause .= join( ') AND( ',
-                values %{ $sb->{'leftjoins'}{$join}{'criteria'} } );
-            $join_clause .= ") ";
-
-            $seen_aliases{$join} = 1;
-        } else {
-            push( @keys, $join );
-            die "Unsatisfied dependency chain in Joins @keys"
-                if $seen{"@keys"}++;
-        }
-
-    }
-    return ( join( ", ", ( $join_clause, @{ $sb->{'aliases'} } ) ) );
-
-}
-
 1;
 
 __END__

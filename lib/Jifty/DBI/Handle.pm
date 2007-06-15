@@ -865,8 +865,8 @@ sub join {
 
         }
 
-        if ( !$alias || $args{'alias1'} ) {
-            return ( $self->_normal_join(%args) );
+        unless ( $alias ) {
+            return $self->_normal_join(%args);
         }
 
         $args{'collection'}->{'aliases'} = \@new_aliases;
@@ -890,14 +890,12 @@ sub join {
     $meta->{'entry_aggregator'} = $args{'entry_aggregator'}
         if $args{'entry_aggregator'};
 
-    my $criterion;
-    if ( $args{'expression'} ) {
-        $criterion = $args{'expression'};
-    } else {
-        $criterion = $args{'alias1'} . "." . $args{'column1'};
-    }
-    $meta->{'criteria'}{ 'criterion' . $args{'collection'}->{'criteria_count'}++ }
-        = " $criterion $args{'operator'} $alias.$args{'column2'}";
+    my $criterion = $args{'expression'} || "$args{'alias1'}.$args{'column1'}";
+    $meta->{'criteria'}{ 'base_criterion' } = [{
+        column   => $criterion,
+        operator => $args{'operator'},
+        value    => "$alias.$args{'column2'}",
+    }];
 
     return ($alias);
 }
@@ -925,18 +923,21 @@ sub _normal_join {
         $meta->{'alias_string'} = " LEFT JOIN $args{'table2'} $alias ";
         $meta->{'depends_on'}   = $args{'alias1'};
         $meta->{'type'}         = 'LEFT';
-        $meta->{'base_criterion'}
-            = " $args{'alias1'}.$args{'column1'} $args{'operator'} $alias.$args{'column2'}";
+        $meta->{'base_criterion'} = [ {
+            column   => "$args{'alias1'}.$args{'column1'}",
+            operator => $args{'operator'},
+            value    => "$alias.$args{'column2'}",
+        } ];
 
         return ($alias);
     } else {
         $sb->Jifty::DBI::Collection::limit(
             entry_aggregator => 'AND',
+            @_,
             quote_value      => 0,
             alias            => $args{'alias1'},
             column           => $args{'column1'},
             value            => $args{'alias2'} . "." . $args{'column2'},
-            @_
         );
     }
 }
@@ -947,48 +948,41 @@ sub _normal_join {
 sub _build_joins {
     my $self = shift;
     my $sb   = shift;
-    my %seen_aliases;
 
-    $seen_aliases{'main'} = 1;
+    my $join_clause = CORE::join " CROSS JOIN ", ($sb->table ." main"), @{ $sb->{'aliases'} };
+    my %processed = map { /^\S+\s+(\S+)$/; $1 => 1 } @{ $sb->{'aliases'} };
+    $processed{'main'} = 1;
 
-    # We don't want to get tripped up on a dependency on a simple alias.
-    foreach my $alias ( @{ $sb->{'aliases'} } ) {
-        if ( $alias =~ /^(.*?)\s+(.*?)$/ ) {
-            $seen_aliases{$2} = 1;
+    # get a @list of joins that have not been processed yet, but depend on processed join
+    my $joins = $sb->{'leftjoins'};
+    while ( my @list = grep !$processed{ $_ }
+            && $processed{ $joins->{ $_ }{'depends_on'} }, keys %$joins )
+    {
+        foreach my $join ( @list ) {
+            $processed{ $join }++;
+
+            my $meta = $joins->{ $join };
+            my $aggregator = $meta->{'entry_aggregator'} || 'AND';
+
+            $join_clause .= $meta->{'alias_string'} . " ON ";
+            my @tmp = map {
+                    ref($_)?
+                        $_->{'column'} .' '. $_->{'operator'} .' '. $_->{'value'}:
+                        $_
+                }
+                map { ('(', @$_, ')', $aggregator) } values %{ $meta->{'criteria'} };
+            # delete last aggregator
+            pop @tmp;
+            $join_clause .= CORE::join ' ', @tmp;
         }
     }
 
-    my $join_clause = $sb->table . " main ";
-
-    my @keys = ( keys %{ $sb->{'leftjoins'} } );
-    my %seen;
-
-    while ( my $join = shift @keys ) {
-        if ( !$sb->{'leftjoins'}{$join}{'depends_on'}
-            || $seen_aliases{ $sb->{'leftjoins'}{$join}{'depends_on'} } )
-        {
-            $join_clause
-                .= $sb->{'leftjoins'}{$join}{'alias_string'} . " ON ";
-
-            my @criteria = values %{ $sb->{'leftjoins'}{$join}{'criteria'} };
-            my $entry_aggregator
-                = $sb->{'leftjoins'}{$join}{'entry_aggregator'} || 'AND';
-            my $criteria = CORE::join( " $entry_aggregator ",
-                map {" ( $_ ) "} @criteria );
-
-            $join_clause .= "( " . $criteria . " ) ";
-            $join_clause = "(" . $join_clause . ")";
-
-            $seen_aliases{$join} = 1;
-        } else {
-            push( @keys, $join );
-            die "Unsatisfied dependency chain in joins @keys"
-                if $seen{"@keys"}++;
-        }
-
+    # here we could check if there is recursion in joins by checking that all joins
+    # are processed
+    if ( my @not_processed = grep !$processed{ $_ }, keys %$joins ) {
+        die "Unsatisfied dependency chain in joins @not_processed";
     }
-    return ( CORE::join( ", ", ( $join_clause, @{ $sb->{'aliases'} } ) ) );
-
+    return $join_clause;
 }
 
 =head2 distinct_query STATEMENTREF 
