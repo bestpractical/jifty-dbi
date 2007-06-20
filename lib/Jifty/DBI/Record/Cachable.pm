@@ -5,6 +5,7 @@ use base qw(Jifty::DBI::Record);
 use Jifty::DBI::Handle;
 
 use Cache::Simple::TimedExpiry;
+use Scalar::Util qw/ blessed /;
 
 use strict;
 use warnings;
@@ -267,6 +268,9 @@ sub _gen_record_cache_key {
     elsif ( ref($value) eq "HASH" ) {
       push @cols, lc($key) . ( $value->{operator} || '=' )
           . defined $value->{value}? $value->{value}: '__undef';
+    }
+    elsif ( blessed $value and $value->isa('Jifty::DBI::Record') ) {
+      push @cols, lc($key) . '=' . ( $value->id );
     }
     else {
       push @cols, lc($key) . "=" . $value;
