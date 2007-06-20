@@ -802,6 +802,8 @@ sub record_class {
     my $self = shift;
     if (@_) {
         $self->{record_class} = shift if (@_);
+        $self->{record_class} = ref $self->{record_class}
+            if ref $self->{record_class};
     } elsif ( not $self->{record_class} ) {
         my $class = ref($self);
         $class =~ s/Collection$//
