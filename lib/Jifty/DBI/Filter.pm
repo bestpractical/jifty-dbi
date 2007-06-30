@@ -6,9 +6,53 @@ use base 'Class::Accessor::Fast';
 
 __PACKAGE__->mk_accessors(qw(record column value_ref));
 
+=head1 NAME
+
+Jifty::DBI::Filter - base class for Jifty::DBI filters
+
+=head1 SYNOPSIS
+
+  # To implement your own filter
+  package MyApp::Filter::Uppercase;
+  use base qw/ Jifty::DBI::Filter /;
+
+  # Setup for DB storage, store in lowercase
+  sub encode {
+      my $self = shift;
+
+      my $value_ref = $self->value_ref;
+      return unless defined $$value_ref; # don't blow up on undef
+
+      $$value_ref = lc $$value_ref;
+  }
+
+  # Setup for Perl code to use, always sees uppercase
+  sub decode {
+      my $self = shift;
+
+      my $value_ref = $self->value_ref;
+      return unless defined $$value_ref; # don't blow up on undef
+
+      $$value_ref = uc $$value_ref;
+  }
+
+  # To use a filter
+  use MyApp::Record schema {
+      column filtered =>
+          type is 'text',
+          filters are qw/ MyApp::Filter::Uppercase /;
+  };
+
+
+=head1 DESCRIPTION
+
+A filter allows Jifty::DBI models to tweak data prior to being stored and/or loaded. This is useful for marshalling and unmarshalling complex objects.
+
+=head1 METHODS
+
 =head2 new
 
-Takes
+Takes two arguments in a parameter hash:
 
 =over
 
@@ -24,7 +68,6 @@ A L<Jifty::DBI::Column> object, whatever sort of column we're working
 with here.
 
 =back
-
 
 =cut
 
@@ -74,5 +117,16 @@ making sure that data is utf8 clean.
 sub decode {
 
 }
+
+=head1 SEE ALSO
+
+L<Jifty::DBI::Filter::Date>, L<Jifty::DBI::Filter::DateTime>, L<Jifty::DBI::Filter:SaltHash>, L<Jifty::DBI::Filter::Storable>, L<Jifty::DBI::Filter::Time>, L<Jifty::DBI::Filter::Truncate>, L<Jifty::DBI::Filter::YAML>, L<Jifty::DBI::Filter::base64>, L<Jifty::DBI::Filter::utf8>
+
+=head1 LICENSE
+
+Jifty::DBI is Copyright 2005-2007 Best Practical Solutions, LLC.
+Jifty::DBI is distributed under the same terms as Perl itself.
+
+=cut
 
 1;
