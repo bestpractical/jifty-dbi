@@ -14,7 +14,7 @@ column type      => type is 'varchar';
 sub schema_sqlite {
     return q{
     CREATE TABLE employees (
-      id INTEGER PRIMARY KEY NOT NULL  ,
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL  ,
       dexterity integer   ,
       name varchar   ,
       label varchar   ,
@@ -73,7 +73,7 @@ sub schema_version {
 sub schema_sqlite {
     return q{
     CREATE TABLE addresses (
-     id INTEGER PRIMARY KEY NOT NULL  ,
+     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL  ,
      employee_id integer   ,
      name varchar  DEFAULT 'Frank' ,
      phone varchar
@@ -84,7 +84,7 @@ sub schema_sqlite {
 sub schema_sqlite_024 {
     return q{
     CREATE TABLE addresses (
-     id INTEGER PRIMARY KEY NOT NULL  ,
+     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL  ,
      employee_id integer   ,
      name varchar  DEFAULT 'Frank' ,
      phone varchar ,

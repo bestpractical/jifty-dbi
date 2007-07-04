@@ -132,13 +132,17 @@ foreach my $d ( @available_drivers ) {
 }
 
 sub is_ignoring_space {
-  my $a = shift;
-  my $b = shift;
-  
-  $a =~ s/^\s+//; $a =~ s/\s+$//; $a =~ s/\s+/ /g;
-  $b =~ s/^\s+//; $b =~ s/\s+$//; $b =~ s/\s+/ /g;
-  
-  unshift @_, $b; unshift @_, $a;
-  
-  goto &is;
+    my $a = shift;
+    my $b = shift;
+
+    for my $item ( $b, $a ) {
+        $item =~ s/^\s+//;
+        $item =~ s/\s+$//;
+        $item =~ s/\s+/ /g;
+        $item =~ s/\s+;/;/g;
+        $item =~ s/\(\s+(.*?)\s+\)/($1)/g;
+
+        unshift @_, $item;
+    }
+    goto &is;
 }

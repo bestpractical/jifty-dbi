@@ -1,5 +1,7 @@
 Revision history for Perl extension Jifty::DBI.
 
+ * Updated for deprecated API in DBIx::DBSchema 0.33
+
 0.41 Mon Apr 16 16:16:12 EDT 2007
  * Fixed a broken dependency. Thanks to SAPER
 

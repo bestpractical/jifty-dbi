@@ -292,11 +292,12 @@ sub _db_schema_table_from_model {
         }
     }
 
+    my $index_count = 1;
     my $table = DBIx::DBSchema::Table->new(
         {   name        => $table_name,
             primary_key => "id",
             columns     => \@cols,
-            (@indexes) ? (index => DBIx::DBSchema::ColGroup->new(\@indexes)) : ()
+            (@indexes) ? (indices => [map {DBIx::DBSchema::Index->new(name => $table_name.$index_count++, columns => $_) } @indexes]) : ()
         }
     );
 
