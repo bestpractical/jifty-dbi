@@ -1,9 +1,13 @@
+--- 
 build_requires: 
   DBD::SQLite: 0
   Test::More: 0.52
 distribution_type: module
-generated_by: Module::Install version 0.640
+generated_by: Module::Install version 0.670
 license: perl
+meta-spec: 
+  url: http://module-build.sourceforge.net/META-spec-v1.3.html
+  version: 1.3
 name: Jifty-DBI
 no_index: 
   directory: 
@@ -17,7 +21,7 @@ requires:
   Class::ReturnValue: 0.4
   Clone: 0
   DBI: 0
-  DBIx::DBSchema: 0.29
+  DBIx::DBSchema: 0.33
   Data::Page: 0
   DateTime: 0.34
   DateTime::Format::ISO8601: 0
