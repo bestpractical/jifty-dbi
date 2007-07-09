@@ -18,6 +18,7 @@ name
     max_length
     mandatory
     virtual
+    container
     distinct
     sort_order
     refers_to by
