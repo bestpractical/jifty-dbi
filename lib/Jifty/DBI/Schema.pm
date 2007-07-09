@@ -303,6 +303,13 @@ sub _init_column {
 *********************************************************
 .
     }
+    return _init_column_for($column, $from, @_);
+}
+
+sub _init_column_for {
+    my $column = shift;
+    my $from   = shift;
+    my $name   = $column->name;
 
     croak "Base of schema class $from is not a Jifty::DBI::Record"
       unless UNIVERSAL::isa($from, "Jifty::DBI::Record");
@@ -353,10 +360,11 @@ sub _init_column {
         } else {
             warn "Error in $from: $refclass neither Record nor Collection";
         }
+    } elsif (my $handler = $column->{_init_handler}) {
+	$handler->($column, $from);
     } else {
         $column->type('varchar(255)') unless $column->type;
     }
-
 
     $from->COLUMNS->{$name} = $column;
 

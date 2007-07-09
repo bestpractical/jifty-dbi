@@ -65,6 +65,7 @@ t/01searches.t
 t/02-column_constraints.t
 t/02records_cachable.t
 t/02records_object.t
+t/02searches_joins.t
 t/03rebless.t
 t/04memcached.t
 t/06filter.t
@@ -80,6 +81,7 @@ t/13collection.t
 t/14handle-pg.t
 t/15types.t
 t/16inheritance.t
+t/17virtualtypes.t
 t/pod-coverage.t
 t/pod.t
 t/testmodels.pl
