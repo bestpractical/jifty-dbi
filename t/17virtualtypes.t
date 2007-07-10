@@ -75,8 +75,8 @@ sub schema_pg {
 <<EOF;
 CREATE TEMPORARY table users (
         id serial primary key,
-        location_x double,
-        location_y double
+        location_x double precision,
+        location_y double precision
 )
 EOF
 
