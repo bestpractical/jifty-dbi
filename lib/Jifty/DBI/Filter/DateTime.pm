@@ -26,8 +26,10 @@ minute, and second information is discarded when encoding.
 =head2 encode
 
 If value is DateTime object then converts it into ISO format
-C<YYYY-MM-DD hh:mm:ss>. Does nothing if value is not defined or
-string.
+C<YYYY-MM-DD hh:mm:ss>. Does nothing if value is not defined.
+
+Sets the value to undef if the value is a string and doesn't match an ISO date (at least).
+
 
 =cut
 
@@ -35,10 +37,15 @@ sub encode {
     my $self = shift;
 
     my $value_ref = $self->value_ref;
+
+    if  ( ! UNIVERSAL::isa( $$value_ref, 'DateTime' )) {
+        if ( $$value_ref !~ /^\d{4}[ -]?\d{2}[ -]?[\d{2}]/) {
+       $$value_ref = undef;
+        }
+        return undef;
+   }
+
     return unless $$value_ref;
-
-    return unless UNIVERSAL::isa( $$value_ref, 'DateTime' );
-
     if (my $tz = $self->_time_zone) {
 	$$value_ref = $$value_ref->clone;
 	$$value_ref->time_zone('floating');
