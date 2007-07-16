@@ -38,6 +38,8 @@ sub encode {
 
     my $value_ref = $self->value_ref;
 
+    return if !defined $$value_ref;
+
     if  ( ! UNIVERSAL::isa( $$value_ref, 'DateTime' )) {
         if ( $$value_ref !~ /^\d{4}[ -]?\d{2}[ -]?[\d{2}]/) {
        $$value_ref = undef;
