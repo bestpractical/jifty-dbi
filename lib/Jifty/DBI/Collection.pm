@@ -423,7 +423,11 @@ sub _limit_clause {
 =head2 _is_limited
 
 If we've limited down this search, return true. Otherwise, return
-false.
+false. 
+
+C<1> means "we have limits"
+C<-1> means "we should return all rows. We want no where clause"
+C<0> means "no limits have been applied yet.
 
 =cut
 
@@ -450,7 +454,7 @@ sub build_select_query {
 
     my $query_string = $self->_build_joins . " ";
 
-    if ( $self->_is_limited ) {
+    if ( $self->_is_limited == 1 ) {
         $query_string .= $self->_where_clause . " ";
     }
     if ( $self->distinct_required ) {
@@ -614,7 +618,7 @@ sub build_select_count_query {
 
     my $query_string = $self->_build_joins . " ";
 
-    if ( $self->_is_limited ) {
+    if ( $self->_is_limited == 1 ) {
         $query_string .= $self->_where_clause . " ";
     }
 
@@ -829,8 +833,11 @@ sub redo_search {
 
 =head2 unlimit
 
-Clears all restrictions and causes this object to return all
-rows in the primary table.
+Unlimit clears all restrictions on this collection and resets
+it to a "default" pristine state. Note, in particular, that 
+this means C<unlimit> will erase ordering and grouping 
+metadata.  To find all rows without resetting this metadata,
+use the C<find_all_rows> method.
 
 =cut
 
@@ -838,6 +845,19 @@ sub unlimit {
     my $self = shift;
 
     $self->clean_slate();
+    $self->_is_limited(-1);
+}
+
+=head2 find_all_rows
+
+C<find_all_rows> instructs this collection class to return all rows in
+the table. (It removes the WHERE clause from your query).
+
+=cut
+
+
+sub find_all_rows {
+    my $self = shift;
     $self->_is_limited(-1);
 }
 
