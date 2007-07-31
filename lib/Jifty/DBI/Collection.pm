@@ -454,7 +454,7 @@ sub build_select_query {
 
     my $query_string = $self->_build_joins . " ";
 
-    if ( $self->_is_limited == 1 ) {
+    if ( $self->_is_limited ) {
         $query_string .= $self->_where_clause . " ";
     }
     if ( $self->distinct_required ) {
@@ -618,7 +618,7 @@ sub build_select_count_query {
 
     my $query_string = $self->_build_joins . " ";
 
-    if ( $self->_is_limited == 1 ) {
+    if ( $self->_is_limited ) {
         $query_string .= $self->_where_clause . " ";
     }
 
