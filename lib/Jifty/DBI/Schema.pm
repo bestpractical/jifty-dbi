@@ -328,16 +328,25 @@ sub _init_column_for {
     $column->input_filters($column->{input_filters} || []);
     $column->output_filters($column->{output_filters} || []);
 
+    # Set up relationships to other records and collections
     if ( my $refclass = $column->refers_to ) {
+        
+        # Handle refers_to SomeCollection by 'foo'
         if (ref($refclass) eq 'ARRAY') {
             $column->by($refclass->[1]);
             $column->refers_to($refclass = $refclass->[0]);
         }
 
+        # Load the class we reference
         $refclass->require();
+
+        # References assume a refernce to an integer ID unless told otherwise
         $column->type('integer') unless ( $column->type );
 
+        # A one-to-one or one-to-many relationship is requested
         if ( UNIVERSAL::isa( $refclass, 'Jifty::DBI::Record' ) ) {
+
+            # Handle *_id reference columns specially
             if ( $name =~ /(.*)_id$/ ) {
                 my $aliased_as = $1;
                 my $virtual_column = $from->add_column($aliased_as);
@@ -345,15 +354,19 @@ sub _init_column_for {
                 # Clone ourselves into the virtual column
                 %$virtual_column = %$column;
 
+                # This column is now just the ID, the virtual holds the ref
                 $column->refers_to(undef);
 
+                # Note the original column
                 $virtual_column->aliased_as($aliased_as);
                 $virtual_column->alias_for_column($name);
 
+                # Create the helper methods for the virtual column too
                 $from->_init_methods_for_column($virtual_column);
             }
+
+            # Assume we refer to the ID column unless told otherwise
             $column->by('id') unless $column->by;
-            $column->type('integer') unless $column->type;
         } elsif ( UNIVERSAL::isa( $refclass, 'Jifty::DBI::Collection' ) ) {
             $column->by('id') unless $column->by;
             $column->virtual('1');
@@ -361,7 +374,7 @@ sub _init_column_for {
             warn "Error in $from: $refclass neither Record nor Collection";
         }
     } elsif (my $handler = $column->{_init_handler}) {
-	$handler->($column, $from);
+        $handler->($column, $from);
     } else {
         $column->type('varchar(255)') unless $column->type;
     }
