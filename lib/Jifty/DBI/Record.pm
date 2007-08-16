@@ -259,11 +259,20 @@ sub _init_methods_for_column {
             if ( $column->readable ) {
                 if ( UNIVERSAL::isa( $column->refers_to, "Jifty::DBI::Record" ) )
                 {
-                    $subref = sub {
-                        if ( @_ > 1 ) { Carp::carp "Value passed to column accessor.  You probably want to use the mutator." }
-                        $_[0]->_to_record( $column_name,
-                            $_[0]->__value($column_name) );
-                    };
+                    if ($column->virtual) {
+                        $subref = sub {
+                            if ( @_ > 1 ) { Carp::carp "Value passed to column accessor. You probably want to use the mutator." }
+                            $_[0]->_to_record( $column_name,
+                                $_[0]->id );
+                        };
+                    }
+                    else {
+                        $subref = sub {
+                            if ( @_ > 1 ) { Carp::carp "Value passed to column accessor.  You probably want to use the mutator." }
+                            $_[0]->_to_record( $column_name,
+                                $_[0]->__value($column_name) );
+                        };
+                    }
                 } elsif (
                     UNIVERSAL::isa(
                         $column->refers_to, "Jifty::DBI::Collection"

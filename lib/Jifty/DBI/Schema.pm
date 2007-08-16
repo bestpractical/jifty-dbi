@@ -346,6 +346,9 @@ sub _init_column_for {
         # A one-to-one or one-to-many relationship is requested
         if ( UNIVERSAL::isa( $refclass, 'Jifty::DBI::Record' ) ) {
 
+            # Make this a virtual record reference if they set by
+            $column->virtual(1) if defined $column->by and $column->by ne 'id';
+
             # Handle *_id reference columns specially
             if ( $name =~ /(.*)_id$/ ) {
                 my $aliased_as = $1;
