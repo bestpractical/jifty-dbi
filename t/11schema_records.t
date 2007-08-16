@@ -9,7 +9,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 74;
+use constant TESTS_PER_DRIVER => 67;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -193,20 +193,8 @@ SKIP: {
             is($ph->phone, '7890');
             is($phone_collection->next, undef);
         }
-
-        is($emp->favorite_color->id, undef, 'emp 1 has no favorite color yet');
-        is($emp2->favorite_color->id, undef, 'emp 2 has no favorite color yet');
         
-        my $color = TestApp::Color->new( handle => $handle );
-        my $c_id = $color->create( employee => $emp, color => 'magenta' );
-        ok($c_id, "Got an id for the new color: $c_id");
-        $color->load($c_id);
-        is($color->id, $c_id);
-        is($emp->favorite_color->id, $c_id, 'emp fave id matches color id');
-        $emp->favorite_color->set_color('cyan');
-        is($emp->favorite_color->color, 'cyan', 'changed color to cyan');
-        $color->load($c_id);
-        is($color->color, 'cyan', 'changed the original too');
+        
 
         cleanup_schema( 'TestApp', $handle );
         disconnect_handle( $handle );
@@ -228,14 +216,8 @@ CREATE table phones (
         id integer primary key,
         employee integer NOT NULL,
         phone varchar(18)
-) 
-}, q{
-CREATE table colors (
-        id integer primary key,
-        employee integer NOT NULL,
-        color varchar(8)
-)
-} ]
+) }
+]
 }
 
 sub schema_mysql {
@@ -249,12 +231,6 @@ CREATE TEMPORARY table phones (
         id integer AUTO_INCREMENT primary key,
         employee integer NOT NULL,
         phone varchar(18)
-)
-}, q{
-CREATE TEMPORARY table colors (
-        id integer AUTO_INCREMENT primary key,
-        employee integer NOT NULL,
-        color varchar(8)
 )
 } ]
 }
@@ -271,13 +247,7 @@ CREATE TEMPORARY table phones (
         employee integer references employees(id),
         phone varchar
 )
-}, q{
-CREATE TEMPORARY table colors (
-        id serial PRIMARY KEY,
-        employee integer references employees(id),
-        color varchar
-)
-}]
+} ]
 }
 
 package TestApp::PhoneCollection;
@@ -289,9 +259,6 @@ sub table {
     return $tab;
 }
 
-package TestApp::Color;
-use base qw/Jifty::DBI::Record/;
-
 package TestApp::Employee;
 use base qw/Jifty::DBI::Record/;
 
@@ -300,7 +267,6 @@ BEGIN {
     use Jifty::DBI::Record schema {
     column name => type is 'varchar';
     column phones => references TestApp::PhoneCollection by 'employee';
-    column favorite_color => references TestApp::Color by 'employee';
     }
 }
 
@@ -321,19 +287,5 @@ BEGIN {
     }
 }
 
-package TestApp::Color;
-
-BEGIN {
-    use Jifty::DBI::Schema;
-    use Jifty::DBI::Record schema{
-    column employee => references TestApp::Employee;
-    column color    =>
-        type is 'varchar', 
-        valid_values are qw/
-            white cyan magenta
-            yellow green red black
-        /; # don't like CGA? too bad
-    }
-}
 
 1;
