@@ -917,6 +917,11 @@ STARTSWITH is like LIKE, except it only appends a % at the end of the string
 
 ENDSWITH is like LIKE, except it prepends a % to the beginning of the string
 
+=item "IN"
+
+IN matches a column within a set of values.  The value specified in the limit
+should be an array reference of values.
+
 =back
 
 =item entry_aggregator 
@@ -956,8 +961,16 @@ sub limit {
         unless defined $args{value};
 
     # make passing in an object DTRT
-    if ( ref( $args{value} ) && $args{value}->isa('Jifty::DBI::Record') ) {
-        $args{value} = $args{value}->id;
+    my $value_ref = ref( $args{value} );
+    if ( $value_ref ) {
+        if ( ( $value_ref ne 'ARRAY' ) && 
+             $args{value}->isa('Jifty::DBI::Record') ) {
+            $args{value} = $args{value}->id;
+        }
+        elsif ( $value_ref eq 'ARRAY' ) {
+            map {$_ = ( ( ref $_ && $_->isa('Jifty::DBI::Record') ) ?
+                        ( $_->id ) : $_ ) } @{$args{value}};
+        }
     }
 
     #since we're changing the search criteria, we need to redo the search
@@ -979,21 +992,14 @@ sub limit {
         # we're doing an IS or IS NOT (null), don't quote the operator.
 
         if ( $args{'quote_value'} && $args{'operator'} !~ /IS/i ) {
-            my $tmp = $self->_handle->dbh->quote( $args{'value'} );
-
-            # Accomodate DBI drivers that don't understand UTF8
-            if ( $] >= 5.007 ) {
-                require Encode;
-                if ( Encode::is_utf8( $args{'value'} ) ) {
-                    Encode::_utf8_on($tmp);
-                }
+            if ( $value_ref eq 'ARRAY' ) {
+                map {$_ = $self->_quote_value( $_ )} @{$args{'value'}};
             }
-            $args{'value'} = $tmp;
+            else {
+                $args{'value'} = $self->_quote_value( $args{'value'} );
+            }
         }
     }
-
-    #TODO: $args{'value'} should take an array of values and generate
-    # the proper where clause.
 
     #If we're performing a left join, we really want the alias to be the
     #left join criterion.
@@ -1057,6 +1063,13 @@ sub limit {
                 = $self->_handle->_make_clause_case_insensitive(
                 $qualified_column, $args{'operator'}, $args{'value'} );
         }
+    }
+
+    if ( $value_ref eq 'ARRAY' ) {
+        croak 'Limits with an array ref are only allowed with operator \'IN\' or \'=\''
+            unless $args{'operator'} =~ /^(IN|=)$/i;
+        $args{'value'} = '( '. join(',', @{$args{'value'}}) .' )';
+        $args{'operator'} = 'IN';
     }
 
     my $clause = {
@@ -1186,6 +1199,24 @@ sub _set_clause {
         $self->redo_search;
     }
     $self->{$type} = $value;
+}
+
+# quote the search value
+sub _quote_value {
+    my $self = shift;
+    my ( $value ) = @_;
+
+    my $tmp = $self->_handle->dbh->quote( $value );
+
+    # Accomodate DBI drivers that don't understand UTF8
+    if ( $] >= 5.007 ) {
+      require Encode;
+      if ( Encode::is_utf8( $tmp ) ) {
+        Encode::_utf8_on($tmp);
+      }
+    }
+    return $tmp;
+
 }
 
 =head2 order_by_cols DEPRECATED

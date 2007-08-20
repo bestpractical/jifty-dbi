@@ -661,8 +661,13 @@ sub _make_clause_case_insensitive {
     my $value    = shift;
 
     if ($self->_case_insensitivity_valid($column, $operator, $value)) {
-      $column = "lower($column)";
-      $value  = "lower($value)";
+        $column = "lower($column)";
+        if (ref $value eq 'ARRAY') {
+            map {$_ = "lower($_)"} @{$value};
+        }
+        else {
+            $value  = "lower($value)";
+        }
     }
     return ( $column, $operator, $value );
 }

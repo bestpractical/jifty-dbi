@@ -8,7 +8,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 82;
+use constant TESTS_PER_DRIVER => 97;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -136,6 +136,19 @@ SKIP: {
         isa_ok( $first_rec, 'Jifty::DBI::Record', 'First returns record object' );
         is( $first_rec->login, 'audreyt', 'login is correct' );
 
+        # IN
+        $users_obj->clean_slate;
+        is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
+        $users_obj->limit( column => 'login', operator => 'IN', 
+                           value => ['cubic', 'obra', 'glasser', 'audreyt'] );
+        is( $users_obj->count, 4, "found 4 user ids" );
+        my %logins = (cubic => 1, obra => 1, glasser => 1, audreyt => 1);
+        while ( my $user = $users_obj->next ) {
+          is ( defined $logins{$user->login}, 1, 'Found login' );
+          delete $logins{$user->login};
+        }
+        is ( scalar( keys( %logins ) ), 0, 'All logins found' );
+
         # IS NULL
         # XXX TODO FIXME: column => undef should be handled as NULL
         $users_obj->clean_slate;
@@ -166,6 +179,14 @@ SKIP: {
         is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
         $users_obj->limit( column => 'name', value => 'jesse vincent' );
         is( $users_obj->count, 1, "case insensitive, non-matched case, should find one row");
+        $users_obj->clean_slate;
+        is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
+        $users_obj->limit( column => 'name', value => ['Jesse Vincent', 'Audrey Tang'], operator => 'IN');
+        is( $users_obj->count, 2, "case insensitive, matching case, should find two rows");
+        $users_obj->clean_slate;
+        is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
+        $users_obj->limit( column => 'name', value => ['jesse vincent', 'audrey tang'], operator => 'IN');
+        is( $users_obj->count, 2, "case insensitive, non-matched case, should find two rows");
 
         # CASE SENSITIVITY, testing with case_sensitive => 1
         $users_obj->clean_slate;
@@ -175,6 +196,22 @@ SKIP: {
         $users_obj->clean_slate;
         is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
         $users_obj->limit( column => 'name', value => 'jesse vincent', case_sensitive => 1 );
+        TODO: {
+            local $TODO = "MySQL still needs case sensitive fixes" if ( $d eq 'mysql' || $d eq 'mysqlPP' );
+            is( $users_obj->count, 0, "case sensitive search, should find zero rows");
+        }
+        $users_obj->clean_slate;
+        is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
+        $users_obj->limit( column => 'name', value => ['Jesse Vincent', 'Audrey Tang'], operator => 'IN',
+                           case_sensitive => 1 );
+        TODO: {
+            local $TODO = "MySQL still needs case sensitive fixes" if ( $d eq 'mysql' || $d eq 'mysqlPP' );
+            is( $users_obj->count, 2, "case sensitive search, should find two rows");
+        }
+        $users_obj->clean_slate;
+        is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
+        $users_obj->limit( column => 'name', value => ['jesse vincent', 'audrey tang'], operator => 'IN', 
+                           case_sensitive => 1 );
         TODO: {
             local $TODO = "MySQL still needs case sensitive fixes" if ( $d eq 'mysql' || $d eq 'mysqlPP' );
             is( $users_obj->count, 0, "case sensitive search, should find zero rows");
