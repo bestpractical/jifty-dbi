@@ -204,10 +204,7 @@ SKIP: {
         is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
         $users_obj->limit( column => 'name', value => ['Jesse Vincent', 'Audrey Tang'], operator => 'IN',
                            case_sensitive => 1 );
-        TODO: {
-            local $TODO = "MySQL still needs case sensitive fixes" if ( $d eq 'mysql' || $d eq 'mysqlPP' );
-            is( $users_obj->count, 2, "case sensitive search, should find two rows");
-        }
+        is( $users_obj->count, 2, "case sensitive search, should find two rows");
         $users_obj->clean_slate;
         is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
         $users_obj->limit( column => 'name', value => ['jesse vincent', 'audrey tang'], operator => 'IN', 
