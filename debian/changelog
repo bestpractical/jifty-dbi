@@ -1,3 +1,9 @@
+libjifty-dbi-perl (0.42-1) unstable; urgency=low
+
+  * 0.42 
+
+ -- AGOSTINI Yves <agostini@univ-metz.fr>  Tue, 21 Aug 2007 10:34:15 +0200
+
 libjifty-dbi-perl (0.41-1) unstable; urgency=low
 
   * 0.41
