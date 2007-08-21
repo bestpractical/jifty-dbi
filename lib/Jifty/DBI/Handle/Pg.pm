@@ -172,9 +172,13 @@ sub _make_clause_case_insensitive {
     my $value    = shift;
 
     if ($self->_case_insensitivity_valid($column, $operator, $value)) {
-        if ( $operator =~ /(?:LIKE|=)/i ) {
+        if ( $operator =~ /(?:LIKE|=|IN)/i ) {
             $column = "LOWER($column)";
-            $value = "LOWER($value)";
+            if ($operator eq 'IN' and ref($value) eq 'ARRAY') {
+                $value = [map { "LOWER($_)" } @$value];
+            } else {
+                $value = "LOWER($value)";
+            }
         }
     }
     return ( $column, $operator, $value );
