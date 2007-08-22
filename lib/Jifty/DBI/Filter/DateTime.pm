@@ -87,7 +87,7 @@ sub decode {
 
     if ($dt) {
 	my $tz = $self->_time_zone;
-	$dt->time_zone($tz) if $tz;
+	$dt->set_time_zone($tz) if $tz;
 
         $dt->set_formatter(DateTime::Format::Strptime->new(pattern => $self->_strptime));
         $$value_ref = $dt;
