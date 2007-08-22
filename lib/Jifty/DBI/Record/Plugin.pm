@@ -82,6 +82,32 @@ Your mixin may also want to register triggers for the records to which it will b
 
 See L<Jifty::DBI::Class::Trigger>.
 
+=head3 register_triggers_late
+
+In cases where a column may be added to the schema after L</register_triggers> has been called, you may want to implement the C<register_triggers_late> method as well. At this time, this primarily used by the database-backed models provided by Jifty. (As of this writing, part of the virtual-models branch only available from Subversion, but planned for merge into trunk for release.)
+
+This method works exactly the same as C<register_triggers>, except that it will be passed the name of the column that has been added to the model schema.
+
+  sub register_triggers_late {
+      my $self   = shift;
+      my $column = shift;
+
+      return unless $column ne 'updated_on';
+
+      $self->add_trigger( 
+          name      => 'after_set_'.$column, 
+          callback  => \&touch_update_time,
+          abortable => 1,
+      );
+  }
+
+  sub touch_update_time {
+      my $self = shift;
+      $self->set_updated_on(DateTime->now);
+  }
+
+See L<Jifty::DBI::Class::Trigger>.
+
 =head2 MODELS USING MIXINS
 
 To use your model plugin, just use the mixins you want to get columns from. You should still include a schema definition, even if it's empty:
