@@ -1,6 +1,109 @@
 Revision history for Perl extension Jifty::DBI.
 
- * Updated for deprecated API in DBIx::DBSchema 0.33
+
+0.43 Fri Aug 24 00:13:20 EDT 2007
+
+
+----------------------------------------------------------------------
+r66529 (orig r3939):  audreyt | 2007-08-22 12:38:23 -0400
+
+* Jifty::DBI::Filter::DateTime: The _time_zone setting was not
+  honoured by ->decode, because the code had a no-op $dt->time_zone($tz)
+  where it should've been $dt->set_time_zone($tz).
+----------------------------------------------------------------------
+r66518 (orig r3928):  falcone | 2007-08-21 19:09:22 -0400
+
+ r23979@ketch:  falcone | 2007-08-21 18:00:57 -0400
+ * tell Pg to be case sensitive on IN clauses and handle the arrayref
+   structure used by IN
+
+----------------------------------------------------------------------
+r66517 (orig r3927):  falcone | 2007-08-21 19:08:59 -0400
+
+ r23978@ketch:  falcone | 2007-08-21 18:00:27 -0400
+ * we don't need to TODO this MySQL test because the case matches exactly
+   and returns values
+
+----------------------------------------------------------------------
+r66197 (orig r3926):  yves | 2007-08-21 10:49:01 -0400
+
+debian packaging
+
+----------------------------------------------------------------------
+r66169 (orig r3923):  efunneko | 2007-08-20 16:57:43 -0400
+
+Added support for the IN operator within limits.  This should be accompanied by an array ref of values to be compared against.  It also allows an array ref to be passed with the '=' operator to accomplish the same thing
+----------------------------------------------------------------------
+r66164 (orig r3918):  sterling | 2007-08-20 15:56:18 -0400
+
+Fixing the name of the branch.
+----------------------------------------------------------------------
+r66163 (orig r3917):  sterling | 2007-08-20 15:54:42 -0400
+
+Creating a new branch to develop improvements on indexes and relationships.
+----------------------------------------------------------------------
+r66157 (orig r3911):  trs | 2007-08-16 15:59:16 -0400
+
+ r26169@zot:  tom | 2007-08-16 15:58:56 -0400
+ Backup r3908 for now since it breaks existing code
+
+----------------------------------------------------------------------
+r66154 (orig r3908):  sterling | 2007-08-16 10:02:48 -0400
+
+ r8684@dynpc145:  andrew | 2007-08-16 08:55:32 -0500
+ Added support for virtual record columns.
+
+----------------------------------------------------------------------
+r66153 (orig r3907):  sterling | 2007-08-16 10:02:26 -0400
+
+ r8682@dynpc145:  andrew | 2007-08-15 11:17:32 -0500
+ Added more code comments, minor perl tidy, and removed a redundant call to set the column type.
+
+----------------------------------------------------------------------
+r65006 (orig r3743):  falcone | 2007-07-31 16:26:13 -0400
+
+ r23202@ketch:  falcone | 2007-07-31 16:25:03 -0400
+ * we have code that uses Jifty::Collection::implicit_clauses
+   and expects that where clause to still show up on an unlimit.
+   This is wrong, but we need to sort out the "right" thing to do.
+
+----------------------------------------------------------------------
+r64931 (orig r3741):  jesse | 2007-07-30 20:27:30 -0400
+
+ r64930@pinglin:  jesse | 2007-07-30 20:27:14 -0400
+ * Removed this. not time yet
+
+----------------------------------------------------------------------
+r64929 (orig r3740):  jesse | 2007-07-30 19:55:14 -0400
+
+ r64923@pinglin:  jesse | 2007-07-30 19:54:31 -0400
+  * first stab at a UUID filter
+
+----------------------------------------------------------------------
+r64902 (orig r3729):  jesse | 2007-07-28 20:27:31 -0400
+
+ r64901@pinglin:  jesse | 2007-07-28 18:29:15 -0500
+ * Added a find_all_rows method which works like 'unlimit' without the side effect of calling _clean_slate and zapping other metadata. 
+ * Clarified unlimit's somewhat brutal nature.
+ 
+     - Thanks to Mikko Lipasti
+
+----------------------------------------------------------------------
+r60774 (orig r3694):  sartak | 2007-07-16 12:49:13 -0400
+
+Fix 'uninitialized value' warnings
+----------------------------------------------------------------------
+r60655 (orig r3692):  jesse | 2007-07-14 00:06:17 -0400
+
+ r60634@pinglin:  jesse | 2007-07-13 20:14:44 -0400
+ * Additional  bulletproofing to stop jifty from trying to insert a bogus date into the database.
+
+----------------------------------------------------------------------
+r60350 (orig r3644):  trs | 2007-07-10 01:32:48 -0400
+
+ r25085@zot:  tom | 2007-07-10 01:32:08 -0400
+ Fix type for Pg
+
 
 0.41 Mon Apr 16 16:16:12 EDT 2007
  * Fixed a broken dependency. Thanks to SAPER

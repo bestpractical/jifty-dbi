@@ -9,7 +9,7 @@ requires('Class::Data::Inheritable');
 requires('Class::ReturnValue', 0.40);
 requires('Clone');
 requires('DBI');
-requires('DBIx::DBSchema' => '0.33');
+requires('DBIx::DBSchema' => '0.34');
 requires('Data::Page');
 requires('DateTime' => 0.34);
 requires('DateTime::Format::ISO8601');

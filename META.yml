@@ -21,7 +21,7 @@ requires:
   Class::ReturnValue: 0.4
   Clone: 0
   DBI: 0
-  DBIx::DBSchema: 0.33
+  DBIx::DBSchema: 0.34
   Data::Page: 0
   DateTime: 0.34
   DateTime::Format::ISO8601: 0
@@ -36,4 +36,4 @@ requires:
   YAML::Syck: 0
   perl: 5.8.3
   version: 0
-version: 0.42
+version: 0.43
