@@ -82,13 +82,13 @@ Your mixin may also want to register triggers for the records to which it will b
 
 See L<Jifty::DBI::Class::Trigger>.
 
-=head3 register_triggers_late
+=head3 register_triggers_for_column
 
-In cases where a column may be added to the schema after L</register_triggers> has been called, you may want to implement the C<register_triggers_late> method as well. At this time, this primarily used by the database-backed models provided by Jifty. (As of this writing, part of the virtual-models branch only available from Subversion, but planned for merge into trunk for release.)
+In addition to the general L</register_triggers> method described above, the mixin may also implement a C<register_triggers_for_column> method. This is called for each column in the table. This is primarily helpful for registering the C<after_set_*> and C<before_set_*> columns.
 
-This method works exactly the same as C<register_triggers>, except that it will be passed the name of the column that has been added to the model schema.
+For example:
 
-  sub register_triggers_late {
+  sub register_triggers_for_column {
       my $self   = shift;
       my $column = shift;
 
@@ -105,6 +105,8 @@ This method works exactly the same as C<register_triggers>, except that it will 
       my $self = shift;
       $self->set_updated_on(DateTime->now);
   }
+
+This has the additional advantage of being callable when new columns are added to a table while the application is running. This can happen when using database-backed models in Jifty (which, as of this writing, has not been released or made part of the development trunk of Jifty, but is part of the virtual-models branch).
 
 See L<Jifty::DBI::Class::Trigger>.
 
@@ -137,6 +139,12 @@ sub import {
     
     if (my $triggers =  $self->can('register_triggers') ) {
         $triggers->($caller)
+    }
+
+    if (my $triggers_for_column =  $self->can('register_triggers') ) {
+        for my $column (map { $_->name } @{ $self->columns }) {
+            $triggers_for_column->($caller, $column)
+        }
     }
 }
 
