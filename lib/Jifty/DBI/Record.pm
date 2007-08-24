@@ -611,6 +611,10 @@ not just a value.
 
 If before_set_I<column_name> returns false, the new value isn't set.
 
+=item before_set PARAMHASH
+
+This is identical to the C<before_set_I<column_name>>, but is called for every column set.
+
 =item after_set_I<column_name> PARAMHASH
 
 This hook will be called after a value is successfully set in the
@@ -619,6 +623,10 @@ contains C<column> and C<value> keys. If C<value> was a SQL function,
 it will now contain the actual value that was set.
 
 This hook's return value is ignored.
+
+=item after_set PARAMHASH
+
+This is identical to the C<after_set_I<column_name>>, but is called for every column set.
 
 =item validate_I<column_name> VALUE
 
