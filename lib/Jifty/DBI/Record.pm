@@ -1083,7 +1083,8 @@ true or false value. If it returns false, the create is aborted.
 
       # Do whatever needs to be done here
 
-      return; # return value is ignored
+      return;   # aborts load of the value and causes create to return failure
+      return 1; # continue normally
   }
 
 This method is called after attempting to insert the record into the
