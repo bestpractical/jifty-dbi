@@ -736,18 +736,37 @@ sub _set {
         @_
     );
 
+    # Call the general before_set triggers
+    my $ok = $self->_run_callback(
+        name => "before_set",
+        args => \%args,
+    );
+    return $ok if( not defined $ok);
 
-    my $ok = $self->_run_callback( name => "before_set_" . $args{column},
-                           args => \%args);
+    # Call the specific before_set_column triggers
+    $ok = $self->_run_callback(
+        name => "before_set_" . $args{column},
+        args => \%args,
+    );
     return $ok if( not defined $ok);
 
     $ok = $self->__set(%args);
     return $ok if not $ok;
 
-        # Fetch the value back to make sure we have the actual value
-        my $value = $self->_value($args{column});
-        my $after_set_ret = $self->_run_callback( name => "after_set_" . $args{column}, args => 
-        {column => $args{column}, value => $value});
+    # Fetch the value back to make sure we have the actual value
+    my $value = $self->_value($args{column});
+
+    # Call the general after_set triggers
+    $self->_run_callback( 
+        name => "after_set_" . $args{column}, 
+        args => { column => $args{column}, value => $value },
+    );
+
+    # Call the specific after_set_column triggers
+    $self->_run_callback( 
+        name => "after_set_" . $args{column}, 
+        args => { column => $args{column}, value => $value },
+    );
 
     return $ok;
 }

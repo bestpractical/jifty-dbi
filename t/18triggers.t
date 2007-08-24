@@ -7,7 +7,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 40;
+use constant TESTS_PER_DRIVER => 62;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -73,6 +73,25 @@ sub register_triggers {
         isa_ok($self, 'TestApp::Address');
         is(ref $ret, 'SCALAR', 'arg is a scalar ref');
         ok($$ret, 'create was sucessful');
+    });
+    $self->add_trigger(before_set => sub {
+        my $self = shift;
+        my $arg = shift;
+        isa_ok($self, 'TestApp::Address');
+        is(ref $arg, 'HASH', 'arg is a hash');
+        is(scalar(keys %$arg), 3, 'hash has 2 keys');
+        ok($arg->{column}, "column arg is set");
+        ok($arg->{value}, "value arg set");
+        is($arg->{is_sql_function}, undef, 'is_sql_function is undef');
+    });
+    $self->add_trigger(after_set => sub {
+        my $self = shift;
+        my $arg = shift;
+        isa_ok($self, 'TestApp::Address');
+        is(ref $arg, 'HASH', 'arg is a hash');
+        is(scalar(keys %$arg), 2, 'hash has 2 keys');
+        ok($arg->{column}, "column arg is set");
+        ok($arg->{value}, "value arg is set");
     });
     $self->add_trigger(before_delete => sub {
         my $self = shift;
