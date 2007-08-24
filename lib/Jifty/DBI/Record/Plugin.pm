@@ -141,7 +141,7 @@ sub import {
         $triggers->($caller)
     }
 
-    if (my $triggers_for_column =  $self->can('register_triggers') ) {
+    if (my $triggers_for_column =  $self->can('register_triggers_for_column') ) {
         for my $column (map { $_->name } @{ $self->columns }) {
             $triggers_for_column->($caller, $column)
         }
