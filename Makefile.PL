@@ -7,6 +7,7 @@ requires('Cache::Simple::TimedExpiry' => '0.21');
 requires('Class::Accessor::Fast' => 0);
 requires('Class::Data::Inheritable');
 requires('Class::ReturnValue', 0.40);
+requires('Class::Trigger', 0.12);
 requires('Clone');
 requires('DBI');
 requires('DBIx::DBSchema' => '0.34');

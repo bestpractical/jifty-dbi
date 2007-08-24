@@ -8,7 +8,7 @@ use Lingua::EN::Inflect ();
 use Jifty::DBI::Column  ();
 use UNIVERSAL::require  ();
 use Scalar::Util      qw(blessed);
-use Jifty::DBI::Class::Trigger; # exports by default
+use Class::Trigger; # exports by default
 
 
 use base qw/

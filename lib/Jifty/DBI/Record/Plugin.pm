@@ -80,7 +80,7 @@ Your mixin may also want to register triggers for the records to which it will b
       # do something...
   }
 
-See L<Jifty::DBI::Class::Trigger>.
+See L<Class::Trigger>.
 
 =head3 register_triggers_for_column
 
@@ -108,7 +108,7 @@ For example:
 
 This has the additional advantage of being callable when new columns are added to a table while the application is running. This can happen when using database-backed models in Jifty (which, as of this writing, has not been released or made part of the development trunk of Jifty, but is part of the virtual-models branch).
 
-See L<Jifty::DBI::Class::Trigger>.
+See L<Class::Trigger>.
 
 =head2 MODELS USING MIXINS
 
@@ -150,7 +150,7 @@ sub import {
 
 =head1 SEE ALSO
 
-L<Jifty::DBI::Record>, L<Jifty::DBI::Class::Trigger>
+L<Jifty::DBI::Record>, L<Class::Trigger>
 
 =head1 LICENSE
 

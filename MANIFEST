@@ -20,7 +20,6 @@ inc/Module/Install/Metadata.pm
 inc/Module/Install/Win32.pm
 inc/Module/Install/WriteAll.pm
 lib/Jifty/DBI.pm
-lib/Jifty/DBI/Class/Trigger.pm
 lib/Jifty/DBI/Collection.pm
 lib/Jifty/DBI/Collection/Union.pm
 lib/Jifty/DBI/Collection/Unique.pm
