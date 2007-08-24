@@ -1056,6 +1056,8 @@ This method calls two hooks in your subclass:
 
 =item before_create
 
+When adding the C<before_create> trigger, you can determine whether the trigger may cause an abort or not by passing the C<abortable> parameter to the C<add_trigger> method. If this is not set, then the return value is ignored regardless.
+
   sub before_create {
       my $self = shift;
       my $args = shift;
@@ -1070,9 +1072,11 @@ This method calls two hooks in your subclass:
 This method is called before trying to create our row in the
 database. It's handed a reference to your paramhash. (That means it
 can modify your parameters on the fly).  C<before_create> returns a
-true or false value. If it returns false, the create is aborted.
+true or false value. If it returns C<undef> and the trigger has been added as C<abortable>, the create is aborted.
 
 =item after_create
+
+When adding the C<after_create> trigger, you can determine whether the trigger may cause an abort or not by passing the C<abortable> parameter to the C<add_trigger> method. If this is not set, then the return value is ignored regardless.
 
   sub after_create {
       my $self                    = shift;
@@ -1083,13 +1087,15 @@ true or false value. If it returns false, the create is aborted.
 
       # Do whatever needs to be done here
 
-      return;   # aborts load of the value and causes create to return failure
+      return;   # aborts the create, possibly preventing a load
       return 1; # continue normally
   }
 
 This method is called after attempting to insert the record into the
 database. It gets handed a reference to the return value of the
-insert. That'll either be a true value or a L<Class::ReturnValue>
+insert. That'll either be a true value or a L<Class::ReturnValue>.
+
+Aborting the trigger merely causes C<create> to return a false (undefined) value even thought he create may have succeeded. This prevents the loading of the record that would normally be returned.
 
 =back
 
