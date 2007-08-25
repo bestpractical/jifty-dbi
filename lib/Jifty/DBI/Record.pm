@@ -767,7 +767,7 @@ sub _set {
 
     # Call the general after_set triggers
     $self->_run_callback( 
-        name => "after_set_" . $args{column}, 
+        name => "after_set",
         args => { column => $args{column}, value => $value },
     );
 
