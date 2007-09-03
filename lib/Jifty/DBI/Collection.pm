@@ -399,7 +399,26 @@ sub _is_joined {
     } else {
         return ( @{ $self->{'aliases'} } );
     }
+}
 
+=head2 _is_distinctly_joined
+
+Returns true if this collection is joining multiple table, but is
+joining other table's distinct fields, hence resulting in distinct
+resultsets.  The behaviour is undefined if called on a non-joining
+collection.
+
+=cut
+
+sub _is_distinctly_joined {
+    my $self = shift;
+    if ( $self->{'leftjoins'} ) {
+	for (values %{ $self->{'leftjoins'} } ) {
+	    return 0 unless $_->{is_distinct};
+	}
+
+	return 1;
+    }
 }
 
 # LIMIT clauses are used for restricting ourselves to subsets of the
@@ -603,7 +622,7 @@ joining this table to something that is not the other table's primary key"
 
 sub distinct_required {
     my $self = shift;
-    return( $self->_is_joined ? 1 : 0 );
+    return( $self->_is_joined ? !$self->_is_distinctly_joined : 0 );
 }
 
 =head2 build_select_count_query

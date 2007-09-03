@@ -820,10 +820,26 @@ sub join {
         column2    => undef,
         expression => undef,
         operator   => '=',
+        is_distinct=> 0,
         @_
     );
 
     my $alias;
+
+    # If we're handed in a table2 as a Collection object, make notes
+    # about if the result of the join is still distinct for the
+    # calling collection
+    if ( $args{'table2'} &&
+         UNIVERSAL::isa($args{'table2'}, 'Jifty::DBI::Collection') ) {
+	if ($args{'operator'} eq '=' ) {
+	    my $x = $args{'table2'}->new_item->column($args{column2});
+	    if ($x->type eq 'serial' || $x->distinct) {
+		$args{'is_distinct'} = 1;
+	    }
+	}
+
+        $args{'table2'} = $args{'table2'}->table;
+    }
 
     #If we're handed in an alias2, we need to go remove it from the
     # Aliases array.  Basically, if anyone generates an alias and then
@@ -894,6 +910,7 @@ sub join {
     $meta->{'depends_on'} = $args{'alias1'};
     $meta->{'entry_aggregator'} = $args{'entry_aggregator'}
         if $args{'entry_aggregator'};
+    $meta->{'is_distinct'} = $args{'is_distinct'};
 
     my $criterion = $args{'expression'} || "$args{'alias1'}.$args{'column1'}";
     $meta->{'criteria'}{ 'base_criterion' } = [{
