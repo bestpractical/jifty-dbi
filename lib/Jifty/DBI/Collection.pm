@@ -982,11 +982,13 @@ sub limit {
     # make passing in an object DTRT
     my $value_ref = ref( $args{value} );
     if ( $value_ref ) {
-        if ( ( $value_ref ne 'ARRAY' ) && 
-             $args{value}->isa('Jifty::DBI::Record') ) {
+        if ( ( $value_ref ne 'ARRAY' ) 
+                && $args{value}->isa('Jifty::DBI::Record') ) {
             $args{value} = $args{value}->id;
         }
         elsif ( $value_ref eq 'ARRAY' ) {
+            # Don't modify the original reference, it isn't polite
+            $args{value} = [ @{$args{value}} ];
             map {$_ = ( ( ref $_ && $_->isa('Jifty::DBI::Record') ) ?
                         ( $_->id ) : $_ ) } @{$args{value}};
         }
