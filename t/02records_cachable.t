@@ -34,7 +34,7 @@ SKIP: {
             isa_ok( $rec, 'Jifty::DBI::Record' );
 
             my ($id)
-                = $rec->create( Name => 'Jesse', Phone => '617 124 567' );
+                = $rec->create( name => 'Jesse', phone => '617 124 567' );
             ok( $id, "Created record #$id" );
 
             ok( $rec->load($id), "Loaded the record" );
@@ -52,7 +52,7 @@ SKIP: {
 
         {    # load by name then load by id, check that we fetch from hash
             my $rec = TestApp::Address->new( handle => $handle );
-            ok( $rec->load_by_cols( Name => 'Jesse' ), "Loaded the record" );
+            ok( $rec->load_by_cols( name => 'Jesse' ), "Loaded the record" );
             is( $rec->name, 'Jesse', "The record's name is Jesse" );
 
             my $rec_cache = TestApp::Address->new( handle => $handle );
@@ -66,44 +66,44 @@ SKIP: {
 
         {    # load_by_cols and undef, 0 or '' values
             my $rec = TestApp::Address->new( handle => $handle );
-            my ($id) = $rec->create( Name => 'EmptyPhone', Phone => '' );
+            my ($id) = $rec->create( name => 'Emptyphone', phone => '' );
             ok( $id, "Created record #$id" );
-            ($id) = $rec->create( Name => 'ZeroPhone', Phone => 0 );
+            ($id) = $rec->create( name => 'Zerophone', phone => 0 );
             ok( $id, "Created record #$id" );
-            ($id) = $rec->create( Name => 'UndefPhone', Phone => undef );
+            ($id) = $rec->create( name => 'Undefphone', phone => undef );
             ok( $id, "Created record #$id" );
 
             Jifty::DBI::Record::Cachable->flush_cache;
 
-            ok( $rec->load_by_cols( Phone => undef ), "Loaded the record" );
-            is( $rec->name, 'UndefPhone', "UndefPhone record" );
+            ok( $rec->load_by_cols( phone => undef ), "Loaded the record" );
+            is( $rec->name, 'Undefphone', "Undefphone record" );
 
-            is( $rec->phone, undef, "Phone number is undefined" );
+            is( $rec->phone, undef, "phone number is undefined" );
 
-            ok( $rec->load_by_cols( Phone => '' ), "Loaded the record" );
-            is( $rec->name,  'EmptyPhone', "EmptyPhone record" );
-            is( $rec->phone, '',           "Phone number is empty string" );
+            ok( $rec->load_by_cols( phone => '' ), "Loaded the record" );
+            is( $rec->name,  'Emptyphone', "Emptyphone record" );
+            is( $rec->phone, '',           "phone number is empty string" );
 
-            ok( $rec->load_by_cols( Phone => 0 ), "Loaded the record" );
-            is( $rec->name,  'ZeroPhone', "ZeroPhone record" );
-            is( $rec->phone, 0,           "Phone number is zero" );
+            ok( $rec->load_by_cols( phone => 0 ), "Loaded the record" );
+            is( $rec->name,  'Zerophone', "Zerophone record" );
+            is( $rec->phone, 0,           "phone number is zero" );
 
      # XXX: next thing fails, looks like operator is mandatory
-     # ok($rec->load_by_cols( Phone => { value => 0 } ), "Loaded the record");
+     # ok($rec->load_by_cols( phone => { value => 0 } ), "Loaded the record");
             ok( $rec->load_by_cols(
-                    Phone => { operator => '=', value => 0 }
+                    phone => { operator => '=', value => 0 }
                 ),
                 "Loaded the record"
             );
-            is( $rec->name,  'ZeroPhone', "ZeroPhone record" );
-            is( $rec->phone, 0,           "Phone number is zero" );
+            is( $rec->name,  'Zerophone', "Zerophone record" );
+            is( $rec->phone, 0,           "phone number is zero" );
         }
 
         Jifty::DBI::Record::Cachable->flush_cache;
 
         {    # case insensetive columns names
             my $rec = TestApp::Address->new( handle => $handle );
-            ok( $rec->load_by_cols( Name => 'Jesse' ), "Loaded the record" );
+            ok( $rec->load_by_cols( name => 'Jesse' ), "Loaded the record" );
             is( $rec->name, 'Jesse', "loaded record" );
 
             my $rec_cache = TestApp::Address->new( handle => $handle );

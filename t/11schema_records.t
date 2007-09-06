@@ -31,7 +31,7 @@ SKIP: {
         isa_ok($ret,'DBI::st', "Inserted the schema. got a statement handle back" );}
 
         my $emp = TestApp::Employee->new( handle => $handle );
-        my $e_id = $emp->create( Name => 'RUZ' );
+        my $e_id = $emp->create( name => 'RUZ' );
         ok($e_id, "Got an id for the new employee: $e_id");
         $emp->load($e_id);
         is($emp->id, $e_id);
