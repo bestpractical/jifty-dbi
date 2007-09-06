@@ -196,7 +196,6 @@ sub _do_search {
     my $self = shift;
 
     my $query_string = $self->build_select_query();
-
     # If we're about to redo the search, we need an empty set of items
     delete $self->{'items'};
 
@@ -829,8 +828,7 @@ sub record_class {
             if ref $self->{record_class};
     } elsif ( not $self->{record_class} ) {
         my $class = ref($self);
-        $class =~ s/Collection$//
-            or die "Can't guess record class from $class";
+         $class =~ s/(Collection|s)$// || die "Can't guess record class from $class";
         $self->{record_class} = $class;
     }
     return $self->{record_class};
@@ -973,11 +971,7 @@ sub limit {
         @_    # get the real argumentlist
     );
 
-    # We need to be passed a column and a value, at very least
-    croak "Must provide a column to limit"
-        unless defined $args{column};
-    croak "Must provide a value to limit to"
-        unless defined $args{value};
+
 
     # make passing in an object DTRT
     my $value_ref = ref( $args{value} );

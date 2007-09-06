@@ -426,7 +426,7 @@ sub _prefetched_collection {
 sub add_column {
     my $self = shift;
     my $name = shift;
-    $name = lc $name;
+    #$name = lc $name;
     
     $self->COLUMNS->{$name} = Jifty::DBI::Column->new()
     unless exists $self->COLUMNS->{$name};
@@ -451,7 +451,7 @@ Returns the $value of a $column.
 
 sub column {
     my $self = shift;
-    my $name = lc( shift || '' );
+    my $name = ( shift || '' );
     my $col = $self->_columns_hashref;
     return undef unless $col && exists $col->{$name};
     return $col->{$name};
@@ -672,7 +672,7 @@ never override __value.
 sub __value {
     my $self        = shift;
 
-    my $column_name = lc(shift);
+    my $column_name = shift;
     # If the requested column is actually an alias for another, resolve it.
     my $column = $self->column($column_name);
     if  ($column   and defined $column->alias_for_column ) {
@@ -681,6 +681,7 @@ sub __value {
     }
 
     return unless ($column);
+
 
     # In the default case of "yeah, we have a value", return it as
     # fast as we can.
@@ -697,8 +698,6 @@ sub __value {
             . " WHERE $pkey = ?";
         my $sth = $self->_handle->simple_query( $query_string, $id );
         my ($value) = eval { $sth->fetchrow_array() };
-        warn $@ if $@;
-
         $self->{'values'}{ $column_name }  = $value;
         $self->{'fetched'}{ $column_name } = 1;
     }
@@ -790,6 +789,7 @@ sub __set {
         @_
     );
 
+
     my $ret = Class::ReturnValue->new();
 
     my $column = $self->column( $args{'column'} );
@@ -815,17 +815,11 @@ sub __set {
     if ( $self->{'fetched'}{ $column->name }
         || !$self->{'decoded'}{ $column->name } )
     {
-        if ((      !defined $args{'value'}
-                && !defined $self->{'values'}{ $column->name }
-            )
-            || (   defined $args{'value'}
-                && defined $self->{'values'}{ $column->name }
-
+        if ((      !defined $args{'value'} && !defined $self->{'values'}{ $column->name })
+            || (   defined $args{'value'} && defined $self->{'values'}{ $column->name } 
                 # XXX: This is a bloody hack to stringify DateTime
                 # and other objects for compares
-                && $args{value}
-                . "" eq ""
-                . $self->{'values'}{ $column->name }
+                && $args{value} . "" eq "" . $self->{'values'}{ $column->name }
             )
             )
         {
@@ -833,6 +827,8 @@ sub __set {
             return ( $ret->return_value );
         }
     }
+
+
 
     if ( my $sub = $column->validator ) {
         my ( $ok, $msg ) = $sub->( $self, $args{'value'} );
@@ -1020,12 +1016,15 @@ sub load_from_hash {
             $self = $class->new( handle => (delete $hashref->{'_handle'} || undef));
     }
     
+    $self->{values} = {};
+    #foreach my $f ( keys %$hashref ) { $self->{'fetched'}{  $f } = 1; }
+    foreach my $col (map {$_->name} $self->columns) {
+        next unless $hashref->{lc($col)};
+        $self->{'fetched'}{$col} = 1;
+        $self->{'values'}->{$col} = $hashref->{lc($col)};
 
-    foreach my $f ( keys %$hashref ) {
-        $self->{'fetched'}{ lc $f } = 1;
-    }
-
-    $self->{'values'}  = $hashref;
+        }
+        #$self->{'values'}  = $hashref;
     $self->{'decoded'} = {};
     return $self->id();
 }
@@ -1047,9 +1046,16 @@ sub _load_from_sql {
 
     return ( 0, "Couldn't execute query" ) unless $sth;
 
-    $self->{'values'}  = $sth->fetchrow_hashref;
+   my $hashref  = $sth->fetchrow_hashref;
+    delete $self->{values} ;
     $self->{'fetched'} = {};
     $self->{'decoded'} = {};
+    #foreach my $f ( keys %$hashref ) { $self->{'fetched'}{  $f } = 1; }
+    foreach my $col (map {$_->name} $self->columns) {
+        next unless $hashref->{lc($col)};
+        $self->{'fetched'}{$col} = 1;
+        $self->{'values'}->{$col} = $hashref->{lc($col)};
+    }
     if ( !$self->{'values'} && $sth->err ) {
         return ( 0, "Couldn't fetch row: " . $sth->err );
     }
@@ -1066,7 +1072,7 @@ sub _load_from_sql {
     }
 
     foreach my $f ( keys %{ $self->{'values'} } ) {
-        $self->{'fetched'}{ lc $f } = 1;
+        $self->{'fetched'}{ $f } = 1;
     }
     return ( 1, "Found object" );
 
