@@ -19,6 +19,7 @@ requires:
   Class::Accessor::Fast: 0
   Class::Data::Inheritable: 0
   Class::ReturnValue: 0.4
+  Class::Trigger: 0.12
   Clone: 0
   DBI: 0
   DBIx::DBSchema: 0.34

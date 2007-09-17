@@ -44,7 +44,7 @@ for my $d (@available_drivers) {
         # Create a record, load from cache
         my $rec = TestApp::Address->new( handle => $handle );
 
-        my ($id) = $rec->create( Name => 'Jesse', Phone => '617 124 567' );
+        my ($id) = $rec->create( name => 'Jesse', phone => '617 124 567' );
         ok( $id, "Created record #$id" );
 
         ok( $rec->load($id), "Loaded the record" );

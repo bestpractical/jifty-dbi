@@ -307,17 +307,17 @@ EOF
 
 sub schema_oracle { [
     "CREATE SEQUENCE Users_seq",
-    "CREATE TABLE Users (
-        id integer CONSTRAINT Users_Key PRIMARY KEY,
+    "CREATE TABLE users (
+        id integer CONSTRAINT users_key PRIMARY KEY,
         Login varchar(18) NOT NULL,
-        Name varchar(36),
-        Phone varchar(18)
+        name varchar(36),
+        phone varchar(18)
     )",
 ] }
 
 sub cleanup_schema_oracle { [
-    "DROP SEQUENCE Users_seq",
-    "DROP TABLE Users", 
+    "DROP SEQUENCE users_seq",
+    "DROP TABLE users", 
 ] }
 
 
