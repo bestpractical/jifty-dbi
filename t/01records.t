@@ -74,7 +74,6 @@ SKIP: {
         is($rec->id, $id, "The record has its id");
         is ($rec->name, 'Jesse', "The record's name is Jesse");
 
-    warn YAML::Dump($rec); use YAML;
         my ($val, $msg) = $rec->set_name('Obra');
         ok($val, $msg) ;
         is($rec->name, 'Obra', "We did actually change the name");
