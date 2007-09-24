@@ -8,35 +8,50 @@ use base qw/Class::Accessor::Fast Jifty::DBI::HasFilters/;
 use UNIVERSAL::require;
 use version;
 
-
-
-our @ATTRS = qw/
-name
+my @attrs = qw/
+    name
     type
     default
     readable writable
     max_length
     mandatory
     virtual
-    container
     distinct
     sort_order
     refers_to by
     alias_for_column
     aliased_as
     since till
-
-    label hints render_as
-    valid_values
-    available_values
     indexed
-    autocompleted
     _validator
     _checked_for_validate_sub
     record_class
+    attributes
     /;
 
-__PACKAGE__->mk_accessors(@ATTRS);
+# these actually live in the attributes hash
+my @handy_attrs = qw/
+    container
+    label hints render_as
+    valid_values
+    available_values
+    autocompleted
+    /;
+
+# compat: this should probably never exist and be deprecated
+our @ATTRS = (@attrs, @handy_attrs);
+
+__PACKAGE__->mk_accessors(@attrs);
+
+for my $attr (@handy_attrs) {
+    no strict 'refs';
+    *$attr = sub {
+        my $self = shift;
+	$self->attributes({}) unless $self->attributes;
+        return $self->attributes->{$attr} unless @_;
+        $self->attributes->{$attr} = (@_ == 1 ? $_[0] : [@_]);
+    }
+}
 
 =head1 NAME
 
@@ -53,6 +68,26 @@ It has the following accessors: C<name type default validator boolean
 refers_to readable writable length>.
 
 =cut
+
+=head2 new
+
+=cut
+
+sub new {
+    my ($class, $args) = @_;
+    my $self = $class->SUPER::new({});
+
+    # run through accessors, push unknown keys into the attributes hash
+
+    # XXX: we might want to construct the proper hash (lifting things
+    # not in @attrs into attributes and just pass the whole hash
+    $self->attributes({});
+    for (keys %$args) {
+	$self->can($_) ? $self->$_($args->{$_}) : $self->attributes->{$_} = $args->{$_};
+    }
+
+    return $self;
+}
 
 =head2 is_numeric
 
@@ -89,17 +124,46 @@ sub is_string {
 =head2 serialize_metadata
 
 Returns a hash describing this column object with enough detail to
+fully describe it in the database.  Intentionally skips
+C<record_class>, all column attributes starting with C<_>, and all
+column attributes which are undefined.  The "known" attributes in the
+C<attributes> hash are flattened and returned as well.  The list of
+known attributes are:
+
+=over
+
+=item     container
+
+=item     label hints render_as
+
+=item     valid_values
+
+=item     available_values
+
+=item     autocompleted
+
+=back
+
+=cut
+
+sub serialize_metadata {
+    my $self = shift;
+    return {map { $_ => $self->$_() } grep { $_ ne 'attributes' && $_ ne 'record_class' && $_ !~ /^_/ && defined $self->$_}
+            @ATTRS};
+}
+
+=head2 serialize_metadata2
+
+Returns a hash describing this column object with enough detail to
 fully describe it in the database.  Intentionally skips C<record_class>,
 all column attributes starting with C<_>, and all column attributes
 which are undefined.
 
 =cut
 
-sub serialize_metadata {
+sub serialize_metadata2 {
     my $self = shift;
-    return {map { $_ => $self->$_() } grep { $_ ne 'record_class' && $_ !~ /^_/ && defined $self->$_}  @ATTRS};
-
-
+    return {map { $_ => $self->$_() } grep { $_ ne 'record_class' && $_ !~ /^_/ && defined $self->$_} @attrs};
 }
 
 =head2 validator

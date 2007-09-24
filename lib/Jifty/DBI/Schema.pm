@@ -373,7 +373,7 @@ sub _init_column_for {
         } else {
             warn "Error in $from: $refclass neither Record nor Collection";
         }
-    } elsif (my $handler = $column->{_init_handler}) {
+    } elsif (my $handler = $column->attributes->{_init_handler}) {
         $handler->($column, $from);
     } else {
         $column->type('varchar(255)') unless $column->type;

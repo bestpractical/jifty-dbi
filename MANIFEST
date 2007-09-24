@@ -81,6 +81,7 @@ t/14handle-pg.t
 t/15types.t
 t/16inheritance.t
 t/17virtualtypes.t
+t/metadata.t
 t/pod-coverage.t
 t/pod.t
 t/testmodels.pl
