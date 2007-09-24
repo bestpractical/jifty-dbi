@@ -317,11 +317,11 @@ sub _init_column_for {
     croak "Illegal column definition for column $name in $from"
       if grep {not UNIVERSAL::isa($_, "Jifty::DBI::Schema::Trait")} @_;
 
-    $column->readable(!(delete $column->{unreadable}));
-    $column->writable(!(delete $column->{immutable}));
+    $column->readable(!(delete $column->attributes->{unreadable}));
+    $column->writable(!(delete $column->attributes->{immutable}));
 
     # XXX: deprecated
-    $column->mandatory(1) if delete $column->{not_null};
+    $column->mandatory(1) if delete $column->attributes->{not_null};
 
     $column->sort_order($SORT_ORDERS->{$from}++);
 
