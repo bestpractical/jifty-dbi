@@ -27,6 +27,7 @@ my @attrs = qw/
     _checked_for_validate_sub
     record_class
     attributes
+    case_sensitive
     /;
 
 # these actually live in the attributes hash

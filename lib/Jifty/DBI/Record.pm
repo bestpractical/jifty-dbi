@@ -939,10 +939,14 @@ sub load_by_cols {
             my $op;
             my $value;
             my $function = "?";
+            my $column_obj = $self->column( $key );
+            my $case_sensitive = $column_obj->case_sensitive;
             if ( ref $hash{$key} eq 'HASH' ) {
                 $op       = $hash{$key}->{operator};
                 $value    = $hash{$key}->{value};
                 $function = $hash{$key}->{function} || "?";
+                $case_sensitive = $hash{$key}->{case_sensitive}
+                    if exists $hash{$key}->{case_sensitive};
             } else {
                 $op    = '=';
                 $value = $hash{$key};
@@ -953,6 +957,13 @@ sub load_by_cols {
                 $value = $value->id;
             }
 
+            # if the handle is in a case_sensitive world and we need to make
+            # a case-insensitive query
+            if ( $self->_handle->case_sensitive && $value ) {
+                if ( $column_obj->is_string && !$case_sensitive ) {
+                    ( $key, $op, $function ) = $self->_handle->_make_clause_case_insensitive( $key, $op, $function );
+        	}
+            }
 
             push @phrases, "$key $op $function";
             push @bind,    $value;

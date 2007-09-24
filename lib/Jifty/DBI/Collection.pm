@@ -1065,14 +1065,17 @@ sub limit {
 
     # If it's a new value or we're overwriting this sort of restriction,
 
+    # XXX: when is column_obj undefined?
+    my $column_obj = $self->new_item()->column( $args{column} );
+    my $case_sensitive = $column_obj ? $column_obj->case_sensitive : 0;
+    $case_sensitive = $args{'case_sensitive'} if defined $args{'case_sensitive'};
     if (   $self->_handle->case_sensitive
         && defined $args{'value'}
         && $args{'quote_value'}
-        && !$args{'case_sensitive'} )
+        && !$case_sensitive )
     {
 
         # don't worry about case for numeric columns_in_db
-        my $column_obj = $self->new_item()->column( $args{column} );
         if ( defined $column_obj ? $column_obj->is_string : 1 ) {
             ( $qualified_column, $args{'operator'}, $args{'value'} )
                 = $self->_handle->_make_clause_case_insensitive(
