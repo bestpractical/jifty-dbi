@@ -227,7 +227,7 @@ sub create_table_sql_statements {
 Returns a string containing a sequence of SQL statements to create tables for all of
 the models added to the SchemaGenerator.
 
-This is just a trivial wrapper around L</create_Table_sql_statements>.
+This is just a trivial wrapper around L</create_table_sql_statements>.
 
 =cut
 
