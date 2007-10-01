@@ -66,7 +66,7 @@ sub schema_mysql {
 <<EOF;
 CREATE TEMPORARY table users (
         id integer auto_increment primary key,
-        name varchar
+        name varchar(255)
 )
 EOF
 

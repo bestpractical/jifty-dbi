@@ -37,7 +37,10 @@ SKIP: {
         ok($id, "Successfuly created ticket");
 
 	$rec->load_by_cols( name => 'foobar');
-	is($rec->id, undef);
+    TODO: {
+        local $TODO = "How do we force mysql to be case sensitive?" if ( $d eq 'mysql' || $d eq 'mysqlPP' );
+        is($rec->id, undef);
+    }
 
 	$rec->load_by_cols( name => { value => 'foobar', case_sensitive => 0, operator => '=' });
 	is($rec->id, $id);
@@ -78,8 +81,8 @@ sub schema_mysql {
 <<EOF;
 CREATE TEMPORARY table users (
         id integer auto_increment primary key,
-        name varchar,
-        interests varchar
+        name varchar(255),
+        interests varchar(255)
 )
 EOF
 
