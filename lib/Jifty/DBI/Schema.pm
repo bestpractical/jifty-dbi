@@ -338,8 +338,11 @@ sub _init_column_for {
         }
 
         # Load the class we reference
-        $refclass->require();
-
+        unless (UNIVERSAL::isa($refclass, 'Jifty::DBI::Record') || UNIVERSAL::isa($refclass, 'Jifty::DBI::Collection')) {
+            local $UNIVERSAL::require::ERROR;
+            $refclass->require();
+            die $UNIVERSAL::require::ERROR if ($UNIVERSAL::require::ERROR);
+        }
         # References assume a refernce to an integer ID unless told otherwise
         $column->type('integer') unless ( $column->type );
 
@@ -371,7 +374,7 @@ sub _init_column_for {
             $column->by('id') unless $column->by;
             $column->virtual('1');
         } else {
-            warn "Error in $from: $refclass neither Record nor Collection";
+            warn "Error in $from: $refclass neither Record nor Collection. Perhaps it couldn't be loaded?";
         }
     } elsif (my $handler = $column->attributes->{_init_handler}) {
         $handler->($column, $from);
