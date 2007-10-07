@@ -3,7 +3,7 @@ build_requires:
   DBD::SQLite: 0
   Test::More: 0.52
 distribution_type: module
-generated_by: Module::Install version 0.670
+generated_by: Module::Install version 0.67
 license: perl
 meta-spec: 
   url: http://module-build.sourceforge.net/META-spec-v1.3.html

@@ -1027,7 +1027,7 @@ sub limit {
 
     # {{{ if there's no alias set, we need to set it
 
-    unless ( $args{'alias'} ) {
+    unless (defined  $args{'alias'} ) {
 
         #if the table we're looking at is the same as the main table
         if ( $args{'table'} eq $self->table ) {
@@ -1049,7 +1049,7 @@ sub limit {
     # Set this to the name of the column and the alias, unless we've been
     # handed a subclause name
 
-    my $qualified_column = $args{'alias'} . "." . $args{'column'};
+    my $qualified_column = $args{'alias'} ? $args{'alias'} . "." . $args{'column'} : $args{'column'};
     my $clause_id = $args{'subclause'} || $qualified_column;
 
     # If we're trying to get a leftjoin restriction, lets set
