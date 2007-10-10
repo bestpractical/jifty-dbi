@@ -1103,10 +1103,10 @@ sub may_be_null {
         my $i = shift;
         my $count = 0;
         for ( ; $i < @conditions; $i++ ) {
-            if ( $conditions[$i] eq '(' ) {
+            if ( $conditions[$i] && $conditions[$i] eq '(' ) {
                 $count++;
             }
-            elsif ( $conditions[$i] eq ')' ) {
+            elsif ( $conditions[$i] && $conditions[$i] eq ')' ) {
                 $count--;
             }
             return $i unless $count;
