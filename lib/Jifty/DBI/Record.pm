@@ -1030,7 +1030,7 @@ sub load_from_hash {
     $self->{values} = {};
     #foreach my $f ( keys %$hashref ) { $self->{'fetched'}{  $f } = 1; }
     foreach my $col (map {$_->name} $self->columns) {
-        next unless defined $hashref->{lc($col)};
+        next unless exists $hashref->{lc($col)};
         $self->{'fetched'}{$col} = 1;
         $self->{'values'}->{$col} = $hashref->{lc($col)};
 
@@ -1063,7 +1063,7 @@ sub _load_from_sql {
     $self->{'decoded'} = {};
     #foreach my $f ( keys %$hashref ) { $self->{'fetched'}{  $f } = 1; }
     foreach my $col (map {$_->name} $self->columns) {
-        next unless defined $hashref->{lc($col)};
+        next unless exists $hashref->{lc($col)};
         $self->{'fetched'}{$col} = 1;
         $self->{'values'}->{$col} = $hashref->{lc($col)};
     }
