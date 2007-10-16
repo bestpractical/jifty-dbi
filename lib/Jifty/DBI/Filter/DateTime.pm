@@ -9,7 +9,7 @@ use DateTime::Format::ISO8601 ();
 use DateTime::Format::Strptime ();
 use Carp ();
 
-use constant _time_zone => '';
+use constant _time_zone => 'UTC';
 use constant _strptime  => '%Y-%m-%d %H:%M:%S';
 
 
@@ -22,6 +22,9 @@ Jifty::DBI::Filter::DateTime - DateTime object wrapper around date columns
 This filter allow you to work with DateTime objects instead of
 plain text dates.  If the column type is "date", then the hour,
 minute, and second information is discarded when encoding.
+
+Both input and output will always be coerced into UTC (or, in the case of
+Dates, the Floating timezone) for consistency.
 
 =head2 encode
 
@@ -49,8 +52,8 @@ sub encode {
 
     return unless $$value_ref;
     if (my $tz = $self->_time_zone) {
-	$$value_ref = $$value_ref->clone;
-	$$value_ref->time_zone('floating');
+        $$value_ref = $$value_ref->clone;
+        $$value_ref->set_time_zone($tz);
     }
     $$value_ref = $$value_ref->strftime($self->_strptime);
     return 1;
