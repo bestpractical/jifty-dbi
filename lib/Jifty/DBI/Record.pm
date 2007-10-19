@@ -940,6 +940,7 @@ sub load_by_cols {
             my $value;
             my $function = "?";
             my $column_obj = $self->column( $key );
+            Carp::confess("Unknown column '$key' in class '".ref($self)."'") if !defined $column_obj;
             my $case_sensitive = $column_obj->case_sensitive;
             if ( ref $hash{$key} eq 'HASH' ) {
                 $op       = $hash{$key}->{operator};
