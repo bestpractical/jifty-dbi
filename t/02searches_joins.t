@@ -132,7 +132,7 @@ diag "main <- alias <- join" if $ENV{'TEST_VERBOSE'};
         "joined table"
     );
     $users_obj->limit( alias => $groups_alias, column => 'name', value => 'Developers' );
-    diag $users_obj->build_select_query;
+    #diag $users_obj->build_select_query;
     is( $users_obj->count, 3, "three members" );
 }
 
