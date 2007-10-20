@@ -40,7 +40,7 @@ SKIP: {
         is($p_id, 1, "Loaded record $p_id");
         $phone->load( $p_id );
 
-        my $obj = $phone->employee( handle => $handle );
+        my $obj = $phone->employee();
         ok($obj, "Employee #$e_id has phone #$p_id");
         isa_ok( $obj, 'TestApp::Employee');
         is($obj->id, $e_id);

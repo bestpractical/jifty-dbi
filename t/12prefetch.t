@@ -61,7 +61,6 @@ SKIP: {
 
         for (3..6){
         my $i = $_;
-        diag("loading phone $i");
         my $phone = TestApp::Phone->new( handle => $handle );
         isa_ok( $phone, 'TestApp::Phone');
         my $p_id = $phone->create( employee => $e_id, phone => "+1 $i");
