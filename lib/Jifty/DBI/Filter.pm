@@ -109,8 +109,8 @@ sub encode {
 
 C<decode> takes data that the database is handing back to us and gets
 it into a form that's OK to hand back to the user. This could be
-anything from flattening a L<DateTime> object into an ISO date to
-making sure that data is utf8 clean.
+anything from inflating an ISO date to a L<DateTime> object to
+making sure that the string properly has the utf8 flag.
 
 =cut
 
