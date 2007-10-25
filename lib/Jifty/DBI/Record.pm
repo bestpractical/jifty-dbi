@@ -1224,6 +1224,9 @@ sub __create {
         if (not defined $attribs{$column->name} and defined $column->default and not ref $column->default) {
             $attribs{$column->name} = $column->default;
         }
+
+        next unless $column->active;
+
         if (not defined $attribs{$column->name} and $column->mandatory and $column->type ne "serial" ) {
             # Enforce "mandatory"
             Carp::carp "Did not supply value for mandatory column ".$column->name;
