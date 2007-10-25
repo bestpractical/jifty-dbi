@@ -5,7 +5,7 @@ use warnings;
 use Test::More;
 use version;
 
-use constant TESTS_PER_DRIVER => 48;
+use constant TESTS_PER_DRIVER => 77;
 our @available_drivers;
 
 BEGIN {
@@ -29,7 +29,8 @@ foreach my $d ( @available_drivers ) {
   SKIP: {
     my $address_schema = has_schema('Sample::Address',$d);
     my $employee_schema = has_schema('Sample::Employee',$d);
-    unless ($address_schema && $employee_schema) {
+    my $corporation_schema = has_schema('Sample::Corporation',$d);
+    unless ($address_schema && $employee_schema && $corporation_schema) {
       skip "need to work on $d", TESTS_PER_DRIVER;
     }
     
@@ -87,6 +88,19 @@ foreach my $d ( @available_drivers ) {
                       Sample::Address->$address_schema. Sample::Employee->$employee_schema, 
                       "got the right Address+Employee schema for $d");
     
+    my $corporation = Sample::Corporation->new;
+    
+    isa_ok($corporation, 'Sample::Corporation');
+    can_ok($corporation, qw( name ));
+    
+    $ret = $SG->add_model($corporation);
+
+    ok($ret != 0, "added model from an instantiated object");
+
+    is_ignoring_space($SG->create_table_sql_text, 
+                      Sample::Address->$address_schema. Sample::Employee->$employee_schema . Sample::Corporation->$corporation_schema, 
+                      "got the right Address+Employee+Corporation schema for $d");
+    
     my $manually_make_text = join ' ', map { "$_;" } $SG->create_table_sql_statements;
      is_ignoring_space($SG->create_table_sql_text, 
                        $manually_make_text, 
@@ -124,6 +138,37 @@ foreach my $d ( @available_drivers ) {
         is_ignoring_space($SG->create_table_sql_text,
                         Sample::Address->$address_version_schema,
                         "got the right Address schema for $d version $version");
+    }
+
+    for my $version (qw/ 0.2.0 0.2.4 0.2.6 0.2.8 0.2.9 /) {
+
+        Sample::Corporation->schema_version($version);
+
+        my $SG = Jifty::DBI::SchemaGenerator->new($handle, $version);
+        $SG->add_model('Sample::Corporation');
+
+        my $needs_state
+            = version->new($version) >= $version_024_min
+           && version->new($version) <  $version_024_max;
+
+        ok(Sample::Corporation->COLUMNS->{id}->active, 'id active');
+        ok(Sample::Corporation->COLUMNS->{name}->active, 'name active');
+        if ($needs_state) {
+            ok(Sample::Corporation->COLUMNS->{us_state}->active, "state active for version $version");
+            ok(Sample::Corporation->COLUMNS->{us_state}->mandatory, "state mandatory for version $version");
+        }
+
+        else {
+            ok(!Sample::Corporation->COLUMNS->{us_state}->active, "state not active for version $version");
+            ok(!Sample::Corporation->COLUMNS->{us_state}->mandatory, "state not mandatory for version $version");
+        }
+
+        my $corporation_version_schema = $needs_state ? "${corporation_schema}_024"
+            :                                             $corporation_schema;
+
+        is_ignoring_space($SG->create_table_sql_text,
+                        Sample::Corporation->$corporation_version_schema,
+                        "got the right Corporation schema for $d version $version");
     }
 
     cleanup_schema( 'TestApp', $handle );

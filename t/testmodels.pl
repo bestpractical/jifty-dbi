@@ -118,4 +118,68 @@ sub schema_pg_024 {
     };
 }
 
+package Sample::Corporation;
+use Jifty::DBI::Schema;
+use Jifty::DBI::Record schema {
+
+column name =>
+    type is 'varchar',
+    is mandatory;
+
+column us_state =>
+    type is 'varchar',
+    is mandatory,
+    since '0.2.4',
+    till '0.2.8';
+
+};
+
+sub schema_sqlite {
+    return q{
+    CREATE TABLE corporations (
+     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL  ,
+     name varchar NOT NULL
+    ) ;
+    }
+}
+
+sub schema_sqlite_024 {
+    return q{
+    CREATE TABLE corporations (
+     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL  ,
+     name varchar NOT NULL ,
+     us_state varchar 
+    ) ;
+    }
+}
+
+sub schema_pg {
+    return q{
+    CREATE TABLE corporations ( 
+      id serial NOT NULL , 
+      name varchar NOT NULL ,
+      PRIMARY KEY (id)
+    ) ;
+    };
+}
+
+sub schema_pg_024 {
+    return q{
+    CREATE TABLE corporations ( 
+      id serial NOT NULL , 
+      name varchar NOT NULL ,
+      us_state varchar ,
+      PRIMARY KEY (id)
+    ) ;
+    };
+}
+
+my $schema_version = undef;
+sub schema_version {
+    my $class = shift;
+    my $new_schema_version = shift;
+    $schema_version = $new_schema_version if defined $new_schema_version;
+    return $schema_version;
+}
+
 1;
