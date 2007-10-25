@@ -148,7 +148,7 @@ sub schema_sqlite_024 {
     CREATE TABLE corporations (
      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL  ,
      name varchar NOT NULL ,
-     us_state varchar 
+     us_state varchar NOT NULL
     ) ;
     }
 }
@@ -168,7 +168,7 @@ sub schema_pg_024 {
     CREATE TABLE corporations ( 
       id serial NOT NULL , 
       name varchar NOT NULL ,
-      us_state varchar ,
+      us_state varchar NOT NULL ,
       PRIMARY KEY (id)
     ) ;
     };

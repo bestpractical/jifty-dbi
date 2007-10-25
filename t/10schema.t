@@ -160,7 +160,7 @@ foreach my $d ( @available_drivers ) {
 
         else {
             ok(!Sample::Corporation->COLUMNS->{us_state}->active, "state not active for version $version");
-            ok(!Sample::Corporation->COLUMNS->{us_state}->mandatory, "state not mandatory for version $version");
+            ok(Sample::Corporation->COLUMNS->{us_state}->mandatory, "state still mandatory for version $version");
         }
 
         my $corporation_version_schema = $needs_state ? "${corporation_schema}_024"
