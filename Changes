@@ -1,6 +1,100 @@
 Revision history for Perl extension Jifty::DBI.
 
 
+0.45
+
+Add a warning for mandatory+till until we fix it
+
+Fix the mandatory/inactive tests
+
+We don't need to check that a column is mandatory if it's not active
+
+Add failing tests for mandatory columns that aren't active, they shouldn't have the not null constraint
+
+Bump to 0.45 because of the JDBI::Filter::DateTime functionality fixes
+
+Improve the decode doc, which was mostly just a copy of encode
+More needless warnings gone
+
+Better error message when trying to use load_by_cols on a column that doesn't exist
+Two fixes for timezones:
+
+    Coerce input and output to be UTC (or Floating, if JDBI::Filter::Date)
+    I think we were depending on DT:F:Strptime being saner than it is
+
+    Use set_time_zone, not time_zone which is only a getter
+    defined is not what you check to see if there is a hash entry. this will stop bogus extra sql calls that slowed down your app
+
+Allow the specification of functions as 'column' on sql search criteria.
+
+When we fail to load a related model class for a good reason, actually die, rather than burying the error
+
+mysql doesn't handle bare varchar's
+
+TODO a test that needs us to force mysql to be case sensitive
+
+typo fix in docs
+
+We can have 0-valued columns, again
+
+New column attribute: is case_sensitive
+
+Make load_by_cols respect column case sensitivity.
+
+NOTE this is a behaviour change as columns are by default
+case-insensitive, and the call was doing a case sensitive
+search, which is different from Collection searching.
+
+To make Jifty::DBI load_by_cols work in the old behaviour:
+
+Use $rec->load_by_cols( name => { value => 'foobar',
+case_sensitive => 0,
+operator => '=' });
+
+unreadable and immutable are now in attributes.
+
+Refactor Jifty::DBI::Column to split attributes into two groups.
+Actual column-related (in jifty::dbi layer) ones, such as type,
+remains as accesssors.  The rest goes into the attributes hash.
+This allows us to declare higher level meta data without having to
+change Jifty::DBI::Column in the future.
+
+Note that if you are accessing the column object's ->{label} directly
+this will now fail.  Use ->label instead.
+
+*Test updates for case issues 
+
+* Add support for non-lowercase column names
+
+Make sure limit() does not modify arrays passed in to the "value" parameter.
+
+* Allow is_distinct when joining collections, hinting the
+resulting collection is still distinct.
+
+* If table2 is given as a Jifty::DBI::Collection object,
+detect if the join is still distinct.
+
+Added documentation for using @EXPORT with mixins.
+
+Fix the call to the after_set trigger.
+
+Added a new accessor, RECORD_MIXINS, for tracking which mixins have been attached to a model.
+
+Adding basic documentation for before_set and after_set triggers.
+
+Adding before_set and after_set triggers and tests for them.
+
+Moved Jifty::DBI to use Class::Trigger instead of its own fork of Class::Trigger.
+
+Added tests and debugged register_triggers_for_column on record plugins.
+
+Improvements to the trigger documentation for after_create and before_create.
+
+Fix the documentation of the after_create trigger to match the actual behavior (and only that, this time).
+
+Removed register_triggers_late() in favor of register_triggers_for_column(), which is nearly the same thing but with clearer semantics.
+
+Updated documentation to discuss the register_triggers_late() method.
 0.43 Fri Aug 24 00:13:20 EDT 2007
 
 
