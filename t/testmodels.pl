@@ -174,7 +174,6 @@ sub schema_pg_024 {
     };
 }
 
-my $schema_version = undef;
 sub schema_version {
     my $class = shift;
     my $new_schema_version = shift;
