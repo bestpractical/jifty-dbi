@@ -251,7 +251,7 @@ sub _do_search {
 
             if ( $class->isa('Jifty::DBI::Collection') ) {
                 my $collection = $class->new( handle => $self->_handle );
-                foreach my $row( sort { $a->{id} <=> $b->{id} }  values %$related_rows ) {
+                foreach my $row( sort { $a->{id} <=> $b->{id} } grep {$_->{id}} values %$related_rows ) {
                     my $entry
                         = $collection->new_item( handle => $self->_handle );
                     $entry->load_from_hash($row);
