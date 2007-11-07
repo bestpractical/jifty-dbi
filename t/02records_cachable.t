@@ -117,6 +117,7 @@ SKIP: {
         Jifty::DBI::Record::Cachable->flush_cache;
 
         cleanup_schema( 'TestApp::Address', $handle );
+        disconnect_handle($handle);
     }
 }    # SKIP, foreach blocks
 

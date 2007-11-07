@@ -38,6 +38,7 @@ SKIP: {
         is($rec->location_x, 10);
         is($rec->location_y, 20);
         is_deeply($rec->location, { x => 10, y => 20});
+        disconnect_handle($handle);
     }
 }
 

@@ -37,4 +37,4 @@ requires:
   YAML::Syck: 0
   perl: 5.8.3
   version: 0
-version: 0.43
+version: 0.45

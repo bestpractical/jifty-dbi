@@ -44,6 +44,7 @@ SKIP: {
 
     my $ret = $rec->delete;
     ok($ret, 'deleted a record');
+    disconnect_handle($handle);
 };
 }
 

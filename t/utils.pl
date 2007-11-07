@@ -1,7 +1,7 @@
 #!/usr/bin/env perl -w
 
 use strict;
-use File::Spec ();
+use File::Temp ();
 
 =head1 VARIABLES
 
@@ -21,6 +21,9 @@ our @supported_drivers = qw(
         Pg
         Sybase
 );
+
+
+
 
 =head2 @available_drivers
 
@@ -93,13 +96,15 @@ sub connect_handle_with_driver
         goto &$call;
 }
 
+
+our $SQLITE_FILENAME;
 sub connect_sqlite
 {
         my $handle = shift;
+        (undef, $SQLITE_FILENAME ) = File::Temp::tempfile();
         return $handle->connect(
                 driver => 'SQLite',
-                database => File::Spec->catfile(File::Spec->tmpdir(), "sb-test.$$")
-        );
+                database => $SQLITE_FILENAME);
 }
 
 sub connect_mysql
@@ -166,7 +171,7 @@ sub disconnect_sqlite
 {
         my $handle = shift;
         $handle->disconnect;
-        unlink File::Spec->catfile(File::Spec->tmpdir(), "sb-test.$$");
+        unlink $SQLITE_FILENAME;
 }
 
 sub disconnect_mysql

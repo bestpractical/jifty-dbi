@@ -65,6 +65,7 @@ for my $d (@available_drivers) {
         $rec = TestApp::Address->new( handle => $handle );
         $rec->load($id);
         is($rec->phone, '555 543 6789', "Loaded changed data from cache OK");
+        disconnect_handle($handle);
 }}
 
 package TestApp::Address;

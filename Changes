@@ -1,5 +1,9 @@
 Revision history for Perl extension Jifty::DBI.
 
+0.46 Wed Nov  7 12:24:08 EST 2007
+
+ - POD Coverage nit
+ - Fix for a stray tempfiles bug reported by ANDK
 
 0.45
 
