@@ -194,6 +194,14 @@ sub validator {
 *read  = \&readable;
 *write = \&writable;
 
+=head2 read
+
+DEPRECATED.  Use C<< $column->readable >> instead.
+
+=head2 write
+
+DEPRECATED.  Use C<< $column->writable >> instead.
+
 =head2 length
 
 DEPRECATED.  Use C<< $column->max_length >> instead.
