@@ -340,7 +340,8 @@ sub _init_column_for {
         # Load the class we reference
         unless (UNIVERSAL::isa($refclass, 'Jifty::DBI::Record') || UNIVERSAL::isa($refclass, 'Jifty::DBI::Collection')) {
             local $UNIVERSAL::require::ERROR;
-            $refclass->require();
+# TISQL XXX: comment out until it's figured out how to avoid problem
+#            $refclass->require();
             die $UNIVERSAL::require::ERROR if ($UNIVERSAL::require::ERROR);
         }
         # References assume a refernce to an integer ID unless told otherwise
