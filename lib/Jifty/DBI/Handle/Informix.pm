@@ -1,5 +1,3 @@
-# $Header:  $
-
 package Jifty::DBI::Handle::Informix;
 use Jifty::DBI::Handle;
 @ISA = qw(Jifty::DBI::Handle);
@@ -103,10 +101,10 @@ takes an incomplete SQL SELECT statement and massages it to return a DISTINCT re
 sub distinct_query {
     my $self         = shift;
     my $statementref = shift;
-    my $sb           = shift;
-    my $table        = $sb->table;
+    my $collection   = shift;
+    my $table        = $collection->table;
 
-    if ( $sb->_order_clause =~ /(?<!main)\./ ) {
+    if ( $collection->_order_clause =~ /(?<!main)\./ ) {
 
         # Don't know how to do ORDER BY when the DISTINCT is in a subquery
         warn
@@ -119,8 +117,8 @@ sub distinct_query {
         $$statementref
             = "SELECT * FROM $table main WHERE id IN ( SELECT DISTINCT main.id FROM $$statementref )";
     }
-    $$statementref .= $sb->_group_clause;
-    $$statementref .= $sb->_order_clause;
+    $$statementref .= $collection->_group_clause;
+    $$statementref .= $collection->_order_clause;
 }
 
 1;

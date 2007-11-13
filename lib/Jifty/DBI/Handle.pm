@@ -13,13 +13,16 @@ $TRANSDEPTH = 0;
 
 our $VERSION = '0.01';
 
-if (my $pattern = $ENV{JIFTY_DBQUERY_CALLER}) {
+if ( my $pattern = $ENV{JIFTY_DBQUERY_CALLER} ) {
     require Hook::LexWrap;
-    Hook::LexWrap::wrap('Jifty::DBI::Handle::simple_query', pre => sub {
-        return unless $_[1] =~ m/$pattern/;
-        warn $_[1].'   '.join(',', @_[2..$#_])."\n";
-        Carp::cluck;
-    });
+    Hook::LexWrap::wrap(
+        'Jifty::DBI::Handle::simple_query',
+        pre => sub {
+            return unless $_[1] =~ m/$pattern/;
+            warn $_[1] . '   ' . CORE::join( ',', @_[ 2 .. $#_ ] ) . "\n";
+            Carp::cluck;
+        }
+    );
 }
 
 =head1 NAME
@@ -188,12 +191,12 @@ sub build_dsn {
         @_
     );
 
-
     my $driver = delete $args{'driver'};
     $args{'dbname'} ||= delete $args{'database'};
 
-    $self->{'dsn'} =
-    "dbi:$driver:" . join(';', map { $_ ."=".$args{$_} } grep { defined $args{$_} } keys %args);
+    $self->{'dsn'} = "dbi:$driver:"
+        . CORE::join( ';',
+        map { $_ . "=" . $args{$_} } grep { defined $args{$_} } keys %args );
 }
 
 =head2 dsn
@@ -346,7 +349,7 @@ sub delete {
 
     my @bind  = ();
     my $where = 'WHERE ';
-    while (my $key = shift @pairs) {
+    while ( my $key = shift @pairs ) {
         $where .= $key . "=?" . " AND ";
         push( @bind, shift(@pairs) );
     }
@@ -364,7 +367,7 @@ Takes a table name and a set of key-value pairs in an array. splits the key valu
 
 sub insert {
     my ( $self, $table, @pairs ) = @_;
-    my ( @cols, @vals,  @bind );
+    my ( @cols, @vals, @bind );
 
 #my %seen; #only the *first* value is used - allows drivers to specify default
     while ( my $key = shift @pairs ) {
@@ -376,7 +379,8 @@ sub insert {
         push @bind, $value;
     }
 
-    my $query_string = "INSERT INTO $table ("
+    my $query_string
+        = "INSERT INTO $table ("
         . CORE::join( ", ", @cols )
         . ") VALUES " . "("
         . CORE::join( ", ", @vals ) . ")";
@@ -407,7 +411,7 @@ sub update_record_value {
         @_
     );
 
-    return 1 unless grep {defined} values %{$args{primary_keys}};
+    return 1 unless grep {defined} values %{ $args{primary_keys} };
 
     my @bind  = ();
     my $query = 'UPDATE ' . $args{'table'} . ' ';
@@ -523,8 +527,9 @@ sub simple_query {
                 . $self->dbh->errstr . "\n";
 
         } else {
-            # XXX: This warn doesn't show up because we mask logging in Jifty::Test::END.
-            # and it usually fails because the test server is still running.
+
+ # XXX: This warn doesn't show up because we mask logging in Jifty::Test::END.
+ # and it usually fails because the test server is still running.
             warn "$self couldn't execute the query '$query_string'";
 
             my $ret = Class::ReturnValue->new();
@@ -609,7 +614,7 @@ sub database_version {
         my $ver = '';
         $ver = ( $sth->fetchrow_arrayref->[0] || '' ) if $sth;
         $ver =~ /(\d+(?:\.\d+)*(?:-[a-z0-9]+)?)/i;
-        $self->{'database_version'}       = $ver;
+        $self->{'database_version'} = $ver;
         $self->{'database_version_short'} = $1 || $ver;
 
         $self->raise_error($re);
@@ -648,10 +653,11 @@ sub _case_insensitivity_valid {
     my $value    = shift;
 
     return $value ne ''
-      && $value   ne "''"
-      && ( $operator !~ /IS/ && $value !~ /^null$/i )
-      # don't downcase integer values
-      && $value !~ /^['"]?\d+['"]?$/;
+        && $value ne "''"
+        && ( $operator !~ /IS/ && $value !~ /^null$/i )
+
+        # don't downcase integer values
+        && $value !~ /^['"]?\d+['"]?$/;
 }
 
 sub _make_clause_case_insensitive {
@@ -660,13 +666,12 @@ sub _make_clause_case_insensitive {
     my $operator = shift;
     my $value    = shift;
 
-    if ($self->_case_insensitivity_valid($column, $operator, $value)) {
+    if ( $self->_case_insensitivity_valid( $column, $operator, $value ) ) {
         $column = "lower($column)";
-        if (ref $value eq 'ARRAY') {
-            map {$_ = "lower($_)"} @{$value};
-        }
-        else {
-            $value  = "lower($value)";
+        if ( ref $value eq 'ARRAY' ) {
+            map { $_ = "lower($_)" } @{$value};
+        } else {
+            $value = "lower($value)";
         }
     }
     return ( $column, $operator, $value );
@@ -811,16 +816,16 @@ sub join {
 
     my $self = shift;
     my %args = (
-        collection => undef,
-        type       => 'normal',
-        alias1     => 'main',
-        column1    => undef,
-        table2     => undef,
-        alias2     => undef,
-        column2    => undef,
-        expression => undef,
-        operator   => '=',
-        is_distinct=> 0,
+        collection  => undef,
+        type        => 'normal',
+        alias1      => 'main',
+        column1     => undef,
+        table2      => undef,
+        alias2      => undef,
+        column2     => undef,
+        expression  => undef,
+        operator    => '=',
+        is_distinct => 0,
         @_
     );
 
@@ -829,236 +834,204 @@ sub join {
     # If we're handed in a table2 as a Collection object, make notes
     # about if the result of the join is still distinct for the
     # calling collection
-    if ( $args{'table2'} &&
-         UNIVERSAL::isa($args{'table2'}, 'Jifty::DBI::Collection') ) {
-	if ($args{'operator'} eq '=' ) {
-	    my $x = $args{'table2'}->new_item->column($args{column2});
-	    if ($x->type eq 'serial' || $x->distinct) {
-		$args{'is_distinct'} = 1;
-	    }
-	}
+    if ( $args{'table2'}
+        && UNIVERSAL::isa( $args{'table2'}, 'Jifty::DBI::Collection' ) )
+    {
+        if ( $args{'operator'} eq '=' ) {
+            my $x = $args{'table2'}->new_item->column( $args{column2} );
+            if ( $x->type eq 'serial' || $x->distinct ) {
+                $args{'is_distinct'} = 1;
+            }
+        }
 
         $args{'table2'} = $args{'table2'}->table;
     }
 
-    #If we're handed in an alias2, we need to go remove it from the
-    # Aliases array.  Basically, if anyone generates an alias and then
-    # tries to use it in a join later, we want to be smart about creating
-    # joins, so we need to go rip it out of the old aliases table and drop
-    # it in as an explicit join
     if ( $args{'alias2'} ) {
-
-        # this code is slow and wasteful, but it's clear.
-        my @aliases = @{ $args{'collection'}->{'aliases'} };
-        my @new_aliases;
-        foreach my $old_alias (@aliases) {
-            if ( $old_alias =~ /^(.*?) (\Q$args{'alias2'}\E)$/ ) {
-                $args{'table2'} = $1;
-                $alias = $2;
-
+        if ( $args{'collection'}{'joins'}{ $args{alias2} } ) {
+            my $join = $args{'collection'}{'joins'}{ $args{alias2} };
+            if ( lc $join->{type} eq 'cross' ) {
+                $args{'table2'} = $join->{table};
+                $alias = $join->{alias};
             } else {
-                push @new_aliases, $old_alias;
+                warn "Already joined?";
+                return;
             }
-        }
-
-# If we found an alias, great. let's just pull out the table and alias for the other item
-        unless ($alias) {
+        } else {
 
             # if we can't do that, can we reverse the join and have it work?
-            my $a1 = $args{'alias1'};
-            my $f1 = $args{'column1'};
-            $args{'alias1'}  = $args{'alias2'};
-            $args{'column1'} = $args{'column2'};
-            $args{'alias2'}  = $a1;
-            $args{'column2'} = $f1;
+            @args{qw/alias1 alias2/}   = @args{qw/alias2 $alias2/};
+            @args{qw/column1 column2/} = @args{qw/column2 column1/};
 
-            @aliases     = @{ $args{'collection'}->{'aliases'} };
-            @new_aliases = ();
-            foreach my $old_alias (@aliases) {
-                if ( $old_alias =~ /^(.*?) ($args{'alias2'})$/ ) {
-                    $args{'table2'} = $1;
-                    $alias = $2;
-
+            if ( $args{'collection'}{'joins'}{ $args{alias2} } ) {
+                my $join = $args{'collection'}{'joins'}{ $args{alias2} };
+                if ( lc $join->{type} eq 'cross' ) {
+                    $args{'table2'} = $join->{table};
+                    $alias = $join->{alias};
                 } else {
-                    push @new_aliases, $old_alias;
+                    warn "Already joined?";
+                    return;
                 }
+            } else {
+
+                # Swap back
+                @args{qw/alias1 alias2/}   = @args{qw/alias2 $alias2/};
+                @args{qw/column1 column2/} = @args{qw/column2 column1/};
+
+                return $self->Jifty::DBI::Collection::limit(
+                    entry_aggregator => 'AND',
+                    @_,
+                    quote_value => 0,
+                    alias       => $args{'alias1'},
+                    column      => $args{'column1'},
+                    value       => $args{'alias2'} . "." . $args{'column2'},
+                );
             }
-
         }
-
-        unless ( $alias ) {
-            return $self->_normal_join(%args);
-        }
-
-        $args{'collection'}->{'aliases'} = \@new_aliases;
-    }
-
-    else {
+    } else {
         $alias = $args{'collection'}->_get_alias( $args{'table2'} );
-
     }
 
-    my $meta = $args{'collection'}->{'leftjoins'}{ $alias } ||= {};
+    my $meta = $args{'collection'}->{'joins'}{$alias} ||= {};
+    $meta->{alias} = $alias;
     if ( $args{'type'} =~ /LEFT/i ) {
-        $meta->{'alias_string'} = " LEFT JOIN " . $args{'table2'} . " $alias ";
+        $meta->{'alias_string'}
+            = " LEFT JOIN " . $args{'table2'} . " $alias ";
         $meta->{'type'} = 'LEFT';
 
     } else {
         $meta->{'alias_string'} = " JOIN " . $args{'table2'} . " $alias ";
-        $meta->{'type'} = 'NORMAL';
+        $meta->{'type'}         = 'NORMAL';
     }
-    $meta->{'depends_on'} = $args{'alias1'};
+    $meta->{'depends_on'}       = $args{'alias1'};
     $meta->{'entry_aggregator'} = $args{'entry_aggregator'}
         if $args{'entry_aggregator'};
     $meta->{'is_distinct'} = $args{'is_distinct'};
 
     my $criterion = $args{'expression'} || "$args{'alias1'}.$args{'column1'}";
-    $meta->{'criteria'}{ 'base_criterion' } = [{
-        column   => $criterion,
-        operator => $args{'operator'},
-        value    => "$alias.$args{'column2'}",
-    }];
-
-    return ($alias);
-}
-
-sub _normal_join {
-
-    my $self = shift;
-    my %args = (
-        collection => undef,
-        type       => 'normal',
-        column1    => undef,
-        alias1     => undef,
-        table2     => undef,
-        column2    => undef,
-        alias2     => undef,
-        operator   => '=',
-        @_
-    );
-
-    my $sb = $args{'collection'};
-
-    if ( $args{'type'} =~ /LEFT/i ) {
-        my $alias = $sb->_get_alias( $args{'table2'} );
-        my $meta  = $sb->{'leftjoins'}{ $alias } ||= {};
-        $meta->{'alias_string'} = " LEFT JOIN $args{'table2'} $alias ";
-        $meta->{'depends_on'}   = $args{'alias1'};
-        $meta->{'type'}         = 'LEFT';
-        $meta->{'base_criterion'} = [ {
-            column   => "$args{'alias1'}.$args{'column1'}",
+    $meta->{'criteria'}{'base_criterion'} = [
+        {   column   => $criterion,
             operator => $args{'operator'},
             value    => "$alias.$args{'column2'}",
-        } ];
+        }
+    ];
 
-        return ($alias);
-    } else {
-        $sb->Jifty::DBI::Collection::limit(
-            entry_aggregator => 'AND',
-            @_,
-            quote_value      => 0,
-            alias            => $args{'alias1'},
-            column           => $args{'column1'},
-            value            => $args{'alias2'} . "." . $args{'column2'},
-        );
-    }
+    return ($alias);
 }
 
 # this code is all hacky and evil. but people desperately want _something_ and I'm
 # super tired. refactoring gratefully appreciated.
 
 sub _build_joins {
-    my $self = shift;
-    my $sb   = shift;
+    my $self       = shift;
+    my $collection = shift;
 
-    $self->_optimize_joins( collection => $sb );
+    $self->_optimize_joins( collection => $collection );
 
-    my $join_clause = CORE::join " CROSS JOIN ", ($sb->table ." main"), @{ $sb->{'aliases'} };
-    my %processed = map { /^\S+\s+(\S+)$/; $1 => 1 } @{ $sb->{'aliases'} };
+    my @cross = grep { lc $_->{type} eq "cross" }
+        values %{ $collection->{'joins'} };
+    my $join_clause = ( $collection->table . " main" )
+        . CORE::join( " ", map { $_->{alias_string} } @cross );
+    my %processed = map { $_->{alias} => 1 } @cross;
     $processed{'main'} = 1;
 
-    # get a @list of joins that have not been processed yet, but depend on processed join
-    my $joins = $sb->{'leftjoins'};
-    while ( my @list = grep !$processed{ $_ }
-            && $processed{ $joins->{ $_ }{'depends_on'} }, keys %$joins )
+# get a @list of joins that have not been processed yet, but depend on processed join
+    my $joins = $collection->{'joins'};
+    while ( my @list = grep !$processed{$_}
+        && $processed{ $joins->{$_}{'depends_on'} }, keys %$joins )
     {
-        foreach my $join ( @list ) {
-            $processed{ $join }++;
+        foreach my $join (@list) {
+            $processed{$join}++;
 
-            my $meta = $joins->{ $join };
+            my $meta = $joins->{$join};
             my $aggregator = $meta->{'entry_aggregator'} || 'AND';
 
             $join_clause .= $meta->{'alias_string'} . " ON ";
             my @tmp = map {
-                    ref($_)?
-                        $_->{'column'} .' '. $_->{'operator'} .' '. $_->{'value'}:
-                        $_
+                ref($_)
+                    ? $_->{'column'} . ' '
+                    . $_->{'operator'} . ' '
+                    . $_->{'value'}
+                    : $_
                 }
-                map { ('(', @$_, ')', $aggregator) } values %{ $meta->{'criteria'} };
+                map {
+                ( '(', @$_, ')', $aggregator )
+                } values %{ $meta->{'criteria'} };
+
             # delete last aggregator
             pop @tmp;
             $join_clause .= CORE::join ' ', @tmp;
         }
     }
 
-    # here we could check if there is recursion in joins by checking that all joins
-    # are processed
-    if ( my @not_processed = grep !$processed{ $_ }, keys %$joins ) {
+# here we could check if there is recursion in joins by checking that all joins
+# are processed
+    if ( my @not_processed = grep !$processed{$_}, keys %$joins ) {
         die "Unsatisfied dependency chain in joins @not_processed";
     }
     return $join_clause;
 }
 
 sub _optimize_joins {
-    my $self = shift;
-    my %args = ( collection => undef, @_ );
-    my $joins = $args{'collection'}->{'leftjoins'};
+    my $self  = shift;
+    my %args  = ( collection => undef, @_ );
+    my $joins = $args{'collection'}->{'joins'};
 
-    my %processed = map { /^\S+\s+(\S+)$/; $1 => 1 } @{ $args{'collection'}->{'aliases'} };
-    $processed{ $_ }++ foreach grep $joins->{ $_ }{'type'} ne 'LEFT', keys %$joins;
+    my %processed;
+    $processed{$_}++
+        foreach grep $joins->{$_}{'type'} ne 'LEFT', keys %$joins;
     $processed{'main'}++;
 
     my @ordered;
-    # get a @list of joins that have not been processed yet, but depend on processed join
-    # if we are talking about forest then we'll get the second level of the forest,
-    # but we should process nodes on this level at the end, so we build FILO ordered list.
-    # finally we'll get ordered list with leafes in the beginning and top most nodes at
-    # the end.
-    while ( my @list = grep !$processed{ $_ }
-            && $processed{ $joins->{ $_ }{'depends_on'} }, keys %$joins )
+
+# get a @list of joins that have not been processed yet, but depend on processed join
+# if we are talking about forest then we'll get the second level of the forest,
+# but we should process nodes on this level at the end, so we build FILO ordered list.
+# finally we'll get ordered list with leafes in the beginning and top most nodes at
+# the end.
+    while ( my @list = grep !$processed{$_}
+        && $processed{ $joins->{$_}{'depends_on'} }, keys %$joins )
     {
         unshift @ordered, @list;
-        $processed{ $_ }++ foreach @list;
+        $processed{$_}++ foreach @list;
     }
 
-    foreach my $join ( @ordered ) {
-        next if $self->may_be_null( collection => $args{'collection'}, alias => $join );
+    foreach my $join (@ordered) {
+        next
+            if $self->may_be_null(
+            collection => $args{'collection'},
+            alias      => $join
+            );
 
-        $joins->{ $join }{'alias_string'} =~ s/^\s*LEFT\s+/ /i;
-        $joins->{ $join }{'type'} = 'NORMAL';
+        $joins->{$join}{'alias_string'} =~ s/^\s*LEFT\s+/ /i;
+        $joins->{$join}{'type'} = 'NORMAL';
     }
 
 }
 
 =head2 may_be_null
 
-Takes a C<collection> and C<alias> in a hash and returns
-true if restrictions of the query allow NULLs in a table joined with
-the alias, otherwise returns false value which means that you can
-use normal join instead of left for the aliased table.
+Takes a C<collection> and C<alias> in a hash and returns true if
+restrictions of the query allow NULLs in a table joined with the
+alias, otherwise returns false value which means that you can use
+normal join instead of left for the aliased table.
 
-Works only for queries have been built with L<Jifty::DBI::Collection/join> and
-L<Jifty::DBI::Collection/limit> methods, for other cases return true value to
-avoid fault optimizations.
+Works only for queries have been built with
+L<Jifty::DBI::Collection/join> and L<Jifty::DBI::Collection/limit>
+methods, for other cases return true value to avoid fault
+optimizations.
 
 =cut
 
 sub may_be_null {
     my $self = shift;
-    my %args = (collection => undef, alias => undef, @_);
-    # if we have at least one subclause that is not generic then we should get out
-    # of here as we can't parse subclauses
-    return 1 if grep $_ ne 'generic_restrictions', keys %{ $args{'collection'}->{'subclauses'} };
+    my %args = ( collection => undef, alias => undef, @_ );
+
+# if we have at least one subclause that is not generic then we should get out
+# of here as we can't parse subclauses
+    return 1
+        if grep $_ ne 'generic_restrictions',
+        keys %{ $args{'collection'}->{'subclauses'} };
 
     # build full list of generic conditions
     my @conditions;
@@ -1068,16 +1041,18 @@ sub may_be_null {
     }
 
     # find tables that depends on this alias and add their join conditions
-    foreach my $join ( values %{ $args{'collection'}->{'leftjoins'} } ) {
+    foreach my $join ( values %{ $args{'collection'}->{'joins'} } ) {
+
         # left joins on the left side so later we'll get 1 AND x expression
         # which equal to x, so we just skip it
         next if $join->{'type'} eq 'LEFT';
         next unless $join->{'depends_on'} eq $args{'alias'};
 
-        my @tmp = map { ('(', @$_, ')', $join->{'entry_aggregator'}) } values %{ $join->{'criteria'} };
+        my @tmp = map { ( '(', @$_, ')', $join->{'entry_aggregator'} ) }
+            values %{ $join->{'criteria'} };
         pop @tmp;
 
-        @conditions = ('(', @conditions, ')', 'AND', '(', @tmp ,')');
+        @conditions = ( '(', @conditions, ')', 'AND', '(', @tmp, ')' );
 
     }
     return 1 unless @conditions;
@@ -1087,12 +1062,15 @@ sub may_be_null {
         unless ( ref $_ ) {
             push @conditions, $_;
         } elsif ( $_->{'column'} =~ /^\Q$args{'alias'}./ ) {
+
             # only operator IS allows NULLs in the aliased table
             push @conditions, lc $_->{'operator'} eq 'is';
         } elsif ( $_->{'value'} && $_->{'value'} =~ /^\Q$args{'alias'}./ ) {
+
             # right operand is our alias, such condition don't allow NULLs
             push @conditions, 0;
         } else {
+
             # conditions on other aliases
             push @conditions, 1;
         }
@@ -1100,13 +1078,12 @@ sub may_be_null {
 
     # returns index of closing paren by index of openning paren
     my $closing_paren = sub {
-        my $i = shift;
+        my $i     = shift;
         my $count = 0;
         for ( ; $i < @conditions; $i++ ) {
             if ( $conditions[$i] && $conditions[$i] eq '(' ) {
                 $count++;
-            }
-            elsif ( $conditions[$i] && $conditions[$i] eq ')' ) {
+            } elsif ( $conditions[$i] && $conditions[$i] eq ')' ) {
                 $count--;
             }
             return $i unless $count;
@@ -1116,11 +1093,12 @@ sub may_be_null {
 
     # solve boolean expression we have, an answer is our result
     my @tmp = ();
-    while ( defined ( my $e = shift @conditions ) ) {
+    while ( defined( my $e = shift @conditions ) ) {
+
         #warn "@tmp >>>$e<<< @conditions";
         return $e if !@conditions && !@tmp;
 
-        unless ( $e ) {
+        unless ($e) {
             if ( $conditions[0] eq ')' ) {
                 push @tmp, $e;
                 next;
@@ -1128,9 +1106,11 @@ sub may_be_null {
 
             my $aggreg = uc shift @conditions;
             if ( $aggreg eq 'OR' ) {
+
                 # 0 OR x == x
                 next;
             } elsif ( $aggreg eq 'AND' ) {
+
                 # 0 AND x == 0
                 my $close_p = $closing_paren->(0);
                 splice @conditions, 0, $close_p + 1, (0);
@@ -1145,10 +1125,12 @@ sub may_be_null {
 
             my $aggreg = uc shift @conditions;
             if ( $aggreg eq 'OR' ) {
+
                 # 1 OR x == 1
                 my $close_p = $closing_paren->(0);
                 splice @conditions, 0, $close_p + 1, (1);
             } elsif ( $aggreg eq 'AND' ) {
+
                 # 1 AND x == x
                 next;
             } else {
@@ -1174,25 +1156,26 @@ sub may_be_null {
 
 takes an incomplete SQL SELECT statement and massages it to return a DISTINCT result set.
 
-
 =cut
 
 sub distinct_query {
     my $self         = shift;
     my $statementref = shift;
-    my $sb           = shift;
+    my $collection   = shift;
 
     # Prepend select query for DBs which allow DISTINCT on all column types.
-    $$statementref = "SELECT DISTINCT ".$sb->_preload_columns." FROM $$statementref";
+    $$statementref
+        = "SELECT DISTINCT "
+        . $collection->query_columns
+        . " FROM $$statementref";
 
-    $$statementref .= $sb->_group_clause;
-    $$statementref .= $sb->_order_clause;
+    $$statementref .= $collection->_group_clause;
+    $$statementref .= $collection->_order_clause;
 }
 
 =head2 distinct_count STATEMENTREF 
 
 takes an incomplete SQL SELECT statement and massages it to return a DISTINCT result set.
-
 
 =cut
 
@@ -1245,7 +1228,7 @@ also C<DBI> about setting C<DBI_PROFILE>.
 
 =head1 AUTHOR
 
-Jesse Vincent, jesse@fsck.com
+Jesse Vincent, <jesse@bestpractical.com>
 
 =head1 SEE ALSO
 

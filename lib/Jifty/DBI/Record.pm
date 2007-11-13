@@ -7,9 +7,8 @@ use Class::ReturnValue  ();
 use Lingua::EN::Inflect ();
 use Jifty::DBI::Column  ();
 use UNIVERSAL::require  ();
-use Scalar::Util      qw(blessed);
-use Class::Trigger; # exports by default
-
+use Scalar::Util qw(blessed);
+use Class::Trigger;    # exports by default
 
 use base qw/
     Class::Data::Inheritable
@@ -19,10 +18,10 @@ use base qw/
 our $VERSION = '0.01';
 
 Jifty::DBI::Record->mk_classdata(qw/COLUMNS/);
-Jifty::DBI::Record->mk_classdata(qw/TABLE_NAME/ );
+Jifty::DBI::Record->mk_classdata(qw/TABLE_NAME/);
 Jifty::DBI::Record->mk_classdata(qw/_READABLE_COLS_CACHE/);
 Jifty::DBI::Record->mk_classdata(qw/_WRITABLE_COLS_CACHE/);
-Jifty::DBI::Record->mk_classdata(qw/_COLUMNS_CACHE/ );
+Jifty::DBI::Record->mk_classdata(qw/_COLUMNS_CACHE/);
 Jifty::DBI::Record->mk_classdata(qw/RECORD_MIXINS/);
 
 =head1 NAME
@@ -64,7 +63,8 @@ sub new {
     $self->input_filters('Jifty::DBI::Filter::Truncate');
 
     if ( scalar(@_) == 1 ) {
-        Carp::cluck("new(\$handle) is deprecated, use new( handle => \$handle )");
+        Carp::cluck(
+            "new(\$handle) is deprecated, use new( handle => \$handle )");
         $self->_init( handle => shift );
     } else {
         $self->_init(@_);
@@ -75,8 +75,8 @@ sub new {
 
 # Not yet documented here.  Should almost certainly be overloaded.
 sub _init {
-    my $self   = shift;
-    my %args   = (@_);
+    my $self = shift;
+    my %args = (@_);
     if ( $args{'handle'} ) {
         $self->_handle( $args{'handle'} );
     }
@@ -86,10 +86,10 @@ sub _init {
 sub import {
     my $class = shift;
     my ($flag) = @_;
-    if ($class->isa(__PACKAGE__) and defined $flag and $flag eq '-base') {
+    if ( $class->isa(__PACKAGE__) and defined $flag and $flag eq '-base' ) {
         my $descendant = (caller)[0];
         no strict 'refs';
-        push @{$descendant . '::ISA'}, $class;
+        push @{ $descendant . '::ISA' }, $class;
         shift;
 
         # run the schema callback
@@ -99,7 +99,7 @@ sub import {
     $class->SUPER::import(@_);
 
     # Turn off redefinition warnings in the caller's scope
-    @_ = (warnings => 'redefine');
+    @_ = ( warnings => 'redefine' );
     goto &warnings::unimport;
 }
 
@@ -128,7 +128,6 @@ sub primary_keys {
     return (%hash);
 }
 
-
 =head2 _accessible COLUMN ATTRIBUTE
 
 Private method. 
@@ -146,7 +145,7 @@ sub _accessible {
     my $self        = shift;
     my $column_name = shift;
     my $attribute   = lc( shift || '' );
-    my $col = $self->column($column_name);
+    my $col         = $self->column($column_name);
     return undef unless ( $col and $col->can($attribute) );
     return $col->$attribute();
 
@@ -199,33 +198,49 @@ sub _init_columns {
 
 =head2 _init_methods_for_columns
 
-This is an internal method responsible for calling L</_init_methods_for_column> for each column that has been configured.
+This is an internal method responsible for calling
+L</_init_methods_for_column> for each column that has been configured.
 
 =cut
 
 sub _init_methods_for_columns {
     my $self = shift;
 
-    for my $column (sort keys %{ $self->COLUMNS || {} }) {
-        $self->_init_methods_for_column($self->COLUMNS->{ $column });
+    for my $column ( sort keys %{ $self->COLUMNS || {} } ) {
+        $self->_init_methods_for_column( $self->COLUMNS->{$column} );
     }
 }
 
 =head2 schema_version
 
-If present, this method must return a string in '1.2.3' format to be used to determine which columns are currently active in the schema. That is, this value is used to determine which columns are defined, based upon comparison to values set in C<till> and C<since>.
+If present, this method must return a string in '1.2.3' format to be
+used to determine which columns are currently active in the
+schema. That is, this value is used to determine which columns are
+defined, based upon comparison to values set in C<till> and C<since>.
 
-If no implementation is present, the "latest" schema version is assumed, meaning that any column defining a C<till> is not active and all others are.
+If no implementation is present, the "latest" schema version is
+assumed, meaning that any column defining a C<till> is not active and
+all others are.
 
 =head2 _init_methods_for_column COLUMN
 
-This method is used internally to update the symbol table for the record class to include an accessor and mutator for each column based upon the column's name.
+This method is used internally to update the symbol table for the
+record class to include an accessor and mutator for each column based
+upon the column's name.
 
-In addition, if your record class defines the method L</schema_version>, it will automatically generate methods according to whether the column currently exists for the current application schema version returned by that method. The C<schema_version> method must return a value in the same form used by C<since> and C<till>.
+In addition, if your record class defines the method
+L</schema_version>, it will automatically generate methods according
+to whether the column currently exists for the current application
+schema version returned by that method. The C<schema_version> method
+must return a value in the same form used by C<since> and C<till>.
 
-If the column doesn't currently exist, it will create the methods, but they will die with an error message stating that the column does not exist for the current version of the application. If it does exist, a normal accessor and mutator will be created.
+If the column doesn't currently exist, it will create the methods, but
+they will die with an error message stating that the column does not
+exist for the current version of the application. If it does exist, a
+normal accessor and mutator will be created.
 
-See also L<Jifty::DBI::Column/active>, L<Jifty::DBI::Schema/since>, L<Jifty::DBI::Schema/till> for more information.
+See also L<Jifty::DBI::Column/active>, L<Jifty::DBI::Schema/since>,
+L<Jifty::DBI::Schema/till> for more information.
 
 =cut
 
@@ -238,30 +253,36 @@ sub _init_methods_for_column {
 
     # Make sure column has a record_class set as not all columns are added
     # through add_column
-    $column->record_class( $package ) if not $column->record_class;
+    $column->record_class($package) if not $column->record_class;
 
     # Check for the correct column type when the Storable filter is in use
     if ( grep { $_ eq 'Jifty::DBI::Filter::Storable' }
-              ($column->input_filters, $column->output_filters)
-         and $column->type !~ /^(blob|bytea)$/i)
+        ( $column->input_filters, $column->output_filters )
+            and $column->type !~ /^(blob|bytea)$/i )
     {
-        die "Column '$column_name' in @{[$column->record_class]} ".
-            "uses the Storable filter but is not of type 'blob'.\n";
+        die "Column '$column_name' in @{[$column->record_class]} "
+            . "uses the Storable filter but is not of type 'blob'.\n";
     }
 
     no strict 'refs';    # We're going to be defining subs
 
     if ( not $self->can($column_name) ) {
+
         # Accessor
         my $subref;
         if ( $column->active ) {
-            
 
             if ( $column->readable ) {
-                if ( UNIVERSAL::isa( $column->refers_to, "Jifty::DBI::Record" ) )
+                if (UNIVERSAL::isa(
+                        $column->refers_to, "Jifty::DBI::Record"
+                    )
+                    )
                 {
                     $subref = sub {
-                        if ( @_ > 1 ) { Carp::carp "Value passed to column accessor.  You probably want to use the mutator." }
+                        if ( @_ > 1 ) {
+                            Carp::carp
+                                "Value passed to column accessor.  You probably want to use the mutator.";
+                        }
                         $_[0]->_to_record( $column_name,
                             $_[0]->__value($column_name) );
                     };
@@ -274,18 +295,23 @@ sub _init_methods_for_column {
                     $subref = sub { $_[0]->_collection_value($column_name) };
                 } else {
                     $subref = sub {
-                        if ( @_ > 1 ) { Carp::carp "Value passed to column accessor.  You probably want to use the mutator." }
+                        if ( @_ > 1 ) {
+                            Carp::carp
+                                "Value passed to column accessor.  You probably want to use the mutator.";
+                        }
                         return ( $_[0]->_value($column_name) );
                     };
                 }
             } else {
                 $subref = sub { return '' }
             }
-        }
-        else {
-            # XXX sterling: should this be done with Class::ReturnValue instead
+        } else {
+
+           # XXX sterling: should this be done with Class::ReturnValue instead
             $subref = sub {
-                Carp::croak("column $column_name is not available for $package for schema version ".$self->schema_version);
+                Carp::croak(
+                    "column $column_name is not available for $package for schema version "
+                        . $self->schema_version );
             };
         }
         *{ $package . "::" . $column_name } = $subref;
@@ -293,11 +319,15 @@ sub _init_methods_for_column {
     }
 
     if ( not $self->can( "set_" . $column_name ) ) {
+
         # Mutator
         my $subref;
         if ( $column->active ) {
             if ( $column->writable ) {
-                if ( UNIVERSAL::isa( $column->refers_to, "Jifty::DBI::Record" ) )
+                if (UNIVERSAL::isa(
+                        $column->refers_to, "Jifty::DBI::Record"
+                    )
+                    )
                 {
                     $subref = sub {
                         my $self = shift;
@@ -306,7 +336,10 @@ sub _init_methods_for_column {
                         $val = $val->id
                             if UNIVERSAL::isa( $val, 'Jifty::DBI::Record' );
                         return (
-                            $self->_set( column => $column_name, value => $val )
+                            $self->_set(
+                                column => $column_name,
+                                value  => $val
+                            )
                         );
                     };
                 } elsif (
@@ -315,8 +348,9 @@ sub _init_methods_for_column {
                     )
                     )
                 {    # XXX elw: collections land here, now what?
-                    my $ret     = Class::ReturnValue->new();
-                    my $message = "Collection column '$column_name' not writable";
+                    my $ret = Class::ReturnValue->new();
+                    my $message
+                        = "Collection column '$column_name' not writable";
                     $ret->as_array( 0, $message );
                     $ret->as_error(
                         errno        => 3,
@@ -327,7 +361,10 @@ sub _init_methods_for_column {
                 } else {
                     $subref = sub {
                         return (
-                            $_[0]->_set( column => $column_name, value => $_[1] )
+                            $_[0]->_set(
+                                column => $column_name,
+                                value  => $_[1]
+                            )
                         );
                     };
                 }
@@ -342,17 +379,18 @@ sub _init_methods_for_column {
                 );
                 $subref = sub { return ( $ret->return_value ); };
             }
-        }
-        else {
-            # XXX sterling: should this be done with Class::ReturnValue instead
+        } else {
+
+           # XXX sterling: should this be done with Class::ReturnValue instead
             $subref = sub {
-                Carp::croak("column $column_name is not available for $package for schema version ".$self->schema_version);
+                Carp::croak(
+                    "column $column_name is not available for $package for schema version "
+                        . $self->schema_version );
             };
         }
         *{ $package . "::" . "set_" . $column_name } = $subref;
     }
 }
-
 
 =head2 _to_record COLUMN VALUE
 
@@ -375,49 +413,74 @@ sub _to_record {
     my $classname     = $column->refers_to();
     my $remote_column = $column->by() || 'id';
 
-    return       unless defined $value;
     return undef unless $classname;
-    return       unless UNIVERSAL::isa( $classname, 'Jifty::DBI::Record' );
+    return unless UNIVERSAL::isa( $classname, 'Jifty::DBI::Record' );
 
-    # XXX TODO FIXME we need to figure out the right way to call new here
-    # perhaps the handle should have an initiializer for records/collections
-    my $object = $classname->new( handle => $self->_handle );
-    $object->load_by_cols( $remote_column => $value );
+    if ( my $prefetched = $self->prefetched($column_name) ) {
+        return $prefetched;
+    }
+
+    my $object = $classname->new( $self->_new_record_args );
+    $object->load_by_cols( $remote_column => $value ) if defined $value;
     return $object;
 }
 
-sub _collection_value {
+sub _new_record_args {
     my $self = shift;
+    return ( handle => $self->_handle );
+}
 
-    my $method_name = shift;
-    return unless defined $method_name;
+sub _collection_value {
+    my $self        = shift;
+    my $column_name = shift;
 
-    my $column    = $self->column($method_name);
+    my $column    = $self->column($column_name);
     my $classname = $column->refers_to();
 
     return undef unless $classname;
     return unless UNIVERSAL::isa( $classname, 'Jifty::DBI::Collection' );
 
-    if ( my $prefetched_col = $self->_prefetched_collection($method_name)) {
-        return $prefetched_col;
+    if ( my $prefetched = $self->prefetched($column_name) ) {
+        return $prefetched;
     }
 
-    my $coll = $classname->new( handle => $self->_handle );
-    $coll->limit( column => $column->by(), value => $self->id );
+    my $coll = $classname->new( $self->_new_collection_args );
+    $coll->limit( column => $column->by, value => $self->id )
+        if $column->by and $self->id;
     return $coll;
 }
 
-sub _prefetched_collection {
-    my $self =shift;
-    my $column_name = shift;
-    if (@_) {
-        $self->{'_prefetched_collections'}->{$column_name} = shift;
-    } else {
-        return $self->{'_prefetched_collections'}->{$column_name};
-    }
-
+sub _new_collection_args {
+    my $self = shift;
+    return ( handle => $self->_handle );
 }
 
+=head2 prefetched NAME
+
+Returns the prefetched value for column of property C<NAME>, if it
+exists.
+
+=cut
+
+sub prefetched {
+    my $self        = shift;
+    my $column_name = shift;
+    if (@_) {
+        my $column = $self->column($column_name);
+        if ( $column and not $column->refers_to ) {
+            warn "$column_name isn't supposed to be an object reference!";
+            return;
+        } elsif ( $column
+            and not UNIVERSAL::isa( $_[0], $column->refers_to ) )
+        {
+            warn "$column_name is supposed to be a @{[$column->refers_to]}!";
+        } else {
+            $self->{'_prefetched'}->{$column_name} = shift;
+        }
+    } else {
+        return $self->{'_prefetched'}->{$column_name};
+    }
+}
 
 =head2 add_column
 
@@ -426,17 +489,18 @@ sub _prefetched_collection {
 sub add_column {
     my $self = shift;
     my $name = shift;
+
     #$name = lc $name;
-    
+
     $self->COLUMNS->{$name} = Jifty::DBI::Column->new()
-    unless exists $self->COLUMNS->{$name};
+        unless exists $self->COLUMNS->{$name};
     $self->_READABLE_COLS_CACHE(undef);
     $self->_WRITABLE_COLS_CACHE(undef);
-    $self->_COLUMNS_CACHE(undef );
+    $self->_COLUMNS_CACHE(undef);
     $self->COLUMNS->{$name}->name($name);
 
-    my $class = ref( $self ) || $self;
-    $self->COLUMNS->{$name}->record_class( $class );
+    my $class = ref($self) || $self;
+    $self->COLUMNS->{$name}->record_class($class);
 
     return $self->COLUMNS->{$name};
 }
@@ -452,7 +516,7 @@ Returns the $value of a $column.
 sub column {
     my $self = shift;
     my $name = ( shift || '' );
-    my $col = $self->_columns_hashref;
+    my $col  = $self->_columns_hashref;
     return undef unless $col && exists $col->{$name};
     return $col->{$name};
 
@@ -468,14 +532,20 @@ Returns a sorted list of a $record's @columns.
 
 sub columns {
     my $self = shift;
-    return @{$self->_COLUMNS_CACHE() || $self->_COLUMNS_CACHE([
-        sort {
-            ( ( ( $b->type || '' ) eq 'serial' )
-                <=> ( ( $a->type || '' ) eq 'serial' ) )
-                or ( ($a->sort_order || 0) <=> ($b->sort_order || 0))
-                or ( $a->name cmp $b->name )
-            } grep { $_->active } values %{ $self->_columns_hashref }
-	])}
+    return @{
+        $self->_COLUMNS_CACHE() || $self->_COLUMNS_CACHE(
+            [   sort {
+                    ( ( ( $b->type || '' ) eq 'serial' )
+                        <=> ( ( $a->type || '' ) eq 'serial' ) )
+                        or (
+                        ( $a->sort_order || 0 ) <=> ( $b->sort_order || 0 ) )
+                        or ( $a->name cmp $b->name )
+                    } grep {
+                    $_->active
+                    } values %{ $self->_columns_hashref }
+            ]
+        )
+        };
 }
 
 =head2 all_columns
@@ -490,21 +560,19 @@ sub all_columns {
     my $self = shift;
 
     # Not cached because it's not expected to be used often
-    return
-        sort {
-            ( ( ( $b->type || '' ) eq 'serial' )
-                <=> ( ( $a->type || '' ) eq 'serial' ) )
-                or ( ($a->sort_order || 0) <=> ($b->sort_order || 0))
-                or ( $a->name cmp $b->name )
-            } values %{ $self->_columns_hashref || {} }
+    return sort {
+        ( ( ( $b->type || '' ) eq 'serial' )
+            <=> ( ( $a->type || '' ) eq 'serial' ) )
+            or ( ( $a->sort_order || 0 ) <=> ( $b->sort_order || 0 ) )
+            or ( $a->name cmp $b->name )
+    } values %{ $self->_columns_hashref || {} };
 }
 
 sub _columns_hashref {
     my $self = shift;
 
-      return ($self->COLUMNS||{});
+    return ( $self->COLUMNS || {} );
 }
-
 
 # sub {{{ readable_attributes
 
@@ -516,16 +584,21 @@ Returns a list this table's readable columns
 
 sub readable_attributes {
     my $self = shift;
-    return @{$self->_READABLE_COLS_CACHE() || $self->_READABLE_COLS_CACHE([sort map { $_->name } grep { $_->readable } $self->columns])};
+    return @{
+        $self->_READABLE_COLS_CACHE() || $self->_READABLE_COLS_CACHE(
+            [ sort map { $_->name } grep { $_->readable } $self->columns ]
+        )
+        };
 }
 
 =head2 serialize_metadata
 
-Returns a hash which describes how this class is stored in the database. 
-Right now, the keys are C<class>, C<table>, and C<columns>. C<class> and C<table>
-return simple scalars, but C<columns> returns a hash of C<name =&gt; value> pairs
-for all the columns in this model. See C<Jifty::DBI::Column/serialize_metadata> for 
-the format of that hash.
+Returns a hash which describes how this class is stored in the
+database.  Right now, the keys are C<class>, C<table>, and
+C<columns>. C<class> and C<table> return simple scalars, but
+C<columns> returns a hash of C<name =&gt; value> pairs for all the
+columns in this model. See C<Jifty::DBI::Column/serialize_metadata>
+for the format of that hash.
 
 
 =cut
@@ -533,24 +606,21 @@ the format of that hash.
 sub serialize_metadata {
     my $self = shift;
     return {
-            class => (ref($self) || $self),
-            table => $self->table,
-            columns => { $self->_serialize_columns },
-    }
+        class => ( ref($self) || $self ),
+        table => $self->table,
+        columns => { $self->_serialize_columns },
+    };
 }
 
 sub _serialize_columns {
     my $self = shift;
     my %serialized_columns;
-    foreach my $column ( $self->columns  ) {
+    foreach my $column ( $self->columns ) {
         $serialized_columns{ $column->name } = $column->serialize_metadata();
     }
 
     return %serialized_columns;
 }
-
-
-
 
 =head2 writable_attributes
 
@@ -561,17 +631,22 @@ Returns a list of this table's writable columns
 
 sub writable_attributes {
     my $self = shift;
-    return @{$self->_WRITABLE_COLS_CACHE() || $self->_WRITABLE_COLS_CACHE([sort map { $_->name } grep { $_->writable } $self->columns])};
+    return @{
+        $self->_WRITABLE_COLS_CACHE() || $self->_WRITABLE_COLS_CACHE(
+            [ sort map { $_->name } grep { $_->writable } $self->columns ]
+        )
+        };
 }
 
 =head2 record values
 
-As you've probably already noticed, C<Jifty::DBI::Record> autocreates methods for your
-standard get/set accessors. It also provides you with some hooks to massage the values
-being loaded or stored.
+As you've probably already noticed, C<Jifty::DBI::Record> autocreates
+methods for your standard get/set accessors. It also provides you with
+some hooks to massage the values being loaded or stored.
 
-When you fetch a record value by calling C<$my_record-E<gt>some_field>, C<Jifty::DBI::Record>
-provides the following hook
+When you fetch a record value by calling
+C<$my_record-E<gt>some_field>, C<Jifty::DBI::Record> provides the
+following hook
 
 =over
 
@@ -614,7 +689,8 @@ If before_set_I<column_name> returns false, the new value isn't set.
 
 =item before_set PARAMHASH
 
-This is identical to the C<before_set_I<column_name>>, but is called for every column set.
+This is identical to the C<before_set_I<column_name>>, but is called
+for every column set.
 
 =item after_set_I<column_name> PARAMHASH
 
@@ -627,17 +703,18 @@ This hook's return value is ignored.
 
 =item after_set PARAMHASH
 
-This is identical to the C<after_set_I<column_name>>, but is called for every column set.
+This is identical to the C<after_set_I<column_name>>, but is called
+for every column set.
 
 =item validate_I<column_name> VALUE
 
 This hook is called just before updating the database. It expects the
 actual new value you're trying to set I<column_name> to. It returns
 two values.  The first is a boolean with truth indicating success. The
-second is an optional message. Note that validate_I<column_name> may be
-called outside the context of a I<set> operation to validate a potential
-value. (The Jifty application framework uses this as part of its AJAX
-validation system.)
+second is an optional message. Note that validate_I<column_name> may
+be called outside the context of a I<set> operation to validate a
+potential value. (The Jifty application framework uses this as part of
+its AJAX validation system.)
 
 =back
 
@@ -657,8 +734,10 @@ sub _value {
     my $column = shift;
 
     my $value = $self->__value( $column => @_ );
-    $self->_run_callback( name => "after_".$column,
-                          args => \$value);
+    $self->_run_callback(
+        name => "after_" . $column,
+        args => \$value
+    );
     return $value;
 }
 
@@ -670,51 +749,53 @@ never override __value.
 =cut
 
 sub __value {
-    my $self        = shift;
+    my $self = shift;
 
     my $column_name = shift;
+
     # If the requested column is actually an alias for another, resolve it.
     my $column = $self->column($column_name);
-    if  ($column   and defined $column->alias_for_column ) {
-        $column = $self->column($column->alias_for_column());
+    if ( $column and defined $column->alias_for_column ) {
+        $column      = $self->column( $column->alias_for_column() );
         $column_name = $column->name;
     }
 
     return unless ($column);
 
-
     # In the default case of "yeah, we have a value", return it as
     # fast as we can.
-    return   $self->{'values'}{$column_name}
+    return $self->{'values'}{$column_name}
         if ( $self->{'fetched'}{$column_name}
-          && $self->{'decoded'}{$column_name} );
+        && $self->{'decoded'}{$column_name} );
 
-    if ( !$self->{'fetched'}{ $column_name } and my $id = $self->id() ) {
-        my $pkey         = $self->_primary_key();
-        my $query_string = "SELECT "
+    if ( !$self->{'fetched'}{$column_name} and my $id = $self->id() ) {
+        my $pkey = $self->_primary_key();
+        my $query_string
+            = "SELECT "
             . $column_name
             . " FROM "
             . $self->table
             . " WHERE $pkey = ?";
         my $sth = $self->_handle->simple_query( $query_string, $id );
         my ($value) = eval { $sth->fetchrow_array() };
-        $self->{'values'}{ $column_name }  = $value;
-        $self->{'fetched'}{ $column_name } = 1;
+        $self->{'values'}{$column_name}  = $value;
+        $self->{'fetched'}{$column_name} = 1;
     }
-    unless ( $self->{'decoded'}{ $column_name } ) {
+    unless ( $self->{'decoded'}{$column_name} ) {
         $self->_apply_output_filters(
             column    => $column,
-            value_ref => \$self->{'values'}{ $column_name },
-        ) if exists $self->{'values'}{ $column_name };
-        $self->{'decoded'}{ $column_name } = 1;
+            value_ref => \$self->{'values'}{$column_name},
+        ) if exists $self->{'values'}{$column_name};
+        $self->{'decoded'}{$column_name} = 1;
     }
 
-    return $self->{'values'}{ $column_name };
+    return $self->{'values'}{$column_name};
 }
 
 =head2 as_hash 
 
-Returns a version of this record's readable columns rendered as a hash of key => value pairs
+Returns a version of this record's readable columns rendered as a hash
+of key => value pairs
 
 =cut
 
@@ -725,13 +806,11 @@ sub as_hash {
     return %values;
 }
 
-
-
 =head2 _set
 
-_set takes a single column name and a single unquoted value.
-It updates both the in-memory value of this column and the in-database copy.
-Subclasses can override _set to insert custom access control.
+_set takes a single column name and a single unquoted value.  It
+updates both the in-memory value of this column and the in-database
+copy.  Subclasses can override _set to insert custom access control.
 
 =cut
 
@@ -749,30 +828,30 @@ sub _set {
         name => "before_set",
         args => \%args,
     );
-    return $ok if( not defined $ok);
+    return $ok if ( not defined $ok );
 
     # Call the specific before_set_column triggers
     $ok = $self->_run_callback(
         name => "before_set_" . $args{column},
         args => \%args,
     );
-    return $ok if( not defined $ok);
+    return $ok if ( not defined $ok );
 
     $ok = $self->__set(%args);
     return $ok if not $ok;
 
     # Fetch the value back to make sure we have the actual value
-    my $value = $self->_value($args{column});
+    my $value = $self->_value( $args{column} );
 
     # Call the general after_set triggers
-    $self->_run_callback( 
+    $self->_run_callback(
         name => "after_set",
         args => { column => $args{column}, value => $value },
     );
 
     # Call the specific after_set_column triggers
-    $self->_run_callback( 
-        name => "after_set_" . $args{column}, 
+    $self->_run_callback(
+        name => "after_set_" . $args{column},
         args => { column => $args{column}, value => $value },
     );
 
@@ -788,7 +867,6 @@ sub __set {
         'is_sql_function' => undef,
         @_
     );
-
 
     my $ret = Class::ReturnValue->new();
 
@@ -815,11 +893,17 @@ sub __set {
     if ( $self->{'fetched'}{ $column->name }
         || !$self->{'decoded'}{ $column->name } )
     {
-        if ((      !defined $args{'value'} && !defined $self->{'values'}{ $column->name })
-            || (   defined $args{'value'} && defined $self->{'values'}{ $column->name } 
+        if ((      !defined $args{'value'}
+                && !defined $self->{'values'}{ $column->name }
+            )
+            || (   defined $args{'value'}
+                && defined $self->{'values'}{ $column->name }
+
                 # XXX: This is a bloody hack to stringify DateTime
                 # and other objects for compares
-                && $args{value} . "" eq "" . $self->{'values'}{ $column->name }
+                && $args{value}
+                . "" eq ""
+                . $self->{'values'}{ $column->name }
             )
             )
         {
@@ -827,8 +911,6 @@ sub __set {
             return ( $ret->return_value );
         }
     }
-
-
 
     if ( my $sub = $column->validator ) {
         my ( $ok, $msg ) = $sub->( $self, $args{'value'} );
@@ -842,12 +924,11 @@ sub __set {
             return ( $ret->return_value );
         }
     }
-    
 
     # Implement 'is distinct' checking
     if ( $column->distinct ) {
         my $ret = $self->is_distinct( $column->name, $args{'value'} );
-        return ( $ret ) if not ( $ret );
+        return ($ret) if not($ret);
     }
 
     # The blob handling will destroy $args{'value'}. But we assign
@@ -855,7 +936,8 @@ sub __set {
     my $unmunged_value = $args{'value'};
 
     if ( $column->type =~ /^(text|longtext|clob|blob|lob|bytea)$/i ) {
-        my $bhash = $self->_handle->blob_params( $column->name, $column->type );
+        my $bhash
+            = $self->_handle->blob_params( $column->name, $column->type );
         $bhash->{'value'} = $args{'value'};
         $args{'value'} = $bhash;
     }
@@ -886,7 +968,7 @@ sub __set {
         # XXX TODO primary_keys
         $self->load_by_cols( id => $self->id );
     } else {
-        $self->{'values'}{ $column->name } = $unmunged_value;
+        $self->{'values'}{ $column->name }  = $unmunged_value;
         $self->{'decoded'}{ $column->name } = 0;
     }
     $ret->as_array( 1, "The new value has been set." );
@@ -897,7 +979,7 @@ sub __set {
 
 C<load> can be called as a class or object method.
 
-Takes a single argument, $id. Calls load_by_cols to retrieve the row 
+Takes a single argument, $id. Calls load_by_cols to retrieve the row
 whose primary key is $id.
 
 =cut
@@ -913,24 +995,24 @@ sub load {
 
 C<load_by_cols> can be called as a class or object method.
 
-Takes a hash of columns and values. Loads the first record that matches all
-keys.
+Takes a hash of columns and values. Loads the first record that
+matches all keys.
 
 The hash's keys are the columns to look at.
 
-The hash's values are either: scalar values to look for
-OR hash references which contain 'operator' and 'value'
+The hash's values are either: scalar values to look for OR hash
+references which contain 'operator' and 'value'
 
 =cut
 
 sub load_by_cols {
-    my $class    = shift;
-    my %hash = (@_);
+    my $class = shift;
+    my %hash  = (@_);
     my ($self);
-    if (ref($class)) {
-            ($self,$class) = ($class,undef);
+    if ( ref($class) ) {
+        ( $self, $class ) = ( $class, undef );
     } else {
-            $self = $class->new( handle => (delete $hash{'_handle'} || undef));
+        $self = $class->new( handle => ( delete $hash{'_handle'} || undef ) );
     }
 
     my ( @bind, @phrases );
@@ -938,14 +1020,16 @@ sub load_by_cols {
         if ( defined $hash{$key} && $hash{$key} ne '' ) {
             my $op;
             my $value;
-            my $function = "?";
-            my $column_obj = $self->column( $key );
-            Carp::confess("Unknown column '$key' in class '".ref($self)."'") if !defined $column_obj;
+            my $function   = "?";
+            my $column_obj = $self->column($key);
+            Carp::confess(
+                "Unknown column '$key' in class '" . ref($self) . "'" )
+                if !defined $column_obj;
             my $case_sensitive = $column_obj->case_sensitive;
             if ( ref $hash{$key} eq 'HASH' ) {
-                $op       = $hash{$key}->{operator};
-                $value    = $hash{$key}->{value};
-                $function = $hash{$key}->{function} || "?";
+                $op             = $hash{$key}->{operator};
+                $value          = $hash{$key}->{value};
+                $function       = $hash{$key}->{function} || "?";
                 $case_sensitive = $hash{$key}->{case_sensitive}
                     if exists $hash{$key}->{case_sensitive};
             } else {
@@ -953,7 +1037,8 @@ sub load_by_cols {
                 $value = $hash{$key};
             }
 
-            if (blessed $value && $value->isa('Jifty::DBI::Record') ) {
+            if ( blessed $value && $value->isa('Jifty::DBI::Record') ) {
+
                 # XXX TODO: check for proper foriegn keyness here
                 $value = $value->id;
             }
@@ -962,13 +1047,15 @@ sub load_by_cols {
             # a case-insensitive query
             if ( $self->_handle->case_sensitive && $value ) {
                 if ( $column_obj->is_string && !$case_sensitive ) {
-                    ( $key, $op, $function ) = $self->_handle->_make_clause_case_insensitive( $key, $op, $function );
-        	}
+                    ( $key, $op, $function )
+                        = $self->_handle->_make_clause_case_insensitive( $key,
+                        $op, $function );
+                }
             }
 
             push @phrases, "$key $op $function";
             push @bind,    $value;
-	} elsif (!defined $hash{$key}) {
+        } elsif ( !defined $hash{$key} ) {
             push @phrases, "$key IS NULL";
         } else {
             push @phrases, "($key IS NULL OR $key = ?)";
@@ -983,12 +1070,17 @@ sub load_by_cols {
         }
     }
 
-    my $query_string = "SELECT  * FROM "
+    my $query_string
+        = "SELECT  * FROM "
         . $self->table
         . " WHERE "
         . join( ' AND ', @phrases );
-    if ($class) { $self->_load_from_sql( $query_string, @bind ); return $self}
-    else {return $self->_load_from_sql( $query_string, @bind );}
+    if ($class) {
+        $self->_load_from_sql( $query_string, @bind );
+        return $self;
+    } else {
+        return $self->_load_from_sql( $query_string, @bind );
+    }
 
 }
 
@@ -1012,31 +1104,34 @@ sub load_by_primary_keys {
 
 =head2 load_from_hash
 
-Takes a hashref, such as created by Jifty::DBI and populates this record's
-loaded values hash.
+Takes a hashref, such as created by Jifty::DBI and populates this
+record's loaded values hash.
 
 =cut
 
 sub load_from_hash {
-    my $class    = shift;
+    my $class   = shift;
     my $hashref = shift;
     my ($self);
 
-    if (ref($class)) {
-            ($self,$class) = ($class,undef);
+    if ( ref($class) ) {
+        ( $self, $class ) = ( $class, undef );
     } else {
-            $self = $class->new( handle => (delete $hashref->{'_handle'} || undef));
+        $self = $class->new(
+            handle => ( delete $hashref->{'_handle'} || undef ) );
     }
-    
-    $self->{values} = {};
-    #foreach my $f ( keys %$hashref ) { $self->{'fetched'}{  $f } = 1; }
-    foreach my $col (map {$_->name} $self->columns) {
-        next unless exists $hashref->{lc($col)};
-        $self->{'fetched'}{$col} = 1;
-        $self->{'values'}->{$col} = $hashref->{lc($col)};
 
-        }
-        #$self->{'values'}  = $hashref;
+    $self->{values} = {};
+
+    #foreach my $f ( keys %$hashref ) { $self->{'fetched'}{  $f } = 1; }
+    foreach my $col ( map { $_->name } $self->columns ) {
+        next unless exists $hashref->{ lc($col) };
+        $self->{'fetched'}{$col} = 1;
+        $self->{'values'}->{$col} = $hashref->{ lc($col) };
+
+    }
+
+    #$self->{'values'}  = $hashref;
     $self->{'decoded'} = {};
     return $self->id();
 }
@@ -1058,15 +1153,16 @@ sub _load_from_sql {
 
     return ( 0, "Couldn't execute query" ) unless $sth;
 
-   my $hashref  = $sth->fetchrow_hashref;
-    delete $self->{values} ;
+    my $hashref = $sth->fetchrow_hashref;
+    delete $self->{values};
     $self->{'fetched'} = {};
     $self->{'decoded'} = {};
+
     #foreach my $f ( keys %$hashref ) { $self->{'fetched'}{  $f } = 1; }
-    foreach my $col (map {$_->name} $self->columns) {
-        next unless exists $hashref->{lc($col)};
+    foreach my $col ( map { $_->name } $self->columns ) {
+        next unless exists $hashref->{ lc($col) };
         $self->{'fetched'}{$col} = 1;
-        $self->{'values'}->{$col} = $hashref->{lc($col)};
+        $self->{'values'}->{$col} = $hashref->{ lc($col) };
     }
     if ( !$self->{'values'} && $sth->err ) {
         return ( 0, "Couldn't fetch row: " . $sth->err );
@@ -1084,7 +1180,7 @@ sub _load_from_sql {
     }
 
     foreach my $f ( keys %{ $self->{'values'} } ) {
-        $self->{'fetched'}{ $f } = 1;
+        $self->{'fetched'}{$f} = 1;
     }
     return ( 1, "Found object" );
 
@@ -1102,7 +1198,10 @@ This method calls two hooks in your subclass:
 
 =item before_create
 
-When adding the C<before_create> trigger, you can determine whether the trigger may cause an abort or not by passing the C<abortable> parameter to the C<add_trigger> method. If this is not set, then the return value is ignored regardless.
+When adding the C<before_create> trigger, you can determine whether
+the trigger may cause an abort or not by passing the C<abortable>
+parameter to the C<add_trigger> method. If this is not set, then the
+return value is ignored regardless.
 
   sub before_create {
       my $self = shift;
@@ -1118,11 +1217,15 @@ When adding the C<before_create> trigger, you can determine whether the trigger 
 This method is called before trying to create our row in the
 database. It's handed a reference to your paramhash. (That means it
 can modify your parameters on the fly).  C<before_create> returns a
-true or false value. If it returns C<undef> and the trigger has been added as C<abortable>, the create is aborted.
+true or false value. If it returns C<undef> and the trigger has been
+added as C<abortable>, the create is aborted.
 
 =item after_create
 
-When adding the C<after_create> trigger, you can determine whether the trigger may cause an abort or not by passing the C<abortable> parameter to the C<add_trigger> method. If this is not set, then the return value is ignored regardless.
+When adding the C<after_create> trigger, you can determine whether the
+trigger may cause an abort or not by passing the C<abortable>
+parameter to the C<add_trigger> method. If this is not set, then the
+return value is ignored regardless.
 
   sub after_create {
       my $self                    = shift;
@@ -1141,7 +1244,9 @@ This method is called after attempting to insert the record into the
 database. It gets handed a reference to the return value of the
 insert. That'll either be a true value or a L<Class::ReturnValue>.
 
-Aborting the trigger merely causes C<create> to return a false (undefined) value even thought he create may have succeeded. This prevents the loading of the record that would normally be returned.
+Aborting the trigger merely causes C<create> to return a false
+(undefined) value even thought he create may have succeeded. This
+prevents the loading of the record that would normally be returned.
 
 =back
 
@@ -1149,43 +1254,46 @@ Aborting the trigger merely causes C<create> to return a false (undefined) value
 =cut 
 
 sub create {
-    my $class    = shift;
+    my $class   = shift;
     my %attribs = @_;
 
     my ($self);
-    if (ref($class)) {
-            ($self,$class) = ($class,undef);
+    if ( ref($class) ) {
+        ( $self, $class ) = ( $class, undef );
     } else {
-            $self = $class->new( handle => (delete $attribs{'_handle'} || undef));
+        $self = $class->new(
+            handle => ( delete $attribs{'_handle'} || undef ) );
     }
 
-
-
-    my $ok = $self->_run_callback( name => "before_create", args => \%attribs);
-    return $ok if ( not defined $ok);
+    my $ok
+        = $self->_run_callback( name => "before_create", args => \%attribs );
+    return $ok if ( not defined $ok );
 
     my $ret = $self->__create(%attribs);
 
-    $ok = $self->_run_callback( name => "after_create",
-                           args => \$ret);
-    return $ok if (not defined $ok);
-    
+    $ok = $self->_run_callback(
+        name => "after_create",
+        args => \$ret
+    );
+    return $ok if ( not defined $ok );
+
     if ($class) {
-        $self->load_by_cols(id => $ret);
+        $self->load_by_cols( id => $ret );
         return ($self);
-    }
-    else {
-     return ($ret);
+    } else {
+        return ($ret);
     }
 }
 
 sub __create {
-    my ($self, %attribs) = @_;
+    my ( $self, %attribs ) = @_;
 
     foreach my $column_name ( keys %attribs ) {
         my $column = $self->column($column_name);
         unless ($column) {
-            # "Virtual" columns beginning with __ is passed through to handle without munging.
+
+            # "Virtual" columns beginning with __ are passed through
+            # to handle without munging.
             next if $column_name =~ /^__/;
 
             Carp::confess "$column_name isn't a column we know about";
@@ -1206,33 +1314,47 @@ sub __create {
 
         # Implement 'is distinct' checking
         if ( $column->distinct ) {
-            my $ret = $self->is_distinct( $column_name, $attribs{$column_name} );
-            if (not $ret ) {
-                Carp::cluck("$self failed a 'is_distinct' check for $column_name on ".$attribs{$column_name});
-            return ( $ret ) 
+            my $ret
+                = $self->is_distinct( $column_name, $attribs{$column_name} );
+            if ( not $ret ) {
+                Carp::cluck(
+                    "$self failed a 'is_distinct' check for $column_name on "
+                        . $attribs{$column_name} );
+                return ($ret);
             }
         }
 
         if ( $column->type =~ /^(text|longtext|clob|blob|lob|bytea)$/i ) {
-            my $bhash = $self->_handle->blob_params( $column_name, $column->type );
+            my $bhash
+                = $self->_handle->blob_params( $column_name, $column->type );
             $bhash->{'value'} = $attribs{$column_name};
             $attribs{$column_name} = $bhash;
         }
     }
 
-    for my $column ($self->columns) {
-        if (not defined $attribs{$column->name} and defined $column->default and not ref $column->default) {
-            $attribs{$column->name} = $column->default;
+    for my $column ( $self->columns ) {
+        if (    not defined $attribs{ $column->name }
+            and defined $column->default
+            and not ref $column->default )
+        {
+            $attribs{ $column->name } = $column->default;
         }
 
-        if (not defined $attribs{$column->name} and $column->mandatory and $column->type ne "serial" ) {
+        if (    not defined $attribs{ $column->name }
+            and $column->mandatory
+            and $column->type ne "serial" )
+        {
+
             # Enforce "mandatory"
-            Carp::carp "Did not supply value for mandatory column ".$column->name;
-            unless ($column->active) {
-                Carp::carp "The mandatory column ".$column->name." is no longer active. This is likely to cause problems!";
+            Carp::carp "Did not supply value for mandatory column "
+                . $column->name;
+            unless ( $column->active ) {
+                Carp::carp "The mandatory column "
+                    . $column->name
+                    . " is no longer active. This is likely to cause problems!";
             }
 
-            return ( 0 );
+            return (0);
         }
     }
 
@@ -1244,7 +1366,7 @@ sub __create {
 Delete this record from the database. On failure return a
 Class::ReturnValue with the error. On success, return 1;
 
-This method has two hooks
+This method has two hooks:
 
 =over 
 
@@ -1254,8 +1376,8 @@ This method is called before the record deletion, if it exists. On
 failure it returns a L<Class::ReturnValue> with the error.  On success
 it returns 1.
 
-If this method returns an error, it causes the delete to abort and return
-the return value from this hook.
+If this method returns an error, it causes the delete to abort and
+return the return value from this hook. 
 
 =item after_delete
 
@@ -1269,12 +1391,12 @@ value from the delete operation.
 sub delete {
     my $self = shift;
     my $before_ret = $self->_run_callback( name => 'before_delete' );
-    return $before_ret unless (defined $before_ret);
+    return $before_ret unless ( defined $before_ret );
     my $ret = $self->__delete;
 
     my $after_ret
         = $self->_run_callback( name => 'after_delete', args => \$ret );
-    return $after_ret unless (defined $after_ret);
+    return $after_ret unless ( defined $after_ret );
     return ($ret);
 
 }
@@ -1287,7 +1409,7 @@ sub __delete {
 
     ## Constructs the where clause.
     my %pkeys = $self->primary_keys();
-    my $return       = $self->_handle->delete( $self->table, $self->primary_keys );
+    my $return = $self->_handle->delete( $self->table, $self->primary_keys );
 
     if ( UNIVERSAL::isa( 'Class::ReturnValue', $return ) ) {
         return ($return);
@@ -1312,20 +1434,22 @@ arguably correct.
 
 sub table {
     my $self = shift;
-    $self->TABLE_NAME($self->_guess_table_name) unless ($self->TABLE_NAME());
+    $self->TABLE_NAME( $self->_guess_table_name )
+        unless ( $self->TABLE_NAME() );
     return $self->TABLE_NAME();
 }
 
 =head2 collection_class
 
-Returns the collection class which this record belongs to; override this to
-subclass.  If you haven't specified a collection class, this returns a best
-guess at the name of the collection class for this collection.
+Returns the collection class which this record belongs to; override
+this to subclass.  If you haven't specified a collection class, this
+returns a best guess at the name of the collection class for this
+collection.
 
-It uses a simple heuristic to determine the collection class name -- It
-appends "Collection" to its own name. If you want to name your records
-and collections differently, go right ahead, but don't say we didn't
-warn you.
+It uses a simple heuristic to determine the collection class name --
+It appends "Collection" to its own name. If you want to name your
+records and collections differently, go right ahead, but don't say we
+didn't warn you.
 
 =cut
 
@@ -1373,7 +1497,6 @@ sub _handle {
 
 used for the declarative syntax
 
-
 =cut
 
 sub _filters {
@@ -1411,8 +1534,8 @@ sub _apply_filters {
     my $action = $args{'direction'} eq 'output' ? 'decode' : 'encode';
     foreach my $filter_class (@filters) {
         local $UNIVERSAL::require::ERROR;
-        $filter_class->require() unless 
-         $INC{ join('/', split(/::/,$filter_class)).".pm" };
+        $filter_class->require()
+            unless $INC{ join( '/', split( /::/, $filter_class ) ) . ".pm" };
 
         if ($UNIVERSAL::require::ERROR) {
             warn $UNIVERSAL::require::ERROR;
@@ -1440,17 +1563,17 @@ and it returns a L<Class::ReturnValue> with the error.
 =cut 
 
 sub is_distinct {
-    my $self = shift;
+    my $self   = shift;
     my $column = shift;
-    my $value = shift;
+    my $value  = shift;
 
-    my $record = $self->new( handle => $self->_handle );
-    $record->load_by_cols ( $column => $value );
+    my $record = $self->new( $self->_new_record_args );
+    $record->load_by_cols( $column => $value );
 
     my $ret = Class::ReturnValue->new();
 
-    if( $record->id ) {
-        $ret->as_array( 0, "Value already exists for unique column $column");
+    if ( $record->id ) {
+        $ret->as_array( 0, "Value already exists for unique column $column" );
         $ret->as_error(
             errno        => 3,
             do_backtrace => 0,
@@ -1462,7 +1585,6 @@ sub is_distinct {
     }
 }
 
-
 =head2 run_canonicalization_for_column column => 'COLUMN', value => 'VALUE'
 
 Runs all canonicalizers for the specified column.
@@ -1471,13 +1593,22 @@ Runs all canonicalizers for the specified column.
 
 sub run_canonicalization_for_column {
     my $self = shift;
-    my %args = ( column => undef,
-                 value => undef,
-                 @_);
+    my %args = (
+        column => undef,
+        value  => undef,
+        @_
+    );
 
-    my ($ret,$value_ref) = $self->_run_callback ( name => "canonicalize_".$args{'column'}, args => $args{'value'});
+    my ( $ret, $value_ref ) = $self->_run_callback(
+        name => "canonicalize_" . $args{'column'},
+        args => $args{'value'}
+    );
     return unless defined $ret;
-    return ( exists $value_ref->[-1]->[0] ? $value_ref->[-1]->[0] : $args{'value'});
+    return (
+        exists $value_ref->[-1]->[0]
+        ? $value_ref->[-1]->[0]
+        : $args{'value'}
+    );
 }
 
 =head2 has_canonicalizer_for_column COLUMN
@@ -1487,16 +1618,15 @@ Returns true if COLUMN has a canonicalizer, otherwise returns undef.
 =cut
 
 sub has_canonicalizer_for_column {
-    my $self = shift;
-    my $key = shift;
-        my $method = "canonicalize_$key";
-     if( $self->can($method) ) {
-         return 1;
-     } else {
-         return undef;
-     }
+    my $self   = shift;
+    my $key    = shift;
+    my $method = "canonicalize_$key";
+    if ( $self->can($method) ) {
+        return 1;
+    } else {
+        return undef;
+    }
 }
-
 
 =head2 run_validation_for_column column => 'COLUMN', value => 'VALUE'
 
@@ -1511,19 +1641,18 @@ sub run_validation_for_column {
         value  => undef,
         @_
     );
-    my $key    = $args{'column'};
-    my $attr   = $args{'value'};
+    my $key  = $args{'column'};
+    my $attr = $args{'value'};
 
+    my ( $ret, $results )
+        = $self->_run_callback( name => "validate_" . $key, args => $attr );
 
-    my ($ret, $results)  = $self->_run_callback( name => "validate_".$key, args => $attr );
-
-    if (defined $ret) {
+    if ( defined $ret ) {
         return ( 1, 'Validation ok' );
+    } else {
+        return ( @{ $results->[-1] } );
     }
-    else {
-        return (@{ $results->[-1]});
-    }
-    
+
 }
 
 =head2 has_validator_for_column COLUMN
@@ -1542,7 +1671,6 @@ sub has_validator_for_column {
     }
 }
 
-
 sub _run_callback {
     my $self = shift;
     my %args = (
@@ -1556,14 +1684,15 @@ sub _run_callback {
     my @results;
     if ( my $func = $self->can($method) ) {
         @results = $func->( $self, $args{args} );
-        return ( wantarray ? ( undef, [[@results]] ) : undef )
+        return ( wantarray ? ( undef, [ [@results] ] ) : undef )
             unless $results[0];
     }
     $ret = $self->call_trigger( $args{'name'} => $args{args} );
     return (
         wantarray
         ? ( $ret, [ [@results], @{ $self->last_trigger_results } ] )
-        : $ret );
+        : $ret
+    );
 }
 
 1;
@@ -1574,7 +1703,9 @@ __END__
 
 =head1 AUTHOR
 
-Jesse Vincent <jesse@bestpractical.com>, Alex Vandiver <alexmv@bestpractical.com>, David Glasser <glasser@bestpractical.com>, Ruslan Zakirov <ruslan.zakirov@gmail.com>
+Jesse Vincent <jesse@bestpractical.com>, Alex Vandiver
+<alexmv@bestpractical.com>, David Glasser <glasser@bestpractical.com>,
+Ruslan Zakirov <ruslan.zakirov@gmail.com>
 
 Based on DBIx::SearchBuilder::Record, whose credits read:
 
@@ -1584,8 +1715,6 @@ Based on DBIx::SearchBuilder::Record, whose credits read:
 
 =head1 SEE ALSO
 
-L<Jifty::DBI>
+L<Jifty::DBI>, L<Jifty::DBI::Handle>, L<Jifty::DBI::Collection>.
 
 =cut
-
-

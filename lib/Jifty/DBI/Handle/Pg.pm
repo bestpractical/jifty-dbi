@@ -120,12 +120,13 @@ Postgres implementation only supports BYTEA types.
 =cut
 
 sub blob_params {
-    my $self   = shift;
+    my $self = shift;
     my $name = shift;
     my $type = shift;
 
     # Don't assign to key 'value' as it is defined later.
-    return ( { pg_type => DBD::Pg::PG_BYTEA() } ) if $type =~ /^(?:blob|bytea)$/;
+    return ( { pg_type => DBD::Pg::PG_BYTEA() } )
+        if $type =~ /^(?:blob|bytea)$/;
     return ( {} );
 }
 
@@ -171,11 +172,11 @@ sub _make_clause_case_insensitive {
     my $operator = shift;
     my $value    = shift;
 
-    if ($self->_case_insensitivity_valid($column, $operator, $value)) {
+    if ( $self->_case_insensitivity_valid( $column, $operator, $value ) ) {
         if ( $operator =~ /(?:LIKE|=|IN)/i ) {
             $column = "LOWER($column)";
-            if ($operator eq 'IN' and ref($value) eq 'ARRAY') {
-                $value = [map { "LOWER($_)" } @$value];
+            if ( $operator eq 'IN' and ref($value) eq 'ARRAY' ) {
+                $value = [ map {"LOWER($_)"} @$value ];
             } else {
                 $value = "LOWER($value)";
             }
@@ -191,44 +192,48 @@ takes an incomplete SQL SELECT statement and massages it to return a DISTINCT re
 =cut
 
 sub distinct_query {
-  my $self         = shift;
-  my $statementref = shift;
-  my $sb           = shift;
-  my $table        = $sb->table;
+    my $self         = shift;
+    my $statementref = shift;
+    my $collection   = shift;
+    my $table        = $collection->table;
 
-  if (
-    grep {
-      ( defined $_->{'alias'} and $_->{'alias'} ne 'main' )
-        || defined $_->{'function'}
-    } @{ $sb->order_by }
-    )
-  {
+    if (grep {
+            ( defined $_->{'alias'} and $_->{'alias'} ne 'main' )
+                || defined $_->{'function'}
+        } @{ $collection->order_by }
+        )
+    {
 
-    # If we are ordering by something not in 'main', we need to GROUP
-    # BY and adjust the ORDER_BY accordingly
-    local $sb->{group_by}
-      = [ @{ $sb->{group_by} || [] }, { column => 'id' } ];
-    local $sb->{order_by} = [
-      map {
-          my $alias = $_->{alias} || '';
-          my $column = $_->{column};
-          $alias .= '.' if $alias;
-          #warn "alias $alias => column $column\n";
-            ((!$alias or $alias eq 'main.') and $column eq 'id')
-          ? $_
-          : { %{$_}, alias => '', column => "min($alias$column)" }
-        } @{ $sb->{order_by} }
-    ];
-    my $group = $sb->_group_clause;
-    my $order = $sb->_order_clause;
-    $$statementref
-      = "SELECT ".$sb->_preload_columns." FROM ( SELECT main.id FROM $$statementref $group $order ) distinctquery, $table main WHERE (main.id = distinctquery.id)";
-  }
-  else {
-    $$statementref = "SELECT DISTINCT ".$sb->_preload_columns." FROM $$statementref";
-    $$statementref .= $sb->_group_clause;
-    $$statementref .= $sb->_order_clause;
-  }
+        # If we are ordering by something not in 'main', we need to GROUP
+        # BY and adjust the ORDER_BY accordingly
+        local $collection->{group_by}
+            = [ @{ $collection->{group_by} || [] }, { column => 'id' } ];
+        local $collection->{order_by} = [
+            map {
+                my $alias = $_->{alias} || '';
+                my $column = $_->{column};
+                $alias .= '.' if $alias;
+
+                #warn "alias $alias => column $column\n";
+                ( ( !$alias or $alias eq 'main.' ) and $column eq 'id' )
+                    ? $_
+                    : { %{$_}, alias => '', column => "min($alias$column)" }
+                } @{ $collection->{order_by} }
+        ];
+        my $group = $collection->_group_clause;
+        my $order = $collection->_order_clause;
+        $$statementref
+            = "SELECT "
+            . $collection->query_columns
+            . " FROM ( SELECT main.id FROM $$statementref $group $order ) distinctquery, $table main WHERE (main.id = distinctquery.id)";
+    } else {
+        $$statementref
+            = "SELECT DISTINCT "
+            . $collection->query_columns
+            . " FROM $$statementref";
+        $$statementref .= $collection->_group_clause;
+        $$statementref .= $collection->_order_clause;
+    }
 }
 
 1;

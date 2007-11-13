@@ -54,9 +54,8 @@ Returns value of ORA_OCI constant, see L<DBD::Oracle/Constants>.
 =cut
 
 sub database_version {
-    return ''. ORA_OCI;
+    return '' . ORA_OCI;
 }
-
 
 =head2 insert
 
@@ -239,33 +238,33 @@ DISTINCT result set.
 sub distinct_query {
     my $self         = shift;
     my $statementref = shift;
-    my $sb           = shift;
-    my $table        = $sb->Table;
+    my $collection   = shift;
+    my $table        = $collection->Table;
 
     # Wrapp select query in a subselect as Oracle doesn't allow
     # DISTINCT against CLOB/BLOB column types.
-    if ( $sb->_order_clause =~ /(?<!main)\./ ) {
+    if ( $collection->_order_clause =~ /(?<!main)\./ ) {
 
         # If we are ordering by something not in 'main', we need to GROUP
         # BY and adjust the ORDER_BY accordingly
-        local $sb->{group_by}
-            = [ @{ $sb->{group_by} || [] }, { column => 'id' } ];
-        local $sb->{order_by} = [
+        local $collection->{group_by}
+            = [ @{ $collection->{group_by} || [] }, { column => 'id' } ];
+        local $collection->{order_by} = [
             map {
                       ( $_->{alias} and $_->{alias} ne "main" )
                     ? { %{$_}, column => "min(" . $_->{column} . ")" }
                     : $_
-                } @{ $sb->{order_by} }
+                } @{ $collection->{order_by} }
         ];
-        my $group = $sb->_group_clause;
-        my $order = $sb->_order_clause;
+        my $group = $collection->_group_clause;
+        my $order = $collection->_order_clause;
         $$statementref
             = "SELECT main.* FROM ( SELECT main.id FROM $$statementref $group $order ) distinctquery, $table main WHERE (main.id = distinctquery.id)";
     } else {
         $$statementref
             = "SELECT main.* FROM ( SELECT DISTINCT main.id FROM $$statementref ) distinctquery, $table main WHERE (main.id = distinctquery.id) ";
-        $$statementref .= $sb->_group_clause;
-        $$statementref .= $sb->_order_clause;
+        $$statementref .= $collection->_group_clause;
+        $$statementref .= $collection->_order_clause;
     }
 }
 

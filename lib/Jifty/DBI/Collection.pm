@@ -27,11 +27,11 @@ perl objects
   my $handle = Jifty::DBI::Handle->new();
   $handle->connect( driver => 'SQLite', database => "my_test_db" );
 
-  my $sb = My::ThingCollection->new( handle => $handle );
+  my $collection = My::ThingCollection->new( handle => $handle );
 
-  $sb->limit( column => "column_1", value => "matchstring" );
+  $collection->limit( column => "column_1", value => "matchstring" );
 
-  while ( my $record = $sb->next ) {
+  while ( my $record = $collection->next ) {
       print $record->id;
   }
 
@@ -60,7 +60,7 @@ use Data::Page;
 use Clone;
 use Carp qw/croak/;
 use base qw/Class::Accessor::Fast/;
-__PACKAGE__->mk_accessors(qw/pager preload_columns preload_related/);
+__PACKAGE__->mk_accessors(qw/pager prefetch_related derived/);
 
 =head1 METHODS
 
@@ -72,7 +72,7 @@ you haven't overridden L<_init> in your subclass, this means that you
 should pass in a L<Jifty::DBI::Handle> (or one of its subclasses) like
 this:
 
-   my $sb = My::Jifty::DBI::Subclass->new( handle => $handle );
+   my $collection = My::Jifty::DBI::Subclass->new( handle => $handle );
 
 However, if your subclass overrides L</_init> you do not need to take
 a handle argument, as long as your subclass takes care of calling the
@@ -103,10 +103,12 @@ C<handle> argument and calls L</_handle> with that.
 sub _init {
     my $self = shift;
     my %args = (
-        handle => undef,
+        handle  => undef,
+        derived => undef,
         @_
     );
-    $self->_handle( $args{'handle'} ) if ( $args{'handle'} );
+    $self->_handle( $args{'handle'} )  if ( $args{'handle'} );
+    $self->derived( $args{'derived'} ) if ( $args{'derived'} );
     $self->table( $self->new_item->table() );
     $self->clean_slate(%args);
 }
@@ -143,11 +145,10 @@ sub clean_slate {
     $self->{'alias_count'}      = 0;
     $self->{'first_row'}        = 0;
     $self->{'show_rows'}        = 0;
-    @{ $self->{'aliases'} } = ();
 
     delete $self->{$_} for qw(
         items
-        leftjoins
+        joins
         raw_rows
         count_all
         subclauses
@@ -196,82 +197,75 @@ sub _do_search {
     my $self = shift;
 
     my $query_string = $self->build_select_query();
+
     # If we're about to redo the search, we need an empty set of items
     delete $self->{'items'};
 
     my $records = $self->_handle->simple_query($query_string);
     return 0 unless $records;
     my @names = @{ $records->{NAME_lc} };
-    my $data = {};
-    my $column_map = {};
-    foreach my $column (@names) {
-        if ($column =~ /^((\w+)_?(?:\d*))_(.*?)$/) {
-            $column_map->{$1}->{$2} =$column;
-        }
-    }
-    my @tables = keys %$column_map;
+    my $data  = {};
 
+    my @tables = (
+        "main", map { $_->{alias} } values %{ $self->prefetch_related || {} }
+    );
 
     my @order;
     while ( my $base_row = $records->fetchrow_hashref() ) {
-        my $main_pkey = $base_row->{$names[0]};
-        push @order, $main_pkey unless ( $order[0] && $order[-1] eq $main_pkey);
+        my $main_pkey = $base_row->{ $names[0] };
+        push @order, $main_pkey
+            unless ( $order[0] && $order[-1] eq $main_pkey );
 
-            # let's chop the row into subrows;
+        # let's chop the row into subrows;
         foreach my $table (@tables) {
             for ( keys %$base_row ) {
-                if ( $_ =~ /$table\_(.*)$/ ) {
-                    $data->{$main_pkey}->{$table} ->{ ($base_row->{ $table . '_id' } ||$main_pkey )}->{$1} = $base_row->{$_};
+                if (/^$table\_(.*)$/) {
+                    $data->{$main_pkey}->{$table}
+                        ->{ ( $base_row->{ $table . '_id' } || $main_pkey ) }
+                        ->{$1} = $base_row->{$_};
                 }
             }
         }
-
     }
 
-    # For related "record" values, we can simply prepopulate the
-    # Jifty::DBI::Record cache and life will be good. (I suspect we want
-    # to do this _before_ doing the initial primary record load on the
-    # off chance that the primary record will try to do the relevant
-    # prefetch manually For related "collection" values, our job is a bit
-    # harder. we need to create a new empty collection object, set it's
-    # "must search" to 0 and manually add the records to it for each of
-    # the items we find. Then we need to ram it into place.
-
-    foreach my $row_id ( @order) {
+    foreach my $row_id (@order) {
         my $item;
         foreach my $row ( values %{ $data->{$row_id}->{'main'} } ) {
             $item = $self->new_item();
             $item->load_from_hash($row);
         }
-        foreach my $alias ( grep { $_ ne 'main' } keys %{ $data->{$row_id} } ) {
+        foreach my $alias ( grep { $_ ne 'main' } keys %{ $data->{$row_id} } )
+        {
 
             my $related_rows = $data->{$row_id}->{$alias};
-            my ( $class, $col_name ) = $self->class_and_column_for_alias($alias);
-            if ($class) {
+            my ( $class, $col_name )
+                = $self->class_and_column_for_alias($alias);
+            next unless $class;
+
+            my @rows = sort { $a->{id} <=> $b->{id} }
+                grep { $_->{id} } values %$related_rows;
 
             if ( $class->isa('Jifty::DBI::Collection') ) {
-                my $collection = $class->new( handle => $self->_handle );
-                foreach my $row( sort { $a->{id} <=> $b->{id} } grep {$_->{id}} values %$related_rows ) {
-                    my $entry
-                        = $collection->new_item( handle => $self->_handle );
+                my $collection = $class->new( $self->_new_collection_args,
+                    derived => 1 );
+                foreach my $row (@rows) {
+                    my $entry = $collection->new_item;
                     $entry->load_from_hash($row);
                     $collection->add_record($entry);
                 }
 
-                $item->_prefetched_collection( $col_name => $collection );
+                $item->prefetched( $col_name => $collection );
             } elsif ( $class->isa('Jifty::DBI::Record') ) {
-                foreach my $related_row ( values %$related_rows ) {
-                    my $item = $class->new( handle => $self->_handle );
-                    $item->load_from_hash($related_row);
-                }
+                warn "Multiple rows returned for $class in prefetch"
+                    if @rows > 1;
+                my $entry = $class->new( $self->_new_record_args );
+                $entry->load_from_hash( shift @rows ) if @rows;
+                $item->prefetched( $col_name => $entry );
             } else {
                 Carp::cluck(
-                    "Asked to preload $alias as a $class. Don't know how to handle $class"
+                    "Asked to prefetch $alias as a $class. Don't know how to handle $class"
                 );
             }
-            }
-
-
         }
         $self->add_record($item);
 
@@ -281,6 +275,16 @@ sub _do_search {
     }
 
     return $self->_record_count;
+}
+
+sub _new_record_args {
+    my $self = shift;
+    return ( handle => $self->_handle );
+}
+
+sub _new_collection_args {
+    my $self = shift;
+    return ( handle => $self->_handle );
 }
 
 =head2 add_record RECORD
@@ -323,7 +327,7 @@ the database; it is used by L</count> and L</count_all>.
 
 sub _do_count {
     my $self = shift;
-    my $all  = shift || 0;
+    my $all = shift || 0;
 
     my $query_string = $self->build_select_count_query();
     my $records      = $self->_handle->simple_query($query_string);
@@ -393,10 +397,10 @@ together.
 
 sub _is_joined {
     my $self = shift;
-    if ( $self->{'leftjoins'} && keys %{ $self->{'leftjoins'} } ) {
+    if ( $self->{'joins'} && keys %{ $self->{'joins'} } ) {
         return (1);
     } else {
-        return ( @{ $self->{'aliases'} } );
+        return 0;
     }
 }
 
@@ -411,12 +415,12 @@ collection.
 
 sub _is_distinctly_joined {
     my $self = shift;
-    if ( $self->{'leftjoins'} ) {
-	for (values %{ $self->{'leftjoins'} } ) {
-	    return 0 unless $_->{is_distinct};
-	}
+    if ( $self->{'joins'} ) {
+        for ( values %{ $self->{'joins'} } ) {
+            return 0 unless $_->{is_distinct};
+        }
 
-	return 1;
+        return 1;
     }
 }
 
@@ -468,6 +472,8 @@ this collection
 sub build_select_query {
     my $self = shift;
 
+    return "" if $self->derived;
+
     # The initial SELECT or SELECT DISTINCT is decided later
 
     my $query_string = $self->_build_joins . " ";
@@ -481,7 +487,7 @@ sub build_select_query {
         $self->_distinct_query( \$query_string );
     } else {
         $query_string
-            = "SELECT " . $self->_preload_columns . " FROM $query_string";
+            = "SELECT " . $self->query_columns . " FROM $query_string";
         $query_string .= $self->_group_clause;
         $query_string .= $self->_order_clause;
     }
@@ -492,73 +498,55 @@ sub build_select_query {
 
 }
 
-=head2 preload_columns
+=head2 query_columns
 
-The columns that the query would load for result items.  By default it's everything.
-
-XXX TODO: in the case of distinct, it needs to work as well.
+The columns that the query would load for result items.  By default
+it's everything.
 
 =cut
 
-sub _preload_columns {
+sub query_columns {
     my $self = shift;
 
-    my @cols            = ();
-    my $item            = $self->new_item;
-    if( $self->{columns} and @{ $self->{columns} } ) {
-         push @cols, @{$self->{columns}};
-         # push @cols, map { warn "Preloading $_"; "main.$_ as main_" . $_ } @{$preload_columns};
+    my @cols = ();
+    my $item = $self->new_item;
+    if ( $self->{columns} and @{ $self->{columns} } ) {
+        push @cols, @{ $self->{columns} };
     } else {
         push @cols, $self->_qualified_record_columns( 'main' => $item );
     }
-    my %preload_related = %{ $self->preload_related || {} };
-    foreach my $alias ( keys %preload_related ) {
-        my $related_obj = $preload_related{$alias};
-        if ( my $col_obj = $item->column($related_obj) ) {
-            my $reference_type = $col_obj->refers_to;
+    my %prefetch_related = %{ $self->prefetch_related || {} };
+    foreach my $alias ( keys %prefetch_related ) {
+        my $class = $prefetch_related{$alias}{class};
 
-            my $reference_item;
-
-            if ( !$reference_type ) {
-                Carp::cluck(
-                    "Asked to prefetch $col_obj->name for $self. But $col_obj->name isn't a known reference"
-                );
-            } elsif ( $reference_type->isa('Jifty::DBI::Collection') ) {
-                $reference_item = $reference_type->new->new_item();
-            } elsif ( $reference_type->isa('Jifty::DBI::Record') ) {
-                $reference_item = $reference_type->new;
-            } else {
-                Carp::cluck(
-                    "Asked to prefetch $col_obj->name for $self. But $col_obj->name isn't a known type"
-                );
-            }
-
-            push @cols,
-                $self->_qualified_record_columns( $alias => $reference_item );
+        my $reference;
+        if ( $class->isa('Jifty::DBI::Collection') ) {
+            $reference = $class->new->new_item( $self->_new_collection_args );
+        } elsif ( $class->isa('Jifty::DBI::Record') ) {
+            $reference = $class->new( $self->_new_record_args );
         }
 
-   #     push @cols, map { $_ . ".*" } keys %{ $self->preload_related || {} };
-
+        push @cols, $self->_qualified_record_columns( $alias => $reference );
     }
     return CORE::join( ', ', @cols );
 }
 
 =head2 class_and_column_for_alias
 
-Takes the alias you've assigned to a prefetched related object. Returns the class
-of the column we've declared that alias preloads.
+Takes the alias you've assigned to a prefetched related
+object. Returns the class of the column we've declared that alias
+prefetches.
 
 =cut
 
 sub class_and_column_for_alias {
-    my $self            = shift;
-    my $alias           = shift;
-    my %preload_related = %{ $self->preload_related || {} };
-    my $related_colname = $preload_related{$alias};
-    if ( my $col_obj = $self->new_item->column($related_colname) ) {
-        return ( $col_obj->refers_to => $related_colname );
-    }
-    return undef;
+    my $self     = shift;
+    my $alias    = shift;
+    my %prefetch = %{ $self->prefetch_related || {} };
+    my $related  = $prefetch{$alias};
+    return unless $related;
+
+    return $related->{class}, $related->{name};
 }
 
 sub _qualified_record_columns {
@@ -567,7 +555,7 @@ sub _qualified_record_columns {
     my $item  = shift;
     grep {$_} map {
         my $col = $_;
-        if ( $col->virtual ) {
+        if ( $col->virtual or $col->aliased_as ) {
             undef;
         } else {
             $col = $col->name;
@@ -576,32 +564,228 @@ sub _qualified_record_columns {
     } $item->columns;
 }
 
-=head2  prefetch ALIAS_NAME ATTRIBUTE
+=head2 prefetch PARAMHASH
 
-prefetches all related rows from alias ALIAS_NAME into the record attribute ATTRIBUTE of the
-sort of item this collection is.
+Prefetches properties of a related table, in the same query.  Possible
+keys in the paramhash are:
 
-If you have employees who have many phone numbers, this method will let you search for all your employees
-    and prepopulate their phone numbers.
+=over
 
-Right now, in order to make this work, you need to do an explicit join between your primary table and the subsidiary tables AND then specify the name of the attribute you want to prefetch related data into.
-This method could be a LOT smarter. since we already know what the relationships between our tables are, that could all be precomputed.
+=item name
 
-XXX TODO: in the future, this API should be extended to let you specify columns.
+This argument is required; it specifies the name of the collection or
+record that is to be prefetched.  If the name matches a column with a
+C<refers_to> relationship, the other arguments can be inferred, and
+this is the only parameter which needs to be passed.
+
+It is possible to pass values for C<name> which are not real columns
+in the model; these, while they won't be accessible by calling 
+C<< $record-> I<columnname> >> on records in this collection, will
+still be accessible by calling C<< $record->prefetched( I<columnname> ) >>.
+
+=item reference
+
+Specifies the series of column names to traverse to extract the
+information.  For instance, if groups referred to multiple users, and
+users referred to multiple phone numbers, then providing
+C<users.phones> would do the two necessary joins to produce a phone
+collection for all users in each group.
+
+This option defaults to the name, and is irrelevant if an C<alias> is
+provided.
+
+=item alias
+
+Specifies an alias which has already been joined to this collection as
+the source of the prefetched data.  C<class> will also need to be
+specified.
+
+=item class
+
+Specifies the class of the data to preload.  This is only necessary if
+C<alias> is provided, and C<name> is not the name of a column which
+provides C<refers_to> information.
+
+=back
+
+For backwards compatibility, C<prefetch> can instead be called with
+C<alias> and C<name> as its two arguments, instead of a paramhash.
 
 =cut
 
 sub prefetch {
-    my $self           = shift;
-    my $alias          = shift;
-    my $into_attribute = shift;
+    my $self = shift;
 
-    my $preload_related = $self->preload_related() || {};
+    # Back-compat
+    if ( @_ and $self->{joins}{ $_[0] } ) {
 
-    $preload_related->{$alias} = $into_attribute;
+        # First argument appears to be an alias
+        @_ = ( alias => $_[0], name => $_[1] );
+    }
 
-    $self->preload_related($preload_related);
+    my %args = (
+        alias     => undef,
+        name      => undef,
+        class     => undef,
+        reference => undef,
+        @_,
+    );
 
+    die "Must at least provide name to prefetch"
+        unless $args{name};
+
+    # Reference defaults to name
+    $args{reference} ||= $args{name};
+
+    # If we don't have an alias, do the join
+    if ( not $args{alias} ) {
+        my ( $class, @columns )
+            = $self->find_class( split /\./, $args{reference} );
+        $args{class} = ref $class;
+        ( $args{alias} ) = $self->resolve_join(@columns);
+    }
+
+    if ( not $args{class} ) {
+
+        # Check the column
+        my $column = $self->new_item->column( $args{name} );
+        $args{class} = $column->refers_to if $column;
+
+        die "Don't know class" unless $args{class};
+    }
+
+    # Check that the class is a Jifty::DBI::Record or Jifty::DBI::Collection
+    unless ( UNIVERSAL::isa( $args{class}, "Jifty::DBI::Record" )
+        or UNIVERSAL::isa( $args{class}, "Jifty::DBI::Collection" ) )
+    {
+        warn
+            "Class ($args{class}) isn't a Jifty::DBI::Record or Jifty::DBI::Collection";
+        return undef;
+    }
+
+    $self->prefetch_related( {} ) unless $self->prefetch_related;
+    $self->prefetch_related->{ $args{alias} } = {};
+    $self->prefetch_related->{ $args{alias} }{$_} = $args{$_}
+        for qw/alias class name/;
+
+    # Return the alias, in case we made it
+    return $args{alias};
+}
+
+=head2 find_column NAMES
+
+Tales a chained list of column names, where all but the last element
+is the name of a column on the previous class which refers to the next
+collection or record.  Returns a list of L<Jifty::DBI::Column> objects
+for the list.
+
+=cut
+
+sub find_column {
+    my $self  = shift;
+    my @names = @_;
+
+    my $last = pop @names;
+    my ( $class, @columns ) = $self->find_class(@names);
+    $class = $class->new_item
+        if UNIVERSAL::isa( $class, "Jifty::DBI::Collection" );
+    my $column = $class->column($last);
+    die "$class has no column '$last'" unless $column;
+    return @columns, $column;
+}
+
+=head2 find_class NAMES
+
+Tales a chained list of column names, where each element is the name
+of a column on the previous class which refers to the next collection
+or record.  Returns an instance of the ending class, followed by the
+list of L<Jifty::DBI::Column> objects traversed to get there.
+
+=cut
+
+sub find_class {
+    my $self  = shift;
+    my @names = @_;
+
+    my @res;
+    my $object = $self;
+    my $item   = $self->new_item;
+    while ( my $name = shift @names ) {
+        my $column = $item->column($name);
+        die "$item has no column '$name'" unless $column;
+
+        push @res, $column;
+
+        my $classname = $column->refers_to;
+        unless ($classname) {
+            die "column '$name' of $item is not a reference";
+        }
+
+        if ( UNIVERSAL::isa( $classname, 'Jifty::DBI::Collection' ) ) {
+            $object = $classname->new( $self->_new_collection_args );
+            $item   = $object->new_item;
+        } elsif ( UNIVERSAL::isa( $classname, 'Jifty::DBI::Record' ) ) {
+            $object = $item = $classname->new( $self->_new_record_args );
+        } else {
+            die
+                "Column '$name' refers to '$classname' which is not record or collection";
+        }
+    }
+
+    return $object, @res;
+}
+
+=head2 resolve_join COLUMNS
+
+Takes a chained list of L<Jifty::DBI::Column> objects, and performs
+the requisite joins to join all of them.  Returns the alias of the
+last join.
+
+=cut
+
+sub resolve_join {
+    my $self  = shift;
+    my @chain = @_;
+
+    my $last_alias = 'main';
+
+    foreach my $column (@chain) {
+        my $name = $column->name;
+
+        my $classname = $column->refers_to;
+        unless ($classname) {
+            die "column '$name' of is not a reference";
+        }
+
+        if ( UNIVERSAL::isa( $classname, 'Jifty::DBI::Collection' ) ) {
+            my $item
+                = $classname->new( $self->_new_collection_args )->new_item;
+            my $right_alias = $self->new_alias($item);
+            $self->join(
+                type    => 'left',
+                alias1  => $last_alias,
+                column1 => 'id',
+                alias2  => $right_alias,
+                column2 => $column->by || 'id',
+            );
+            $last_alias = $right_alias;
+        } elsif ( UNIVERSAL::isa( $classname, 'Jifty::DBI::Record' ) ) {
+            my $item        = $classname->new( $self->_new_record_args );
+            my $right_alias = $self->new_alias($item);
+            $self->join(
+                type    => 'left',
+                alias1  => $last_alias,
+                column1 => $name,
+                alias2  => $right_alias,
+                column2 => $column->by || 'id',
+            );
+            $last_alias = $right_alias;
+        } else {
+            die
+                "Column '$name' refers to '$classname' which is not record or collection";
+        }
+    }
+    return $last_alias;
 }
 
 =head2 distinct_required
@@ -621,7 +805,7 @@ joining this table to something that is not the other table's primary key"
 
 sub distinct_required {
     my $self = shift;
-    return( $self->_is_joined ? !$self->_is_distinctly_joined : 0 );
+    return ( $self->_is_joined ? !$self->_is_distinctly_joined : 0 );
 }
 
 =head2 build_select_count_query
@@ -633,6 +817,8 @@ Builds a SELECT statement to find the number of rows this collection
 
 sub build_select_count_query {
     my $self = shift;
+
+    return "" if $self->derived;
 
     my $query_string = $self->_build_joins . " ";
 
@@ -663,6 +849,7 @@ on your database, call C<do_search> before that C<count>.
 
 sub do_search {
     my $self = shift;
+    return              if $self->derived;
     $self->_do_search() if $self->{'must_redo_search'};
 
 }
@@ -682,8 +869,7 @@ sub next {
 
     my $item = $self->peek;
 
-    if ( $self->{'itemscount'} < $self->_record_count )
-    {
+    if ( $self->{'itemscount'} < $self->_record_count ) {
         $self->{'itemscount'}++;
     } else {    #we've gone through the whole list. reset the count.
         $self->goto_first_item();
@@ -788,7 +974,6 @@ sub items_array_ref {
 =head2 new_item
 
 Should return a new object of the correct type for the current collection.
-Must be overridden by a subclassed.
 
 =cut
 
@@ -799,8 +984,9 @@ sub new_item {
     die "Jifty::DBI::Collection needs to be subclassed; override new_item\n"
         unless $class;
 
+    warn "$self $class\n" if $class =~ /::$/;
     $class->require();
-    return $class->new( handle => $self->_handle );
+    return $class->new( $self->_new_record_args );
 }
 
 =head2 record_class
@@ -828,7 +1014,8 @@ sub record_class {
             if ref $self->{record_class};
     } elsif ( not $self->{record_class} ) {
         my $class = ref($self);
-         $class =~ s/(Collection|s)$// || die "Can't guess record class from $class";
+        $class =~ s/(Collection|s)$//
+            || die "Can't guess record class from $class";
         $self->{record_class} = $class;
     }
     return $self->{record_class};
@@ -871,7 +1058,6 @@ C<find_all_rows> instructs this collection class to return all rows in
 the table. (It removes the WHERE clause from your query).
 
 =cut
-
 
 sub find_all_rows {
     my $self = shift;
@@ -971,20 +1157,26 @@ sub limit {
         @_    # get the real argumentlist
     );
 
-
+    return if $self->derived;
 
     # make passing in an object DTRT
     my $value_ref = ref( $args{value} );
-    if ( $value_ref ) {
-        if ( ( $value_ref ne 'ARRAY' ) 
-                && $args{value}->isa('Jifty::DBI::Record') ) {
+    if ($value_ref) {
+        if ( ( $value_ref ne 'ARRAY' )
+            && $args{value}->isa('Jifty::DBI::Record') )
+        {
             $args{value} = $args{value}->id;
-        }
-        elsif ( $value_ref eq 'ARRAY' ) {
+        } elsif ( $value_ref eq 'ARRAY' ) {
+
             # Don't modify the original reference, it isn't polite
-            $args{value} = [ @{$args{value}} ];
-            map {$_ = ( ( ref $_ && $_->isa('Jifty::DBI::Record') ) ?
-                        ( $_->id ) : $_ ) } @{$args{value}};
+            $args{value} = [ @{ $args{value} } ];
+            map {
+                $_ = (
+                      ( ref $_ && $_->isa('Jifty::DBI::Record') )
+                    ? ( $_->id )
+                    : $_
+                    )
+            } @{ $args{value} };
         }
     }
 
@@ -995,11 +1187,11 @@ sub limit {
 
         #If it's a like, we supply the %s around the search term
         if ( $args{'operator'} =~ /MATCHES/i ) {
-            $args{'value'}    = "%" . $args{'value'} . "%";
+            $args{'value'} = "%" . $args{'value'} . "%";
         } elsif ( $args{'operator'} =~ /STARTSWITH/i ) {
-            $args{'value'}    = $args{'value'} . "%";
+            $args{'value'} = $args{'value'} . "%";
         } elsif ( $args{'operator'} =~ /ENDSWITH/i ) {
-            $args{'value'}    = "%" . $args{'value'};
+            $args{'value'} = "%" . $args{'value'};
         }
         $args{'operator'} =~ s/(?:MATCHES|ENDSWITH|STARTSWITH)/LIKE/i;
 
@@ -1008,9 +1200,8 @@ sub limit {
 
         if ( $args{'quote_value'} && $args{'operator'} !~ /IS/i ) {
             if ( $value_ref eq 'ARRAY' ) {
-                map {$_ = $self->_quote_value( $_ )} @{$args{'value'}};
-            }
-            else {
+                map { $_ = $self->_quote_value($_) } @{ $args{'value'} };
+            } else {
                 $args{'value'} = $self->_quote_value( $args{'value'} );
             }
         }
@@ -1027,7 +1218,7 @@ sub limit {
 
     # {{{ if there's no alias set, we need to set it
 
-    unless (defined  $args{'alias'} ) {
+    unless ( defined $args{'alias'} ) {
 
         #if the table we're looking at is the same as the main table
         if ( $args{'table'} eq $self->table ) {
@@ -1049,18 +1240,22 @@ sub limit {
     # Set this to the name of the column and the alias, unless we've been
     # handed a subclause name
 
-    my $qualified_column = $args{'alias'} ? $args{'alias'} . "." . $args{'column'} : $args{'column'};
+    my $qualified_column
+        = $args{'alias'}
+        ? $args{'alias'} . "." . $args{'column'}
+        : $args{'column'};
     my $clause_id = $args{'subclause'} || $qualified_column;
 
     # If we're trying to get a leftjoin restriction, lets set
-    # $restriction to point htere. otherwise, lets construct normally
+    # $restriction to point there. otherwise, lets construct normally
 
     my $restriction;
     if ( $args{'leftjoin'} ) {
-        $restriction = $self->{'leftjoins'}{ $args{'leftjoin'} }{'criteria'}
-            { $clause_id } ||= [];
+        $restriction
+            = $self->{'joins'}{ $args{'leftjoin'} }{'criteria'}{$clause_id}
+            ||= [];
     } else {
-        $restriction = $self->{'restrictions'}{ $clause_id } ||= [];
+        $restriction = $self->{'restrictions'}{$clause_id} ||= [];
     }
 
     # If it's a new value or we're overwriting this sort of restriction,
@@ -1068,7 +1263,8 @@ sub limit {
     # XXX: when is column_obj undefined?
     my $column_obj = $self->new_item()->column( $args{column} );
     my $case_sensitive = $column_obj ? $column_obj->case_sensitive : 0;
-    $case_sensitive = $args{'case_sensitive'} if defined $args{'case_sensitive'};
+    $case_sensitive = $args{'case_sensitive'}
+        if defined $args{'case_sensitive'};
     if (   $self->_handle->case_sensitive
         && defined $args{'value'}
         && $args{'quote_value'}
@@ -1084,9 +1280,10 @@ sub limit {
     }
 
     if ( $value_ref eq 'ARRAY' ) {
-        croak 'Limits with an array ref are only allowed with operator \'IN\' or \'=\''
+        croak
+            'Limits with an array ref are only allowed with operator \'IN\' or \'=\''
             unless $args{'operator'} =~ /^(IN|=)$/i;
-        $args{'value'} = '( '. join(',', @{$args{'value'}}) .' )';
+        $args{'value'} = '( ' . join( ',', @{ $args{'value'} } ) . ' )';
         $args{'operator'} = 'IN';
     }
 
@@ -1098,14 +1295,14 @@ sub limit {
 
     # Juju because this should come _AFTER_ the EA
     my @prefix;
-    if ( $self->{'_open_parens'}{ $clause_id } ) {
-        @prefix = ('(') x delete $self->{'_open_parens'}{ $clause_id };
+    if ( $self->{'_open_parens'}{$clause_id} ) {
+        @prefix = ('(') x delete $self->{'_open_parens'}{$clause_id};
     }
 
     if ( lc( $args{'entry_aggregator'} || "" ) eq 'none' || !@$restriction ) {
-        @$restriction = (@prefix, $clause);
+        @$restriction = ( @prefix, $clause );
     } else {
-        push @$restriction, $args{'entry_aggregator'}, @prefix , $clause;
+        push @$restriction, $args{'entry_aggregator'}, @prefix, $clause;
     }
 
     # We're now limited. people can do searches.
@@ -1147,7 +1344,7 @@ arbitrarily complex queries.
 # Immediate Action
 sub close_paren {
     my ( $self, $clause ) = @_;
-    my $restriction = $self->{'restrictions'}{ $clause } ||= [];
+    my $restriction = $self->{'restrictions'}{$clause} ||= [];
     push @$restriction, ')';
 }
 
@@ -1173,7 +1370,8 @@ sub _where_clause {
     #Go through all restriction types. Build the where clause from the
     #Various subclauses.
 
-    my @subclauses = grep defined && length, values %{ $self->{'subclauses'} };
+    my @subclauses = grep defined && length,
+        values %{ $self->{'subclauses'} };
 
     $where_clause = " WHERE " . CORE::join( ' AND ', @subclauses )
         if (@subclauses);
@@ -1189,22 +1387,23 @@ sub _compile_generic_restrictions {
 
     delete $self->{'subclauses'}{'generic_restrictions'};
 
-    # Go through all the restrictions of this type. Buld up the generic subclause
+ # Go through all the restrictions of this type. Buld up the generic subclause
     my $result = '';
-    foreach my $restriction ( grep $_ && @$_, values %{ $self->{'restrictions'} } ) {
+    foreach my $restriction ( grep $_ && @$_,
+        values %{ $self->{'restrictions'} } )
+    {
         $result .= ' AND ' if $result;
         $result .= '(';
-        foreach my $entry ( @$restriction ) {
+        foreach my $entry (@$restriction) {
             unless ( ref $entry ) {
-                $result .= ' '. $entry . ' ';
-            }
-            else {
+                $result .= ' ' . $entry . ' ';
+            } else {
                 $result .= join ' ', @{$entry}{qw(column operator value)};
             }
         }
         $result .= ')';
     }
-    return ($self->{'subclauses'}{'generic_restrictions'} = $result);
+    return ( $self->{'subclauses'}{'generic_restrictions'} = $result );
 }
 
 # set $self->{$type .'_clause'} to new value
@@ -1222,16 +1421,16 @@ sub _set_clause {
 # quote the search value
 sub _quote_value {
     my $self = shift;
-    my ( $value ) = @_;
+    my ($value) = @_;
 
-    my $tmp = $self->_handle->dbh->quote( $value );
+    my $tmp = $self->_handle->dbh->quote($value);
 
     # Accomodate DBI drivers that don't understand UTF8
     if ( $] >= 5.007 ) {
-      require Encode;
-      if ( Encode::is_utf8( $tmp ) ) {
-        Encode::_utf8_on($tmp);
-      }
+        require Encode;
+        if ( Encode::is_utf8($tmp) ) {
+            Encode::_utf8_on($tmp);
+        }
     }
     return $tmp;
 
@@ -1274,6 +1473,7 @@ Returns the current list of columns.
 
 sub order_by {
     my $self = shift;
+    return if $self->derived;
     if (@_) {
         my @args = @_;
 
@@ -1283,7 +1483,7 @@ sub order_by {
         $self->{'order_by'} = \@args;
         $self->redo_search();
     }
-    return ( $self->{'order_by'} || []);
+    return ( $self->{'order_by'} || [] );
 }
 
 =head2 _order_clause
@@ -1317,7 +1517,7 @@ sub _order_clause {
             $clause .= $rowhash{'function'} . ' ';
             $clause .= $rowhash{'order'};
 
-        } elsif ( (defined $rowhash{'alias'} )
+        } elsif ( ( defined $rowhash{'alias'} )
             and ( $rowhash{'column'} ) )
         {
 
@@ -1365,6 +1565,7 @@ The method is EXPERIMENTAL and subject to change.
 sub group_by {
     my $self = shift;
 
+    return if $self->derived;
     my @args = @_;
 
     unless ( UNIVERSAL::isa( $args[0], 'HASH' ) ) {
@@ -1436,17 +1637,20 @@ sub new_alias {
 
     my $alias = $self->_get_alias($table);
 
-    my $subclause = "$table $alias";
-
-    push( @{ $self->{'aliases'} }, $subclause );
+    $self->{'joins'}{$alias} = {
+        alias        => $alias,
+        table        => $table,
+        type         => 'CROSS',
+        alias_string => " CROSS JOIN $table $alias ",
+    };
 
     return $alias;
 }
 
 # _get_alias is a private function which takes an tablename and
-# returns a new alias for that table without adding something
-# to self->{'aliases'}.  This function is used by new_alias
-# and the as-yet-unnamed left join code
+# returns a new alias for that table without adding something to
+# self->{'joins'}.  This function is used by new_alias and the
+# as-yet-unnamed left join code
 
 sub _get_alias {
     my $self  = shift;
@@ -1478,6 +1682,10 @@ of join, it will return the alias generated by the join.
 The parameter C<operator> defaults C<=>, but you can specify other
 operators to join with.
 
+Passing a true value for the C<is_distinct> parameter allows one to
+specify that, despite the join, the original table's rows are will all
+still be distinct.
+
 Instead of C<alias1>/C<column1>, it's possible to specify expression, to join
 C<alias2>/C<table2> on an arbitrary expression.
 
@@ -1495,6 +1703,7 @@ sub join {
         @_
     );
 
+    return if $self->derived;
     $self->_handle->join( collection => $self, %args );
 
 }
@@ -1517,6 +1726,7 @@ sub set_page_info {
         current_page => undef,    # 1-based
         @_
     );
+    return if $self->derived;
 
     $self->pager->total_entries( $self->count_all )
         ->entries_per_page( $args{'per_page'} )
@@ -1766,7 +1976,7 @@ sub column {
 
     my $column = "col" . @{ $self->{columns} ||= [] };
     $column = $args{column} if $table eq $self->table and !$args{alias};
-    $column = ($args{'alias'}||'main')."_".$column;
+    $column = ( $args{'alias'} || 'main' ) . "_" . $column;
     push @{ $self->{columns} }, "$name AS \L$column";
     return $column;
 }
@@ -1856,8 +2066,8 @@ sub clone {
 
     $obj->redo_search();    # clean out the object of data
 
-    $obj->{$_} = Clone::clone( $obj->{$_} ) for
-        grep exists $self->{ $_ }, $self->_cloned_attributes;
+    $obj->{$_} = Clone::clone( $obj->{$_} )
+        for grep exists $self->{$_}, $self->_cloned_attributes;
     return $obj;
 }
 
@@ -1873,8 +2083,7 @@ the list.
 
 sub _cloned_attributes {
     return qw(
-        aliases
-        leftjoins
+        joins
         subclauses
         restrictions
     );
@@ -1904,7 +2113,12 @@ temporary file as the database.  For example:
 
 =head1 AUTHOR
 
-Copyright (c) 2001-2005 Jesse Vincent, jesse@fsck.com.
+Jesse Vincent <jesse@bestpractical.com>, Alex Vandiver
+<alexmv@bestpractical.com>, Ruslan Zakirov <ruslan.zakirov@gmail.com>
+
+Based on DBIx::SearchBuilder::Collection, whose credits read:
+
+ Jesse Vincent, <jesse@fsck.com> 
 
 All rights reserved.
 
@@ -1914,7 +2128,6 @@ and/or modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-Jifty::DBI::Handle, Jifty::DBI::Record.
+L<Jifty::DBI>, L<Jifty::DBI::Handle>, L<Jifty::DBI::Record>.
 
 =cut
-
