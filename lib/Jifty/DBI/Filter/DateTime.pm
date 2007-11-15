@@ -13,15 +13,6 @@ use constant _time_zone => 'UTC';
 use constant _strptime  => '%Y-%m-%d %H:%M:%S';
 use constant _parser    => DateTime::Format::ISO8601->new();
 
-__PACKAGE__->mk_classdata("_formatter");
-sub formatter {
-    my $self = shift;
-    unless ($self->_formatter) {
-         $self->_formatter(DateTime::Format::Strptime->new(pattern => $self->_strptime));
-    }
-    return $self->_formatter;
-}
-
 =head1 NAME
 
 Jifty::DBI::Filter::DateTime - DateTime object wrapper around date columns
@@ -34,6 +25,27 @@ minute, and second information is discarded when encoding.
 
 Both input and output will always be coerced into UTC (or, in the case of
 Dates, the Floating timezone) for consistency.
+
+=head2 formatter
+
+This is an instance of the DateTime::Format object used for inflating the
+string in the database to a DateTime object. By default it is a
+L<DateTime::Format::Strptime> object that uses the C<_strptime> method as its
+pattern.
+
+You can use the _formatter classdata storage as a cache so you don't need
+to re-instantiate your format object every C<decode>.
+
+=cut
+
+__PACKAGE__->mk_classdata("_formatter");
+sub formatter {
+    my $self = shift;
+    unless ($self->_formatter) {
+         $self->_formatter(DateTime::Format::Strptime->new(pattern => $self->_strptime));
+    }
+    return $self->_formatter;
+}
 
 =head2 encode
 
