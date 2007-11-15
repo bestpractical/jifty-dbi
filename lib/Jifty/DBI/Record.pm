@@ -392,6 +392,24 @@ sub _init_methods_for_column {
     }
 }
 
+=head2 null_reference 
+
+By default, Jifty::DBI::Record will return C<undef> for non-existant
+foreign references which don't exist.  That is, if each Employee
+C<refers_to> a Department, but isn't required to,
+C<<$model->department>> will return C<undef> for employees not in a
+department.
+
+Overriding this method to return 0 will cause it to return a record
+with no id.  That is, C<<$model->department>> will return a Department
+object, but C<<$model->department->id>> will be C<undef>.
+
+=cut
+
+sub null_reference {
+    return 1;
+}
+
 =head2 _to_record COLUMN VALUE
 
 This B<PRIVATE> method takes a column name and a value for that column. 
@@ -413,6 +431,7 @@ sub _to_record {
     my $classname     = $column->refers_to();
     my $remote_column = $column->by() || 'id';
 
+    return undef if not defined $value and $self->null_reference;
     return undef unless $classname;
     return unless UNIVERSAL::isa( $classname, 'Jifty::DBI::Record' );
 

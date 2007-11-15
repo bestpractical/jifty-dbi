@@ -6,7 +6,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 14;
+use constant TESTS_PER_DRIVER => 13;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -53,23 +53,12 @@ SKIP: {
         isa_ok($rec->currency, 'TestApp::Currency');
         is($rec->currency->name, 'USD');
 
-        isa_ok($rec->food, 'TestApp::Food', 'referee is null but shuold still return an object');
-        is($rec->food->id, undef);
-
-TODO: {
-        local $TODO = 'not yet';
-        *TestApp::User::null_reference = sub {1};
-        $rec->load($id);
         is( $rec->food, undef, 'null_reference option in effect' );
 
-        is_deeply(
-            { $rec->as_hash },
-            {   currency => 'USD',
-                id       => $id,
-                food     => undef
-            }
-        );
-    }
+        local *TestApp::User::null_reference = sub {0};
+        $rec->load($id);
+        isa_ok($rec->food, 'TestApp::Food', 'referee is null but shuold still return an object');
+        is($rec->food->id, undef);
 }
 }
 
@@ -91,7 +80,7 @@ sub schema_mysql {
 <<EOF;
 CREATE TEMPORARY table currencies (
         id integer auto_increment primary key,
-        name varchar
+        name varchar(50)
 )
 EOF
 
@@ -133,7 +122,7 @@ sub schema_mysql {
 <<EOF;
 CREATE TEMPORARY table foods (
         id integer auto_increment primary key,
-        name varchar
+        name varchar(50)
 )
 EOF
 
@@ -166,7 +155,7 @@ sub schema_sqlite {
 <<EOF;
 CREATE table users (
         id integer primary key,
-        food integar,
+        food integer,
         currency varchar
 )
 EOF
@@ -178,8 +167,8 @@ sub schema_mysql {
 <<EOF;
 CREATE TEMPORARY table users (
         id integer auto_increment primary key,
-        food integar,
-        currency varchar
+        food integer,
+        currency varchar(50)
 )
 EOF
 
@@ -190,7 +179,7 @@ sub schema_pg {
 <<EOF;
 CREATE TEMPORARY table users (
         id serial primary key,
-        food integar,
+        food integer,
         currency varchar
 )
 EOF

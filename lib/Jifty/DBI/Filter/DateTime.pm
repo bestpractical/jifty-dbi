@@ -11,7 +11,8 @@ use Carp ();
 
 use constant _time_zone => 'UTC';
 use constant _strptime  => '%Y-%m-%d %H:%M:%S';
-
+use constant _parser    => DateTime::Format::ISO8601->new();
+use constant _formatter => DateTime::Format::Strptime->new(pattern => _strptime);
 
 =head1 NAME
 
@@ -81,7 +82,7 @@ sub decode {
 
     my $str = join('T', split ' ', $$value_ref, 2);
     my $dt;
-    eval { $dt  = DateTime::Format::ISO8601->parse_datetime($str) };
+    eval { $dt  = $self->_parser->parse_datetime($str) };
 
     if ($@) { # if datetime can't decode this, scream loudly with a useful error message
         Carp::cluck($@);
@@ -92,7 +93,7 @@ sub decode {
 	my $tz = $self->_time_zone;
 	$dt->set_time_zone($tz) if $tz;
 
-        $dt->set_formatter(DateTime::Format::Strptime->new(pattern => $self->_strptime));
+        $dt->set_formatter($self->_formatter);
         $$value_ref = $dt;
     } else {
         return;

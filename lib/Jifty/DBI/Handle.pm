@@ -837,14 +837,15 @@ sub join {
     if ( $args{'table2'}
         && UNIVERSAL::isa( $args{'table2'}, 'Jifty::DBI::Collection' ) )
     {
+        my $c = ref $args{'table2'} ? $args{'table2'} : $args{'table2'}->new($args{collection}->_new_collection_args);
         if ( $args{'operator'} eq '=' ) {
-            my $x = $args{'table2'}->new_item->column( $args{column2} );
+            my $x = $c->new_item->column( $args{column2} );
             if ( $x->type eq 'serial' || $x->distinct ) {
                 $args{'is_distinct'} = 1;
             }
         }
-
-        $args{'table2'} = $args{'table2'}->table;
+        $args{'class2'} = ref $c;
+        $args{'table2'} = $c->table;
     }
 
     if ( $args{'alias2'} ) {
@@ -904,9 +905,10 @@ sub join {
         $meta->{'type'}         = 'NORMAL';
     }
     $meta->{'depends_on'}       = $args{'alias1'};
+    $meta->{'is_distinct'}      = $args{'is_distinct'};
+    $meta->{'class'}            = $args{'class2'} if $args{'class2'};
     $meta->{'entry_aggregator'} = $args{'entry_aggregator'}
         if $args{'entry_aggregator'};
-    $meta->{'is_distinct'} = $args{'is_distinct'};
 
     my $criterion = $args{'expression'} || "$args{'alias1'}.$args{'column1'}";
     $meta->{'criteria'}{'base_criterion'} = [
@@ -979,7 +981,7 @@ sub _optimize_joins {
 
     my %processed;
     $processed{$_}++
-        foreach grep $joins->{$_}{'type'} ne 'LEFT', keys %$joins;
+        foreach grep {lc $joins->{$_}{'type'} ne 'left'} keys %$joins;
     $processed{'main'}++;
 
     my @ordered;

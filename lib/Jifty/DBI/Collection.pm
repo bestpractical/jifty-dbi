@@ -555,7 +555,7 @@ sub _qualified_record_columns {
     my $item  = shift;
     grep {$_} map {
         my $col = $_;
-        if ( $col->virtual or $col->aliased_as ) {
+        if ( $col->virtual ) {
             undef;
         } else {
             $col = $col->name;
@@ -767,6 +767,7 @@ sub resolve_join {
                 column1 => 'id',
                 alias2  => $right_alias,
                 column2 => $column->by || 'id',
+                is_distinct => 1,
             );
             $last_alias = $right_alias;
         } elsif ( UNIVERSAL::isa( $classname, 'Jifty::DBI::Record' ) ) {
@@ -778,6 +779,7 @@ sub resolve_join {
                 column1 => $name,
                 alias2  => $right_alias,
                 column2 => $column->by || 'id',
+                is_distinct => 1,
             );
             $last_alias = $right_alias;
         } else {
@@ -1012,10 +1014,11 @@ sub record_class {
         $self->{record_class} = shift if (@_);
         $self->{record_class} = ref $self->{record_class}
             if ref $self->{record_class};
-    } elsif ( not $self->{record_class} ) {
-        my $class = ref($self);
+    } elsif ( not ref $self or not $self->{record_class} ) {
+        my $class = ref($self) || $self;
         $class =~ s/(Collection|s)$//
             || die "Can't guess record class from $class";
+        return $class unless ref $self;
         $self->{record_class} = $class;
     }
     return $self->{record_class};
@@ -1261,7 +1264,10 @@ sub limit {
     # If it's a new value or we're overwriting this sort of restriction,
 
     # XXX: when is column_obj undefined?
-    my $column_obj = $self->new_item()->column( $args{column} );
+    my $class = $self->{joins}{$args{alias}} && $self->{joins}{$args{alias}}{class} 
+      ? $self->{joins}{$args{alias}}{class}->new($self->_new_collection_args)
+      : $self;
+    my $column_obj = $class->new_item()->column( $args{column} );
     my $case_sensitive = $column_obj ? $column_obj->case_sensitive : 0;
     $case_sensitive = $args{'case_sensitive'}
         if defined $args{'case_sensitive'};
