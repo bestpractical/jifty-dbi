@@ -3,7 +3,7 @@ package Jifty::DBI::Filter::DateTime;
 use warnings;
 use strict;
 
-use base qw|Jifty::DBI::Filter|;
+use base qw|Jifty::DBI::Filter Class::Data::Inheritable|;
 use DateTime                  ();
 use DateTime::Format::ISO8601 ();
 use DateTime::Format::Strptime ();
@@ -12,7 +12,15 @@ use Carp ();
 use constant _time_zone => 'UTC';
 use constant _strptime  => '%Y-%m-%d %H:%M:%S';
 use constant _parser    => DateTime::Format::ISO8601->new();
-use constant _formatter => DateTime::Format::Strptime->new(pattern => _strptime);
+
+__PACKAGE__->mk_classdata("_formatter");
+sub formatter {
+    my $self = shift;
+    unless ($self->_formatter) {
+         $self->_formatter(DateTime::Format::Strptime->new(pattern => $self->_strptime));
+    }
+    return $self->_formatter;
+}
 
 =head1 NAME
 
@@ -93,7 +101,7 @@ sub decode {
 	my $tz = $self->_time_zone;
 	$dt->set_time_zone($tz) if $tz;
 
-        $dt->set_formatter($self->_formatter);
+        $dt->set_formatter($self->formatter);
         $$value_ref = $dt;
     } else {
         return;

@@ -283,6 +283,12 @@ sub _init_methods_for_column {
                             Carp::carp
                                 "Value passed to column accessor.  You probably want to use the mutator.";
                         }
+                        # This should be using _value, so we acl_check
+                        # appropriately, except the acl checks often
+                        # involve object references.  So even if you
+                        # don't have rights to $object->foo_id,
+                        # $object->foo->id will always have to
+                        # work. :/
                         $_[0]->_to_record( $column_name,
                             $_[0]->__value($column_name) );
                     };
