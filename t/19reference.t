@@ -55,6 +55,7 @@ SKIP: {
 
         is( $rec->food, undef, 'null_reference option in effect' );
 
+        no warnings 'redefine';
         local *TestApp::User::null_reference = sub {0};
         $rec->load($id);
         isa_ok($rec->food, 'TestApp::Food', 'referee is null but shuold still return an object');
