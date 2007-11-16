@@ -1,5 +1,49 @@
 Revision history for Perl extension Jifty::DBI.
 
+0.47 Fri Nov 16 15:23:28 EST 2007
+
+   or, "The chmrr fixfest"
+
+   * Note for posterity why we can't apply acl checks to refers_to columns
+   * The formatter can't be decided at compile time, because subclasses
+     may override the format.  Hence, make it once and cache it.
+   * r4425 actually changed the way that undef foreign objects were
+     treated; revert to the old behavior, but make it easier to achieve
+     the new (aka Jifty's) behavior.
+   * Only create the parser and formatter for DateTime objects once, as
+     they are slow to create.
+   * When looking up the column object in a limit, try to find the right
+     class in the aliases.  This only currently works if you specified
+     the model class as the 'table2' in the join, instead of its table
+     name.
+   * Can now call ->record_class as a class method
+   * Force chained auto-joins to be marked distinct
+   * Alias columns now count as virtual
+   * some tests for referencing.
+   * Factor out ->_new_record_args and ->_new_collection_args on both
+     Record and Collection; makes for easier subclassing in Jifty
+   * (re-)wrapped POD
+   * Remove broken ->_normal_join
+   * $collection->prefetch is now smarter, stealing code from future
+     tisql branch
+   * $collection->_preload_columns becomes ->query_columns, to have a
+     better name
+   * $collection->{aliases} rolled into ->{joins}, to also not lie
+   * $collection->{leftjoins} becomes ->{joins}, to not lie
+   * Standardize on "prefetch" not "preload"
+   * Fix preload for records
+   * Don't grovel theough columns to find possible joins, just look at
+     the joins
+   * derived collections can't be relimited
+   * add derived => 1 for prefetched collections
+   * Remove Jifty::DBI::Collection->preload_columns, which was old and
+     unused 
+   * '$sb' -> '$collection' because we aren't SearchBuilder anymore
+   * perltidy
+   * Get rid of a spurious warning
+   * Whoops, turned off the wrong warning
+   * POD coverage
+
 0.46 Wed Nov  7 12:24:08 EST 2007
 
  - POD Coverage nit
