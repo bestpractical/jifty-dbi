@@ -1130,6 +1130,10 @@ should be an array reference of values.
 
 =back
 
+=item escape
+
+If you need to escape wildcard characters in the value *explicitly* with "ESCAPE", set the escape character here. Note that backslashes may be required special treatment (e.g. Postgres).
+
 =item entry_aggregator 
 
 Can be AND or OR (or anything else valid to aggregate two clauses in SQL)
