@@ -145,7 +145,7 @@ SKIP: {
         isa_ok( $first_rec, 'Jifty::DBI::Record', 'First returns record object' );
         is( $first_rec->login, 'glasser', 'login is correct' );
 
-        # LIKE with escaped wildcard
+        # MATCHES with escaped wildcard
         $users_obj->clean_slate;
         is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
         # XXX: don't use backslashes; reason above

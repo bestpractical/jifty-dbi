@@ -11,7 +11,7 @@ perl objects
 =head1 SYNOPSIS
 
   use Jifty::DBI::Collection;
-  
+
   package My::ThingCollection;
   use base qw/Jifty::DBI::Collection/;
 
@@ -20,7 +20,7 @@ perl objects
   use Jifty::DBI::Record schema {
     column column_1 => type is 'text';
   };
-  
+
   package main;
 
   use Jifty::DBI::Handle;
@@ -1132,7 +1132,9 @@ should be an array reference of values.
 
 =item escape
 
-If you need to escape wildcard characters in the value *explicitly* with "ESCAPE", set the escape character here. Note that backslashes may be required special treatment (e.g. Postgres).
+If you need to escape wildcard characters (usually _ or %) in the value *explicitly* with 
+"ESCAPE", set the  escape character here. Note that backslashes may require special treatment 
+(e.g. Postgres dislikes \ or \\ in queries unless we use the E'' syntax).
 
 =item entry_aggregator 
 
