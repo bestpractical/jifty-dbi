@@ -849,34 +849,24 @@ sub join {
     }
 
     if ( $args{'alias2'} ) {
-        if ( $args{'collection'}{'joins'}{ $args{alias2} } ) {
+        if ( $args{'collection'}{'joins'}{ $args{alias2} } and lc $args{'collection'}{'joins'}{ $args{alias2} }{type} eq "cross" ) {
             my $join = $args{'collection'}{'joins'}{ $args{alias2} };
-            if ( lc $join->{type} eq 'cross' ) {
-                $args{'table2'} = $join->{table};
-                $alias = $join->{alias};
-            } else {
-                warn "Already joined?";
-                return;
-            }
+            $args{'table2'} = $join->{table};
+            $alias = $join->{alias};
         } else {
 
             # if we can't do that, can we reverse the join and have it work?
-            @args{qw/alias1 alias2/}   = @args{qw/alias2 $alias2/};
+            @args{qw/alias1 alias2/}   = @args{qw/alias2 alias1/};
             @args{qw/column1 column2/} = @args{qw/column2 column1/};
 
-            if ( $args{'collection'}{'joins'}{ $args{alias2} } ) {
+            if ( $args{'collection'}{'joins'}{ $args{alias2} } and lc $args{'collection'}{'joins'}{ $args{alias2} }{type} eq "cross" ) {
                 my $join = $args{'collection'}{'joins'}{ $args{alias2} };
-                if ( lc $join->{type} eq 'cross' ) {
-                    $args{'table2'} = $join->{table};
-                    $alias = $join->{alias};
-                } else {
-                    warn "Already joined?";
-                    return;
-                }
+                $args{'table2'} = $join->{table};
+                $alias = $join->{alias};
             } else {
 
                 # Swap back
-                @args{qw/alias1 alias2/}   = @args{qw/alias2 $alias2/};
+                @args{qw/alias1 alias2/}   = @args{qw/alias2 alias1/};
                 @args{qw/column1 column2/} = @args{qw/column2 column1/};
 
                 return $self->Jifty::DBI::Collection::limit(
