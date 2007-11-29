@@ -1,5 +1,31 @@
 Revision history for Perl extension Jifty::DBI.
 
+0.48 Thu Nov 29 16:28:11 EST 2007
+
+   * User and password values are excluded from the DSN in a more proper fashion
+   * Setting a default for RECORD_MIXINS and altering the mk_classdata() decls
+     to avoid any confusion with the mk_accessors() interface.
+   * Eliminated the ?: at the end of import() since RECORD_MIXINS is now [] by
+     default.
+   * Let users run arbitrary code during SQL statement logging
+   * Exclude user and passowrd from the DSN so it doesn't show up in the
+     terminal
+   * use YAML () -> require YAML to suppress error when YAML is not installed
+     (but ::Syck is installed)
+   * Fix reverse joins.  Broken in multiple ways.
+   * added 'escape' option (undef by default) to Collection->limit, to allow "
+   * where column like 'something including wildcard(\\%)' ESCAPE '\\'" kind of
+     stuff, mainly for SQLite which doesn't seem to be able to escape wildcards
+     without ESCAPE
+   * changed escape character in the t/01searches.t from backslashes to at mar
+   * k, which is cleaner and kind to postgres; added pod
+   * typo fix in docs
+   * mysql doesn't handle bare varchar's
+   * TODO a test that needs us to force mysql to be case sensitive
+   * expand the escape documentation
+   * manifest skip pm_to_blib, add new test file to manifest
+   * Update Changes
+
 0.47 Fri Nov 16 15:23:28 EST 2007
 
    or, "The chmrr fixfest"
