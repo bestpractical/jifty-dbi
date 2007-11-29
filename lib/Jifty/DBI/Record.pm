@@ -17,12 +17,12 @@ use base qw/
 
 our $VERSION = '0.01';
 
-Jifty::DBI::Record->mk_classdata(qw/COLUMNS/);
-Jifty::DBI::Record->mk_classdata(qw/TABLE_NAME/);
-Jifty::DBI::Record->mk_classdata(qw/_READABLE_COLS_CACHE/);
-Jifty::DBI::Record->mk_classdata(qw/_WRITABLE_COLS_CACHE/);
-Jifty::DBI::Record->mk_classdata(qw/_COLUMNS_CACHE/);
-Jifty::DBI::Record->mk_classdata(qw/RECORD_MIXINS/);
+Jifty::DBI::Record->mk_classdata('COLUMNS');
+Jifty::DBI::Record->mk_classdata('TABLE_NAME');
+Jifty::DBI::Record->mk_classdata('_READABLE_COLS_CACHE');
+Jifty::DBI::Record->mk_classdata('_WRITABLE_COLS_CACHE');
+Jifty::DBI::Record->mk_classdata('_COLUMNS_CACHE');
+Jifty::DBI::Record->mk_classdata('RECORD_MIXINS' => []);
 
 =head1 NAME
 
