@@ -255,7 +255,31 @@ sub log_sql_statements {
     return ( $self->{'_dologsql'} );
 }
 
-=head2 _log_sql_statement STATEMENT DURATION
+=head2 log_sql_hook NAME [, CODE]
+
+Used in instrumenting the SQL logging. You can use this to, for example, get a
+stack trace for each query (so you can find out where the query is being made).
+The name is required so that multiple hooks can be installed without stepping
+on eachother's toes.
+
+The coderef is run in scalar context and (currently) receives no arguments.
+
+If you don't pass CODE in, then the coderef currently assigned under
+NAME is returned.
+
+=cut
+
+sub log_sql_hook {
+    my $self = shift;
+    my $name = shift;
+
+    if (@_) {
+        $self->{'_logsqlhooks'}{$name} = shift;
+    }
+    return ( $self->{'_logsqlhooks'}{$name} );
+}
+
+=head2 _log_sql_statement STATEMENT DURATION BINDINGS
 
 add an SQL statement to our query log
 
@@ -266,8 +290,14 @@ sub _log_sql_statement {
     my $statement = shift;
     my $duration  = shift;
     my @bind      = @_;
+
+    my $results = {};
+    while (my ($name, $code) = each %{ $self->{'_logsqlhooks'} || {} }) {
+        $results->{$name} = $code->();
+    }
+
     push @{ $self->{'StatementLog'} },
-        ( [ Time::HiRes::time(), $statement, [@bind], $duration ] );
+        ( [ Time::HiRes::time(), $statement, [@bind], $duration, $results ] );
 
 }
 
@@ -284,9 +314,12 @@ sub clear_sql_statement_log {
 
 =head2 sql_statement_log
 
-Returns the current SQL statement log as an array of arrays. Each entry is a list of 
+Returns the current SQL statement log as an array of arrays. Each entry is a list of:
 
-(Time, Statement, [Bindings], Duration)
+(Time, Statement, [Bindings], Duration, {HookResults})
+
+Bindings is an arrayref of the values of any placeholders. HookResults is a
+hashref keyed by hook name.
 
 =cut
 
