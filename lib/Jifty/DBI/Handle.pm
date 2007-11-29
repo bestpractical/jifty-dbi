@@ -194,9 +194,12 @@ sub build_dsn {
     my $driver = delete $args{'driver'};
     $args{'dbname'} ||= delete $args{'database'};
 
+	my %exclusions = map { $_ => delete $args{$_} } qw/user password/;
+
     $self->{'dsn'} = "dbi:$driver:"
         . CORE::join( ';',
         map { $_ . "=" . $args{$_} } grep { defined $args{$_} } keys %args );
+	%args = (%args, %exclusions);
 }
 
 =head2 dsn
