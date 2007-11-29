@@ -191,8 +191,7 @@ sub import {
         }
     }
 
-    defined $caller->RECORD_MIXINS ? push(@{ $caller->RECORD_MIXINS }, $self)
-                                   : $caller->RECORD_MIXINS([ $self ]);
+    push(@{ $caller->RECORD_MIXINS }, $self)
 }
 
 =head1 SEE ALSO
