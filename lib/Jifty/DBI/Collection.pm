@@ -2,6 +2,7 @@ package Jifty::DBI::Collection;
 
 use warnings;
 use strict;
+use Scalar::Defer qw/lazy/;
 
 =head1 NAME
 
@@ -1746,12 +1747,14 @@ sub set_page_info {
     );
     return if $self->derived;
 
-    $self->pager->total_entries( $self->count_all )
+    $self->pager->total_entries( lazy { $self->count_all } )
         ->entries_per_page( $args{'per_page'} )
         ->current_page( $args{'current_page'} );
 
     $self->rows_per_page( $args{'per_page'} );
-    $self->first_row( $self->pager->first || 1 );
+    # We're not using $pager->first because it automatically does a count_all 
+    # to correctly return '0' for empty collections
+    $self->first_row((($self->pager->current_page - 1) * $self->pager->entries_per_page) + 1);
 
 }
 
