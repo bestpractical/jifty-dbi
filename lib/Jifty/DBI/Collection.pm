@@ -1754,7 +1754,7 @@ sub set_page_info {
     $self->rows_per_page( $args{'per_page'} );
     # We're not using $pager->first because it automatically does a count_all 
     # to correctly return '0' for empty collections
-    $self->first_row((($self->pager->current_page - 1) * $self->pager->entries_per_page) + 1);
+    $self->first_row(($args{'current_page'} - 1) * $args{'per_page'} + 1);
 
 }
 
