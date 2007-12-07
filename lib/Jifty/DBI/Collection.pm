@@ -1741,8 +1741,8 @@ the selected page.
 sub set_page_info {
     my $self = shift;
     my %args = (
-        per_page     => undef,
-        current_page => undef,    # 1-based
+        per_page     => 0,
+        current_page => 1,    # 1-based
         @_
     );
     return if $self->derived;
