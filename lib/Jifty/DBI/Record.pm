@@ -532,9 +532,9 @@ sub add_column {
 
 =head2 column
 
-    my $column = $self->column($column_name);
+    my $value = $self->column($column);
 
-Returns the L<Jifty::DBI::Column> object of the specified column name.
+Returns the $value of a $column.
 
 =cut
 
