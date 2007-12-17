@@ -3,6 +3,7 @@ package Jifty::DBI::Collection;
 use warnings;
 use strict;
 use Scalar::Defer qw/lazy/;
+use Scalar::Util qw/weaken/;
 
 =head1 NAME
 
@@ -1747,7 +1748,10 @@ sub set_page_info {
     );
     return if $self->derived;
 
-    $self->pager->total_entries( lazy { $self->count_all } )
+    my $weakself = $self;
+    weaken($weakself);
+
+    $self->pager->total_entries( lazy { $weakself->count_all } )
         ->entries_per_page( $args{'per_page'} )
         ->current_page( $args{'current_page'} );
 
