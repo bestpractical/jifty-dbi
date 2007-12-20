@@ -1117,11 +1117,11 @@ database supports are also valid.
 
 MATCHES is like LIKE, except it surrounds the value with % signs.
 
-=item "STARTSWITH"
+=item "starts_with"
 
-STARTSWITH is like LIKE, except it only appends a % at the end of the string
+starts_with is like LIKE, except it only appends a % at the end of the string
 
-=item "ENDSWITH"
+=item "ends_with"
 
 ENDSWITH is like LIKE, except it prepends a % to the beginning of the string
 
@@ -1200,12 +1200,12 @@ sub limit {
         #If it's a like, we supply the %s around the search term
         if ( $args{'operator'} =~ /MATCHES/i ) {
             $args{'value'} = "%" . $args{'value'} . "%";
-        } elsif ( $args{'operator'} =~ /STARTSWITH/i ) {
+        } elsif ( $args{'operator'} =~ /STARTS_?WITH/i ) {
             $args{'value'} = $args{'value'} . "%";
-        } elsif ( $args{'operator'} =~ /ENDSWITH/i ) {
+        } elsif ( $args{'operator'} =~ /ENDS_?WITH/i ) {
             $args{'value'} = "%" . $args{'value'};
         }
-        $args{'operator'} =~ s/(?:MATCHES|ENDSWITH|STARTSWITH)/LIKE/i;
+        $args{'operator'} =~ s/(?:MATCHES|ENDS_?WITH|STARTS_?WITH)/LIKE/i;
 
         #if we're explicitly told not to to quote the value or
         # we're doing an IS or IS NOT (null), don't quote the operator.
