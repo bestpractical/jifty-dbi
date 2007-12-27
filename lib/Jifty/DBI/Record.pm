@@ -258,7 +258,9 @@ sub _init_methods_for_column {
     # Check for the correct column type when the Storable filter is in use
     if ( grep { $_ eq 'Jifty::DBI::Filter::Storable' }
         ( $column->input_filters, $column->output_filters )
-            and $column->type !~ /^(blob|bytea)$/i )
+         and not grep { $_ eq 'Jifty::DBI::Filter::base64' }
+        ( $column->input_filters, $column->output_filters )
+         and $column->type !~ /^(blob|bytea)$/i )
     {
         die "Column '$column_name' in @{[$column->record_class]} "
             . "uses the Storable filter but is not of type 'blob'.\n";
@@ -312,7 +314,6 @@ sub _init_methods_for_column {
                 $subref = sub { return '' }
             }
         } else {
-
            # XXX sterling: should this be done with Class::ReturnValue instead
             $subref = sub {
                 Carp::croak(
@@ -320,6 +321,7 @@ sub _init_methods_for_column {
                         . $self->schema_version );
             };
         }
+        require Sub::Name; Sub::Name::subname($package . "::" . $column_name, $subref);
         *{ $package . "::" . $column_name } = $subref;
 
     }
@@ -394,6 +396,7 @@ sub _init_methods_for_column {
                         . $self->schema_version );
             };
         }
+        require Sub::Name; Sub::Name::subname($package . "::set_" . $column_name, $subref);
         *{ $package . "::" . "set_" . $column_name } = $subref;
     }
 }

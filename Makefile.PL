@@ -20,7 +20,7 @@ requires('Exporter::Lite');
 requires('Hash::Merge');
 requires('Lingua::EN::Inflect');
 requires('Object::Declare' => 0.22);
-requires('UNIVERSAL::require');
+requires('UNIVERSAL::require' => 0.11);
 requires('Scalar::Defer' => 0.10);
 requires('version');
 #requires('Class::Trigger');
