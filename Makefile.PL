@@ -36,6 +36,11 @@ features(
         -default => 1,
         (can_cc() ? requires('YAML::Syck') : requires('YAML')),
     ],
+    'Duration filter' => [
+        -default => 1,
+        'Time::Duration' => '',
+        'Time::Duration::Parse' => '',
+    ],
 );
 auto_install();
 &WriteAll;
