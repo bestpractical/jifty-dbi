@@ -6,7 +6,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 8;
+use constant TESTS_PER_DRIVER => 23;
 
 eval "use Time::Duration ()";
 if ($@) {
@@ -21,7 +21,8 @@ if ($@) {
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
 
-my $duration_string  = '3 hours and 5 minutes';
+my @duration_input   = qw(3h5m 3:05 3:04:60);
+my $duration_output  = '3h5m';
 my $duration_seconds = 11100;
 
 foreach my $d (@available_drivers) {
@@ -45,22 +46,29 @@ SKIP: {
         isa_ok($ret, 'DBI::st', 'init schema');
     }
 
-   my $rec = TestApp::User->new( handle => $handle );
-   isa_ok($rec, 'Jifty::DBI::Record');
+    for my $input ( @duration_input ) {
+        my $rec = TestApp::User->new( handle => $handle );
+        isa_ok($rec, 'Jifty::DBI::Record');
 
-   my ($id) = $rec->create( my_data => $duration_string );
-   ok($id, 'created record');
-   ok($rec->load($id), 'loaded record');
-   is($rec->id, $id, 'record id matches');
-   
-   is($rec->my_data, $duration_string, 'my_data matches initial data');
+        my ($id) = $rec->create( my_data => $input );
+        ok($id, 'created record');
+        ok($rec->load($id), 'loaded record');
+        is($rec->id, $id, 'record id matches');
+        
+        is($rec->my_data, $duration_output, 'my_data output is consistent');
+        
+        my $sth = $handle->simple_query("SELECT my_data FROM users WHERE id = $id");
+        my ($seconds) = $sth->fetchrow_array;
 
-   # undef/NULL
-   $rec->set_my_data;
-   is($rec->my_data, undef, 'set undef value');
+        is( $seconds, $duration_seconds, 'my_data seconds match' );
 
-   cleanup_schema('TestApp', $handle);
-   disconnect_handle($handle);
+        # undef/NULL
+        $rec->set_my_data;
+        is($rec->my_data, undef, 'set undef value');
+    }
+
+    cleanup_schema('TestApp', $handle);
+    disconnect_handle($handle);
 }
 }
 
