@@ -26,6 +26,11 @@ sub encode {
     my $value_ref = $self->value_ref;
     return unless defined $$value_ref;
 
+    # Convert hh:mm::ss to something Time::Duration::Parse understands
+    if ( $$value_ref =~ /^\s*(\d+):(\d\d)(?::(\d\d))?\s*$/ ) {
+        $$value_ref = defined $3 ? "$1h $2m $3s" : "$1h $2m";
+    }
+
     $$value_ref = Time::Duration::Parse::parse_duration($$value_ref);
 
     return 1;
@@ -34,7 +39,8 @@ sub encode {
 =head2 decode
 
 If value is defined, then decode it using
-L<Time::Duration/duration_exact>, otherwise do nothing.
+L<Time::Duration/duration_exact> and L<Time::Duration/concise>,
+otherwise do nothing.
 
 =cut
 
@@ -44,7 +50,7 @@ sub decode {
     my $value_ref = $self->value_ref;
     return unless defined $$value_ref;
 
-    $$value_ref = Time::Duration::duration_exact($$value_ref);
+    $$value_ref = Time::Duration::concise(Time::Duration::duration_exact($$value_ref));
 }
 
 =head1 SEE ALSO
