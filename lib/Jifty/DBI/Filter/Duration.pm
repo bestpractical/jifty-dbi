@@ -26,10 +26,9 @@ sub encode {
     my $value_ref = $self->value_ref;
     return unless defined $$value_ref;
 
-    # Convert hh:mm::ss to something Time::Duration::Parse understands
-    if ( $$value_ref =~ /^\s*(\d+):(\d\d)(?::(\d\d))?\s*$/ ) {
-        $$value_ref = defined $3 ? "$1h $2m $3s" : "$1h $2m";
-    }
+    # Convert hh:mm(::ss)? to something Time::Duration::Parse understands
+    $$value_ref =~ s/\b(\d+):(\d\d):(\d\d)\b/$1h $2m $3s/g;
+    $$value_ref =~ s/\b(\d+):(\d\d)\b/$1h $2m/g;
 
     $$value_ref = Time::Duration::Parse::parse_duration($$value_ref);
 

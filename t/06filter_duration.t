@@ -6,7 +6,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 23;
+use constant TESTS_PER_DRIVER => 37;
 
 eval "use Time::Duration ()";
 if ($@) {
@@ -21,7 +21,7 @@ if ($@) {
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
 
-my @duration_input   = qw(3h5m 3:05 3:04:60);
+my @duration_input   = ('3h5m', '3:05', '3:04:60', '3h 0:05', '1h 2:04:60');
 my $duration_output  = '3h5m';
 my $duration_seconds = 11100;
 
