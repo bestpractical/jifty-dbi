@@ -1498,13 +1498,8 @@ sub order_by {
     my $self = shift;
     return if $self->derived;
     if (@_) {
-        my @args = @_;
-
-        unless ( UNIVERSAL::isa( $args[0], 'HASH' ) ) {
-            @args = {@args};
-        }
-        $self->{'order_by'} = \@args;
-        $self->redo_search();
+        $self->{'order_by'} = [];
+        $self->add_order_by(@_);
     }
     return ( $self->{'order_by'} || [] );
 }
