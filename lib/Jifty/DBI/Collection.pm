@@ -351,7 +351,7 @@ only C<< $self->rows_per_page >> rows, skipping C<< $self->first_row >>
 rows.  (That is, if rows are numbered starting from 0, row number
 C<< $self->first_row >> will be the first row returned.)  Note that it
 probably makes no sense to set these variables unless you are also
-enforcing an ordering on the rows (with L</order_by_cols>, say).
+enforcing an ordering on the rows (with L</order_by>, say).
 
 =cut
 
