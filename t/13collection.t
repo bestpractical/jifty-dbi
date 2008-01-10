@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 4;
+use Test::More tests => 7;
 
 my $package;
 BEGIN { 
@@ -87,3 +87,39 @@ $obj = bless {
 is $obj->_order_clause,
    ' ORDER BY name ASC, sent ASC, ab.msg_session ASC ',
    'empty and false aliases';
+
+$obj->add_order_by(
+    {
+        alias => 'ab',
+        column => 'msg_id',
+        order => 'DESC',
+    },
+    {
+        alias => 'main',
+        column => 'yaks',
+    },
+);
+
+is $obj->_order_clause,
+   ' ORDER BY name ASC, sent ASC, ab.msg_session ASC, ab.msg_id DESC, main.yaks ASC ',
+   "add_order_by doesn't thrash previous ordering";
+
+$obj->order_by(
+        alias => 'ab',
+        column => 'msg_id',
+        order => 'DESC',
+);
+
+is $obj->_order_clause,
+   ' ORDER BY ab.msg_id DESC ',
+   "order_by does thrash previous ordering";
+
+$obj->add_order_by(
+        alias => 'main',
+        column => 'yaks',
+);
+
+is $obj->_order_clause,
+   ' ORDER BY ab.msg_id DESC, main.yaks ASC ',
+   "add_order_by works when passing a list-as-hash directly";
+

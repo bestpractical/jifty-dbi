@@ -1485,6 +1485,9 @@ in the C<alias.column> format.
 
 Use array of hashes to order by many columns/functions.
 
+Calling this I<sets> the ordering, it doesn't refine it. If you want to keep
+previous ordering, use C<add_order_by>.
+
 The results would be unordered if method called without arguments.
 
 Returns the current list of columns.
@@ -1501,6 +1504,27 @@ sub order_by {
             @args = {@args};
         }
         $self->{'order_by'} = \@args;
+        $self->redo_search();
+    }
+    return ( $self->{'order_by'} || [] );
+}
+
+=head2 add_order_by EMPTY|HASH|ARRAY_OF_HASHES
+
+Same as order_by, except it will not reset the ordering you have already set.
+
+=cut
+
+sub add_order_by {
+    my $self = shift;
+    return if $self->derived;
+    if (@_) {
+        my @args = @_;
+
+        unless ( UNIVERSAL::isa( $args[0], 'HASH' ) ) {
+            @args = {@args};
+        }
+        push @{ $self->{'order_by'} ||= [] }, @args;
         $self->redo_search();
     }
     return ( $self->{'order_by'} || [] );
