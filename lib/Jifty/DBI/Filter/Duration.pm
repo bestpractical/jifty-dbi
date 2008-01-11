@@ -16,7 +16,8 @@ Jifty::DBI::Filter::Duration - Encodes time durations
 =head2 encode
 
 If value is defined, then encode it using
-L<Time::Duration::Parse/parse_duration>, otherwise do nothing.
+L<Time::Duration::Parse/parse_duration>, otherwise do nothing.  If the value
+can't be parsed, then set it to undef.
 
 =cut
 
@@ -26,13 +27,20 @@ sub encode {
     my $value_ref = $self->value_ref;
     return unless defined $$value_ref and length $$value_ref;
 
-    # Convert hh:mm(::ss)? to something Time::Duration::Parse understands
+    # Convert hh:mm(:ss)? to something Time::Duration::Parse understands
     $$value_ref =~ s/\b(\d+):(\d\d):(\d\d)\b/$1h $2m $3s/g;
     $$value_ref =~ s/\b(\d+):(\d\d)\b/$1h $2m/g;
 
-    $$value_ref = Time::Duration::Parse::parse_duration($$value_ref);
+    my ($parsed) = eval { Time::Duration::Parse::parse_duration($$value_ref) };
 
-    return 1;
+    if ( not $@ ) {
+        $$value_ref = $parsed;
+        return 1;
+    }
+    else {
+        $$value_ref = undef;
+        return;
+    }
 }
 
 =head2 decode
@@ -47,7 +55,8 @@ sub decode {
     my $self = shift;
 
     my $value_ref = $self->value_ref;
-    return unless defined $$value_ref and length $$value_ref;
+    return unless defined $$value_ref and length $$value_ref
+              and $$value_ref =~ /^\s*\d+\s*$/;
 
     $$value_ref = Time::Duration::concise(Time::Duration::duration_exact($$value_ref));
 }

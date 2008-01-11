@@ -6,7 +6,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 37;
+use constant TESTS_PER_DRIVER => 42;
 
 eval "use Time::Duration ()";
 if ($@) {
@@ -21,6 +21,7 @@ if ($@) {
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
 
+my @bad_input        = ('foo');
 my @duration_input   = ('3h5m', '3:05', '3:04:60', '3h 0:05', '1h 2:04:60');
 my $duration_output  = '3h5m';
 my $duration_seconds = 11100;
@@ -44,6 +45,18 @@ SKIP: {
     {
         my $ret = init_schema('TestApp::User', $handle);
         isa_ok($ret, 'DBI::st', 'init schema');
+    }
+
+    for my $input ( @bad_input ) {
+        my $rec = TestApp::User->new( handle => $handle );
+        isa_ok($rec, 'Jifty::DBI::Record');
+
+        my ($id) = $rec->create( my_data => $input );
+        ok($id, 'created record');
+        ok($rec->load($id), 'loaded record');
+        is($rec->id, $id, 'record id matches');
+        
+        is($rec->my_data, undef, 'my_data output is undef');
     }
 
     for my $input ( @duration_input ) {
