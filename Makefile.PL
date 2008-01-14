@@ -39,7 +39,7 @@ features(
     'Duration filter' => [
         -default => 1,
         'Time::Duration' => '',
-        'Time::Duration::Parse' => '0.04',
+        'Time::Duration::Parse' => '0.05',
     ],
 );
 auto_install();

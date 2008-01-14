@@ -27,10 +27,6 @@ sub encode {
     my $value_ref = $self->value_ref;
     return unless defined $$value_ref and length $$value_ref;
 
-    # Convert hh:mm(:ss)? to something Time::Duration::Parse understands
-    $$value_ref =~ s/\b(\d+):(\d\d):(\d\d)\b/$1h $2m $3s/g;
-    $$value_ref =~ s/\b(\d+):(\d\d)\b/$1h $2m/g;
-
     my ($parsed) = eval { Time::Duration::Parse::parse_duration($$value_ref) };
 
     if ( not $@ ) {
