@@ -86,7 +86,7 @@ sub load_by_cols {
     if ( ref($class) ) {
         ( $self, $class ) = ( $class, undef );
     } else {
-        $self = $self->new( handle => ( delete $attr{'_handle'} || undef ) );
+        $self = $class->new( handle => ( delete $attr{'_handle'} || undef ) );
     }
 
     ## Generate the cache key
