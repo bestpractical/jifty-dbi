@@ -28,6 +28,8 @@ my @attrs = qw/
     record_class
     attributes
     case_sensitive
+    private
+    protected
     /;
 
 # these actually live in the attributes hash
