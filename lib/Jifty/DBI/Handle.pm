@@ -550,6 +550,13 @@ sub simple_query {
     {
         no warnings 'uninitialized';    # undef in bind_values makes DBI sad
         eval { $executed = $sth->execute(@bind_values) };
+
+        # try to ping and reconnect, if the DB connection failed
+        if ($@ and !$self->dbh->ping) {
+            $self->dbh(undef); # don't try pinging again, just connect
+            $self->connect; 
+            eval { $executed = $sth->execute(@bind_values) };
+        }
     }
     if ( $self->log_sql_statements ) {
         $self->_log_sql_statement( $query_string,
