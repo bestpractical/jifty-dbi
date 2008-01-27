@@ -36,6 +36,7 @@ my @attrs = qw/
 my @handy_attrs = qw/
     container
     label hints render_as
+    documentation
     valid_values
     available_values
     autocompleted
