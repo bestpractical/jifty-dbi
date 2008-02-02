@@ -146,6 +146,8 @@ known attributes are:
 
 =item     autocompleted
 
+=item     documentation
+
 =back
 
 =cut
