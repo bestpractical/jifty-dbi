@@ -4,6 +4,11 @@ use warnings;
 use strict;
 use Scalar::Defer qw/lazy/;
 use Scalar::Util qw/weaken/;
+use overload (
+    '@{}'       => \&items_array_ref,
+    '<>'        => \&next,
+    fallback    => 1
+);
 
 =head1 NAME
 
@@ -866,6 +871,13 @@ returns undef and resets the search such that the following call to
 L</next> will start over with the first item retrieved from the
 database.
 
+You may also call this method via the built-in iterator syntax.
+The two lines below are equivalent:
+
+    while ($_ = $collection->next) { ... }
+
+    while (<$collection>) { ... }
+
 =cut
 
 sub next {
@@ -958,6 +970,13 @@ sub last {
 
 Return a reference to an array containing all objects found by this
 search.
+
+You may also call this method via the built-in array dereference syntax.
+The two lines below are equivalent:
+
+    for (@{$collection->items_array_ref}) { ... }
+
+    for (@$collection) { ... }
 
 =cut
 
