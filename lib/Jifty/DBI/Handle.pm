@@ -731,12 +731,18 @@ Emulates nested transactions, by keeping a transaction stack depth.
 
 sub begin_transaction {
     my $self = shift;
-    $TRANSDEPTH++;
-    if ( $TRANSDEPTH > 1 ) {
-        return ($TRANSDEPTH);
-    } else {
-        return ( $self->dbh->begin_work );
+
+    if ( $TRANSDEPTH > 0 ) {
+        # We're inside a transaction.
+        $TRANSDEPTH++;
+        return $TRANSDEPTH;
     }
+
+    my $rv = $self->dbh->begin_work;
+    if ($rv) {
+        $TRANSDEPTH++;
+    }
+    return $rv;
 }
 
 =head2 commit
@@ -752,13 +758,18 @@ sub commit {
         Carp::confess(
             "Attempted to commit a transaction with none in progress");
     }
-    $TRANSDEPTH--;
 
-    if ( $TRANSDEPTH == 0 ) {
-        return ( $self->dbh->commit );
-    } else {    #we're inside a transaction
-        return ($TRANSDEPTH);
+    if ($TRANSDEPTH > 1) {
+        # We're inside a nested transaction.
+        $TRANSDEPTH--;
+        return $TRANSDEPTH;
     }
+
+    my $rv = $self->dbh->commit;
+    if ($rv) {
+        $TRANSDEPTH--;
+    }
+    return $rv;
 }
 
 =head2 rollback [FORCE]
@@ -786,13 +797,22 @@ sub rollback {
         return ( $dbh->rollback );
     }
 
-    $TRANSDEPTH-- if ( $TRANSDEPTH >= 1 );
-    if ( $TRANSDEPTH == 0 ) {
-        return ( $dbh->rollback );
-    } else {    #we're inside a transaction
-        return ($TRANSDEPTH);
+    if ($TRANSDEPTH == 0) {
+        # We're not actually in a transaction.
+        return 1;
     }
 
+    if ($TRANSDEPTH > 1) {
+        # We're inside a nested transaction.
+        $TRANSDEPTH--;
+        return $TRANSDEPTH;
+    }
+
+    my $rv = $self->dbh->rollback;
+    if ($rv) {
+        $TRANSDEPTH--;
+    }
+    return $rv;
 }
 
 =head2 force_rollback
