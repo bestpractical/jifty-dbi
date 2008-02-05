@@ -1528,14 +1528,13 @@ sub _filters {
     my $self = shift;
     my %args = ( direction => 'input', column => undef, @_ );
 
-    my @filters = ();
-    my @objs = ( $self, $args{'column'}, $self->_handle );
-    @objs = reverse @objs if $args{'direction'} eq 'output';
-    my $method = $args{'direction'} . "_filters";
-    foreach my $obj (@objs) {
-        push @filters, $obj->$method();
+    if ( $args{'direction'} eq 'input' ) {
+        return grep $_, map $_->input_filters,
+            ( $self, $args{'column'}, $self->_handle );
+    } else {
+        return grep $_, map $_->output_filters,
+            ( $self->_handle, $args{'column'}, $self );
     }
-    return grep $_, @filters;
 }
 
 sub _apply_input_filters {
