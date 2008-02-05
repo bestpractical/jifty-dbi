@@ -291,14 +291,14 @@ sub _log_sql_statement {
     my $duration  = shift;
     my @bind      = @_;
 
-    my $results = {};
+    my %results;
+    my @log = (Time::HiRes::time(), $statement, [@bind], $duration, \%results);
+
     while (my ($name, $code) = each %{ $self->{'_logsqlhooks'} || {} }) {
-        $results->{$name} = $code->();
+        $results{$name} = $code->(@log);
     }
 
-    push @{ $self->{'StatementLog'} },
-        ( [ Time::HiRes::time(), $statement, [@bind], $duration, $results ] );
-
+    push @{ $self->{'StatementLog'} }, \@log;
 }
 
 =head2 clear_sql_statement_log
