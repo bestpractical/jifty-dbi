@@ -10,6 +10,7 @@ use Regexp::Common qw(delimited);
 my $re_delim  = qr{$RE{delimited}{-delim=>qq{\'\"}}};
 my $re_field  = qr{[a-zA-Z][a-zA-Z0-9_]*};
 my $re_column = qr{\.?$re_field(?:\.$re_field)*};
+my $re_alias  = qr{$re_column\s+AS\s+$re_field}i;
 my $re_sql_op_bin = qr{!?=|<>|>=?|<=?|(?:NOT )?LIKE}i;
 my $re_sql_op_un  = qr{IS (?:NOT )?NULL}i;
 my $re_value = qr{$re_delim|[0-9.]+};
@@ -34,22 +35,24 @@ sub parse_query {
     my $self = shift;
     my $string = shift;
 
-    my @pre_joins;
-    if ( $string =~ s/^\s*FROM\s+($re_column\s+AS\s+$re_field(?:\s*,\s*$re_column\s+AS\s+$re_field)*)\s+WHERE\s+//i ) {
-        @pre_joins = map [split /\s+AS\s+/i, $_], split /,/, $1;
-    }
-    my %aliases = ();
-    foreach my $join ( @pre_joins ) {
-        $aliases{ $join->[1] } = $self->find_column( $join->[0], \%aliases );
+    my $tree = {
+        joins => {},
+        conditions => undef,
+    };
+    
+    # parse "FROM..." prefix into $tree->{'joins'}
+    if ( $string =~ s/^\s*FROM\s+($re_alias(?:\s*,\s*$re_alias)*)\s+WHERE\s+//oi ) {
+        $tree->{'joins'}->{ $_->[1] } = $self->find_column( $_->[0], $tree->{'joins'} )
+            foreach map [split /\s+AS\s+/i, $_], split /,/, $1;
     }
 
-    my $query_tree = $self->as_array(
+    $tree->{'conditions'} = $self->as_array(
         $string,
-        operand_cb => sub { return $self->split_condition( $_[0], \%aliases ) },
+        operand_cb => sub { return $self->split_condition( $_[0], $tree->{'joins'} ) },
     );
-    use Data::Dumper; warn Dumper( $query_tree );
-    $self->apply_query_tree( $query_tree );
-    return $query_tree;
+    use Data::Dumper; warn Dumper( $tree->{'conditions'} );
+    $self->apply_query_tree( $tree->{'conditions'} );
+    return $tree;
 }
 
 sub apply_query_tree {
