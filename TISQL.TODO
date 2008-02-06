@@ -1,0 +1,5 @@
+* more docs
+* decide if we want "order by"
+* decide if we want "col{blabla} = 'X'" syntax
+* Alex ported resolve_join method into JDBI::Collection class...
+  look how we can merge back code base to avoid duplication
