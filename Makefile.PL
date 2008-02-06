@@ -20,7 +20,7 @@ requires('Exporter::Lite');
 requires('Hash::Merge');
 requires('Lingua::EN::Inflect');
 requires('Object::Declare' => 0.22);
-requires('UNIVERSAL::require');
+requires('UNIVERSAL::require' => 0.11);
 requires('Scalar::Defer' => 0.10);
 requires('version');
 #requires('Class::Trigger');
@@ -35,6 +35,11 @@ features(
     'YAML filter' => [
         -default => 1,
         (can_cc() ? requires('YAML::Syck') : requires('YAML')),
+    ],
+    'Duration filter' => [
+        -default => 1,
+        'Time::Duration' => '',
+        'Time::Duration::Parse' => '0.05',
     ],
 );
 auto_install();

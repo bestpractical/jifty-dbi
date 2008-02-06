@@ -3,6 +3,12 @@ package Jifty::DBI::Collection;
 use warnings;
 use strict;
 use Scalar::Defer qw/lazy/;
+use Scalar::Util qw/weaken/;
+use overload (
+    '@{}'       => \&items_array_ref,
+    '<>'        => \&next,
+    fallback    => 1
+);
 
 =head1 NAME
 
@@ -350,7 +356,7 @@ only C<< $self->rows_per_page >> rows, skipping C<< $self->first_row >>
 rows.  (That is, if rows are numbered starting from 0, row number
 C<< $self->first_row >> will be the first row returned.)  Note that it
 probably makes no sense to set these variables unless you are also
-enforcing an ordering on the rows (with L</order_by_cols>, say).
+enforcing an ordering on the rows (with L</order_by>, say).
 
 =cut
 
@@ -865,6 +871,13 @@ returns undef and resets the search such that the following call to
 L</next> will start over with the first item retrieved from the
 database.
 
+You may also call this method via the built-in iterator syntax.
+The two lines below are equivalent:
+
+    while ($_ = $collection->next) { ... }
+
+    while (<$collection>) { ... }
+
 =cut
 
 sub next {
@@ -957,6 +970,13 @@ sub last {
 
 Return a reference to an array containing all objects found by this
 search.
+
+You may also call this method via the built-in array dereference syntax.
+The two lines below are equivalent:
+
+    for (@{$collection->items_array_ref}) { ... }
+
+    for (@$collection) { ... }
 
 =cut
 
@@ -1116,11 +1136,11 @@ database supports are also valid.
 
 MATCHES is like LIKE, except it surrounds the value with % signs.
 
-=item "STARTSWITH"
+=item "starts_with"
 
-STARTSWITH is like LIKE, except it only appends a % at the end of the string
+starts_with is like LIKE, except it only appends a % at the end of the string
 
-=item "ENDSWITH"
+=item "ends_with"
 
 ENDSWITH is like LIKE, except it prepends a % to the beginning of the string
 
@@ -1199,12 +1219,12 @@ sub limit {
         #If it's a like, we supply the %s around the search term
         if ( $args{'operator'} =~ /MATCHES/i ) {
             $args{'value'} = "%" . $args{'value'} . "%";
-        } elsif ( $args{'operator'} =~ /STARTSWITH/i ) {
+        } elsif ( $args{'operator'} =~ /STARTS_?WITH/i ) {
             $args{'value'} = $args{'value'} . "%";
-        } elsif ( $args{'operator'} =~ /ENDSWITH/i ) {
+        } elsif ( $args{'operator'} =~ /ENDS_?WITH/i ) {
             $args{'value'} = "%" . $args{'value'};
         }
-        $args{'operator'} =~ s/(?:MATCHES|ENDSWITH|STARTSWITH)/LIKE/i;
+        $args{'operator'} =~ s/(?:MATCHES|ENDS_?WITH|STARTS_?WITH)/LIKE/i;
 
         #if we're explicitly told not to to quote the value or
         # we're doing an IS or IS NOT (null), don't quote the operator.
@@ -1484,6 +1504,9 @@ in the C<alias.column> format.
 
 Use array of hashes to order by many columns/functions.
 
+Calling this I<sets> the ordering, it doesn't refine it. If you want to keep
+previous ordering, use C<add_order_by>.
+
 The results would be unordered if method called without arguments.
 
 Returns the current list of columns.
@@ -1494,12 +1517,28 @@ sub order_by {
     my $self = shift;
     return if $self->derived;
     if (@_) {
+        $self->{'order_by'} = [];
+        $self->add_order_by(@_);
+    }
+    return ( $self->{'order_by'} || [] );
+}
+
+=head2 add_order_by EMPTY|HASH|ARRAY_OF_HASHES
+
+Same as order_by, except it will not reset the ordering you have already set.
+
+=cut
+
+sub add_order_by {
+    my $self = shift;
+    return if $self->derived;
+    if (@_) {
         my @args = @_;
 
         unless ( UNIVERSAL::isa( $args[0], 'HASH' ) ) {
             @args = {@args};
         }
-        $self->{'order_by'} = \@args;
+        push @{ $self->{'order_by'} ||= [] }, @args;
         $self->redo_search();
     }
     return ( $self->{'order_by'} || [] );
@@ -1741,13 +1780,16 @@ the selected page.
 sub set_page_info {
     my $self = shift;
     my %args = (
-        per_page     => undef,
-        current_page => undef,    # 1-based
+        per_page     => 0,
+        current_page => 1,    # 1-based
         @_
     );
     return if $self->derived;
 
-    $self->pager->total_entries( lazy { $self->count_all } )
+    my $weakself = $self;
+    weaken($weakself);
+
+    $self->pager->total_entries( lazy { $weakself->count_all } )
         ->entries_per_page( $args{'per_page'} )
         ->current_page( $args{'current_page'} );
 
