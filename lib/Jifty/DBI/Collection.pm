@@ -7,7 +7,7 @@ use Scalar::Util qw/weaken/;
 use overload (
     '@{}'       => \&items_array_ref,
     '<>'        => \&next,
-    bool        => sub {1},
+    bool        => sub {shift},
     fallback    => 1
 );
 
