@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use base qw(Parse::BooleanLogic);
+use Scalar::Util qw(refaddr blessed);
 
 use Regexp::Common qw(delimited);
 my $re_delim  = qr{$RE{delimited}{-delim=>qq{\'\"}}};
@@ -107,7 +108,18 @@ sub resolve_join {
     my $last_column = pop @chain;
     my $last_alias = 'main';
 
+    my %aliases;
+
     foreach my $column ( @chain ) {
+        unless ( blessed $column ) {
+            if ( my $tmp = $aliases{ refaddr $column } ) {
+                ($last_alias, $last_column) = @$tmp;
+            } else {
+                ($last_alias, $last_column) = $self->resolve_join( @$column );
+            }
+            next;
+        }
+
         my $name = $column->name;
 
         my $classname = $column->refers_to;
@@ -184,9 +196,9 @@ sub find_column {
     unless ( $start_from ) {
         $item = $self->{'collection'}->new_item;
     } else {
-        $item = $aliases->{ $start_from }->[-1]->refers_to->new( handle => $self->{'collection'}->_handle ) || die "$start_from alias is not defined";
-        push @res, @{ $aliases->{ $start_from } };
-        use Data::Dumper; print Dumper($item);
+        my $alias = $aliases->{ $start_from } || die "$start_from alias is not defined";
+        $item = $alias->[-1]->refers_to->new( handle => $self->{'collection'}->_handle );
+        push @res, $alias;
     }
     while ( my $name = shift @names ) {
         my $column = $item->column( $name );
