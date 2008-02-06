@@ -258,7 +258,6 @@ sub _db_schema_table_from_model {
 
         # Skip "Virtual" columns - (foreign keys to collections)
         next if $column->virtual;
-        next if defined $column->alias_for_column;
 
         # If schema_version is defined, make sure columns are for that version
         if ($model->can('schema_version') and defined $model->schema_version) {

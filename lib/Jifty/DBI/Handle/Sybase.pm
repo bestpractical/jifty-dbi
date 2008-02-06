@@ -82,7 +82,7 @@ sub case_sensitive {
 #     my $statementref = shift;
 #     my $per_page     = shift;
 #     my $first        = shift;
-# 
+#
 # }
 
 =head2 distinct_query STATEMENTREF
@@ -95,10 +95,10 @@ DISTINCT result set.
 sub distinct_query {
     my $self         = shift;
     my $statementref = shift;
-    my $sb           = shift;
-    my $table        = $sb->table;
+    my $collection   = shift;
+    my $table        = $collection->table;
 
-    if ( $sb->_order_clause =~ /(?<!main)\./ ) {
+    if ( $collection->_order_clause =~ /(?<!main)\./ ) {
 
         # Don't know how to do ORDER BY when the DISTINCT is in a subquery
         warn
@@ -111,8 +111,8 @@ sub distinct_query {
         $$statementref
             = "SELECT main.* FROM ( SELECT DISTINCT main.id FROM $$statementref ) distinctquery, $table main WHERE (main.id = distinctquery.id) ";
     }
-    $$statementref .= $sb->_group_clause;
-    $$statementref .= $sb->_order_clause;
+    $$statementref .= $collection->_group_clause;
+    $$statementref .= $collection->_order_clause;
 }
 
 1;

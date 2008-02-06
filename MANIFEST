@@ -82,6 +82,7 @@ t/15types.t
 t/16inheritance.t
 t/17virtualtypes.t
 t/18triggers.t
+t/19reference.t
 t/case_sensitivity.t
 t/metadata.t
 t/pod-coverage.t

@@ -8,7 +8,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 97;
+use constant TESTS_PER_DRIVER => 109;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -117,6 +117,40 @@ SKIP: {
         $first_rec = $users_obj->first;
         isa_ok( $first_rec, 'Jifty::DBI::Record', 'First returns record object' );
         is( $first_rec->login, 'glasser', 'login is correct' );
+
+        # LIKE with wildcard
+        $users_obj->clean_slate;
+        is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
+        $users_obj->limit( column => 'name', operator => 'MATCHES', value => 'G_ass' );
+        is( $users_obj->count, 1, "found one user with 'Glass' in the name" );
+        $first_rec = $users_obj->first;
+        isa_ok( $first_rec, 'Jifty::DBI::Record', 'First returns record object' );
+        is( $first_rec->login, 'glasser', 'login is correct' );
+
+        # LIKE with escaped wildcard
+        $users_obj->clean_slate;
+        is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
+        # XXX: don't use backslashes; Pg (only Pg?) requires special
+        # treatment like "LIKE E'%g\\_ass%'" for that case, 
+        # which is not supported yet (but this should be fixed)
+        $users_obj->limit( column => 'name', operator => 'MATCHES', value => 'G@_ass', escape => '@' );
+        is( $users_obj->count, 0, "should not find users with 'Glass' in the name" );
+
+        # LIKE with wildcard
+        $users_obj->clean_slate;
+        is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
+        $users_obj->limit( column => 'name', operator => 'MATCHES', value => 'Glass%' );
+        is( $users_obj->count, 1, "found one user with 'Glass' in the name" );
+        $first_rec = $users_obj->first;
+        isa_ok( $first_rec, 'Jifty::DBI::Record', 'First returns record object' );
+        is( $first_rec->login, 'glasser', 'login is correct' );
+
+        # MATCHES with escaped wildcard
+        $users_obj->clean_slate;
+        is_deeply( $users_obj, $clean_obj, 'after clean_slate looks like new object');
+        # XXX: don't use backslashes; reason above
+        $users_obj->limit( column => 'name', operator => 'MATCHES', value => 'Glass@%', escape => '@' );
+        is( $users_obj->count, 0, "should not find users with 'Glass' in the name" );
 
         # STARTSWITH
         $users_obj->clean_slate;

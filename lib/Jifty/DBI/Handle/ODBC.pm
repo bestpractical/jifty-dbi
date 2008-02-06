@@ -39,10 +39,10 @@ sub case_sensitive {
 sub build_dsn {
     my $self = shift;
     my %args = (
-        driver     => undef,
-        database   => undef,
-        host       => undef,
-        port       => undef,
+        driver   => undef,
+        database => undef,
+        host     => undef,
+        port     => undef,
         @_
     );
 
@@ -77,12 +77,11 @@ sub apply_limits {
 sub distinct_query {
     my $self         = shift;
     my $statementref = shift;
-
-    my $sb = shift;
+    my $collection   = shift;
 
     $$statementref = "SELECT main.* FROM $$statementref";
-    $$statementref .= $sb->_group_clause;
-    $$statementref .= $sb->_order_clause;
+    $$statementref .= $collection->_group_clause;
+    $$statementref .= $collection->_order_clause;
 }
 
 =head2 encoding

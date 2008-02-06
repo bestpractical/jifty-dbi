@@ -15,7 +15,7 @@ use Jifty::DBI::Collection;
 package Foo::Bar::Collection;
 our @ISA = 'Jifty::DBI::Collection';
 
-sub _preload_columns { "blah" }
+sub query_columns { "blah" }
 sub table { "bars" }
 
 package main;

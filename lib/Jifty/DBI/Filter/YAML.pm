@@ -8,7 +8,10 @@ my ($Dump, $Load);
 
 eval "use YAML::Syck ()";
 if ($@) { 
-    use YAML (); 
+    # We don't actually need to "use", which is checked at compile 
+    # time and would cause error when YAML is not installed.
+    # Or, eval this, too?
+    require YAML;
     $Dump = \&YAML::Dump;
     $Load = \&YAML::Load;
 }
