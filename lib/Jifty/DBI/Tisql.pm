@@ -229,4 +229,37 @@ sub find_column {
     return \@res;
 }
 
+sub filter_conditions_tree {
+    my ($self, $tree, $cb, $inner) = @_;
+
+    my $skip_next = 0;
+
+    my @res;
+    foreach my $entry ( @$tree ) {
+        next if $skip_next-- > 0;
+
+        if ( ref $entry eq 'ARRAY' ) {
+            my $tmp = $self->filter_conditions( $entry, $cb, 1 );
+            if ( !$tmp || (ref $tmp eq 'ARRAY' && !@$tmp) ) {
+                pop @res;
+                $skip_next = 1 unless @res;
+            } else {
+                push @res, $tmp;
+            }
+        } elsif ( ref $entry eq 'HASH' ) {
+            if ( $cb->( $entry ) ) {
+                push @res, $entry;
+            } else {
+                pop @res;
+                $skip_next = 1 unless @res;
+            }
+        } else {
+            push @res, $entry;
+        }
+    }
+    return $res[0] if @res == 1 && ($inner || ref $res[0] eq 'ARRAY');
+    return \@res;
+}
+
+
 1;
