@@ -8,20 +8,45 @@ use base qw(Parse::BooleanLogic);
 use Regexp::Common qw(delimited);
 my $re_delim  = qr{$RE{delimited}{-delim=>qq{\'\"}}};
 my $re_field  = qr{[a-zA-Z][a-zA-Z0-9_]*};
-my $re_column = qr{$re_field(?:\.$re_field)*};
+my $re_column = qr{\.?$re_field(?:\.$re_field)*};
 my $re_sql_op_bin = qr{!?=|<>|>=?|<=?|(?:NOT )?LIKE}i;
 my $re_sql_op_un  = qr{IS (?:NOT )?NULL}i;
 my $re_value = qr{$re_delim|[0-9.]+};
+
+my $re_op_positive = qr/^(?:=|IS|LIKE)$/i;
+my $re_op_negative = qr/^(?:!=|<>|IS NOT|NOT LIKE)$/i;
+my %invert_op = (
+    '=' => '!=',
+    '!=' => '=',
+    '<>' => '=',
+    'is' => 'IS NOT',
+    'is not' => 'IS',
+    'like' => 'NOT LIKE',
+    'not like' => 'LIKE',
+    '>' => '<=',
+    '>=' => '<',
+    '<' => '>=',
+    '<=' => '>',
+);
 
 sub parse_query {
     my $self = shift;
     my $string = shift;
 
+    my @pre_joins;
+    if ( $string =~ s/^\s*FROM\s+($re_column\s+AS\s+$re_field(?:\s*,\s*$re_column\s+AS\s+$re_field)*)\s+WHERE\s+//i ) {
+        @pre_joins = map [split /\s+AS\s+/i, $_], split /,/, $1;
+    }
+    my %aliases = ();
+    foreach my $join ( @pre_joins ) {
+        $aliases{ $join->[1] } = $self->find_column( $join->[0], \%aliases );
+    }
+
     my $query_tree = $self->as_array(
         $string,
-        operand_cb => sub { return $self->split_condition( $_[0] ) },
+        operand_cb => sub { return $self->split_condition( $_[0], \%aliases ) },
     );
-    #use Data::Dumper; warn Dumper( $query_tree );
+    use Data::Dumper; warn Dumper( $query_tree );
     $self->apply_query_tree( $query_tree );
     return $query_tree;
 }
@@ -124,9 +149,10 @@ sub resolve_join {
 sub split_condition {
     my $self = shift;
     my $string = shift;
+    my $aliases = shift;
 
     if ( $string =~ /^($re_column)\s*($re_sql_op_bin)\s*($re_value)$/o ) {
-        my ($lhs, $op, $rhs) = ($self->find_column($1), $2, $3);
+        my ($lhs, $op, $rhs) = ($self->find_column($1, $aliases), $2, $3);
         if ( $rhs =~ /^$re_delim$/ ) {
             $rhs =~ s/^["']//g;
             $rhs =~ s/["']$//g;
@@ -134,12 +160,12 @@ sub split_condition {
         return { lhs => $lhs, op => $op, rhs => $rhs };
     }
     elsif ( $string =~ /^($re_column)\s*($re_sql_op_un)$/o ) {
-        my ($lhs, $op, $rhs) = ($self->find_column($1), $2, $3);
+        my ($lhs, $op, $rhs) = ($self->find_column($1, $aliases), $2, $3);
         ($op, $rhs) = split /\s*(?=null)/i, $op;
         return { lhs => $lhs, op => $op, rhs => $rhs };
     }
     elsif ( $string =~ /^($re_column)\s*($re_sql_op_bin)\s*($re_column)$/o ) {
-        return { lhs => $self->find_column($1), op => $2, rhs => $self->find_column($3) };
+        return { lhs => $self->find_column($1, $aliases), op => $2, rhs => $self->find_column($3, $aliases) };
     }
     else {
         die "$string is not a tisql condition";
@@ -149,11 +175,19 @@ sub split_condition {
 sub find_column {
     my $self = shift;
     my $string = shift;
+    my $aliases = shift;
 
     my @res;
 
-    my @names = split /\./, $string;
-    my $item = $self->{'collection'}->new_item;
+    my ($start_from, @names) = split /\./, $string;
+    my $item;
+    unless ( $start_from ) {
+        $item = $self->{'collection'}->new_item;
+    } else {
+        $item = $aliases->{ $start_from }->[-1]->refers_to->new( handle => $self->{'collection'}->_handle ) || die "$start_from alias is not defined";
+        push @res, @{ $aliases->{ $start_from } };
+        use Data::Dumper; print Dumper($item);
+    }
     while ( my $name = shift @names ) {
         my $column = $item->column( $name );
         die "$item has no column '$name'" unless $column;
@@ -179,9 +213,5 @@ sub find_column {
 
     return \@res;
 }
-
-
-
-
 
 1;

@@ -9,10 +9,12 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 2;
+use constant TESTS_PER_DRIVER => 6;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
+
+use Data::Dumper;
 
 foreach my $d ( @available_drivers ) {
 SKIP: {
@@ -41,20 +43,24 @@ SKIP: {
     my $users_obj = $clean_obj->clone;
     is_deeply( $users_obj, $clean_obj, 'after Clone looks the same');
 
-    $users_obj->tisql('login = "ivan" OR ( login like "au%" AND login not like "%n%" )');
+    $users_obj->tisql('.login = "ivan" OR ( .login like "au%" AND .login not like "%n%" )');
     diag $users_obj->build_select_query;
 
     $users_obj->clean_slate;
-    $users_obj->tisql('gm.grp.name = "Support"');
+    $users_obj->tisql('.gm.grp.name = "Support"');
     diag $users_obj->build_select_query;
-    use Data::Dumper;
     diag Dumper( $users_obj->items_array_ref );
 
     $users_obj->clean_slate;
-    $users_obj->tisql('gm.grp is null');
+    $users_obj->tisql('from .gm.grp as g1 where g1.name = "Support" or g1.name = "Developers"');
     diag $users_obj->build_select_query;
-    use Data::Dumper;
     diag Dumper( $users_obj->items_array_ref );
+
+#    $users_obj->clean_slate;
+#    $users_obj->tisql('.gm.grp is null');
+#    diag $users_obj->build_select_query;
+#    use Data::Dumper;
+#    diag Dumper( $users_obj->items_array_ref );
 
     cleanup_schema( 'TestApp', $handle );
 
