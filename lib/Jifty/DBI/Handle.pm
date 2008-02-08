@@ -1101,7 +1101,7 @@ sub may_be_null {
         # left joins on the left side so later we'll get 1 AND x expression
         # which equal to x, so we just skip it
         next if $join->{'type'} eq 'LEFT';
-        next unless $join->{'depends_on'} eq $args{'alias'};
+        next unless $join->{'depends_on'} && ($join->{'depends_on'} eq $args{'alias'});
 
         my @tmp = map { ( '(', @$_, ')', $join->{'entry_aggregator'} ) }
             values %{ $join->{'criteria'} };
