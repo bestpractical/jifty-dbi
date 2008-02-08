@@ -282,7 +282,7 @@ sub _db_schema_table_from_model {
             {   name     => $column->name,
                 type     => $column->type,
                 null     => $column->mandatory ? 0 : 1,
-                default  => $column->default,
+                default  => $column->default ||'',
             }
             );
 
