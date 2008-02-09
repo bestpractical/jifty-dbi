@@ -770,11 +770,11 @@ sub resolve_join {
                 = $classname->new( $self->_new_collection_args )->new_item;
             my $right_alias = $self->new_alias($item);
             $self->join(
-                type    => 'left',
-                alias1  => $last_alias,
-                column1 => 'id',
-                alias2  => $right_alias,
-                column2 => $column->by || 'id',
+                type        => 'left',
+                alias1      => $last_alias,
+                column1     => 'id',
+                alias2      => $right_alias,
+                column2     => $column->by || 'id',
                 is_distinct => 1,
             );
             $last_alias = $right_alias;
@@ -782,11 +782,11 @@ sub resolve_join {
             my $item        = $classname->new( $self->_new_record_args );
             my $right_alias = $self->new_alias($item);
             $self->join(
-                type    => 'left',
-                alias1  => $last_alias,
-                column1 => $name,
-                alias2  => $right_alias,
-                column2 => $column->by || 'id',
+                type        => 'left',
+                alias1      => $last_alias,
+                column1     => $name,
+                alias2      => $right_alias,
+                column2     => $column->by || 'id',
                 is_distinct => 1,
             );
             $last_alias = $right_alias;
@@ -859,7 +859,7 @@ on your database, call C<do_search> before that C<count>.
 
 sub do_search {
     my $self = shift;
-    return              if $self->derived;
+    return if $self->derived;
     $self->_do_search() if $self->{'must_redo_search'};
 
 }
@@ -1297,9 +1297,12 @@ sub limit {
     # If it's a new value or we're overwriting this sort of restriction,
 
     # XXX: when is column_obj undefined?
-    my $class = $self->{joins}{$args{alias}} && $self->{joins}{$args{alias}}{class} 
-      ? $self->{joins}{$args{alias}}{class}->new($self->_new_collection_args)
-      : $self;
+    my $class
+        = $self->{joins}{ $args{alias} }
+        && $self->{joins}{ $args{alias} }{class}
+        ? $self->{joins}{ $args{alias} }{class}
+        ->new( $self->_new_collection_args )
+        : $self;
     my $column_obj = $class->new_item()->column( $args{column} );
     my $case_sensitive = $column_obj ? $column_obj->case_sensitive : 0;
     $case_sensitive = $args{'case_sensitive'}
@@ -1310,8 +1313,8 @@ sub limit {
         && !$case_sensitive )
     {
 
-        # don't worry about case for numeric columns_in_db
-        if ( defined $column_obj ? $column_obj->is_string : 1 ) {
+# don't worry about case for numeric columns_in_db - only be case insensitive when we KNOW it's a blob
+        if ( defined $column_obj ? $column_obj->is_string : 0 ) {
             ( $qualified_column, $args{'operator'}, $args{'value'} )
                 = $self->_handle->_make_clause_case_insensitive(
                 $qualified_column, $args{'operator'}, $args{'value'} );
@@ -1438,7 +1441,9 @@ sub _compile_generic_restrictions {
             unless ( ref $entry ) {
                 $result .= ' ' . $entry . ' ';
             } else {
-                $result .= join ' ', grep { defined } @{$entry}{qw(column operator value escape)};
+                $result .= join ' ',
+                    grep {defined}
+                    @{$entry}{qw(column operator value escape)};
             }
         }
         $result .= ')';
@@ -1687,9 +1692,10 @@ sub new_alias {
     my $self = shift;
     my $refers_to = shift || die "Missing parameter";
     my $table;
-
+    my $class = undef;
     if ( $refers_to->can('table') ) {
         $table = $refers_to->table;
+        $class = $refers_to;
     } else {
         $table = $refers_to;
     }
@@ -1697,9 +1703,10 @@ sub new_alias {
     my $alias = $self->_get_alias($table);
 
     $self->{'joins'}{$alias} = {
-        alias        => $alias,
-        table        => $table,
-        type         => 'CROSS',
+        alias => $alias,
+        table => $table,
+        type  => 'CROSS',
+        ( $class ? ( class => $class ) : () ),
         alias_string => " CROSS JOIN $table $alias ",
     };
 
@@ -1795,9 +1802,10 @@ sub set_page_info {
         ->current_page( $args{'current_page'} );
 
     $self->rows_per_page( $args{'per_page'} );
-    # We're not using $pager->first because it automatically does a count_all 
+
+    # We're not using $pager->first because it automatically does a count_all
     # to correctly return '0' for empty collections
-    $self->first_row(($args{'current_page'} - 1) * $args{'per_page'} + 1);
+    $self->first_row( ( $args{'current_page'} - 1 ) * $args{'per_page'} + 1 );
 
 }
 
