@@ -52,7 +52,16 @@ sub encode {
 
     return unless defined $$value_ref;
 
-    $$value_ref = $self->_is_true($$value_ref);
+    if ($self->_is_true($$value_ref)) {
+        $$value_ref = 1;
+    }
+    elsif ($self->_is_false($$value_ref)) {
+        $$value_ref = 0;
+    }
+    else {
+        $self->handle->log("The value '$$value_ref' does not look like a boolean. Defaulting to false.");
+        $$value_ref = 0;
+    }
 }
 
 =head2 decode
@@ -73,14 +82,18 @@ sub decode {
     if ($self->_is_true($$value_ref)) {
         $$value_ref = $self->handle->canonical_true;
     }
+    elsif ($self->_is_false($$value_ref)) {
+        $$value_ref = $self->handle->canonical_false;
+    }
     else {
+        $self->handle->log("The value '$$value_ref' does not look like a boolean. Defaulting to false.");
         $$value_ref = $self->handle->canonical_false;
     }
 }
 
 =head1 SEE ALSO
 
-L<Jifty::DBI::Filter>, L<Time::Duration>, L<Time::Duration::Parse>
+L<Jifty::DBI::Filter>
 
 =cut
 
