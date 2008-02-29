@@ -236,6 +236,22 @@ sub distinct_query {
     }
 }
 
+=head2 canonical_true
+
+The canonical true value in Postgres is 't'.
+
+=cut
+
+sub canonical_true { 't' }
+
+=head2 canonical_false
+
+The canonical false value in Postgres is 'f'.
+
+=cut
+
+sub canonical_false { 'f' }
+
 1;
 
 __END__

@@ -1258,6 +1258,28 @@ sub log {
 
 }
 
+=head2 canonical_true
+
+This returns the canonical true value for this database. For example, in SQLite
+it is 1 but in Postgres it is 't'.
+
+The default is 1.
+
+=cut
+
+sub canonical_true { 1 }
+
+=head2 canonical_false
+
+This returns the canonical false value for this database. For example, in SQLite
+it is 0 but in Postgres it is 'f'.
+
+The default is 0.
+
+=cut
+
+sub canonical_false { 0 }
+
 =head2 DESTROY
 
 When we get rid of the L<Jifty::DBI::Handle>, we need to disconnect

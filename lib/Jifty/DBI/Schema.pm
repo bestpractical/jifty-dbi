@@ -403,6 +403,13 @@ sub register_types {
     }
 }
 
+__PACKAGE__->register_types(
+    boolean => sub {
+        type is 'boolean',
+        filters are qw(Jifty::DBI::Filter::Boolean),
+    },
+);
+
 1;
 
 __END__
