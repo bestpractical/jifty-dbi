@@ -1569,6 +1569,7 @@ sub _apply_filters {
             record    => $self,
             column    => $args{'column'},
             value_ref => $args{'value_ref'},
+            handle    => $self->_handle,
         );
 
         # XXX TODO error proof this

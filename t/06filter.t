@@ -4,7 +4,7 @@ use strict;
 
 use Test::More;
 BEGIN { require "t/utils.pl" }
-plan tests => 6;
+plan tests => 7;
 # test for Jifty::DBI::Filter class only
 # create new t/06filter_*.t files for specific filters
 
@@ -14,6 +14,7 @@ my $filter = new Jifty::DBI::Filter;
 isa_ok( $filter, 'Jifty::DBI::Filter' );
 is( $filter->column, undef, "empty column value" );
 is( $filter->value_ref, undef, "empty value reference" );
+is( $filter->handle, undef, "empty handle" );
 
 $filter->column( 'my column' );
 is( $filter->column, 'my column', "successfuly set column" );

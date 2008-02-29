@@ -4,7 +4,7 @@ use strict;
 package Jifty::DBI::Filter;
 use base 'Class::Accessor::Fast';
 
-__PACKAGE__->mk_accessors(qw(record column value_ref));
+__PACKAGE__->mk_accessors(qw(record column value_ref handle));
 
 =head1 NAME
 
@@ -52,7 +52,7 @@ A filter allows Jifty::DBI models to tweak data prior to being stored and/or loa
 
 =head2 new
 
-Takes two arguments in a parameter hash:
+Takes three arguments in a parameter hash:
 
 =over
 
@@ -69,6 +69,13 @@ with here.
 
 =back
 
+=item handle
+
+A L<Jifty::DBI::Handle> object, because some filters (ie
+L<Jifty::DBI::Filter::Boolean>) depend on what database system is being used.
+
+=back
+
 =cut
 
 sub new {
@@ -76,6 +83,7 @@ sub new {
     my %args  = (
         column    => undef,
         value_ref => undef,
+        handle    => undef,
         @_
     );
     my $self = {};
