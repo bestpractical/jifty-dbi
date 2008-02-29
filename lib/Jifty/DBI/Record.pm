@@ -1071,7 +1071,7 @@ sub load_by_cols {
             $self->_apply_input_filters(
                 column    => $column_obj,
                 value_ref => \$value,
-            ) if $column_obj->encode_select;
+            ) if $column_obj->decode_select;
 
             # if the handle is in a case_sensitive world and we need to make
             # a case-insensitive query
@@ -1368,6 +1368,11 @@ sub __create {
             and not ref $column->default )
         {
             $attribs{ $column->name } = $column->default;
+
+            $self->_apply_input_filters(
+                column    => $column,
+                value_ref => \$attribs{ $column->name },
+            );
         }
 
         if (    not defined $attribs{ $column->name }

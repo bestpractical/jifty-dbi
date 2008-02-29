@@ -6,7 +6,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 122;
+use constant TESTS_PER_DRIVER => 130;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -40,13 +40,13 @@ SKIP: {
         ( map { [$_, 'false'] } @false ),
     );
 
-    for my $value ( @values ) {
+    for my $value ( @values, [undef, 'false'] ) {
         my ($input, $bool) = @$value;
 
         my $rec = TestApp::User->new( handle => $handle );
         isa_ok($rec, 'Jifty::DBI::Record');
 
-        my ($id) = $rec->create( my_data => $input );
+        my ($id) = $rec->create( defined($input) ? (my_data => $input) : () );
         ok($id, 'created record');
         ok($rec->load($id), 'loaded record');
         is($rec->id, $id, 'record id matches');

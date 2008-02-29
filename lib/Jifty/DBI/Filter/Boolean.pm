@@ -6,11 +6,13 @@ use strict;
 use base 'Jifty::DBI::Filter';
 
 use constant TRUE_VALUES  => qw(1 t true y yes TRUE);
-use constant FALSE_VALUES => qw(0 f false n no FALSE);
+use constant FALSE_VALUES => ('', qw(0 f false n no FALSE));
 
 sub _is_true {
     my $self = shift;
     my $value = shift;
+
+    no warnings 'uninitialized';
 
     for ($self->TRUE_VALUES, map { "'$_'" } $self->TRUE_VALUES) {
         return 1 if $value eq $_;
@@ -22,6 +24,8 @@ sub _is_true {
 sub _is_false {
     my $self = shift;
     my $value = shift;
+
+    return 1 if not defined $value;
 
     for ($self->FALSE_VALUES, map { "'$_'" } $self->FALSE_VALUES) {
         return 1 if $value eq $_;
@@ -41,8 +45,6 @@ Jifty::DBI::Filter::Boolean - Encodes booleans
 Transform the value into 1 or 0 so Perl's concept of the boolean's value agrees
 with the database's concept of the boolean's value. (For example, 't' and 'f'
 might be used -- 'f' is true in Perl)
-
-If the value is C<undef>, then the encoded value will also be C<undef>.
 
 =cut
 
@@ -68,8 +70,6 @@ sub encode {
 
 Transform the value to the canonical true or false value as expected by the
 database.
-
-If the value is C<undef>, then the decoded value will also be C<undef>.
 
 =cut
 
