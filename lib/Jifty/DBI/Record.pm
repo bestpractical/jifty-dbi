@@ -1068,6 +1068,11 @@ sub load_by_cols {
                 $value = $value->id;
             }
 
+            $self->_apply_input_filters(
+                column    => $column_obj,
+                value_ref => \$value,
+            ) if $column_obj->encode_select;
+
             # if the handle is in a case_sensitive world and we need to make
             # a case-insensitive query
             if ( $self->_handle->case_sensitive && $value ) {

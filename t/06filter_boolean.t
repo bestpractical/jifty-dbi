@@ -6,7 +6,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 86;
+use constant TESTS_PER_DRIVER => 122;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -61,6 +61,25 @@ SKIP: {
         # undef/NULL
         $rec->set_my_data;
         is($rec->my_data, undef, 'set undef value');
+
+        $rec->set_my_data($input);
+        ok($bool eq 'true' ? $rec->my_data : !$rec->my_data, 'Perl agrees with the expected boolean value');
+    }
+
+    for my $value ( @values ) {
+        my ($input, $bool) = @$value;
+        my $rec = TestApp::User->new( handle => $handle );
+        $rec->load_by_cols(
+            my_data => $input,
+        );
+        ok($rec->id, "loaded a record by boolean value '$input'");
+
+        my $col = TestApp::UserCollection->new( handle => $handle );
+        $col->limit(
+            column => 'my_data',
+            value  => $input,
+        );
+        ok($bool eq 'true' ? $col->first->my_data : !$col->first->my_data, 'Perl agrees with the expected boolean value');
     }
 
     cleanup_schema('TestApp', $handle);
@@ -70,8 +89,6 @@ SKIP: {
 
 package TestApp::User;
 use base qw/ Jifty::DBI::Record /;
-
-1;
 
 sub schema_sqlite {
 
@@ -115,4 +132,13 @@ BEGIN {
     }
 }
 
+package TestApp::UserCollection;
+
+use base qw/Jifty::DBI::Collection/;
+
+sub _init {
+    my $self = shift;
+    $self->SUPER::_init(@_);
+    $self->table('users');
+}
 

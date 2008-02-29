@@ -405,6 +405,11 @@ sub register_types {
 
 __PACKAGE__->register_types(
     boolean => sub {
+        _init_handler is sub {
+            my ($column, $from) = @_;
+            $column->encode_select(1);
+            $column->type('boolean');
+        },
         type is 'boolean',
         filters are qw(Jifty::DBI::Filter::Boolean),
     },

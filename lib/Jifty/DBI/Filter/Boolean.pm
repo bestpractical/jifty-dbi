@@ -12,7 +12,7 @@ sub _is_true {
     my $self = shift;
     my $value = shift;
 
-    for ($self->TRUE_VALUES) {
+    for ($self->TRUE_VALUES, map { "'$_'" } $self->TRUE_VALUES) {
         return 1 if $value eq $_;
     }
 
@@ -23,7 +23,7 @@ sub _is_false {
     my $self = shift;
     my $value = shift;
 
-    for ($self->FALSE_VALUES) {
+    for ($self->FALSE_VALUES, map { "'$_'" } $self->FALSE_VALUES) {
         return 1 if $value eq $_;
     }
 

@@ -67,8 +67,6 @@ refers to.
 A L<Jifty::DBI::Column> object, whatever sort of column we're working
 with here.
 
-=back
-
 =item handle
 
 A L<Jifty::DBI::Handle> object, because some filters (ie

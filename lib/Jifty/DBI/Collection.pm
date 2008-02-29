@@ -1329,6 +1329,11 @@ sub limit {
         $args{'operator'} = 'IN';
     }
 
+    $self->record_class->new(handle => $self->_handle)->_apply_input_filters(
+        column    => $column_obj,
+        value_ref => \$args{'value'},
+    ) if $column_obj && $column_obj->encode_select;
+
     my $clause = {
         column   => $qualified_column,
         operator => $args{'operator'},
