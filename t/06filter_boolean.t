@@ -51,12 +51,23 @@ SKIP: {
         ok($rec->load($id), 'loaded record');
         is($rec->id, $id, 'record id matches');
 
-        ok($bool eq 'true' ? $rec->my_data : !$rec->my_data, 'Perl agrees with the expected boolean value');
+        is($rec->my_data, $bool eq 'true' ? 1 : 0, 'Perl agrees with the expected boolean value');
+
         my $sth = $handle->simple_query("SELECT my_data FROM users WHERE id = $id");
         my ($got) = $sth->fetchrow_array;
 
+        if ($d eq 'Pg') {
+            # this option tells DBD::Pg to keep booleans as 't' and 'f' and not
+            # map them to 1 and 0
+            $handle->dbh->{pg_bool_tf} = 0;
+        }
+
         my $method = "canonical_$bool";
-        is( $got, $handle->$method, 'my_data bool match' );
+        is( $got, $handle->$method, "my_data bool match for " . (defined($input) ? $input : 'undef') . " ($bool)" );
+
+        if ($d eq 'Pg') {
+            $handle->dbh->{pg_bool_tf} = 1;
+        }
 
         # undef/NULL
         $rec->set_my_data;
@@ -79,7 +90,12 @@ SKIP: {
             column => 'my_data',
             value  => $input,
         );
-        ok($bool eq 'true' ? $col->first->my_data : !$col->first->my_data, 'Perl agrees with the expected boolean value');
+        if ($col->count) {
+            ok($bool eq 'true' ? $col->first->my_data : !$col->first->my_data, 'Perl agrees with the expected boolean value');
+        }
+        else {
+            fail("Got no results from limit");
+        }
     }
 
     cleanup_schema('TestApp', $handle);

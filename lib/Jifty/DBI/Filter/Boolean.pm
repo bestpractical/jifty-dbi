@@ -40,7 +40,7 @@ Jifty::DBI::Filter::Boolean - Encodes booleans
 
 =head1 DESCRIPTION
 
-=head2 encode
+=head2 decode
 
 Transform the value into 1 or 0 so Perl's concept of the boolean's value agrees
 with the database's concept of the boolean's value. (For example, 't' and 'f'
@@ -48,7 +48,7 @@ might be used -- 'f' is true in Perl)
 
 =cut
 
-sub encode {
+sub decode {
     my $self = shift;
     my $value_ref = $self->value_ref;
 
@@ -66,14 +66,14 @@ sub encode {
     }
 }
 
-=head2 decode
+=head2 encode
 
 Transform the value to the canonical true or false value as expected by the
 database.
 
 =cut
 
-sub decode {
+sub encode {
     my $self = shift;
     my $value_ref = $self->value_ref;
 
