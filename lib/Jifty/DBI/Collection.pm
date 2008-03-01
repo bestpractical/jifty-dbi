@@ -1191,6 +1191,59 @@ sub limit {
 
     return if $self->derived;
 
+    #If we're performing a left join, we really want the alias to be the
+    #left join criterion.
+
+    if (   ( defined $args{'leftjoin'} )
+        && ( not defined $args{'alias'} ) )
+    {
+        $args{'alias'} = $args{'leftjoin'};
+    }
+
+    # {{{ if there's no alias set, we need to set it
+
+    unless ( defined $args{'alias'} ) {
+
+        #if the table we're looking at is the same as the main table
+        if ( $args{'table'} eq $self->table ) {
+
+            # TODO this code assumes no self joins on that table.
+            # if someone can name a case where we'd want to do that,
+            # I'll change it.
+
+            $args{'alias'} = 'main';
+        }
+
+        else {
+            $args{'alias'} = $self->new_alias( $args{'table'} );
+        }
+    }
+
+    # }}}
+
+    # Set this to the name of the column and the alias, unless we've been
+    # handed a subclause name
+
+    my $qualified_column
+        = $args{'alias'}
+        ? $args{'alias'} . "." . $args{'column'}
+        : $args{'column'};
+    my $clause_id = $args{'subclause'} || $qualified_column;
+
+    # XXX: when is column_obj undefined?
+    my $class
+        = $self->{joins}{ $args{alias} }
+        && $self->{joins}{ $args{alias} }{class}
+        ? $self->{joins}{ $args{alias} }{class}
+        ->new( $self->_new_collection_args )
+        : $self;
+    my $column_obj = $class->new_item()->column( $args{column} );
+
+    $self->record_class->new(handle => $self->_handle)->_apply_input_filters(
+        column    => $column_obj,
+        value_ref => \$args{'value'},
+    ) if $column_obj && $column_obj->decode_select;
+
     # make passing in an object DTRT
     my $value_ref = ref( $args{value} );
     if ($value_ref) {
@@ -1243,45 +1296,6 @@ sub limit {
         $args{'escape'} = 'ESCAPE ' . $self->_quote_value( $args{escape} );
     }
 
-    #If we're performing a left join, we really want the alias to be the
-    #left join criterion.
-
-    if (   ( defined $args{'leftjoin'} )
-        && ( not defined $args{'alias'} ) )
-    {
-        $args{'alias'} = $args{'leftjoin'};
-    }
-
-    # {{{ if there's no alias set, we need to set it
-
-    unless ( defined $args{'alias'} ) {
-
-        #if the table we're looking at is the same as the main table
-        if ( $args{'table'} eq $self->table ) {
-
-            # TODO this code assumes no self joins on that table.
-            # if someone can name a case where we'd want to do that,
-            # I'll change it.
-
-            $args{'alias'} = 'main';
-        }
-
-        else {
-            $args{'alias'} = $self->new_alias( $args{'table'} );
-        }
-    }
-
-    # }}}
-
-    # Set this to the name of the column and the alias, unless we've been
-    # handed a subclause name
-
-    my $qualified_column
-        = $args{'alias'}
-        ? $args{'alias'} . "." . $args{'column'}
-        : $args{'column'};
-    my $clause_id = $args{'subclause'} || $qualified_column;
-
     # If we're trying to get a leftjoin restriction, lets set
     # $restriction to point there. otherwise, lets construct normally
 
@@ -1296,14 +1310,6 @@ sub limit {
 
     # If it's a new value or we're overwriting this sort of restriction,
 
-    # XXX: when is column_obj undefined?
-    my $class
-        = $self->{joins}{ $args{alias} }
-        && $self->{joins}{ $args{alias} }{class}
-        ? $self->{joins}{ $args{alias} }{class}
-        ->new( $self->_new_collection_args )
-        : $self;
-    my $column_obj = $class->new_item()->column( $args{column} );
     my $case_sensitive = $column_obj ? $column_obj->case_sensitive : 0;
     $case_sensitive = $args{'case_sensitive'}
         if defined $args{'case_sensitive'};
@@ -1328,11 +1334,6 @@ sub limit {
         $args{'value'} = '( ' . join( ',', @{ $args{'value'} } ) . ' )';
         $args{'operator'} = 'IN';
     }
-
-    $self->record_class->new(handle => $self->_handle)->_apply_input_filters(
-        column    => $column_obj,
-        value_ref => \$args{'value'},
-    ) if $column_obj && $column_obj->decode_select;
 
     my $clause = {
         column   => $qualified_column,
