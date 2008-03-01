@@ -1242,7 +1242,7 @@ sub limit {
     $self->record_class->new(handle => $self->_handle)->_apply_input_filters(
         column    => $column_obj,
         value_ref => \$args{'value'},
-    ) if $column_obj && $column_obj->decode_select;
+    ) if $column_obj && $column_obj->encode_on_select;
 
     # make passing in an object DTRT
     my $value_ref = ref( $args{value} );

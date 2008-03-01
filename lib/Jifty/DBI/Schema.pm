@@ -407,7 +407,7 @@ __PACKAGE__->register_types(
     boolean => sub {
         _init_handler is sub {
             my ($column, $from) = @_;
-            $column->decode_select(1);
+            $column->encode_on_select(1);
             $column->type('boolean');
         },
         type is 'boolean',

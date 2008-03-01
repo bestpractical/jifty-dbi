@@ -30,7 +30,7 @@ my @attrs = qw/
     case_sensitive
     private
     protected
-    decode_select
+    encode_on_select
     /;
 
 # these actually live in the attributes hash
