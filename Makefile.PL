@@ -41,6 +41,10 @@ features(
         'Time::Duration' => '',
         'Time::Duration::Parse' => '0.05',
     ],
+    'URI filter' => [
+        -default => 1,
+        'URI' => '',
+    ],
 );
 auto_install();
 &WriteAll;
