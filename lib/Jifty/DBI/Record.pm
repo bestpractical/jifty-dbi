@@ -599,8 +599,6 @@ sub _columns_hashref {
     return ( $self->COLUMNS || {} );
 }
 
-# sub {{{ readable_attributes
-
 =head2 readable_attributes
 
 Returns a list this table's readable columns
