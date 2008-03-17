@@ -1377,7 +1377,6 @@ sub __create {
             and $column->mandatory
             and $column->type ne "serial" )
         {
-
             # Enforce "mandatory"
             Carp::carp "Did not supply value for mandatory column "
                 . $column->name;
@@ -1634,7 +1633,8 @@ sub run_canonicalization_for_column {
 
     my ( $ret, $value_ref ) = $self->_run_callback(
         name => "canonicalize_" . $args{'column'},
-        args => $args{'value'}
+        args => $args{'value'},
+        short_circuit => 0,
     );
     return unless defined $ret;
     return (
@@ -1655,6 +1655,8 @@ sub has_canonicalizer_for_column {
     my $key    = shift;
     my $method = "canonicalize_$key";
     if ( $self->can($method) ) {
+        return 1;
+    } elsif ( Class::Trigger::__fetch_all_triggers($self, $method) ) {
         return 1;
     } else {
         return undef;
@@ -1697,7 +1699,10 @@ Returns true if COLUMN has a validator, otherwise returns undef.
 sub has_validator_for_column {
     my $self = shift;
     my $key  = shift;
-    if ( $self->can( "validate_" . $key ) ) {
+    my $method = "validate_$key";
+    if ( $self->can( $method ) ) {
+        return 1;
+    } elsif ( Class::Trigger::__fetch_all_triggers($self, $method) ) {
         return 1;
     } else {
         return undef;
@@ -1709,6 +1714,7 @@ sub _run_callback {
     my %args = (
         name => undef,
         args => undef,
+        short_circuit => 1,
         @_
     );
 
@@ -1718,7 +1724,7 @@ sub _run_callback {
     if ( my $func = $self->can($method) ) {
         @results = $func->( $self, $args{args} );
         return ( wantarray ? ( undef, [ [@results] ] ) : undef )
-            unless $results[0];
+            if $args{short_circuit} and not $results[0];
     }
     $ret = $self->call_trigger( $args{'name'} => $args{args} );
     return (

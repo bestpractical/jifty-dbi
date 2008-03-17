@@ -405,14 +405,22 @@ sub register_types {
 
 __PACKAGE__->register_types(
     boolean => sub {
-        _init_handler is sub {
-            my ($column, $from) = @_;
-            $column->encode_on_select(1);
-            $column->type('boolean');
-        },
+        encode_on_select is 1,
         type is 'boolean',
         filters are qw(Jifty::DBI::Filter::Boolean),
-        default is 0,
+        default is 'false',
+        _init_handler is sub {
+            my ($column, $from) = @_;
+            no strict 'refs';
+            Class::Trigger::add_trigger($from, name => "canonicalize_" . $column->name, callback => sub {
+                my ($self,$value) = @_;
+                $self->_apply_output_filters(
+                    column    => $column,
+                    value_ref => \$value,
+                );
+                return $value;
+            });
+        },
     },
 );
 

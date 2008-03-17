@@ -6,7 +6,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 130;
+use constant TESTS_PER_DRIVER => 136;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -98,6 +98,20 @@ SKIP: {
         }
     }
 
+    # Test undef for boolean columns marked mandatory
+    my $rec = TestApp::User->new( handle => $handle );
+    my ($id) = $rec->create();
+    ok($id, 'created record');
+    ok($rec->load($id), 'loaded record');
+    is($rec->id, $id, 'record id matches');
+    is($rec->other_data, 0, 'default mandatory column is false, not undef');
+
+    $rec->set_other_data(1);
+    is($rec->other_data, 1, 'mandatory column is now true');
+    
+    $rec->set_other_data(undef);
+    is($rec->other_data, 0, 'mandatory column set to undef is now false, not undef');
+
     cleanup_schema('TestApp', $handle);
     disconnect_handle($handle);
 }
@@ -111,7 +125,8 @@ sub schema_sqlite {
 <<EOF;
 CREATE table users (
     id integer primary key,
-    my_data boolean
+    my_data boolean,
+    other_data boolean not null
 )
 EOF
 
@@ -122,7 +137,8 @@ sub schema_mysql {
 <<EOF;
 CREATE TEMPORARY table users (
     id integer auto_increment primary key,
-    my_data boolean
+    my_data boolean,
+    other_data boolean not null
 )
 EOF
 
@@ -133,7 +149,8 @@ sub schema_pg {
 <<EOF;
 CREATE TEMPORARY table users (
     id serial primary key,
-    my_data boolean
+    my_data boolean,
+    other_data boolean not null
 )
 EOF
 
@@ -145,6 +162,10 @@ BEGIN {
     use Jifty::DBI::Record schema {
     column my_data =>
         is boolean;
+
+    column other_data =>
+        is boolean,
+        is mandatory;
     }
 }
 
