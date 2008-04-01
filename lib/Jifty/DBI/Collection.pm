@@ -364,7 +364,7 @@ enforcing an ordering on the rows (with L</order_by>, say).
 sub _apply_limits {
     my $self         = shift;
     my $statementref = shift;
-    $self->_handle->apply_limits( $statementref, $self->rows_per_page,
+    $self->_handle->apply_limits( $statementref, $self->pager->entries_on_this_page,
         $self->first_row );
 
 }
@@ -443,7 +443,7 @@ sub _limit_clause {
         if ( $self->first_row != 0 ) {
             $limit_clause .= $self->first_row . ", ";
         }
-        $limit_clause .= $self->rows_per_page;
+        $limit_clause .= $self->pager->entries_on_this_page;
     } else {
         $limit_clause = "";
     }

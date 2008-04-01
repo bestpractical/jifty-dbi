@@ -88,6 +88,7 @@ sub connect {
         user       => undef,
         password   => undef,
         requiressl => undef,
+        extra      => {},
         @_
     );
 
@@ -109,7 +110,7 @@ sub connect {
     if ( ( !$self->dbh ) || ( !$self->dbh->ping ) || ( $self->dsn ne $dsn ) )
     {
         my $handle
-            = DBI->connect( $self->dsn, $args{'user'}, $args{'password'} )
+            = DBI->connect( $self->dsn, $args{'user'}, $args{'password'}, $args{'extra'} )
             || Carp::croak "Connect Failed $DBI::errstr\n";
 
 #databases do case conversion on the name of columns returned.
@@ -196,6 +197,7 @@ sub build_dsn {
 
     delete $args{'user'};
     delete $args{'password'};
+    delete $args{'extra'};
 
     $self->{'dsn'} = "dbi:$driver:"
         . CORE::join( ';',

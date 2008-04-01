@@ -409,6 +409,7 @@ __PACKAGE__->register_types(
         type is 'boolean',
         filters are qw(Jifty::DBI::Filter::Boolean),
         default is 'false',
+        render_as 'Checkbox',
         _init_handler is sub {
             my ($column, $from) = @_;
             no strict 'refs';
