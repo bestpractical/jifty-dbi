@@ -377,10 +377,12 @@ sub _init_column_for {
         } else {
             warn "Error in $from: $refclass neither Record nor Collection. Perhaps it couldn't be loaded?";
         }
-    } elsif (my $handler = $column->attributes->{_init_handler}) {
-        $handler->($column, $from);
     } else {
         $column->type('varchar(255)') unless $column->type;
+    }
+
+    if (my $handler = $column->attributes->{_init_handler}) {
+        $handler->($column, $from);
     }
 
     $from->COLUMNS->{$name} = $column;
