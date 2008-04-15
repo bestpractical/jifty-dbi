@@ -1803,6 +1803,9 @@ sub set_page_info {
     my $weakself = $self;
     weaken($weakself);
 
+    $args{'current_page'} = 1 if !defined($args{'current_page'});
+    $args{'per_page'}     = 0 if !defined($args{'per_page'});
+
     $self->pager->total_entries( lazy { $weakself->count_all } )
         ->entries_per_page( $args{'per_page'} )
         ->current_page( $args{'current_page'} );
