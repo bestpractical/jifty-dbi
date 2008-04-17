@@ -60,7 +60,7 @@ for my $attr (@handy_attrs) {
 
 =head1 NAME
 
-Jifty::DBI::Column
+Jifty::DBI::Column - Encapsulate's a single column in a Jifty::DBI::Record table
 
 =head1 DESCRIPTION
 
