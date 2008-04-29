@@ -205,7 +205,7 @@ ever else I think of.
 
 =head1 LICENSE
 
-Jifty::DBI is Copyright 2005-2007 Best Practical Solutions, LLC.
+Jifty::DBI is Copyright 2005-2008 Best Practical Solutions, LLC.
 Jifty::DBI is distributed under the same terms as Perl itself.
 
 =cut
