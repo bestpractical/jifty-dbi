@@ -1556,6 +1556,18 @@ sub add_order_by {
     return ( $self->{'order_by'} || [] );
 }
 
+=head2 clear_order_by
+
+Clears whatever would normally get set in the ORDER BY clause.
+
+=cut
+
+sub clear_order_by {
+    my $self = shift;
+
+    $self->{'order_by'} = [];
+}
+
 =head2 _order_clause
 
 returns the ORDER BY clause for the search.

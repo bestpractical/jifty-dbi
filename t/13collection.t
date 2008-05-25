@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 7;
+use Test::More tests => 8;
 
 my $package;
 BEGIN { 
@@ -123,3 +123,5 @@ is $obj->_order_clause,
    ' ORDER BY ab.msg_id DESC, main.yaks ASC ',
    "add_order_by works when passing a list-as-hash directly";
 
+$obj->clear_order_by;
+is($obj->_order_clause, '', "clear_order_by works");
