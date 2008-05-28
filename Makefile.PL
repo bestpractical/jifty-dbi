@@ -1,8 +1,8 @@
 use inc::Module::Install;
-requires( perl => '5.8.3');
 name ('Jifty-DBI');
 license ('perl');
 version_from('lib/Jifty/DBI.pm');
+perl_version('5.8.3');
 requires('Cache::Simple::TimedExpiry' => '0.21');
 requires('Class::Accessor::Fast' => 0);
 requires('Class::Data::Inheritable');
