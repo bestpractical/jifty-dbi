@@ -26,7 +26,7 @@ requires('version');
 #requires('Class::Trigger');
 build_requires('Test::More' => 0.52);
 build_requires('Test::Warn' => 0.10);
-build_requires('DBD::SQLite');
+build_requires('DBD::SQLite' => 1.14);
 no_index directory => 'ex';
 features( 
     'Memcached support' => [
