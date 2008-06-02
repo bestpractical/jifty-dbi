@@ -40,7 +40,7 @@ features(
     'Duration filter' => [
         -default => 1,
         'Time::Duration' => '',
-        'Time::Duration::Parse' => '0.05',
+        'Time::Duration::Parse' => '0.06',
     ],
     'URI filter' => [
         -default => 1,
