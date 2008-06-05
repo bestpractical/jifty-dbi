@@ -1734,6 +1734,19 @@ sub _run_callback {
     );
 }
 
+=head2 unload_value COLUMN
+
+Purges the cached value of COLUMN from the object, forcing it to be
+fetched from the database next time it is queried.
+
+=cut
+
+sub unload_value {
+    my $self = shift;
+    my $column = shift;
+    delete $self->{$_}{$column} for qw/values fetched decoded _prefetched/;
+}
+
 1;
 
 __END__
