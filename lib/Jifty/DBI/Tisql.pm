@@ -6,6 +6,8 @@ use warnings;
 use base qw(Parse::BooleanLogic);
 use Scalar::Util qw(refaddr blessed);
 
+use Data::Dumper;
+
 use Regexp::Common qw(delimited);
 my $re_delim  = qr{$RE{delimited}{-delim=>qq{\'\"}}};
 my $re_field  = qr{[a-zA-Z][a-zA-Z0-9_]*};
@@ -36,40 +38,46 @@ sub parse_query {
     my $string = shift;
 
     my $tree = {
-        joins => {},
+        aliases => {},
         conditions => undef,
     };
-    
-    # parse "FROM..." prefix into $tree->{'joins'}
+
+    # parse "FROM..." prefix into $tree->{'aliases'}
     if ( $string =~ s/^\s*FROM\s+($re_alias(?:\s*,\s*$re_alias)*)\s+WHERE\s+//oi ) {
-        $tree->{'joins'}->{ $_->[1] } = $self->find_column( $_->[0], $tree->{'joins'} )
-            foreach map [split /\s+AS\s+/i, $_], split /,/, $1;
+        $tree->{'aliases'}->{ $_->[1] } = $self->find_column( $_->[0], $tree->{'aliases'} )
+            foreach map [split /\s+AS\s+/i, $_], split /\s*,\s*/, $1;
+        while ( my ($name, $meta) = each %{ $tree->{aliases} } ) {
+            $meta->{'name'} = $name;
+        }
     }
 
     $tree->{'conditions'} = $self->as_array(
         $string,
-        operand_cb => sub { return $self->split_condition( $_[0], $tree->{'joins'} ) },
+        operand_cb => sub { return $self->parse_condition( $_[0], $tree->{'aliases'} ) },
     );
-    use Data::Dumper; warn Dumper( $tree->{'conditions'} );
-    $self->apply_query_tree( $tree->{'conditions'} );
+    $self->{'tisql'}{'conditions'} = $tree->{'conditions'};
+    $self->merge_joins( $tree );
+    $self->bundle_conditions( $tree ) if 0;
+    $self->apply_query_tree( $tree );
     return $tree;
 }
 
 sub apply_query_tree {
     my $self = shift;
     my $tree = shift;
+    my $current = shift || $tree->{'conditions'};
+    my $ea = shift || 'AND';
 
     my $collection = $self->{'collection'};
 
-    my $ea = shift || 'AND';
     $collection->open_paren('tisql');
-    foreach my $element ( @$tree ) {
+    foreach my $element ( @$current ) {
         unless ( ref $element ) {
             $ea = $element;
             next;
         }
         elsif ( ref $element eq 'ARRAY' ) {
-            $self->apply_query_tree( $element, $ea );
+            $self->apply_query_tree( $tree, $element, $ea );
             next;
         }
         elsif ( ref $element ne 'HASH' ) {
@@ -82,14 +90,16 @@ sub apply_query_tree {
             operator         => $element->{'op'},
         );
         if ( ref $element->{'lhs'} ) {
-            my ($alias, $column) = $self->resolve_join( @{ $element->{'lhs'} } );
-            @limit{qw(alias column)} = ($alias, $column->name);
+            $limit{'alias'} = $self->resolve_join( $element->{'lhs'} );
+            $limit{'column'} = $element->{'lhs'}{'chain'}[-1]->name;
         } else {
             die "left hand side must be always column specififcation";
         }
         if ( ref $element->{'rhs'} ) {
-            my ($alias, $column) = $self->resolve_join( @{ $element->{'rhs'} } );
-            @limit{qw(quote_value value)} = (0, $alias .'.'. $column->name );
+            $limit{'quote_value'} = 0;
+            $limit{'value'} =
+                $self->resolve_join( $element->{'rhs'} )
+                .'.'. $element->{'rhs'}{'chain'}[-1]->name;
         } else {
             $limit{'value'} = $element->{'rhs'};
         }
@@ -99,35 +109,89 @@ sub apply_query_tree {
     $collection->close_paren('tisql');
 }
 
+{
+my %cache;
+my $i = 0;
+my $aliases;
+my $merge_joins_cb = sub {
+    my $meta = shift;
+    my @parts = split /\./, $meta->{'string'};
+    while ( @parts > 2 ) {
+        my $new_str = join '.', splice @parts, 0, 2;
+        my $m = $cache{ $new_str };
+        unless ( $m ) {
+            my $name = 'a'. ++$i;
+            $name = "a". ++$i while exists $aliases->{ $name };
+            $m = {
+                name     => $name,
+                string   => $new_str,
+                chain    => [ $meta->{'chain'}[0] ],
+                previous => $meta->{'previous'},
+            };
+            $cache{ $new_str } = $aliases->{ $name } = $m;
+        }
+        shift @{ $meta->{'chain'} };
+        unshift @parts, $m->{'name'};
+        $meta->{'previous'} = $m;
+        $meta->{'string'} = join '.', @parts;
+        $meta = $m;
+    }
+};
+
+sub merge_joins {
+    my $self = shift;
+    my $tree = shift;
+    %cache = ();
+    $aliases = $tree->{'aliases'};
+
+    $merge_joins_cb->( $_ ) foreach values %$aliases;
+    $self->apply_callback_to_tree(
+        $tree->{'conditions'},
+        sub {
+            my $condition = shift;
+            $merge_joins_cb->( $_ ) foreach
+                grep ref $_, map $condition->{$_}, qw(lhs rhs);
+        }
+    );
+}
+}
+
+sub bundle_conditions {
+    my $self = shift;
+    my $tree = shift;
+
+    $self->apply_callback_to_tree(
+        $tree->{'conditions'},
+        sub {
+            my $condition = shift;
+            return if ref $condition->{'rhs'};
+            my $lhs = $condition->{'lhs'};
+        }
+    );
+}
+
 sub resolve_join {
     my $self = shift;
-    my @chain = @_;
-    if ( @chain == 1 ) {
-        return 'main', $chain[0];
-    }
+    my $meta = shift;
+
+    return $meta->{'sql_alias'} if $meta->{'sql_alias'};
 
     my $collection = $self->{'collection'};
 
-    my $last_column = pop @chain;
     my $last_alias = 'main';
+    if ( my $prev = $meta->{'previous'} ) {
+        $last_alias = $self->resolve_join( $prev );
+    }
 
-    my %aliases;
-
-    foreach my $column ( @chain ) {
-        unless ( blessed $column ) {
-            if ( my $tmp = $aliases{ refaddr $column } ) {
-                ($last_alias, $last_column) = @$tmp;
-            } else {
-                ($last_alias, $last_column) = $self->resolve_join( @$column );
-            }
-            next;
-        }
-
+    my @chain = @{ $meta->{'chain'} };
+    while( my $column = shift @chain ) {
         my $name = $column->name;
 
         my $classname = $column->refers_to;
         unless ( $classname ) {
-            die "column '$name' of is not a reference";
+            die "column '$name' is not a reference when there are still items in the chain"
+                if @chain;
+            return $meta->{'sql_alias'} = $last_alias;
         }
 
         if ( UNIVERSAL::isa( $classname, 'Jifty::DBI::Collection' ) ) {
@@ -158,10 +222,11 @@ sub resolve_join {
             die "Column '$name' refers to '$classname' which is not record or collection";
         }
     }
-    return ($last_alias, $last_column);
+    $meta->{'sql_alias'} = $last_alias;
+    return $last_alias;
 }
 
-sub split_condition {
+sub parse_condition {
     my $self = shift;
     my $string = shift;
     my $aliases = shift;
@@ -192,27 +257,32 @@ sub find_column {
     my $string = shift;
     my $aliases = shift;
 
-    my @res;
+    my %res = (
+        string   => $string,
+        previous => undef,
+        chain    => [],
+    );
 
     my ($start_from, @names) = split /\./, $string;
     my $item;
     unless ( $start_from ) {
         $item = $self->{'collection'}->new_item;
     } else {
-        my $alias = $aliases->{ $start_from } || die "$start_from alias is not defined";
-        $item = $alias->[-1]->refers_to->new( handle => $self->{'collection'}->_handle );
-        push @res, $alias;
+        my $alias = $aliases->{ $start_from }
+            || die "$start_from alias is not declared in from clause";
+        $res{'previous'} = $alias;
+        $item = $alias->{'chain'}[-1]->refers_to->new( handle => $self->{'collection'}->_handle );
     }
     while ( my $name = shift @names ) {
         my $column = $item->column( $name );
         die "$item has no column '$name'" unless $column;
 
-        push @res, $column;
-        return \@res unless @names;
+        push @{ $res{'chain'} }, $column;
+        return \%res unless @names;
 
         my $classname = $column->refers_to;
         unless ( $classname ) {
-            die "column '$name' of $item is not a reference";
+            die "column '$name' of $item is not a reference to record or collection";
         }
 
         if ( UNIVERSAL::isa( $classname, 'Jifty::DBI::Collection' ) ) {
@@ -226,7 +296,7 @@ sub find_column {
         }
     }
 
-    return \@res;
+    return \%res;
 }
 
 sub filter_conditions_tree {
@@ -239,7 +309,7 @@ sub filter_conditions_tree {
         next if $skip_next-- > 0;
 
         if ( ref $entry eq 'ARRAY' ) {
-            my $tmp = $self->filter_conditions( $entry, $cb, 1 );
+            my $tmp = $self->filter_conditions_tree( $entry, $cb, 1 );
             if ( !$tmp || (ref $tmp eq 'ARRAY' && !@$tmp) ) {
                 pop @res;
                 $skip_next = 1 unless @res;
@@ -261,5 +331,16 @@ sub filter_conditions_tree {
     return \@res;
 }
 
+sub apply_callback_to_tree {
+    my ($self, $tree, $cb) = @_;
+
+    foreach my $entry ( @$tree ) {
+        if ( ref $entry eq 'ARRAY' ) {
+            $self->apply_callback_to_tree( $entry, $cb );
+        } elsif ( ref $entry eq 'HASH' ) {
+            $cb->( $entry );
+        }
+    }
+}
 
 1;
