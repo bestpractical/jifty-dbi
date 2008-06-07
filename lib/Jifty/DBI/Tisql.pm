@@ -134,7 +134,6 @@ my $merge_joins_cb = sub {
         unshift @parts, $m->{'name'};
         $meta->{'previous'} = $m;
         $meta->{'string'} = join '.', @parts;
-        $meta = $m;
     }
 };
 
