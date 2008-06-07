@@ -48,19 +48,9 @@ SKIP: {
 
     $users_obj->clean_slate;
     $users_obj->tisql('.gm.grp.name = "Support"');
-    diag $users_obj->build_select_query;
-    diag Dumper( $users_obj->items_array_ref );
 
     $users_obj->clean_slate;
     $users_obj->tisql('from .gm.grp as g1 where g1.name = "Support" or g1.name = "Developers"');
-    diag $users_obj->build_select_query;
-    diag Dumper( $users_obj->items_array_ref );
-
-#    $users_obj->clean_slate;
-#    $users_obj->tisql('.gm.grp is null');
-#    diag $users_obj->build_select_query;
-#    use Data::Dumper;
-#    diag Dumper( $users_obj->items_array_ref );
 
     cleanup_schema( 'TestApp', $handle );
 
