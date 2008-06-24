@@ -934,7 +934,7 @@ sub join {
                 @args{qw/alias1 alias2/}   = @args{qw/alias2 alias1/};
                 @args{qw/column1 column2/} = @args{qw/column2 column1/};
 
-                return $self->Jifty::DBI::Collection::limit(
+                return $args{'collection'}->limit(
                     entry_aggregator => 'AND',
                     @_,
                     quote_value => 0,
