@@ -1150,6 +1150,12 @@ ENDSWITH is like LIKE, except it prepends a % to the beginning of the string
 IN matches a column within a set of values.  The value specified in the limit
 should be an array reference of values.
 
+=item "IS"
+
+=item "IS NOT"
+
+This is useful for when you wish to match columns that contain NULL (or ones that don't). Use this operator and a value of "NULL".
+
 =back
 
 =item escape
