@@ -1373,6 +1373,35 @@ of allowing you to construct malformed SQL queries.  Its interface
 will probably change in the near future, but its presence allows for
 arbitrarily complex queries.
 
+Here's an example, to construct a SQL WHERE clause roughly equivalent to (depending on your SQL dialect):
+
+  parent = 12 AND task_type = 'action' 
+      AND (status = 'open' 
+          OR (status = 'done' 
+              AND completed_on >= '2008-06-26 11:39:22'))
+
+You can use sub-clauses and C<open_paren> and C<close_paren> as follows:
+
+  $col->limit( column => 'parent', value => 12 );
+  $col->limit( column => 'task_type', value => 'action' );
+
+  $col->open_paren("my_clause");
+
+  $col->limit( subclause => "my_clause", column => 'status', value => 'open' );
+
+  $col->open_paren("my_clause");
+
+  $col->limit( subclause => "my_clause", column => 'status', 
+      value => 'done', entry_aggregator => 'OR' );
+  $col->limit( subclause => "my_clause", column => 'completed_on',
+      operator => '>=', value => '2008-06-26 11:39:22' );
+
+  $col->close_paren("my_clause");
+
+  $col->close_paren("my_clause");
+
+Where the C<"my_clause"> can be any name you choose.
+
 =cut
 
 sub open_paren {
