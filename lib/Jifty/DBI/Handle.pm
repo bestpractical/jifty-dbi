@@ -796,6 +796,10 @@ sub rollback {
 #unless ($TRANSDEPTH) {Carp::confess("Attempted to rollback a transaction with none in progress")};
     if ($force) {
         $TRANSDEPTH = 0;
+
+        Jifty::DBI::Record->flush_cache
+            if Jifty::DBI::Record->can('flush_cache');
+
         return ( $dbh->rollback );
     }
 
@@ -810,7 +814,10 @@ sub rollback {
         return $TRANSDEPTH;
     }
 
-    my $rv = $self->dbh->rollback;
+    Jifty::DBI::Record->flush_cache
+        if Jifty::DBI::Record->can('flush_cache');
+
+    my $rv = $dbh->rollback;
     if ($rv) {
         $TRANSDEPTH--;
     }
