@@ -65,12 +65,11 @@ Jifty::DBI::Column - Encapsulate's a single column in a Jifty::DBI::Record table
 =head1 DESCRIPTION
 
 
-This class encapsulate's a single column in a Jifty::DBI::Record table
-description. It replaces the _accessible method in
-L<Jifty::DBI::Record>.
+This class encapsulate's a single column in a L<Jifty::DBI::Record> table
+description. It replaces the _accessible method in L<Jifty::DBI::Record>.
 
 It has the following accessors: C<name type default validator boolean
-refers_to readable writable length>.
+refers_to readable writable max_length>.
 
 =cut
 
