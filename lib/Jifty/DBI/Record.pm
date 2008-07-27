@@ -258,7 +258,7 @@ sub _init_methods_for_column {
     # Check for the correct column type when the Storable filter is in use
     if ( grep { $_ eq 'Jifty::DBI::Filter::Storable' }
         ( $column->input_filters, $column->output_filters )
-            and $column->type !~ /^(blob|bytea)$/i )
+            and !$column->is_binary )
     {
         die "Column '$column_name' in @{[$column->record_class]} "
             . "uses the Storable filter but is not of type 'blob'.\n";

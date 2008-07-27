@@ -124,6 +124,21 @@ sub is_string {
     return 0;
 }
 
+=head2 is_binary
+
+Returns true if this column is a binary field, e.g blob or varbinary.
+
+=cut
+
+
+sub is_binary {
+    my $self = shift;
+    if ( $self->type =~ /BLOB|BINARY|BYTEA/i ){ 
+        return 1;
+    }
+    return 0;
+}
+
 
 =head2 serialize_metadata
 
