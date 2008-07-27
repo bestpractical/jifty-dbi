@@ -41,7 +41,9 @@ to re-instantiate your format object every C<decode>.
 __PACKAGE__->mk_classdata("_formatter");
 sub formatter {
     my $self = shift;
-    unless ($self->_formatter) {
+    if ( not $self->_formatter
+          or $self->_formatter->pattern ne $self->_strptime )
+    {
          $self->_formatter(DateTime::Format::Strptime->new(pattern => $self->_strptime));
     }
     return $self->_formatter;

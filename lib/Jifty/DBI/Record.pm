@@ -599,8 +599,6 @@ sub _columns_hashref {
     return ( $self->COLUMNS || {} );
 }
 
-# sub {{{ readable_attributes
-
 =head2 readable_attributes
 
 Returns a list this table's readable columns
@@ -1068,6 +1066,11 @@ sub load_by_cols {
                 $value = $value->id;
             }
 
+            $self->_apply_input_filters(
+                column    => $column_obj,
+                value_ref => \$value,
+            ) if $column_obj->encode_on_select;
+
             # if the handle is in a case_sensitive world and we need to make
             # a case-insensitive query
             if ( $self->_handle->case_sensitive && $value ) {
@@ -1363,13 +1366,17 @@ sub __create {
             and not ref $column->default )
         {
             $attribs{ $column->name } = $column->default;
+
+            $self->_apply_input_filters(
+                column    => $column,
+                value_ref => \$attribs{ $column->name },
+            );
         }
 
         if (    not defined $attribs{ $column->name }
             and $column->mandatory
             and $column->type ne "serial" )
         {
-
             # Enforce "mandatory"
             Carp::carp "Did not supply value for mandatory column "
                 . $column->name;
@@ -1569,6 +1576,7 @@ sub _apply_filters {
             record    => $self,
             column    => $args{'column'},
             value_ref => $args{'value_ref'},
+            handle    => $self->_handle,
         );
 
         # XXX TODO error proof this
@@ -1625,7 +1633,8 @@ sub run_canonicalization_for_column {
 
     my ( $ret, $value_ref ) = $self->_run_callback(
         name => "canonicalize_" . $args{'column'},
-        args => $args{'value'}
+        args => $args{'value'},
+        short_circuit => 0,
     );
     return unless defined $ret;
     return (
@@ -1646,6 +1655,8 @@ sub has_canonicalizer_for_column {
     my $key    = shift;
     my $method = "canonicalize_$key";
     if ( $self->can($method) ) {
+        return 1;
+    } elsif ( Class::Trigger::__fetch_all_triggers($self, $method) ) {
         return 1;
     } else {
         return undef;
@@ -1688,7 +1699,10 @@ Returns true if COLUMN has a validator, otherwise returns undef.
 sub has_validator_for_column {
     my $self = shift;
     my $key  = shift;
-    if ( $self->can( "validate_" . $key ) ) {
+    my $method = "validate_$key";
+    if ( $self->can( $method ) ) {
+        return 1;
+    } elsif ( Class::Trigger::__fetch_all_triggers($self, $method) ) {
         return 1;
     } else {
         return undef;
@@ -1700,6 +1714,7 @@ sub _run_callback {
     my %args = (
         name => undef,
         args => undef,
+        short_circuit => 1,
         @_
     );
 
@@ -1709,7 +1724,7 @@ sub _run_callback {
     if ( my $func = $self->can($method) ) {
         @results = $func->( $self, $args{args} );
         return ( wantarray ? ( undef, [ [@results] ] ) : undef )
-            unless $results[0];
+            if $args{short_circuit} and not $results[0];
     }
     $ret = $self->call_trigger( $args{'name'} => $args{args} );
     return (
@@ -1717,6 +1732,19 @@ sub _run_callback {
         ? ( $ret, [ [@results], @{ $self->last_trigger_results } ] )
         : $ret
     );
+}
+
+=head2 unload_value COLUMN
+
+Purges the cached value of COLUMN from the object, forcing it to be
+fetched from the database next time it is queried.
+
+=cut
+
+sub unload_value {
+    my $self = shift;
+    my $column = shift;
+    delete $self->{$_}{$column} for qw/values fetched decoded _prefetched/;
 }
 
 1;

@@ -378,10 +378,12 @@ sub _init_column_for {
         } else {
             warn "Error in $from: $refclass neither Record nor Collection. Perhaps it couldn't be loaded?";
         }
-    } elsif (my $handler = $column->attributes->{_init_handler}) {
-        $handler->($column, $from);
     } else {
         $column->type('varchar(255)') unless $column->type;
+    }
+
+    if (my $handler = $column->attributes->{_init_handler}) {
+        $handler->($column, $from);
     }
 
     $from->COLUMNS->{$name} = $column;
@@ -403,6 +405,28 @@ sub register_types {
         $class->TYPES->{$type} = $sub;
     }
 }
+
+__PACKAGE__->register_types(
+    boolean => sub {
+        encode_on_select is 1,
+        type is 'boolean',
+        filters are qw(Jifty::DBI::Filter::Boolean),
+        default is 'false',
+        render_as 'Checkbox',
+        _init_handler is sub {
+            my ($column, $from) = @_;
+            no strict 'refs';
+            Class::Trigger::add_trigger($from, name => "canonicalize_" . $column->name, callback => sub {
+                my ($self,$value) = @_;
+                $self->_apply_output_filters(
+                    column    => $column,
+                    value_ref => \$value,
+                );
+                return $value;
+            });
+        },
+    },
+);
 
 1;
 

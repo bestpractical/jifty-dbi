@@ -7,6 +7,7 @@ use Scalar::Util qw/weaken/;
 use overload (
     '@{}'       => \&items_array_ref,
     '<>'        => \&next,
+    bool        => sub {shift},
     fallback    => 1
 );
 
@@ -769,11 +770,11 @@ sub resolve_join {
                 = $classname->new( $self->_new_collection_args )->new_item;
             my $right_alias = $self->new_alias($item);
             $self->join(
-                type    => 'left',
-                alias1  => $last_alias,
-                column1 => 'id',
-                alias2  => $right_alias,
-                column2 => $column->by || 'id',
+                type        => 'left',
+                alias1      => $last_alias,
+                column1     => 'id',
+                alias2      => $right_alias,
+                column2     => $column->by || 'id',
                 is_distinct => 1,
             );
             $last_alias = $right_alias;
@@ -781,11 +782,11 @@ sub resolve_join {
             my $item        = $classname->new( $self->_new_record_args );
             my $right_alias = $self->new_alias($item);
             $self->join(
-                type    => 'left',
-                alias1  => $last_alias,
-                column1 => $name,
-                alias2  => $right_alias,
-                column2 => $column->by || 'id',
+                type        => 'left',
+                alias1      => $last_alias,
+                column1     => $name,
+                alias2      => $right_alias,
+                column2     => $column->by || 'id',
                 is_distinct => 1,
             );
             $last_alias = $right_alias;
@@ -858,7 +859,7 @@ on your database, call C<do_search> before that C<count>.
 
 sub do_search {
     my $self = shift;
-    return              if $self->derived;
+    return if $self->derived;
     $self->_do_search() if $self->{'must_redo_search'};
 
 }
@@ -1149,6 +1150,12 @@ ENDSWITH is like LIKE, except it prepends a % to the beginning of the string
 IN matches a column within a set of values.  The value specified in the limit
 should be an array reference of values.
 
+=item "IS"
+
+=item "IS NOT"
+
+This is useful for when you wish to match columns that contain NULL (or ones that don't). Use this operator and a value of "NULL".
+
 =back
 
 =item escape
@@ -1189,6 +1196,59 @@ sub limit {
     );
 
     return if $self->derived;
+
+    #If we're performing a left join, we really want the alias to be the
+    #left join criterion.
+
+    if (   ( defined $args{'leftjoin'} )
+        && ( not defined $args{'alias'} ) )
+    {
+        $args{'alias'} = $args{'leftjoin'};
+    }
+
+    # {{{ if there's no alias set, we need to set it
+
+    unless ( defined $args{'alias'} ) {
+
+        #if the table we're looking at is the same as the main table
+        if ( $args{'table'} eq $self->table ) {
+
+            # TODO this code assumes no self joins on that table.
+            # if someone can name a case where we'd want to do that,
+            # I'll change it.
+
+            $args{'alias'} = 'main';
+        }
+
+        else {
+            $args{'alias'} = $self->new_alias( $args{'table'} );
+        }
+    }
+
+    # }}}
+
+    # Set this to the name of the column and the alias, unless we've been
+    # handed a subclause name
+
+    my $qualified_column
+        = $args{'alias'}
+        ? $args{'alias'} . "." . $args{'column'}
+        : $args{'column'};
+    my $clause_id = $args{'subclause'} || $qualified_column;
+
+    # XXX: when is column_obj undefined?
+    my $class
+        = $self->{joins}{ $args{alias} }
+        && $self->{joins}{ $args{alias} }{class}
+        ? $self->{joins}{ $args{alias} }{class}
+        ->new( $self->_new_collection_args )
+        : $self;
+    my $column_obj = $class->new_item()->column( $args{column} );
+
+    $self->record_class->new(handle => $self->_handle)->_apply_input_filters(
+        column    => $column_obj,
+        value_ref => \$args{'value'},
+    ) if $column_obj && $column_obj->encode_on_select;
 
     # make passing in an object DTRT
     my $value_ref = ref( $args{value} );
@@ -1242,45 +1302,6 @@ sub limit {
         $args{'escape'} = 'ESCAPE ' . $self->_quote_value( $args{escape} );
     }
 
-    #If we're performing a left join, we really want the alias to be the
-    #left join criterion.
-
-    if (   ( defined $args{'leftjoin'} )
-        && ( not defined $args{'alias'} ) )
-    {
-        $args{'alias'} = $args{'leftjoin'};
-    }
-
-    # {{{ if there's no alias set, we need to set it
-
-    unless ( defined $args{'alias'} ) {
-
-        #if the table we're looking at is the same as the main table
-        if ( $args{'table'} eq $self->table ) {
-
-            # TODO this code assumes no self joins on that table.
-            # if someone can name a case where we'd want to do that,
-            # I'll change it.
-
-            $args{'alias'} = 'main';
-        }
-
-        else {
-            $args{'alias'} = $self->new_alias( $args{'table'} );
-        }
-    }
-
-    # }}}
-
-    # Set this to the name of the column and the alias, unless we've been
-    # handed a subclause name
-
-    my $qualified_column
-        = $args{'alias'}
-        ? $args{'alias'} . "." . $args{'column'}
-        : $args{'column'};
-    my $clause_id = $args{'subclause'} || $qualified_column;
-
     # If we're trying to get a leftjoin restriction, lets set
     # $restriction to point there. otherwise, lets construct normally
 
@@ -1295,11 +1316,6 @@ sub limit {
 
     # If it's a new value or we're overwriting this sort of restriction,
 
-    # XXX: when is column_obj undefined?
-    my $class = $self->{joins}{$args{alias}} && $self->{joins}{$args{alias}}{class} 
-      ? $self->{joins}{$args{alias}}{class}->new($self->_new_collection_args)
-      : $self;
-    my $column_obj = $class->new_item()->column( $args{column} );
     my $case_sensitive = $column_obj ? $column_obj->case_sensitive : 0;
     $case_sensitive = $args{'case_sensitive'}
         if defined $args{'case_sensitive'};
@@ -1309,8 +1325,8 @@ sub limit {
         && !$case_sensitive )
     {
 
-        # don't worry about case for numeric columns_in_db
-        if ( defined $column_obj ? $column_obj->is_string : 1 ) {
+# don't worry about case for numeric columns_in_db - only be case insensitive when we KNOW it's a blob
+        if ( defined $column_obj ? $column_obj->is_string : 0 ) {
             ( $qualified_column, $args{'operator'}, $args{'value'} )
                 = $self->_handle->_make_clause_case_insensitive(
                 $qualified_column, $args{'operator'}, $args{'value'} );
@@ -1362,6 +1378,35 @@ Note that this can be used for Deep Magic, and has a high likelyhood
 of allowing you to construct malformed SQL queries.  Its interface
 will probably change in the near future, but its presence allows for
 arbitrarily complex queries.
+
+Here's an example, to construct a SQL WHERE clause roughly equivalent to (depending on your SQL dialect):
+
+  parent = 12 AND task_type = 'action' 
+      AND (status = 'open' 
+          OR (status = 'done' 
+              AND completed_on >= '2008-06-26 11:39:22'))
+
+You can use sub-clauses and C<open_paren> and C<close_paren> as follows:
+
+  $col->limit( column => 'parent', value => 12 );
+  $col->limit( column => 'task_type', value => 'action' );
+
+  $col->open_paren("my_clause");
+
+  $col->limit( subclause => "my_clause", column => 'status', value => 'open' );
+
+  $col->open_paren("my_clause");
+
+  $col->limit( subclause => "my_clause", column => 'status', 
+      value => 'done', entry_aggregator => 'OR' );
+  $col->limit( subclause => "my_clause", column => 'completed_on',
+      operator => '>=', value => '2008-06-26 11:39:22' );
+
+  $col->close_paren("my_clause");
+
+  $col->close_paren("my_clause");
+
+Where the C<"my_clause"> can be any name you choose.
 
 =cut
 
@@ -1437,7 +1482,9 @@ sub _compile_generic_restrictions {
             unless ( ref $entry ) {
                 $result .= ' ' . $entry . ' ';
             } else {
-                $result .= join ' ', grep { defined } @{$entry}{qw(column operator value escape)};
+                $result .= join ' ',
+                    grep {defined}
+                    @{$entry}{qw(column operator value escape)};
             }
         }
         $result .= ')';
@@ -1542,6 +1589,18 @@ sub add_order_by {
         $self->redo_search();
     }
     return ( $self->{'order_by'} || [] );
+}
+
+=head2 clear_order_by
+
+Clears whatever would normally get set in the ORDER BY clause.
+
+=cut
+
+sub clear_order_by {
+    my $self = shift;
+
+    $self->{'order_by'} = [];
 }
 
 =head2 _order_clause
@@ -1686,9 +1745,10 @@ sub new_alias {
     my $self = shift;
     my $refers_to = shift || die "Missing parameter";
     my $table;
-
+    my $class = undef;
     if ( $refers_to->can('table') ) {
         $table = $refers_to->table;
+        $class = $refers_to;
     } else {
         $table = $refers_to;
     }
@@ -1696,9 +1756,10 @@ sub new_alias {
     my $alias = $self->_get_alias($table);
 
     $self->{'joins'}{$alias} = {
-        alias        => $alias,
-        table        => $table,
-        type         => 'CROSS',
+        alias => $alias,
+        table => $table,
+        type  => 'CROSS',
+        ( $class ? ( class => $class ) : () ),
         alias_string => " CROSS JOIN $table $alias ",
     };
 
@@ -1794,9 +1855,10 @@ sub set_page_info {
         ->current_page( $args{'current_page'} );
 
     $self->rows_per_page( $args{'per_page'} );
-    # We're not using $pager->first because it automatically does a count_all 
+
+    # We're not using $pager->first because it automatically does a count_all
     # to correctly return '0' for empty collections
-    $self->first_row(($args{'current_page'} - 1) * $args{'per_page'} + 1);
+    $self->first_row( ( $args{'current_page'} - 1 ) * $args{'per_page'} + 1 );
 
 }
 

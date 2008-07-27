@@ -5,11 +5,12 @@ use strict;
 use warnings;
 use File::Spec;
 use Test::More;# import => [qw(isa_ok skip plan)];
+use Test::Warn;
 
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 7;
+use constant TESTS_PER_DRIVER => 9;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -37,13 +38,21 @@ SKIP: {
         ok($e_id, "Got an id for the new employee");
 
         # Test 'is mandatory'
-        $e_id = $emp->create( employee_num => '456' );
+        warning_like {
+            $e_id = $emp->create( employee_num => '456' );
+        } qr/^Did not supply value for mandatory column name/;
+
         ok(!$e_id, "Did not get an id for second new employee, good");
 
         # Test 'is distinct'
         $e_id = $emp->create( name => 'Foo', employee_num => '456' );
         ok($e_id, "Was able to create a second record successfully");
-        my $e_id2 = $emp->create( name => 'Bar', employee_num => '123' );
+        my $e_id2;
+
+        warning_like {
+            $e_id2 = $emp->create( name => 'Bar', employee_num => '123' );
+        } qr/^TestApp::Employee=HASH\(\w+\) failed a 'is_distinct' check for employee_num on 123/;
+
         ok(!$e_id2, "is_distinct prevents us from creating another record");
         my $obj = TestApp::Employee->new( handle => $handle );
         $obj->load( $e_id );

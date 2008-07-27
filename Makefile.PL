@@ -1,8 +1,8 @@
 use inc::Module::Install;
-requires( perl => '5.8.3');
 name ('Jifty-DBI');
 license ('perl');
 version_from('lib/Jifty/DBI.pm');
+perl_version('5.8.3');
 requires('Cache::Simple::TimedExpiry' => '0.21');
 requires('Class::Accessor::Fast' => 0);
 requires('Class::Data::Inheritable');
@@ -25,7 +25,8 @@ requires('Scalar::Defer' => 0.10);
 requires('version');
 #requires('Class::Trigger');
 build_requires('Test::More' => 0.52);
-build_requires('DBD::SQLite');
+build_requires('Test::Warn' => 0.10);
+build_requires('DBD::SQLite' => 1.14);
 no_index directory => 'ex';
 features( 
     'Memcached support' => [
@@ -39,7 +40,11 @@ features(
     'Duration filter' => [
         -default => 1,
         'Time::Duration' => '',
-        'Time::Duration::Parse' => '0.05',
+        'Time::Duration::Parse' => '0.06',
+    ],
+    'URI filter' => [
+        -default => 1,
+        'URI' => '',
     ],
 );
 auto_install();

@@ -1,5 +1,96 @@
 Revision history for Perl extension Jifty::DBI.
 
+0.49 Mon Apr 07 22:16:48 EST 2008
+- Major changes:
+   * "is boolean" support for cross-database booleans
+   * New filters: Duration, URI
+   * column attribute encode_select for filtering columns on load_by_cols, etc
+   * <$collection> and @$collection support
+   * Protected and private fields, for Jifty's automatic action introspection
+   * ping/reconnect on error
+   * Memory leak, unnecessary query, and transaction fixes
+
+- All changes:
+   * call _init_hander for all columns
+   * Revert paging fix which isn't quite ready yet
+   * Note that booleans render as checkboxes
+   * Fixes for NULL boolean columns
+   * Booleans get canonicalizers, so perl-level gets canonical values, not just
+     the DB.
+   * Canonicalization fixes
+   * Catch some expected warnings with (new dependency on) Test::Warn
+   * Get rid of an unbalanced vim-fold
+   * Jifty::DBI::Filter::URI
+   * Rename decode_select to encode_on_select
+   * Fix final test failure: toggle pg_bool_tf before making the query
+   * encode and decode were swapped :|
+   * Some test fixes. DBD::Pg has a damn "DWIM" option for booleans that caused
+     failures
+   * Move the alias and column handling in ->limit up sooner so we have a
+     column object as soon as possible
+   * Apply filters on default values for attributes
+   * Rename encode_select to decode_select (I always get the two confused)
+   * Force undefined boolean attributes to be false, for sanity reasons
+   * Add a new column attribute, encode_select. This will apply filters on
+     load_by_cols and limit. Have Boolean use encode_select.
+   * Complain if the encoded/decoded value doesn't return one of _is_true or
+     _is_false.
+   * Add "is boolean" support for not-braindead booleans.
+   * Have filters receive the database handle
+   * fixing our lower() behaviour on non-text columns when we were being stupid
+   * better passing in the class of a joined table when using ->new_alias
+   * defaulting to a not-null string
+   * Quiet down defaults for an annoying regex match in current DBIx::DBSChema
+   * Return self, not true, in boolean context
+   * Fix collections in bool context
+   * Pass all data to logging hook so they can do more interesting things with
+     them immediately
+   * micro-optimization of _filters which is called quite often
+   * Add <$collection> and @$collection syntax sugar that simply calls
+     $collection->next and $collection->items_array_ref behind the scenes.
+   * Tiny POD tweak so t/pod-coverage.t passes.
+   * Jifty::DBI::Handle - When "begin_transaction", "commit" and "rollback"
+     did not succeed, the internal $TRANSDEPTH should be left unchanged.
+     (Otherwise, a failed ->commit will cause future transactions to never
+     really take place.)
+   * Add a documentation meta-attribute, for Jifty
+   * Debian packaging for 0.48
+   * Bump for added properties
+   * Protected and private fields, for Jifty's automatic action introspection
+   * Added the ping/reconnect on error as suggested by Jesse.
+   * Fix typo
+   * Upgrade dep to 0.05 now that the hh:mm(:ss) parsing code is in it
+   * Better error checking
+   * No need to duplicate order_by's logic, just call thrash explicitly and
+     call add_order_by
+   * Add Collection->add_order_by, which refines ordering, instead of thrashing
+     it
+   * Get rid of reference to deprecated method
+   * Don't try to encode/decode empty values
+   * Handle hh:mm(:ss)? within other duration strings so that "1d 2:30" works
+   * More tests for the duration filter (to test different input formats and
+     check the raw DB value)
+   * Fix version
+   * Handle hh:mm:ss in the duration filter as input and output a more concise
+     format
+   * dd missing dependancies with Class::Trigger in debian packaging for use of
+     alone package libjifty-dbi-perl
+   * Add optional dependencies on Time::Duration(::Parse) in Makefile.PL
+   * Add a duration filter which uses Time::Duration and Time::Duration::Parse.
+     Stores durations as seconds in the database and converts them to English
+     strings for output.
+   * Revert mistaken change
+   * UNIVERSAL::require has a memory leak, fixed by 0.11
+   * Allow starts_with and ends_with in addition to STARTSWITH and ENDSWITH
+   * We were leaking the collection on set_page_info. Yuck! We need some way to
+     find these Scalar::Defer leaks
+   * Be more careful about initializing values we're using
+   * Fix a mismerge in 4642
+   * By not reaching inside the pager object, we save on some useless forced
+     SQL queries
+   * Be a bit cleverer about not always doing a count before doing a select
+     (The previous behaviour was pathalogical)
+
 0.48 Thu Nov 29 16:28:11 EST 2007
 
    * User and password values are excluded from the DSN in a more proper fashion

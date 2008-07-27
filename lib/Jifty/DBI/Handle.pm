@@ -88,6 +88,7 @@ sub connect {
         user       => undef,
         password   => undef,
         requiressl => undef,
+        extra      => {},
         @_
     );
 
@@ -109,7 +110,7 @@ sub connect {
     if ( ( !$self->dbh ) || ( !$self->dbh->ping ) || ( $self->dsn ne $dsn ) )
     {
         my $handle
-            = DBI->connect( $self->dsn, $args{'user'}, $args{'password'} )
+            = DBI->connect( $self->dsn, $args{'user'}, $args{'password'}, $args{'extra'} )
             || Carp::croak "Connect Failed $DBI::errstr\n";
 
 #databases do case conversion on the name of columns returned.
@@ -196,6 +197,7 @@ sub build_dsn {
 
     delete $args{'user'};
     delete $args{'password'};
+    delete $args{'extra'};
 
     $self->{'dsn'} = "dbi:$driver:"
         . CORE::join( ';',
@@ -794,6 +796,10 @@ sub rollback {
 #unless ($TRANSDEPTH) {Carp::confess("Attempted to rollback a transaction with none in progress")};
     if ($force) {
         $TRANSDEPTH = 0;
+
+        Jifty::DBI::Record->flush_cache
+            if Jifty::DBI::Record->can('flush_cache');
+
         return ( $dbh->rollback );
     }
 
@@ -808,7 +814,10 @@ sub rollback {
         return $TRANSDEPTH;
     }
 
-    my $rv = $self->dbh->rollback;
+    Jifty::DBI::Record->flush_cache
+        if Jifty::DBI::Record->can('flush_cache');
+
+    my $rv = $dbh->rollback;
     if ($rv) {
         $TRANSDEPTH--;
     }
@@ -932,7 +941,7 @@ sub join {
                 @args{qw/alias1 alias2/}   = @args{qw/alias2 alias1/};
                 @args{qw/column1 column2/} = @args{qw/column2 column1/};
 
-                return $self->Jifty::DBI::Collection::limit(
+                return $args{'collection'}->limit(
                     entry_aggregator => 'AND',
                     @_,
                     quote_value => 0,
@@ -1101,7 +1110,7 @@ sub may_be_null {
         # left joins on the left side so later we'll get 1 AND x expression
         # which equal to x, so we just skip it
         next if $join->{'type'} eq 'LEFT';
-        next unless $join->{'depends_on'} eq $args{'alias'};
+        next unless $join->{'depends_on'} && ($join->{'depends_on'} eq $args{'alias'});
 
         my @tmp = map { ( '(', @$_, ')', $join->{'entry_aggregator'} ) }
             values %{ $join->{'criteria'} };
@@ -1257,6 +1266,28 @@ sub log {
     warn $msg . "\n";
 
 }
+
+=head2 canonical_true
+
+This returns the canonical true value for this database. For example, in SQLite
+it is 1 but in Postgres it is 't'.
+
+The default is 1.
+
+=cut
+
+sub canonical_true { 1 }
+
+=head2 canonical_false
+
+This returns the canonical false value for this database. For example, in SQLite
+it is 0 but in Postgres it is 'f'.
+
+The default is 0.
+
+=cut
+
+sub canonical_false { 0 }
 
 =head2 DESTROY
 

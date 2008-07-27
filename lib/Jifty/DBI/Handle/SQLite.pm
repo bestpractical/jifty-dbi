@@ -90,6 +90,15 @@ sub distinct_count {
 
 }
 
+sub _make_clause_case_insensitive {
+    my $self     = shift;
+    my $column   = shift;
+    my $operator = shift;
+    my $value    = shift;
+    return("$column COLLATE NOCASE", $operator, $value);
+}
+
+
 1;
 
 __END__
