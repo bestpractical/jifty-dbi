@@ -290,7 +290,7 @@ sub _init_methods_for_column {
                         # $object->foo->id will always have to
                         # work. :/
                         $_[0]->_to_record( $column_name,
-                            $_[0]->__value($column_name) );
+                            $_[0]->__value($column_name), @_ );
                     };
                 } elsif (
                     UNIVERSAL::isa(
@@ -298,7 +298,7 @@ sub _init_methods_for_column {
                     )
                     )
                 {
-                    $subref = sub { $_[0]->_collection_value($column_name) };
+                    $subref = sub { $_[0]->_collection_value($column_name, @_) };
                 } else {
                     $subref = sub {
                         if ( @_ > 1 ) {
