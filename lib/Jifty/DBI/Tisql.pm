@@ -255,6 +255,7 @@ sub find_column {
     my $self = shift;
     my $string = shift;
     my $aliases = shift;
+    my $collection = shift || $self->{'collection'};
 
     my %res = (
         string   => $string,
@@ -265,30 +266,39 @@ sub find_column {
     my ($start_from, @names) = split /\./, $string;
     my $item;
     unless ( $start_from ) {
-        $item = $self->{'collection'}->new_item;
+        $item = $collection->new_item;
     } else {
         my $alias = $aliases->{ $start_from }
             || die "$start_from alias is not declared in from clause";
         $res{'previous'} = $alias;
-        $item = $alias->{'chain'}[-1]->refers_to->new( handle => $self->{'collection'}->_handle );
+        my $classname = $alias->{'chain'}[-1]->refers_to; # ->new( handle => $collection->_handle );
+        if ( UNIVERSAL::isa( $classname, 'Jifty::DBI::Collection' ) ) {
+            $item = $classname->new( handle => $collection->_handle )->new_item;
+        }
+        elsif ( UNIVERSAL::isa( $classname, 'Jifty::DBI::Record' ) ) {
+            $item = $classname->new( handle => $collection->_handle )
+        }
+        else {
+            die "Column refers to '$classname' which is not record or collection";
+        }
     }
     while ( my $name = shift @names ) {
         my $column = $item->column( $name );
-        die "$item has no column '$name'" unless $column;
+        die ref($item) ." has no column '$name'" unless $column;
 
         push @{ $res{'chain'} }, $column;
         return \%res unless @names;
 
         my $classname = $column->refers_to;
         unless ( $classname ) {
-            die "column '$name' of $item is not a reference to record or collection";
+            die "column '$name' of ". ref($item) ." is not a reference to record or collection";
         }
 
         if ( UNIVERSAL::isa( $classname, 'Jifty::DBI::Collection' ) ) {
-            $item = $classname->new( handle => $self->{'collection'}->_handle )->new_item;
+            $item = $classname->new( handle => $collection->_handle )->new_item;
         }
         elsif ( UNIVERSAL::isa( $classname, 'Jifty::DBI::Record' ) ) {
-            $item = $classname->new( handle => $self->{'collection'}->_handle )
+            $item = $classname->new( handle => $collection->_handle )
         }
         else {
             die "Column '$name' refers to '$classname' which is not record or collection";
@@ -340,6 +350,51 @@ sub apply_callback_to_tree {
             $cb->( $entry );
         }
     }
+}
+
+sub parse_column_reference {
+    my $self = shift;
+    my %args = @_;
+
+    my $record = $args{'record'};
+    my $column = $args{'column'};
+    my $string = $column->tisql;
+
+    my $record_alias = {
+        string    => 'record',
+        previous  => undef,
+        chain     => [$column],
+        sql_alias => $self->{'collection'}->new_alias( $record ),
+    };
+
+    my $tree = {
+        aliases => {
+            record => $record_alias
+        },
+        conditions => undef,
+    };
+
+    $tree->{'conditions'} = $self->as_array(
+        $string,
+        operand_cb => sub { return $self->parse_condition( $_[0], $tree->{'aliases'} ) },
+    );
+    $tree->{'conditions'} = [
+        {
+            lhs => {
+                string => 'record.id',
+                previous => $record_alias,
+                chain => [ $record->column('id') ]
+            },
+            op => '=',
+            rhs => $record->id
+        },
+        'AND',
+        $tree->{'conditions'},
+    ];
+    $self->{'tisql'}{'conditions'} = $tree->{'conditions'};
+    $self->apply_query_tree( $tree );
+
+    return $tree;
 }
 
 1;

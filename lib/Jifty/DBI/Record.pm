@@ -470,8 +470,13 @@ sub _collection_value {
     }
 
     my $coll = $classname->new( $self->_new_collection_args );
-    $coll->limit( column => $column->by, value => $self->id )
-        if $column->by and $self->id;
+    if ( my $by = $column->by ) {
+        $coll->limit( column => $by, value => $self->id )
+    } elsif ( $column->tisql ) {
+        require Jifty::DBI::Tisql;
+        my $parser = Jifty::DBI::Tisql->new( collection => $coll );
+        $parser->parse_column_reference( record => $self, column => $column );
+    }
     return $coll;
 }
 

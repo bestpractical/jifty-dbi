@@ -18,7 +18,7 @@ my @attrs = qw/
     virtual
     distinct
     sort_order
-    refers_to by
+    refers_to by tisql
     alias_for_column
     aliased_as
     since till

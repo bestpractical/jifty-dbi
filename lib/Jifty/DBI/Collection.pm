@@ -1243,7 +1243,7 @@ sub limit {
         ? $self->{joins}{ $args{alias} }{class}
         ->new( $self->_new_collection_args )
         : $self;
-    my $column_obj = $class->new_item()->column( $args{column} );
+    my $column_obj = ( $class->isa('Jifty::DBI::Collection')? $class->new_item : $class )->column( $args{column} );
 
     $self->record_class->new(handle => $self->_handle)->_apply_input_filters(
         column    => $column_obj,

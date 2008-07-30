@@ -333,7 +333,12 @@ sub _init_column_for {
         
         # Handle refers_to SomeCollection by 'foo'
         if (ref($refclass) eq 'ARRAY') {
-            $column->by($refclass->[1]);
+            if ( ($refclass->[1]||'') eq 'tisql' && @$refclass == 3 ) {
+                $column->tisql($refclass->[2]);
+            } else {
+                # Assume we refer to the ID column unless told otherwise
+                $column->by($refclass->[1] || 'id');
+            }
             $column->refers_to($refclass = $refclass->[0]);
         }
 
@@ -349,8 +354,6 @@ sub _init_column_for {
 
         # A one-to-one or one-to-many relationship is requested
         if ( UNIVERSAL::isa( $refclass, 'Jifty::DBI::Record' ) ) {
-            # Assume we refer to the ID column unless told otherwise
-            $column->by('id') unless $column->by;
 
             # Handle *_id reference columns specially
             if ( $name =~ /(.*)_id$/ ) {
@@ -373,7 +376,6 @@ sub _init_column_for {
             }
 
         } elsif ( UNIVERSAL::isa( $refclass, 'Jifty::DBI::Collection' ) ) {
-            $column->by('id') unless $column->by;
             $column->virtual('1');
         } else {
             warn "Error in $from: $refclass neither Record nor Collection. Perhaps it couldn't be loaded?";
