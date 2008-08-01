@@ -1663,7 +1663,7 @@ sub has_canonicalizer_for_column {
     }
 }
 
-=head2 run_validation_for_column column => 'COLUMN', value => 'VALUE'
+=head2 run_validation_for_column column => 'COLUMN', value => 'VALUE' [extra => \@ARGS]
 
 Runs all validators for the specified column.
 
@@ -1674,13 +1674,14 @@ sub run_validation_for_column {
     my %args = (
         column => undef,
         value  => undef,
+        extra  => [],
         @_
     );
     my $key  = $args{'column'};
     my $attr = $args{'value'};
 
     my ( $ret, $results )
-        = $self->_run_callback( name => "validate_" . $key, args => $attr );
+        = $self->_run_callback( name => "validate_" . $key, args => $attr, extra => $args{'extra'} );
 
     if ( defined $ret ) {
         return ( 1, 'Validation ok' );
@@ -1715,6 +1716,7 @@ sub _run_callback {
         name => undef,
         args => undef,
         short_circuit => 1,
+        extra => [],
         @_
     );
 
@@ -1722,11 +1724,11 @@ sub _run_callback {
     my $method = $args{'name'};
     my @results;
     if ( my $func = $self->can($method) ) {
-        @results = $func->( $self, $args{args} );
+        @results = $func->( $self, $args{args}, @{$args{'extra'}} );
         return ( wantarray ? ( undef, [ [@results] ] ) : undef )
             if $args{short_circuit} and not $results[0];
     }
-    $ret = $self->call_trigger( $args{'name'} => $args{args} );
+    $ret = $self->call_trigger( $args{'name'} => $args{args}, @{$args{'extra'}} );
     return (
         wantarray
         ? ( $ret, [ [@results], @{ $self->last_trigger_results } ] )
