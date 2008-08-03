@@ -57,7 +57,6 @@ sub parse_query {
     );
     $self->{'tisql'}{'conditions'} = $tree->{'conditions'};
     $self->merge_joins( $tree );
-    $self->bundle_conditions( $tree ) if 0;
     $self->apply_query_tree( $tree );
     return $tree;
 }
@@ -153,20 +152,6 @@ sub merge_joins {
         }
     );
 }
-}
-
-sub bundle_conditions {
-    my $self = shift;
-    my $tree = shift;
-
-    $self->apply_callback_to_tree(
-        $tree->{'conditions'},
-        sub {
-            my $condition = shift;
-            return if ref $condition->{'rhs'};
-            my $lhs = $condition->{'lhs'};
-        }
-    );
 }
 
 sub resolve_join {
