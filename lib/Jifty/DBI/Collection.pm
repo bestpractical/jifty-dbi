@@ -161,7 +161,6 @@ sub clean_slate {
         count_all
         subclauses
         restrictions
-        _open_parens
         criteria_count
     );
 
@@ -1349,16 +1348,18 @@ sub limit {
     };
 
     # Juju because this should come _AFTER_ the EA
-    my @prefix;
-    if ( $self->{'_open_parens'}{$clause_id} ) {
-        @prefix = ('(') x delete $self->{'_open_parens'}{$clause_id};
+    if ( @$restriction ) {
+        if ( $restriction->[-1] eq '(' ) {
+            for my $i ( reverse 0 .. (@$restriction-1) ) {
+                next if $restriction->[-1] eq '(';
+                splice @$restriction, $i-1, 0, $args{'entry_aggregator'};
+                last;
+            }
+        } else {
+            push @$restriction, $args{'entry_aggregator'};
+        }
     }
-
-    if ( lc( $args{'entry_aggregator'} || "" ) eq 'none' || !@$restriction ) {
-        @$restriction = ( @prefix, $clause );
-    } else {
-        push @$restriction, $args{'entry_aggregator'}, @prefix, $clause;
-    }
+    push @$restriction, $clause;
 
     # We're now limited. people can do searches.
 
@@ -1411,8 +1412,14 @@ Where the C<"my_clause"> can be any name you choose.
 =cut
 
 sub open_paren {
-    my ( $self, $clause ) = @_;
-    $self->{_open_parens}{$clause}++;
+    my ( $self, $clause, $join ) = @_;
+    my $restriction;
+    if ( $join ) {
+        $restriction = $self->{'joins'}{ $join }{'criteria'}{ $clause } ||= [];
+    } else {
+        $restriction = $self->{'restrictions'}{$clause} ||= [];
+    }
+    push @$restriction, '(';
 }
 
 =head2 close_paren CLAUSE
@@ -1427,8 +1434,13 @@ arbitrarily complex queries.
 
 # Immediate Action
 sub close_paren {
-    my ( $self, $clause ) = @_;
-    my $restriction = $self->{'restrictions'}{$clause} ||= [];
+    my ( $self, $clause, $join ) = @_;
+    my $restriction;
+    if ( $join ) {
+        $restriction = $self->{'joins'}{ $join }{'criteria'}{ $clause } ||= [];
+    } else {
+        $restriction = $self->{'restrictions'}{$clause} ||= [];
+    }
     push @$restriction, ')';
 }
 
