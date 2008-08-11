@@ -2226,14 +2226,10 @@ sub _cloned_attributes {
     );
 }
 
-use Jifty::DBI::Tisql;
 sub tisql {
     my $self = shift;
-    my $string = shift;
-
-    my $parser = Jifty::DBI::Tisql->new( collection => $self );
-    $parser->parse_query( $string );
-    
+    require Jifty::DBI::Tisql;
+    return Jifty::DBI::Tisql->new( collection => $self );
 }
 
 1;
