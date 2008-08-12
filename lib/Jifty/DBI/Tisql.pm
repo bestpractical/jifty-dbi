@@ -279,7 +279,9 @@ sub find_column {
         }
     }
     while ( my $name = shift @names ) {
-        my $column = $item->column( $name );
+        my $column =
+            $self->{'additional_columns'}{ref $item}{$name}
+            || $item->column( $name );
         die ref($item) ." has no column '$name'" unless $column;
 
         push @{ $res{'chain'} }, $column;
