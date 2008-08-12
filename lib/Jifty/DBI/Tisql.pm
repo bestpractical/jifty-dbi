@@ -82,21 +82,19 @@ sub query {
 }
 
 sub apply_query_tree {
-    my $self = shift;
-    my $tree = shift;
-    my $current = shift || $tree->{'conditions'};
-    my $ea = shift || 'AND';
+    my ($self, $current, $join, $ea) = @_;
+    $ea ||= 'AND';
 
     my $collection = $self->{'collection'};
 
-    $collection->open_paren('tisql');
+    $collection->open_paren('tisql', $join);
     foreach my $element ( @$current ) {
         unless ( ref $element ) {
             $ea = $element;
             next;
         }
         elsif ( ref $element eq 'ARRAY' ) {
-            $self->apply_query_tree( $tree, $element, $ea );
+            $self->apply_query_tree( $element, $join, $ea );
             next;
         }
         elsif ( ref $element ne 'HASH' ) {
@@ -105,6 +103,7 @@ sub apply_query_tree {
 
         my %limit = (
             subclause        => 'tisql',
+            leftjoin         => $join,
             entry_aggregator => $ea,
             operator         => $element->{'op'},
         );
@@ -125,7 +124,7 @@ sub apply_query_tree {
 
         $collection->limit( %limit );
     }
-    $collection->close_paren('tisql');
+    $collection->close_paren('tisql', $join);
 }
 
 sub resolve_join {
@@ -168,6 +167,7 @@ sub resolve_join {
             my $item = $classname->new( handle => $collection->_handle );
             my $right_alias = $collection->new_alias( $item );
             $collection->join(
+                subclause => 'tisql',
                 type    => 'left',
                 alias1  => $last_alias,
                 column1 => $name,
