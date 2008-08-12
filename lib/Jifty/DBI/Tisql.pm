@@ -153,14 +153,24 @@ sub resolve_join {
 
         if ( UNIVERSAL::isa( $classname, 'Jifty::DBI::Collection' ) ) {
             my $item = $classname->new( handle => $collection->_handle )->new_item;
-            my $right_alias = $collection->new_alias( $item );
-            $collection->join(
-                type    => 'left',
-                alias1  => $last_alias,
-                column1 => 'id',
-                alias2  => $right_alias,
-                column2 => $column->by || 'id',
-            );
+            my $right_alias;
+            if ( my $tisql = $column->tisql ) {
+                $right_alias = $self->resolve_tisql_join(
+                    alias => $last_alias,
+                    collection => $collection,
+                    column => $column,
+                );
+            } else {
+                $right_alias = $collection->new_alias( $item );
+                $collection->join(
+                    subclause => 'tisql',
+                    type    => 'left',
+                    alias1  => $last_alias,
+                    column1 => 'id',
+                    alias2  => $right_alias,
+                    column2 => $column->by || 'id',
+                );
+            }
             $last_alias = $right_alias;
         }
         elsif ( UNIVERSAL::isa( $classname, 'Jifty::DBI::Record' ) ) {
@@ -182,6 +192,33 @@ sub resolve_join {
     }
     $meta->{'sql_alias'} = $last_alias;
     return $last_alias;
+}
+
+sub resolve_tisql_join {
+    my $self = shift;
+    my %args = (@_);
+    
+    my $collection = $args{'collection'};
+
+    my $left_alias = $args{'alias'};
+    my $query = $args{'column'}->tisql;
+    my $classname = $args{'column'}->refers_to;
+    my $right_alias = $collection->new_alias( $classname->new( handle => $collection->_handle )->new_item );
+
+    my $tree = $self->as_array(
+        $query,
+        operand_cb => sub { return $self->parse_condition( $_[0],
+            { $args{'column'}->name => { 
+                chain => [ $args{'column'} ],
+                string => '',
+                sql_alias => $right_alias,
+            } },
+        ) },
+    );
+
+    $self->apply_query_tree( $tree, $right_alias );
+
+    return $right_alias;
 }
 
 sub parse_condition {
