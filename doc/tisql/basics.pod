@@ -1,0 +1,58 @@
+
+=head1 Basics of TISQL
+
+=head1 History
+
+It all comes from L<DBIx::SearchBuilder> and RT which has quite flexible
+query builder. Queries are implemented as strings close to SQL, but with
+special syntax for columns. For example it can be 'Requester.Login =
+"ruz"'. Such thing works quite good, but only for tickets and has some
+limitations, so I've decided to reimplement it in Jifty and improve.
+
+=head1 Basic syntax
+
+=head2 Boolean logic
+
+Everything is pretty simple here:
+
+=over 4
+
+=item boolean operator - 'AND' and 'OR'
+
+=item paranthesis - '(' and ')'
+
+=item boolean operands - our conditions
+
+=back
+
+So the following is our simple boolean expression:
+
+    ( <cond> OR <cond> ) AND <cond>
+
+In query language itself we'll have operators and operands too, we'll try
+to avoid cofusion by clarifing if it's boolean's or TISQL's. I'll use paren
+for paranthesis and open/close paren (/) respectively.
+
+See also L<Parse::BooleanLogic> for details on internals.
+
+=head2 Quoting
+
+As usually happens with strings we need some quoting. Almost all literal
+strings have to be quoted with " or ' and only quoting character inside
+have to be escaped with '\'. Some examples:
+
+    "a string"
+    "ruz's cool string"
+    'ruz\'s cool string'
+    'we can have "mixed" quoting'
+
+=head1 Conditions
+
+=head2 Basic syntax
+
+    <column> <uni_op> - .resolved IS NULL
+    <column> <bi_op> <constant> - ".id = 1" or ".created > '2008-03-25'"
+    <column> <bi_op> <column> - ".Member = u.id"
+
+=head2 Column syntax
+

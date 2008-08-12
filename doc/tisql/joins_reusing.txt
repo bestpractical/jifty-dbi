@@ -1,0 +1,34 @@
+Ok, we've figured out syntax, let's play with number of joins.
+
+'.tag.value = "zoo" OR .tag.value = "bar"'
+
+This is the simplest query when we can bundle conditions and use on
+join, but this rule applies only to OR binary operator, when AND
+operator with positive conditions requires at least two joins. In the
+case of AND you have to use different joins as the same record you
+join can not be 'foo' and 'bar' at the same time.
+
+'.tag.value != "zoo"'
+
+Do you remember I wrote about positive conditions is such queries. I
+was talking in such way because if we implement this condition in the
+same way as '.tag.value = "zoo"' then we'll get wrong results, we'll
+find all objects that have at least one tag that is not 'zoo' instead
+we have to use positive condition in a left join and check that the
+right part is empty. Something like:
+ SELECT o.* FROM o LEFT JOIN t ON t.object = o.id AND t.value = 'zoo'
+WHERE t.value IS NULL;
+Note that we invert operator, so query is more closer to "NOT
+(.tag.value = 'zoo')"
+
+'.tag.value != "zoo" AND .tag.value != "bar"'
+
+Smoothly we move to bundling negative conditions joined by AND binary
+operator. Using boolean logic we can rewrite the query into 'NOT(
+.tag.value = "zoo" OR .tag.value = "bar" )' and things are clearer
+now.
+
+What about more complex examples? I use Parse::BooleanLogic, then I've
+implemented filter that  leaves two conditions in the structure, so we
+can figure out relation between any pair of conditions in the query.
+

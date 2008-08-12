@@ -1,0 +1,52 @@
+In my research I'm moving from TicketSQL to a new query language (call
+it "tisql" now, but that's a subject to change :). Let's define conditions
+people want to use during searches by tags and any other one-to-many
+relation:
+* has no any tag
+* has at least one tag
+* has tag X
+* has no tag Y
+To be more generic, let's change last two conditions to "has [no] tag
+that matches positive condition X". I'll describe later why condition
+should be positive.
+
+Here is syntax I suggest for these queries:
+* ".tag IS NULL"
+* ".tag IS NOT NULL"
+* ".tag.value = 'foo'"
+* ".tag.value != 'bar'"
+
+Formats of operators and values are well known, but I want to stop for
+while on a format of column, which is the following:
+keyword_definition: [ alias ] '.' <column_definition>
+column_definition: real_column | virtual_column [ '.' <column_definition> ]
+
+Alias is optional and describing it purposes is out of the scope of
+this chapter, default value is 'main' or the current collection. so
+$objects->JQL(".type = 'ticket'") select objects where type is ticket.
+"type" is a real column of the collection, when "tag" is a virtual and
+should be described in the model as well.
+
+".tag IS NULL" vs ".tag.value IS NULL"
+
+these are two different queries, where the first one selects objects
+without tags, but the latter one selects objects that has at least one
+associated tag record with column 'value' equal to NULL, for tags it's
+definitely strange query, however it can be useful, for example
+'.children.resolved_date IS NULL' which select some objects that have
+not resolved children.
+
+".tag = 'foo'"
+
+For now it's illegal query and you have to use ".tag.column = 'foo'"
+instead, but it would be cool to be able to define preferred real
+column per model, in the case this will be nice.
+
+Complex queries:
+* '(.tag.value = "foo" AND .type = "memo") OR (.tag.value = "bar" AND
+.type = "news")'
+** select all memos with tag foo or news with tag bar
+* '.tag.value = "zoo" OR (.tag.value = "foo" AND .tag.value = "bar")'
+** objects with tag zoo or tagged with foo and bar at the same time
+
+Ok, we've figured out syntax, let's play with number of joins.
