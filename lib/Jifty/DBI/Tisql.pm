@@ -33,7 +33,28 @@ my %invert_op = (
     '<=' => '>',
 );
 
-sub parse_query {
+sub add_reference {
+    my $self = shift;
+    my %args = (
+        model     => undef,
+        name      => undef,
+        refers_to => undef,
+        tisql     => '',
+        @_
+    );
+    $args{'model'} ||= ref($self->{'collection'}->new_item);
+    my $column = Jifty::DBI::Column->new({
+        name      => $args{'name'},
+        refers_to => $args{'refers_to'},
+        by        => $args{'by'},
+        tisql     => $args{'tisql'},
+        virtual   => 1,
+    });
+    $self->{'additional_columns'}{ $args{'model'} }{ $args{'name'} } = $column;
+    return $self;
+}
+
+sub query {
     my $self = shift;
     my $string = shift;
 
