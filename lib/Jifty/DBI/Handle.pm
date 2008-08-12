@@ -996,6 +996,12 @@ sub _build_joins {
         values %{ $collection->{'joins'} };
     my $join_clause = ( $collection->table . " main" )
         . CORE::join( " ", map { $_->{alias_string} } @cross );
+    foreach my $j ( grep $_->{'criteria'}, @cross ) {
+        while (my ($k, $v) = each %{ $j->{'criteria'} } ) {
+            $collection->{restrictions}{ $j->{'alias'} . $k } = $v;
+        }
+        delete $j->{'criteria'};
+    }
     my %processed = map { $_->{alias} => 1 } @cross;
     $processed{'main'} = 1;
 
