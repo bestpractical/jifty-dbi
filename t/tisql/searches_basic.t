@@ -87,7 +87,7 @@ sub run_our_cool_tests {
     my %tests = @_;
     while (my ($q, $check) = each %tests ) {
         $collection->clean_slate;
-        $collection->tisql( $q );
+        $collection->tisql->query( $q );
         my $expected_count = scalar grep $_, values %$check;
         is($collection->count, $expected_count, "count is correct for $q")
             or diag "wrong count query: ". $collection->build_select_count_query;
