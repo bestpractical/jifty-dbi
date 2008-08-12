@@ -45,7 +45,7 @@ SKIP: {
     ok( !$users_obj->next, 'no more records');
 
     $users_obj->clean_slate;
-    is_deeply( $users_obj, $clean_obj, 'after Clone looks the same');
+    is_deeply( $users_obj, $clean_obj, 'after clean looks good');
 
     $users_obj->tisql->query('.login = "ivan" AND .login = "john"');
     is( $users_obj->count, 0, 'correct number');
