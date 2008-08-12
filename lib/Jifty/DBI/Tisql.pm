@@ -77,9 +77,8 @@ sub query {
         operand_cb => sub { return $self->parse_condition( $_[0], $tree->{'aliases'} ) },
     );
     $self->{'tisql'}{'conditions'} = $tree->{'conditions'};
-    $self->merge_joins( $tree );
-    $self->apply_query_tree( $tree );
-    return $tree;
+    $self->apply_query_tree( $tree->{'conditions'} );
+    return $self;
 }
 
 sub apply_query_tree {
