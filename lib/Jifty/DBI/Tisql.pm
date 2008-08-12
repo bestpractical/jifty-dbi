@@ -149,6 +149,8 @@ sub resolve_join {
             die "column '$name' is not a reference when there are still items in the chain"
                 if @chain;
             return $meta->{'sql_alias'} = $last_alias;
+        } elsif ( !@chain && !$column->virtual ) {
+            return $meta->{'sql_alias'} = $last_alias;
         }
 
         if ( UNIVERSAL::isa( $classname, 'Jifty::DBI::Collection' ) ) {
