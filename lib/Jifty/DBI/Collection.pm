@@ -1351,8 +1351,8 @@ sub limit {
     if ( @$restriction ) {
         if ( $restriction->[-1] eq '(' ) {
             for my $i ( reverse 0 .. (@$restriction-1) ) {
-                next if $restriction->[-1] eq '(';
-                splice @$restriction, $i-1, 0, $args{'entry_aggregator'};
+                next if $restriction->[$i] eq '(';
+                splice @$restriction, $i+1, 0, $args{'entry_aggregator'};
                 last;
             }
         } else {
