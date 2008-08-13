@@ -167,7 +167,7 @@ use Jifty::DBI::Record schema {
     column login => type is 'varchar(36)';
     column attrs =>
         refers_to TestApp::AttributeCollection
-            by tisql => ".model = 'User' AND .record = record.id",
+            by tisql => "attrs.model = 'User' AND attrs.record = .id",
         is virtual;
 };
 }
