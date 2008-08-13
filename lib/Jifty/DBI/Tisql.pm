@@ -357,49 +357,48 @@ sub apply_callback_to_tree {
     }
 }
 
-sub parse_column_reference {
+sub external_reference {
     my $self = shift;
     my %args = @_;
 
     my $record = $args{'record'};
     my $column = $args{'column'};
-    my $string = $column->tisql;
+    my $name   = $column->name;
 
-    my $record_alias = {
-        string    => 'record',
+    my $aliases = { __record__ => {
+        string    => '__record__',
         previous  => undef,
         chain     => [$column],
         sql_alias => $self->{'collection'}->new_alias( $record ),
-    };
+    } };
 
-    my $tree = {
-        aliases => {
-            record => $record_alias
+    my $column_cb = sub {
+        my $str = shift;
+        $str = "__record__". $str if 0 == rindex $str, '.', 0;
+        substr($str, 0, length($name)) = '' if 0 == rindex $str, "$name.", 0;
+        return $self->find_column($str, $aliases);
+    };
+    my $conditions = $self->as_array(
+        $column->tisql,
+        operand_cb => sub {
+            return $self->parse_condition( $_[0], $column_cb )
         },
-        conditions => undef,
-    };
-
-    $tree->{'conditions'} = $self->as_array(
-        $string,
-        operand_cb => sub { return $self->parse_condition( $_[0], $tree->{'aliases'} ) },
     );
-    $tree->{'conditions'} = [
+    $conditions = [
+        $conditions, 'AND',
         {
             lhs => {
-                string => 'record.id',
-                previous => $record_alias,
-                chain => [ $record->column('id') ]
+                string   => '__record__.id',
+                previous => $aliases->{'__record__'},
+                chain    => [ $record->column('id') ]
             },
             op => '=',
-            rhs => $record->id
+            rhs => $record->id || 0,
         },
-        'AND',
-        $tree->{'conditions'},
     ];
-    $self->{'tisql'}{'conditions'} = $tree->{'conditions'};
-    $self->apply_query_tree( $tree );
+    $self->apply_query_tree( $conditions );
 
-    return $tree;
+    return $self;
 }
 
 {
