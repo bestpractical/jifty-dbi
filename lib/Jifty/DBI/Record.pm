@@ -473,9 +473,7 @@ sub _collection_value {
     if ( my $by = $column->by ) {
         $coll->limit( column => $by, value => $self->id )
     } elsif ( $column->tisql ) {
-        require Jifty::DBI::Tisql;
-        my $parser = Jifty::DBI::Tisql->new( collection => $coll );
-        $parser->parse_column_reference( record => $self, column => $column );
+        $coll->tisql->external_reference( record => $self, column => $column );
     }
     return $coll;
 }
