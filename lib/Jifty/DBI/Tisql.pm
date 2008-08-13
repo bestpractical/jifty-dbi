@@ -74,7 +74,9 @@ sub query {
 
     $tree->{'conditions'} = $self->as_array(
         $string,
-        operand_cb => sub { return $self->parse_condition( $_[0], $tree->{'aliases'} ) },
+        operand_cb => sub { return $self->parse_condition( 
+            $_[0], sub { $self->find_column( $_[0], $tree->{'aliases'} ) }
+        ) },
     );
     $self->{'tisql'}{'conditions'} = $tree->{'conditions'};
     $self->apply_query_tree( $tree->{'conditions'} );
@@ -209,12 +211,15 @@ sub resolve_tisql_join {
 
     my $tree = $self->as_array(
         $query,
-        operand_cb => sub { return $self->parse_condition( $_[0],
-            { $args{'column'}->name => { 
-                chain => [ $args{'column'} ],
-                string => '',
-                sql_alias => $right_alias,
-            } },
+        operand_cb => sub { return $self->parse_condition( 
+            $_[0], sub { return $self->find_column(
+                $_[0],
+                { $args{'column'}->name => { 
+                    chain => [ $args{'column'} ],
+                    string => '',
+                    sql_alias => $right_alias,
+                } },
+            ) }
         ) },
     );
 
@@ -226,10 +231,10 @@ sub resolve_tisql_join {
 sub parse_condition {
     my $self = shift;
     my $string = shift;
-    my $aliases = shift;
+    my $cb = shift;
 
     if ( $string =~ /^($re_column)\s*($re_sql_op_bin)\s*($re_value)$/o ) {
-        my ($lhs, $op, $rhs) = ($self->find_column($1, $aliases), $2, $3);
+        my ($lhs, $op, $rhs) = ($cb->($1), $2, $3);
         if ( $rhs =~ /^$re_delim$/ ) {
             $rhs =~ s/^["']//g;
             $rhs =~ s/["']$//g;
@@ -237,12 +242,12 @@ sub parse_condition {
         return { lhs => $lhs, op => $op, rhs => $rhs };
     }
     elsif ( $string =~ /^($re_column)\s*($re_sql_op_un)$/o ) {
-        my ($lhs, $op, $rhs) = ($self->find_column($1, $aliases), $2, $3);
+        my ($lhs, $op, $rhs) = ($cb->($1), $2, $3);
         ($op, $rhs) = split /\s*(?=null)/i, $op;
         return { lhs => $lhs, op => $op, rhs => $rhs };
     }
     elsif ( $string =~ /^($re_column)\s*($re_sql_op_bin)\s*($re_column)$/o ) {
-        return { lhs => $self->find_column($1, $aliases), op => $2, rhs => $self->find_column($3, $aliases) };
+        return { lhs => $cb->($1), op => $2, rhs => $cb->($3) };
     }
     else {
         die "$string is not a tisql condition";
