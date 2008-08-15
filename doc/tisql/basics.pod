@@ -1,6 +1,4 @@
 
-=head1 Basics of TISQL
-
 =head1 History
 
 It all comes from L<DBIx::SearchBuilder> and RT which has quite flexible
@@ -8,6 +6,19 @@ query builder. Queries are implemented as strings close to SQL, but with
 special syntax for columns. For example it can be 'Requester.Login =
 "ruz"'. Such thing works quite good, but only for tickets and has some
 limitations, so I've decided to reimplement it in Jifty and improve.
+
+=head1 Introduction
+
+Here is simple example:
+
+    my $articles = new MyApp::ArticleCollection;
+    $articles->tisql->query(
+        ".author.name = 'ruz'"
+        ." AND .status = 'published'"
+        ." AND .tags.value = 'tisql'"
+    );
+
+Nice, isn't it? Yep, we think so too.
 
 =head1 Basic syntax
 
@@ -27,7 +38,7 @@ Everything is pretty simple here:
 
 So the following is our simple boolean expression:
 
-    ( <cond> OR <cond> ) AND <cond>
+    ( <a condition> OR <condition> ) AND <condition>
 
 In query language itself we'll have operators and operands too, we'll try
 to avoid cofusion by clarifing if it's boolean's or TISQL's. I'll use paren
@@ -50,9 +61,124 @@ have to be escaped with '\'. Some examples:
 
 =head2 Basic syntax
 
-    <column> <uni_op> - .resolved IS NULL
-    <column> <bi_op> <constant> - ".id = 1" or ".created > '2008-03-25'"
-    <column> <bi_op> <column> - ".Member = u.id"
+Some examples:
+
+    .resolved IS NULL
+    .id = 1
+    .created > '2008-03-25'
+    .subject like 'Re: %'
+
+So each condition is an operator, a column on its left side and constant or
+another column on the right. Operators like IS NULL has nothing on right side.
+
+=head2 Simple operators
+
+=over 4
+
+=item =, != - equality
+
+=item IS NULL, IS NOT NULL - tests for NULLs
+
+=item <, >, <=, >= - ranges
+
+=item LIKE, NOT LIKE - string pattern matching
+
+=back
+
+So everything is simple as in SQL.
 
 =head2 Column syntax
 
+Grammar:
+
+    [<alias>] ( '.' <column> )*
+
+Alias is optional and most of the time you don't need them, however them
+are desperatedly required in some situations, read about that below XXX
+link goes here. Let's leave them alone.
+
+When you apply a tisql query you do it on a collection of records, for
+example C<MyApp::Model::UserCollection>. Records in this collection have
+columns described by schema of the model C<MyApp::Model::User>. You skip
+alias to say that you want column of records in base collection, each
+column is prefixed with literal dot character, for example:
+
+    .real_name
+    .organization
+
+JDBI supports referes_to definition for columns to delare named references
+to other records and collections. In tisql you can use this advantage and
+continue columns sequence to build conditions based on properties of
+related objects, for example:
+
+    .member_of.name
+    # where member_of refers to groups collection, each group has name
+    # column
+
+    .owner_of.tags.value
+    # where owner_of referes to tasks collection and tasks have tags
+
+Summary: an optional alias followed by one or more dot column pairs.
+
+=head2 Conditions on related records
+
+What do you expect to find when you write the following query:
+
+    .tags.value != 'X'
+
+Most people want to find all records without tag 'X', records without
+tags or records that has no tag 'X'. We're not exceptional to this desire.
+So not equal and negative pattern matching operators on long column sequences
+will as 'find records which have no related objects with properties equal
+or matching a value/pattern'.
+
+More examples:
+
+    .member_of.name != 'sales department'
+    .depends_on.status != 'done'
+
+Note that 'IS NOT NULL' operator is not affected. This can be changed as
+it's not clear what is better.
+
+=head2 Extended conditions on related records.
+
+As we figured out earlier each record in the collection you're limiting can
+be related to multiple sets of records. In such situation conditions
+described above are too limitted in many situations. Tisql provide 'has'
+and 'has no' conditions modifiers.
+
+=over 4
+
+=item C<has .reference.property = 'x'> - the same as C<.column.property =
+'x'>.
+
+=item C<has no .reference.property = 'x'> - the same as C<.column.property
+!= 'x'>.
+
+=item C<has .reference.property != 'x'> - find records which refers to at
+least one record with property != 'x', for example C<has
+.sub_projects.status != 'done'> which find projects that have at least one
+not finished sub project.
+
+=item C<has no .reference.property != 'x'> - find records which has no
+refererences to records with property != 'x', for example C<has no
+.sub_projects.status != 'done'> which finds projects that either have no
+sub projects or all sub projects are done.
+
+=item C<has .reference> - the same as C<.reference.id IS NOT NULL>
+
+=item C<has no .reference> - the same as C<.reference.id IS NULL>
+
+=back
+
+=head2 Where are joins?
+
+=head2 Extended refers_to column declarations
+
+=head2 Adding new columns at run-time
+
+=head2 Aliasing
+
+=head2 Placeholders
+
+=cut
