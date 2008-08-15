@@ -49,6 +49,7 @@ sub add_reference {
         by        => $args{'by'},
         tisql     => $args{'tisql'},
         virtual   => 1,
+        record_class => $args{'model'},
     });
     $self->{'additional_columns'}{ $args{'model'} }{ $args{'name'} } = $column;
     return $self;
