@@ -144,8 +144,8 @@ it's not clear what is better.
 
 As we figured out earlier each record in the collection you're limiting can
 be related to multiple sets of records. In such situation conditions
-described above are too limitted in many situations. Tisql provide 'has'
-and 'has no' conditions modifiers.
+described above are too limitted. Tisql provide 'has' and 'has no'
+conditions modifiers.
 
 =over 4
 
@@ -171,14 +171,91 @@ sub projects or all sub projects are done.
 
 =back
 
-=head2 Where are joins?
-
-=head2 Extended refers_to column declarations
-
-=head2 Adding new columns at run-time
+These prefixes work for other conditions as well.
 
 =head2 Aliasing
 
-=head2 Placeholders
+Let's start from an example:
+
+    .members.first_name = 'John' AND .member.last_name = 'Doe'
+
+What will it find? Groups where John Doe is member or some John and some
+Doe are members of the same Group? Without an alias the latter will happen.
+To achive the former results you have to use the following query:
+
+    FROM .members AS member
+    WHERE member.first_name = 'John'
+        AND member.last_name = 'Doe'
+
+RFC: better syntax is required
+
+What is alias? As we start column spcifications from one collection then
+whole query looks like a star. Using an alias we can merge rays pointing to
+the same related objects and check different properties of these objects.
+
+May be not that clear description :-), but this works as described above.
+
+Condition prefixes ('has' and 'has no') don't work for first level aliased
+columns, for example 'has no member.first_name != "John"' is illegal, but
+'member.first_name = "John" AND has member.member_of.name = "Sales" is ok.
+The last search finds all groups with some John as memeber, however this
+John should be from Sales group.
+
+Considering above "alias.column != 'x'" and other negative conditions
+behave as ".column != 'x'", so "member.first_name != 'John'" will find a
+groups where some members exist and none of them is John.
+
+Is it limitation? Yes and no. It's helpful in in situation above, but has
+no other big advantages I can think of. As well plenty of situations can be
+effectivly solved by extended references and placeholders. I'm open to
+suggestions about either transforming aliases into something more useful or
+replacing them with another nice syntax.
+
+=head2 Where are joins?
+
+Tisql has no joins in that fashion we used to see them in SQL. You have
+refers_to columns and that's your joins. Each column that refers to another
+collection or record is a way to join record(s) to another one and define
+conditions of such relation.
+
+=head3 Extended refers_to column declarations
+
+By default JDBI allow you to use only one column in references using
+"by 'column'" when tisql upgrades this to a new level. Example:
+
+    package TestApp::User;
+    ...
+    use Jifty::DBI::Record schema {
+        column login => type is 'varchar(36)';
+        column attrs =>
+            refers_to TestApp::AttributeCollection
+                by tisql => "attrs.model = 'User' AND attrs.record = .id";
+    };
+
+In the query used for references you have additional alias by default, name
+of the alias and name of the column are equal.
+
+=head3 Adding new columns at run-time
+
+You can add virtual columns to models at run-time, right before applying a
+query, for example:
+
+    $users_obj->tisql
+        # reference to collection of (group id, member id) pairs
+        ->add_reference(
+            name      => 'gm',
+            refers_to => 'TestApp::UserToGroupCollection',
+            tisql     => 'gm.person = .id',
+        # reference to groups a user is member of using previous reference
+        )->add_reference(
+            name      => 'member_of',
+            refers_to => 'TestApp::GroupCollection',
+            tisql     => '.gm.grp = member_of.id',
+        )->query('.member_of.name = "Sales"');
+
+This columns may be used very often and most probably want to add them
+persistently to the User model, but this is just an example.
+
+=head3 Placeholders
 
 =cut
