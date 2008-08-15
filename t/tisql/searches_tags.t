@@ -9,7 +9,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 59;
+use constant TESTS_PER_DRIVER => 140;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -51,6 +51,8 @@ SKIP: {
         # has [no] tags
         ".tags.id IS NULL"     => [qw(a m)],
         ".tags.id IS NOT NULL" => [qw(aa at axy mm mt mqwe)],
+        "has .tags"    => [qw(a m)],
+        "has no .tags" => [qw(aa at axy mm mt mqwe)],
 
         # has [no] tags and/or type
         ".tags.id IS NULL     AND .type = 'article'" => [qw(a)],
@@ -64,6 +66,19 @@ SKIP: {
         ".tags.value = 't'" => [qw(at mt)],
         ".tags.value LIKE '%'" => [qw(aa at axy mm mt mqwe)],
 
+        # tag = x written as 'has .tags.value =x'
+        "has .tags.value = 'no'" => [qw()],
+        "has .tags.value = 'a'" => [qw(aa)],
+        "has .tags.value = 't'" => [qw(at mt)],
+        "has .tags.value LIKE '%'" => [qw(aa at axy mm mt mqwe)],
+
+        # tag != x
+        ".tags.value != 'no'" => [qw(a aa at axy m mm mt mqwe)],
+        ".tags.value != 'a'" => [qw(a at axy m mm mt mqwe)],
+        ".tags.value != 't'" => [qw(a aa axy m mm mqwe)],
+        ".tags.value != 'q'" => [qw(a aa at axy m mm mt)],
+        ".tags.value NOT LIKE '%'" => [qw(a m)],
+
         # tag = x and/or tag = y
         ".tags.value = 'no' AND .tags.value = 't'" => [qw()],
         ".tags.value = 'no' OR  .tags.value = 't'" => [qw(at mt)],
@@ -72,7 +87,33 @@ SKIP: {
         ".tags.value = 'x' AND .tags.value = 'y'" => [qw(axy)],
         ".tags.value = 'x' OR  .tags.value = 'y'" => [qw(axy)],
 
-        # we don't lookup with negative values as we're not sure about syntax yet
+        # tag != x and/or tag = y
+        ".tags.value != 'no' AND .tags.value = 't'" => [qw(at mt)],
+        ".tags.value != 'no' OR  .tags.value = 't'" => [qw(a aa at axy m mm mt mqwe)],
+        ".tags.value != 'a' AND .tags.value = 't'" => [qw(at mt)],
+        ".tags.value != 'a' OR  .tags.value = 't'" => [qw(a at axy m mm mt mqwe)],
+        ".tags.value != 'x' AND .tags.value = 'y'" => [qw()],
+        ".tags.value != 'x' OR  .tags.value = 'y'" => [qw(a aa at axy m mm mt mqwe)],
+
+        # has .tag != x
+        "has .tags.value != 'no'" => [qw(aa at axy mm mt mqwe)],
+        "has .tags.value != 'a'" => [qw(at axy mm mt mqwe)],
+        "has .tags.value != 't'" => [qw(aa axy mm mqwe)],
+        "has .tags.value != 'q'" => [qw(aa at axy mm mt mqwe)],
+
+        # has no .tag != x
+        "has no .tags.value != 'no'" => [qw(a m)],
+        "has no .tags.value != 'a'"  => [qw(a aa m)],
+        "has no .tags.value != 't'"  => [qw(a at m mt)],
+        "has no .tags.value != 'q'"  => [qw(a m)],
+
+        # crazy things
+
+        # get all nodes that have intersection in tags with article #3 (at)
+        ".tags.nodes.id = 3" => [qw(at mt)],
+        # get all nodes that have intersactions in tags with nodes that have tag 't'
+        ".tags.nodes.tags.value = 't'" => [qw(at mt)],
+
     );
 
     cleanup_schema( 'TestApp', $handle );
