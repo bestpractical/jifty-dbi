@@ -17,8 +17,8 @@ my $re_sql_op_bin = qr{!?=|<>|>=?|<=?|(?:NOT )?LIKE}i;
 my $re_sql_op_un  = qr{IS (?:NOT )?NULL}i;
 my $re_value = qr{$re_delim|[0-9.]+};
 
-my $re_op_positive = qr/^(?:=|IS|LIKE)$/i;
-my $re_op_negative = qr/^(?:!=|<>|IS NOT|NOT LIKE)$/i;
+my $re_positive_op = qr/^(?:=|IS|LIKE)$/i;
+my $re_negative_op = qr/^(?:!=|<>|NOT LIKE)$/i;
 my %invert_op = (
     '=' => '!=',
     '!=' => '=',
