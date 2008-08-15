@@ -104,30 +104,86 @@ sub apply_query_tree {
             die "wrong query tree";
         }
 
+        $self->apply_query_condition( $collection, $ea, $element, $join );
+    }
+    $collection->close_paren('tisql', $join);
+}
+
+sub apply_query_condition {
+    my ($self, $collection, $ea, $condition, $join) = @_;
+
+    die "left hand side must be always column specififcation"
+        unless ref $condition->{'lhs'};
+
+    my $prefix = $condition->{'prefix'};
+    my $op     = $condition->{'op'};
+    my $long   = do {
+        my @tmp = split /\./, $condition->{'lhs'}{'string'};
+        @tmp > 2 ? 1 : 0
+    };
+    if ( $long && !$prefix && $op =~ $re_negative_op ) {
+        $prefix = 'has no';
+        $op = $invert_op{ lc $op };
+    }
+    elsif ( $prefix && !$long ) {
+        die "'has no' and 'has' prefixes are only applicable on columns of related records";
+    }
+    $prefix ||= 'has';
+
+    if ( $prefix eq 'has' ) {
         my %limit = (
             subclause        => 'tisql',
             leftjoin         => $join,
             entry_aggregator => $ea,
-            operator         => $element->{'op'},
+            alias            => $self->resolve_join( $condition->{'lhs'} ),
+            column           => $condition->{'lhs'}{'chain'}[-1]->name,
+            operator         => $op,
         );
-        if ( ref $element->{'lhs'} ) {
-            $limit{'alias'} = $self->resolve_join( $element->{'lhs'} );
-            $limit{'column'} = $element->{'lhs'}{'chain'}[-1]->name;
-        } else {
-            die "left hand side must be always column specififcation";
-        }
-        if ( ref $element->{'rhs'} ) {
+        if ( ref $condition->{'rhs'} ) {
             $limit{'quote_value'} = 0;
             $limit{'value'} =
-                $self->resolve_join( $element->{'rhs'} )
-                .'.'. $element->{'rhs'}{'chain'}[-1]->name;
+                $self->resolve_join( $condition->{'rhs'} )
+                .'.'. $condition->{'rhs'}{'chain'}[-1]->name;
         } else {
-            $limit{'value'} = $element->{'rhs'};
+            $limit{'value'} = $condition->{'rhs'};
         }
 
         $collection->limit( %limit );
     }
-    $collection->close_paren('tisql', $join);
+    else {
+        die "not yet implemented: it's a join" if $join;
+
+        my %limit = (
+            subclause        => 'tisql',
+            alias            => $self->resolve_join( $condition->{'lhs'} ),
+            column           => $condition->{'lhs'}{'chain'}[-1]->name,
+            operator         => $op,
+        );
+        if ( ref $condition->{'rhs'} ) {
+            $limit{'quote_value'} = 0;
+            $limit{'value'} =
+                $self->resolve_join( $condition->{'rhs'} )
+                .'.'. $condition->{'rhs'}{'chain'}[-1]->name;
+        } else {
+            $limit{'value'} = $condition->{'rhs'};
+        }
+
+        $collection->limit(
+            %limit,
+            entry_aggregator => 'AND',
+            leftjoin         => $limit{'alias'},
+        );
+
+        $collection->limit(
+            subclause        => 'tisql',
+            entry_aggregator => $ea,
+            alias            => $limit{'alias'},
+            column           => 'id',
+            operator         => 'IS',
+            value            => 'NULL',
+            quote_value      => 0,
+        );
+    }
 }
 
 sub resolve_join {
@@ -138,22 +194,26 @@ sub resolve_join {
 
     my $collection = $self->{'collection'};
 
-    my $last_alias = 'main';
+    my ($last_alias) = ('main');
     if ( my $prev = $meta->{'previous'} ) {
         $last_alias = $self->resolve_join( $prev );
     }
 
     my @chain = @{ $meta->{'chain'} };
+    if ( @chain == 1 && !$chain[0]->virtual ) {
+        return $last_alias;
+    }
+
     while( my $column = shift @chain ) {
         my $name = $column->name;
+
+        return $last_alias unless @chain;
 
         my $classname = $column->refers_to;
         unless ( $classname ) {
             die "column '$name' is not a reference when there are still items in the chain"
                 if @chain;
-            return $meta->{'sql_alias'} = $last_alias;
-        } elsif ( !@chain && !$column->virtual ) {
-            return $meta->{'sql_alias'} = $last_alias;
+            return $last_alias;
         }
 
         if ( UNIVERSAL::isa( $classname, 'Jifty::DBI::Collection' ) ) {
@@ -161,9 +221,10 @@ sub resolve_join {
             my $right_alias;
             if ( my $tisql = $column->tisql ) {
                 $right_alias = $self->resolve_tisql_join(
-                    alias => $last_alias,
+                    chain      => $meta->{'previous'},
+                    alias      => $last_alias,
                     collection => $collection,
-                    column => $column,
+                    column     => $column,
                 );
             } else {
                 $right_alias = $collection->new_alias( $item );
@@ -194,32 +255,42 @@ sub resolve_join {
         else {
             die "Column '$name' refers to '$classname' which is not record or collection";
         }
+
+        $meta->{'previous'} = {
+            chain     => [$column],
+            previous  => $meta->{'previous'},
+            string    => ($meta->{'previous'}? $meta->{'previous'}{'string'} : '') .'.'. $name,
+            sql_alias => $last_alias,
+        };
+        $meta->{'chain'} = [ @chain ];
     }
-    $meta->{'sql_alias'} = $last_alias;
-    return $last_alias;
+    return $meta->{'sql_alias'} = $last_alias;
 }
 
 sub resolve_tisql_join {
     my $self = shift;
     my %args = (@_);
-    
+
     my $collection = $args{'collection'};
 
-    my $left_alias = $args{'alias'};
     my $query = $args{'column'}->tisql;
-    my $classname = $args{'column'}->refers_to;
-    my $right_alias = $collection->new_alias( $classname->new( handle => $collection->_handle )->new_item );
+    my $right_alias = $collection->new_alias(
+        $args{'column'}->refers_to->new( handle => $collection->_handle )->new_item
+    );
 
     my $tree = $self->as_array(
         $query,
         operand_cb => sub { return $self->parse_condition( 
             $_[0], sub { return $self->find_column(
                 $_[0],
-                { $args{'column'}->name => { 
-                    chain => [ $args{'column'} ],
-                    string => '',
-                    sql_alias => $right_alias,
-                } },
+                {
+                    '' => $args{'chain'},
+                    $args{'column'}->name => { 
+                        chain => [ $args{'column'} ],
+                        string => '',
+                        sql_alias => $right_alias,
+                    } 
+                },
             ) }
         ) },
     );
@@ -234,21 +305,39 @@ sub parse_condition {
     my $string = shift;
     my $cb = shift;
 
-    if ( $string =~ /^($re_column)\s*($re_sql_op_bin)\s*($re_value)$/o ) {
-        my ($lhs, $op, $rhs) = ($cb->($1), $2, $3);
+    if ( $string =~ /^(has(\s+no)?\s+)?($re_column)\s*($re_sql_op_bin)\s*($re_value)$/io ) {
+        my ($lhs, $op, $rhs) = ($cb->($3), $4, $5);
+        my $prefix;
+        $prefix = 'has' if $1;
+        $prefix .= ' no' if $2;
         if ( $rhs =~ /^$re_delim$/ ) {
             $rhs =~ s/^["']//g;
             $rhs =~ s/["']$//g;
         }
-        return { lhs => $lhs, op => $op, rhs => $rhs };
+        die "Last column in '". $lhs->{'string'} ."' is virtual and can not be used in condition '$string'" 
+            if $lhs->{'chain'}[-1]->virtual;
+        return { string => $string, prefix => $prefix, lhs => $lhs, op => $op, rhs => $rhs };
     }
     elsif ( $string =~ /^($re_column)\s*($re_sql_op_un)$/o ) {
         my ($lhs, $op, $rhs) = ($cb->($1), $2, $3);
         ($op, $rhs) = split /\s*(?=null)/i, $op;
-        return { lhs => $lhs, op => $op, rhs => $rhs };
+        die "Last column in '". $lhs->{'string'} ."' is virtual and can not be used in condition '$string'" 
+            if $lhs->{'chain'}[-1]->virtual;
+        return { string => $string, lhs => $lhs, op => $op, rhs => $rhs };
     }
-    elsif ( $string =~ /^($re_column)\s*($re_sql_op_bin)\s*($re_column)$/o ) {
-        return { lhs => $cb->($1), op => $2, rhs => $cb->($3) };
+    elsif ( $string =~ /^(has(\s+no)?\s+)?($re_column)\s*($re_sql_op_bin)\s*($re_column)$/o ) {
+        my ($lhs, $op, $rhs) = ($cb->($3), $4, $cb->($5));
+        my $prefix;
+        $prefix = 'has' if $1;
+        $prefix .= ' no' if $2;
+        die "Last column in '". $lhs->{'string'} ."' is virtual and can not be used in condition '$string'" 
+            if $lhs->{'chain'}[-1]->virtual;
+        die "Last column in '". $rhs->{'string'} ."' is virtual and can not be used in condition '$string'" 
+            if $rhs->{'chain'}[-1]->virtual;
+        return { string => $string, prefix => $prefix, lhs => $lhs, op => $op, rhs => $rhs };
+    }
+    elsif ( $string =~ /^has(\s+no)?\s+($re_column)$/o ) {
+        return { string => $string, lhs => $cb->( $2 .'.id' ), op => $1? 'IS NOT': 'IS', rhs => 'NULL' };
     }
     else {
         die "$string is not a tisql condition";
@@ -269,10 +358,10 @@ sub find_column {
 
     my ($start_from, @names) = split /\./, $string;
     my $item;
-    unless ( $start_from ) {
+    if ( !$start_from && !$aliases->{''} ) {
         $item = $collection->new_item;
     } else {
-        my $alias = $aliases->{ $start_from }
+        my $alias = $aliases->{ $start_from || '' }
             || die "$start_from alias is not declared in from clause";
         $res{'previous'} = $alias;
         my $classname = $alias->{'chain'}[-1]->refers_to; # ->new( handle => $collection->_handle );
