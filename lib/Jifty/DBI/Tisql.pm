@@ -9,14 +9,20 @@ use Scalar::Util qw(refaddr blessed);
 use Data::Dumper;
 
 use Regexp::Common qw(delimited);
-my $re_delim  = qr{$RE{delimited}{-delim=>qq{\'\"}}};
-my $re_field  = qr{[a-zA-Z][a-zA-Z0-9_]*};
-my $re_column = qr{\.?$re_field(?:\.$re_field)*};
-my $re_alias  = qr{$re_column\s+AS\s+$re_field}i;
+my $re_delim      = qr{$RE{delimited}{-delim=>qq{\'\"}}};
+my $re_field      = qr{[a-zA-Z][a-zA-Z0-9_]*};
+my $re_alias_name = $re_field;
+my $re_ph         = qr{_[1-9][0-9]+_};
+
+my $re_value      = qr{$re_delim|[0-9.]+};
+my $re_value_ph   = qr{$re_value|$re_ph};
+my $re_cs_values  = qr{$re_value(?:\s*,\s*$re_value)*};
+my $re_ph_access  = qr{{\s*(?:$re_cs_values|$re_ph)?\s*}};
+my $re_column     = qr{$re_alias_name?(?:\.$re_field$re_ph_access?)+};
+my $re_alias      = qr{$re_column\s+AS\s+$re_alias_name}i;
+
 my $re_sql_op_bin = qr{!?=|<>|>=?|<=?|(?:NOT )?LIKE}i;
 my $re_sql_op_un  = qr{IS (?:NOT )?NULL}i;
-my $re_value = qr{$re_delim|[0-9.]+};
-
 my $re_positive_op = qr/^(?:=|IS|LIKE)$/i;
 my $re_negative_op = qr/^(?:!=|<>|NOT LIKE)$/i;
 my %invert_op = (
