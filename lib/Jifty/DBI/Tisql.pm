@@ -142,14 +142,14 @@ sub apply_query_condition {
             leftjoin         => $join,
             entry_aggregator => $ea,
             alias            => $self->resolve_join( $condition->{'lhs'} ),
-            column           => $condition->{'lhs'}{'chain'}[-1]->name,
+            column           => $condition->{'lhs'}{'column'}->name,
             operator         => $op,
         );
         if ( ref $condition->{'rhs'} ) {
             $limit{'quote_value'} = 0;
             $limit{'value'} =
                 $self->resolve_join( $condition->{'rhs'} )
-                .'.'. $condition->{'rhs'}{'chain'}[-1]->name;
+                .'.'. $condition->{'rhs'}{'column'}->name;
         } else {
             $limit{'value'} = $condition->{'rhs'};
         }
@@ -162,14 +162,14 @@ sub apply_query_condition {
         my %limit = (
             subclause        => 'tisql',
             alias            => $self->resolve_join( $condition->{'lhs'} ),
-            column           => $condition->{'lhs'}{'chain'}[-1]->name,
+            column           => $condition->{'lhs'}{'column'}->name,
             operator         => $op,
         );
         if ( ref $condition->{'rhs'} ) {
             $limit{'quote_value'} = 0;
             $limit{'value'} =
                 $self->resolve_join( $condition->{'rhs'} )
-                .'.'. $condition->{'rhs'}{'chain'}[-1]->name;
+                .'.'. $condition->{'rhs'}{'column'}->name;
         } else {
             $limit{'value'} = $condition->{'rhs'};
         }
@@ -195,82 +195,60 @@ sub apply_query_condition {
 sub resolve_join {
     my $self = shift;
     my $meta = shift;
+    my $resolve_last = shift;
 
-    return $meta->{'sql_alias'} if $meta->{'sql_alias'};
+    return $meta->{'sql_alias'}
+        if $meta->{'sql_alias'} && $resolve_last;
 
     my $collection = $self->{'collection'};
 
-    my ($last_alias) = ('main');
+    my ($prev_alias) = ('main');
     if ( my $prev = $meta->{'previous'} ) {
-        $last_alias = $self->resolve_join( $prev );
+        $prev_alias = $self->resolve_join( $prev, 'resolve_last' );
     }
+    return $prev_alias unless $resolve_last;
 
-    my @chain = @{ $meta->{'chain'} };
-    if ( @chain == 1 && !$chain[0]->virtual ) {
-        return $last_alias;
-    }
-
-    while( my $column = shift @chain ) {
-        my $name = $column->name;
-
-        return $last_alias unless @chain;
-
-        my $classname = $column->refers_to;
-        unless ( $classname ) {
-            die "column '$name' is not a reference when there are still items in the chain"
-                if @chain;
-            return $last_alias;
-        }
-
-        if ( UNIVERSAL::isa( $classname, 'Jifty::DBI::Collection' ) ) {
-            my $item = $classname->new( handle => $collection->_handle )->new_item;
-            my $right_alias;
-            if ( my $tisql = $column->tisql ) {
-                $right_alias = $self->resolve_tisql_join(
-                    chain      => $meta->{'previous'},
-                    alias      => $last_alias,
-                    collection => $collection,
-                    column     => $column,
-                );
-            } else {
-                $right_alias = $collection->new_alias( $item );
-                $collection->join(
-                    subclause => 'tisql',
-                    type    => 'left',
-                    alias1  => $last_alias,
-                    column1 => 'id',
-                    alias2  => $right_alias,
-                    column2 => $column->by || 'id',
-                );
-            }
-            $last_alias = $right_alias;
-        }
-        elsif ( UNIVERSAL::isa( $classname, 'Jifty::DBI::Record' ) ) {
-            my $item = $classname->new( handle => $collection->_handle );
-            my $right_alias = $collection->new_alias( $item );
+    my $res;
+    my $column = $meta->{'column'};
+    my $refers = $meta->{'refers_to'};
+    if ( UNIVERSAL::isa( $refers, 'Jifty::DBI::Collection' ) ) {
+        my $item = $refers->new_item;
+        if ( my $tisql = $column->tisql ) {
+            $res = $self->resolve_tisql_join(
+                chain      => $meta->{'previous'},
+                alias      => $prev_alias,
+                collection => $collection,
+                column     => $column,
+            );
+        } else {
+            $res = $collection->new_alias( $item );
             $collection->join(
                 subclause => 'tisql',
                 type    => 'left',
-                alias1  => $last_alias,
-                column1 => $name,
-                alias2  => $right_alias,
+                alias1  => $prev_alias,
+                column1 => 'id',
+                alias2  => $res,
                 column2 => $column->by || 'id',
             );
-            $last_alias = $right_alias;
         }
-        else {
-            die "Column '$name' refers to '$classname' which is not record or collection";
-        }
-
-        $meta->{'previous'} = {
-            chain     => [$column],
-            previous  => $meta->{'previous'},
-            string    => ($meta->{'previous'}? $meta->{'previous'}{'string'} : '') .'.'. $name,
-            sql_alias => $last_alias,
-        };
-        $meta->{'chain'} = [ @chain ];
     }
-    return $meta->{'sql_alias'} = $last_alias;
+    elsif ( UNIVERSAL::isa( $refers, 'Jifty::DBI::Record' ) ) {
+        $res = $collection->new_alias( $refers );
+        $collection->join(
+            subclause => 'tisql',
+            type    => 'left',
+            alias1  => $prev_alias,
+            column1 => $column->name,
+            alias2  => $res,
+            column2 => $column->by || 'id',
+        );
+    }
+    else { 
+        die "Column '". $column->name ."' refers to '"
+            . (ref($refers) || $refers)
+            ."' that is not record or collection";
+    }
+    return $res;
 }
 
 sub resolve_tisql_join {
@@ -280,9 +258,8 @@ sub resolve_tisql_join {
     my $collection = $args{'collection'};
 
     my $query = $args{'column'}->tisql;
-    my $right_alias = $collection->new_alias(
-        $args{'column'}->refers_to->new( handle => $collection->_handle )->new_item
-    );
+    my $refers_to = $args{'column'}->refers_to->new( handle => $collection->_handle );
+    my $right_alias = $collection->new_alias( $refers_to->new_item );
 
     my $tree = $self->as_array(
         $query,
@@ -292,8 +269,9 @@ sub resolve_tisql_join {
                 {
                     '' => $args{'chain'},
                     $args{'column'}->name => { 
-                        chain => [ $args{'column'} ],
-                        string => '',
+                        column    => $args{'column'},
+                        refers_to => $refers_to,
+                        string    => '',
                         sql_alias => $right_alias,
                     } 
                 },
@@ -321,14 +299,14 @@ sub parse_condition {
             $rhs =~ s/["']$//g;
         }
         die "Last column in '". $lhs->{'string'} ."' is virtual and can not be used in condition '$string'" 
-            if $lhs->{'chain'}[-1]->virtual;
+            if $lhs->{'column'}->virtual;
         return { string => $string, prefix => $prefix, lhs => $lhs, op => $op, rhs => $rhs };
     }
     elsif ( $string =~ /^($re_column)\s*($re_sql_op_un)$/o ) {
         my ($lhs, $op, $rhs) = ($cb->($1), $2, $3);
         ($op, $rhs) = split /\s*(?=null)/i, $op;
         die "Last column in '". $lhs->{'string'} ."' is virtual and can not be used in condition '$string'" 
-            if $lhs->{'chain'}[-1]->virtual;
+            if $lhs->{'column'}->virtual;
         return { string => $string, lhs => $lhs, op => $op, rhs => $rhs };
     }
     elsif ( $string =~ /^(has(\s+no)?\s+)?($re_column)\s*($re_sql_op_bin)\s*($re_column)$/o ) {
@@ -337,9 +315,9 @@ sub parse_condition {
         $prefix = 'has' if $1;
         $prefix .= ' no' if $2;
         die "Last column in '". $lhs->{'string'} ."' is virtual and can not be used in condition '$string'" 
-            if $lhs->{'chain'}[-1]->virtual;
+            if $lhs->{'column'}->virtual;
         die "Last column in '". $rhs->{'string'} ."' is virtual and can not be used in condition '$string'" 
-            if $rhs->{'chain'}[-1]->virtual;
+            if $rhs->{'column'}->virtual;
         return { string => $string, prefix => $prefix, lhs => $lhs, op => $op, rhs => $rhs };
     }
     elsif ( $string =~ /^has(\s+no)?\s+($re_column)$/o ) {
@@ -356,57 +334,58 @@ sub find_column {
     my $aliases = shift;
     my $collection = shift || $self->{'collection'};
 
-    my %res = (
-        string   => $string,
-        previous => undef,
-        chain    => [],
-    );
-
     my ($start_from, @names) = split /\./, $string;
-    my $item;
+    my ($item, $last);
     if ( !$start_from && !$aliases->{''} ) {
         $item = $collection->new_item;
     } else {
-        my $alias = $aliases->{ $start_from || '' }
-            || die "$start_from alias is not declared in from clause";
-        $res{'previous'} = $alias;
-        my $classname = $alias->{'chain'}[-1]->refers_to; # ->new( handle => $collection->_handle );
-        if ( UNIVERSAL::isa( $classname, 'Jifty::DBI::Collection' ) ) {
-            $item = $classname->new( handle => $collection->_handle )->new_item;
+        my $alias = $aliases->{ $start_from }
+            || die "alias '$start_from' is not declared";
+
+        $last = $alias;
+        $item = $alias->{'refers_to'};
+        unless ( $item ) {
+    Test::More::diag Dumper $aliases;
+
+            die "last column in alias '$start_from' is not a reference";
         }
-        elsif ( UNIVERSAL::isa( $classname, 'Jifty::DBI::Record' ) ) {
-            $item = $classname->new( handle => $collection->_handle )
-        }
-        else {
-            die "Column refers to '$classname' which is not record or collection";
-        }
+        $item = $item->new_item if $item->isa('Jifty::DBI::Collection');
     }
+
+    my @done_with = ($start_from);
     while ( my $name = shift @names ) {
         my $column =
             $self->{'additional_columns'}{ref $item}{$name}
             || $item->column( $name );
         die ref($item) ." has no column '$name'" unless $column;
 
-        push @{ $res{'chain'} }, $column;
-        return \%res unless @names;
+        my %res = (
+            string    => join( '.', @done_with, $name ),
+            previous  => $last,
+            column    => $column,
+        );
 
         my $classname = $column->refers_to;
-        unless ( $classname ) {
-            die "column '$name' of ". ref($item) ." is not a reference to record or collection";
+        if ( !$classname && @names ) {
+            die "column '$name' of ". ref($item) ." is not a reference, but used so in '$string'";
         }
+        return \%res unless $classname;
 
         if ( UNIVERSAL::isa( $classname, 'Jifty::DBI::Collection' ) ) {
-            $item = $classname->new( handle => $collection->_handle )->new_item;
+            $res{'refers_to'} = $classname->new( handle => $collection->_handle );
+            $item = $res{'refers_to'}->new_item;
         }
         elsif ( UNIVERSAL::isa( $classname, 'Jifty::DBI::Record' ) ) {
-            $item = $classname->new( handle => $collection->_handle )
+            $res{'refers_to'} = $item = $classname->new( handle => $collection->_handle )
         }
         else {
             die "Column '$name' refers to '$classname' which is not record or collection";
         }
+        $last = \%res;
+        push @done_with, $name;
     }
 
-    return \%res;
+    return $last;
 }
 
 sub filter_conditions_tree {
@@ -464,7 +443,8 @@ sub external_reference {
     my $aliases = { __record__ => {
         string    => '__record__',
         previous  => undef,
-        chain     => [$column],
+        column    => $column,
+        refers_to => $column->refers_to->new( handle => $self->{'collection'}->_handle ),
         sql_alias => $self->{'collection'}->new_alias( $record ),
     } };
 
@@ -486,7 +466,7 @@ sub external_reference {
             lhs => {
                 string   => '__record__.id',
                 previous => $aliases->{'__record__'},
-                chain    => [ $record->column('id') ]
+                column   => $record->column('id'),
             },
             op => '=',
             rhs => $record->id || 0,
@@ -513,11 +493,12 @@ my $merge_joins_cb = sub {
             $m = {
                 name     => $name,
                 string   => $new_str,
-                chain    => [ $meta->{'chain'}[0] ],
+                column    => $meta->{'column'},
                 previous => $meta->{'previous'},
             };
             $cache{ $new_str } = $aliases->{ $name } = $m;
         }
+        # XXX: no more chain
         shift @{ $meta->{'chain'} };
         unshift @parts, $m->{'name'};
         $meta->{'previous'} = $m;
