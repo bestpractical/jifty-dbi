@@ -328,9 +328,26 @@ sub parse_condition {
     }
 }
 
+my $re_column_keep = qr{($re_alias_name)?(\.$re_field$re_ph_access*)+};
+my $re_ph_keep = qr{\.($re_field)($re_ph_access)*};
+
+sub parse_column {
+    my $self = shift;
+    my $string = shift;
+    my ($alias, @parts) = ($string =~ /^$re_column_keep$/og);
+    Test::More::diag Dumper [$alias, @parts];
+    foreach (@parts) {
+        my ($field, @phs) = ($_ =~ /^$re_ph_keep$/og);
+        $_ = [$field, @phs];
+    }
+    Test::More::diag Dumper [$alias, @parts];
+
+}
+
 sub find_column {
     my $self = shift;
     my $string = shift;
+    $self->parse_column($string);
     my $aliases = shift;
     my $collection = shift || $self->{'collection'};
 
