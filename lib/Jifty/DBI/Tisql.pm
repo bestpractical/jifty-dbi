@@ -345,8 +345,6 @@ sub find_column {
         $last = $alias;
         $item = $alias->{'refers_to'};
         unless ( $item ) {
-    Test::More::diag Dumper $aliases;
-
             die "last column in alias '$start_from' is not a reference";
         }
         $item = $item->new_item if $item->isa('Jifty::DBI::Collection');
