@@ -235,6 +235,9 @@ By default JDBI allow you to use only one column in references using
 In the query used for references you have additional alias by default, name
 of the alias and name of the column are equal.
 
+These columns generate accessors as well, so you can call C<< $user->attrs
+>> that will return TestApp::AttributeCollection.
+
 =head3 Adding new columns at run-time
 
 You can add virtual columns to models at run-time, right before applying a
@@ -257,5 +260,7 @@ This columns may be used very often and most probably want to add them
 persistently to the User model, but this is just an example.
 
 =head3 Placeholders
+
+Adding new references all the time 
 
 =cut
