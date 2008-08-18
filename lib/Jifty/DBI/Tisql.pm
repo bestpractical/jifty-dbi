@@ -328,30 +328,49 @@ sub parse_condition {
     }
 }
 
-my $re_column_keep = qr{($re_alias_name)?(\.$re_field$re_ph_access*)+};
-my $re_ph_keep = qr{\.($re_field)($re_ph_access)*};
+my $re_ph_keep = qr{($re_field)($re_ph_access)*};
 
 sub parse_column {
     my $self = shift;
     my $string = shift;
-    my ($alias, @parts) = ($string =~ /^$re_column_keep$/og);
-    Test::More::diag Dumper [$alias, @parts];
-    foreach (@parts) {
-        my ($field, @phs) = ($_ =~ /^$re_ph_keep$/og);
-        $_ = [$field, @phs];
-    }
-    Test::More::diag Dumper [$alias, @parts];
 
+    my (%res, @parts);
+    ($res{'alias'}, @parts) = split /\.($re_field$re_ph_access*)/o, $string;
+    @parts = grep defined && length, @parts;
+    foreach my $p (@parts) {
+        $p =~ s/^($re_field)//;
+        my $field = $1;
+        my @phs = split /{\s*($re_cs_values|$re_ph)?\s*}/, $p;
+        @phs = grep !defined || length, @phs;
+        $p = { name => $field, placeholders => \@phs };
+        foreach my $ph ( @phs ) {
+            if ( !defined $ph ) {
+                $ph = [];
+            }
+            elsif ($ph =~ /^%([0-9]+)$/) {
+                $ph = $1;
+            }
+            else {
+                my @values;
+                while ( $ph =~ s/^($re_value)\s*,?\s*// ) {
+                    push @values, $1;
+                }
+                $ph = \@values;
+            }
+        }
+    }
+    $res{'chain'} = \@parts;
+    return \%res;
 }
 
 sub find_column {
     my $self = shift;
     my $string = shift;
-    $self->parse_column($string);
     my $aliases = shift;
     my $collection = shift || $self->{'collection'};
 
-    my ($start_from, @names) = split /\./, $string;
+    my $meta = $self->parse_column($string);
+    my $start_from = $meta->{'alias'};
     my ($item, $last);
     if ( !$start_from && !$aliases->{''} ) {
         $item = $collection->new_item;
@@ -366,6 +385,8 @@ sub find_column {
         }
         $item = $item->new_item if $item->isa('Jifty::DBI::Collection');
     }
+
+    my @names = map $_->{'name'}, @{ $meta->{'chain'} };
 
     my @done_with = ($start_from);
     while ( my $name = shift @names ) {
