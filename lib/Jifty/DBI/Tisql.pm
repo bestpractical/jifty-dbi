@@ -128,7 +128,7 @@ sub apply_query_condition {
     my ($self, $collection, $ea, $condition, $join) = @_;
 
     die "left hand side must be always column specififcation"
-        unless ref $condition->{'lhs'};
+        unless ref $condition->{'lhs'} eq 'HASH';
 
     my $prefix = $condition->{'prefix'};
     my $op     = $condition->{'op'};
@@ -154,7 +154,7 @@ sub apply_query_condition {
             column           => $condition->{'lhs'}{'column'}->name,
             operator         => $op,
         );
-        if ( ref $condition->{'rhs'} ) {
+        if ( ref $condition->{'rhs'} eq 'HASH' ) {
             $limit{'quote_value'} = 0;
             $limit{'value'} =
                 $self->resolve_join( $condition->{'rhs'} )
@@ -174,7 +174,7 @@ sub apply_query_condition {
             column           => $condition->{'lhs'}{'column'}->name,
             operator         => $op,
         );
-        if ( ref $condition->{'rhs'} ) {
+        if ( ref $condition->{'rhs'} eq 'HASH' ) {
             $limit{'quote_value'} = 0;
             $limit{'value'} =
                 $self->resolve_join( $condition->{'rhs'} )
@@ -303,10 +303,6 @@ sub parse_condition {
         my $prefix;
         $prefix = 'has' if $1;
         $prefix .= ' no' if $2;
-        if ( $rhs =~ /^$re_delim$/ ) {
-            $rhs =~ s/^["']//g;
-            $rhs =~ s/["']$//g;
-        }
         die "Last column in '". $lhs->{'string'} ."' is virtual and can not be used in condition '$string'" 
             if $lhs->{'column'}->virtual;
         return { string => $string, prefix => $prefix, lhs => $lhs, op => $op, rhs => $rhs };
