@@ -362,20 +362,23 @@ sub parse_column {
     my $self = shift;
     my $string = shift;
 
-    my (%res, @parts);
-    ($res{'alias'}, @parts) = split /\.($re_field$re_ph_access*)/o, $string;
-    @parts = grep defined && length, @parts;
-    foreach my $p (@parts) {
-        $p =~ s/^($re_field)//;
+    my (%res, @columns);
+    ($res{'alias'}, @columns) = split /\.($re_field$re_ph_access*)/o, $string;
+    @columns = grep defined && length, @columns;
+    my $prev;
+    foreach my $col (@columns) {
+        my $string = $col;
+        $col =~ s/^($re_field)//;
         my $field = $1;
-        my @phs = split /{\s*($re_cs_values|$re_ph)?\s*}/, $p;
+        my @phs = split /{\s*($re_cs_values|$re_ph)?\s*}/, $col;
         @phs = grep !defined || length, @phs;
-        $p = { name => $field, placeholders => \@phs };
-        foreach my $ph ( @phs ) {
-            if ( !defined $ph ) {
-                $ph = [];
-            }
-            elsif ($ph =~ /^%([0-9]+)$/) {
+        $col = {
+            name => $field,
+            string => ($prev? $prev->{'string'} : $res{'alias'}) .".$string",
+        };
+        $col->{'placeholders'} = \@phs if @phs;
+        foreach my $ph ( grep defined, @phs ) {
+            if ( $ph =~ /^%([0-9]+)$/ ) {
                 $ph = $1;
             }
             else {
@@ -386,8 +389,9 @@ sub parse_column {
                 $ph = \@values;
             }
         }
+        $prev = $col;
     }
-    $res{'chain'} = \@parts;
+    $res{'chain'} = \@columns;
     return \%res;
 }
 
@@ -414,23 +418,24 @@ sub find_column {
         $item = $item->new_item if $item->isa('Jifty::DBI::Collection');
     }
 
-    my @names = map $_->{'name'}, @{ $meta->{'chain'} };
+    my @chain = @{ $meta->{'chain'} };
 
-    my @done_with = ($start_from);
-    while ( my $name = shift @names ) {
+    while ( my $joint = shift @chain ) {
+        my $name = $joint->{'name'};
         my $column =
             $self->{'additional_columns'}{ref $item}{$name}
             || $item->column( $name );
         die ref($item) ." has no column '$name'" unless $column;
 
         my %res = (
-            string    => join( '.', @done_with, $name ),
-            previous  => $last,
-            column    => $column,
+            string       => $joint->{'string'},
+            previous     => $last,
+            column       => $column,
+            placeholders => $joint->{'placeholders'},
         );
 
         my $classname = $column->refers_to;
-        if ( !$classname && @names ) {
+        if ( !$classname && @chain ) {
             die "column '$name' of ". ref($item) ." is not a reference, but used so in '$string'";
         }
         return \%res unless $classname;
@@ -446,7 +451,6 @@ sub find_column {
             die "Column '$name' refers to '$classname' which is not record or collection";
         }
         $last = \%res;
-        push @done_with, $name;
     }
 
     return $last;
