@@ -160,6 +160,11 @@ sub apply_query_condition {
                 $self->resolve_join( $condition->{'rhs'} )
                 .'.'. $condition->{'rhs'}{'column'}->name;
         } else {
+            if ( ref $condition->{'rhs'} eq 'ARRAY' ) {
+                $_ = dq( $_ ) foreach @{ $condition->{'rhs'} };
+            } else {
+                $condition->{'rhs'} = dq( $condition->{'rhs'} );
+            }
             $limit{'value'} = $condition->{'rhs'};
         }
 
@@ -180,6 +185,11 @@ sub apply_query_condition {
                 $self->resolve_join( $condition->{'rhs'} )
                 .'.'. $condition->{'rhs'}{'column'}->name;
         } else {
+            if ( ref $condition->{'rhs'} eq 'ARRAY' ) {
+                $_ = dq( $_ ) foreach @{ $condition->{'rhs'} };
+            } else {
+                $condition->{'rhs'} = dq( $condition->{'rhs'} );
+            }
             $limit{'value'} = $condition->{'rhs'};
         }
 
