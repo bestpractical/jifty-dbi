@@ -351,7 +351,7 @@ sub parse_condition {
         return { string => $string, prefix => $prefix, lhs => $lhs, op => $op, rhs => $rhs };
     }
     elsif ( $string =~ /^has(\s+no)?\s+($re_column)$/o ) {
-        return { string => $string, lhs => $cb->( $2 .'.id' ), op => $1? 'IS NOT': 'IS', rhs => 'NULL' };
+        return { string => $string, lhs => $cb->( $2 .'.id' ), op => $1? 'IS': 'IS NOT', rhs => 'NULL' };
     }
     else {
         die "$string is not a tisql condition";
