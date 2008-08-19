@@ -39,6 +39,15 @@ my %invert_op = (
     '<=' => '>',
 );
 
+sub dq {
+    my $s = $_[0];
+    return $s unless $s =~ /^$re_delim$/o;
+    substr( $s, 0, 1 ) = '';
+    substr( $s, -1   ) = '';
+    $s =~ s/\\(?=["'])//g;
+    return $s;
+}
+
 sub add_reference {
     my $self = shift;
     my %args = (
