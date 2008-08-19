@@ -233,12 +233,7 @@ sub resolve_join {
     if ( UNIVERSAL::isa( $refers, 'Jifty::DBI::Collection' ) ) {
         my $item = $refers->new_item;
         if ( my $tisql = $column->tisql ) {
-            $res = $self->resolve_tisql_join(
-                chain      => $meta->{'previous'},
-                alias      => $prev_alias,
-                collection => $collection,
-                column     => $column,
-            );
+            $res = $self->resolve_tisql_join( $meta );
         } else {
             $res = $collection->new_alias( $item );
             $collection->join(
@@ -272,35 +267,55 @@ sub resolve_join {
 
 sub resolve_tisql_join {
     my $self = shift;
-    my %args = (@_);
+    my $meta = shift;
 
-    my $collection = $args{'collection'};
-
-    my $query = $args{'column'}->tisql;
-    my $refers_to = $args{'column'}->refers_to->new( handle => $collection->_handle );
-    my $right_alias = $collection->new_alias( $refers_to->new_item );
+    my $alias = $self->{'collection'}->new_alias(
+        $meta->{'refers_to'}->new_item
+    );
 
     my $tree = $self->as_array(
-        $query,
+        $meta->{'column'}->tisql,
         operand_cb => sub { return $self->parse_condition( 
             $_[0], sub { return $self->find_column(
                 $_[0],
                 {
-                    '' => $args{'chain'},
-                    $args{'column'}->name => { 
-                        column    => $args{'column'},
-                        refers_to => $refers_to,
-                        string    => '',
-                        sql_alias => $right_alias,
+                    '' => $meta->{'previous'},
+                    $meta->{'column'}->name => {
+                        %$meta,
+                        sql_alias => $alias,
                     } 
                 },
             ) }
         ) },
     );
 
-    $self->apply_query_tree( $tree, $right_alias );
+    $tree = $self->filter_conditions_tree( $tree, sub {
+        my $rhs = $_[0]->{'rhs'};
+        if ( $rhs && !ref $rhs && $rhs =~ /^%([0-9]+)$/ ) {
+            return 0 unless defined $meta->{'placeholders'}[ $1 - 1 ];
+            $_[0]->{'rhs'} = $meta->{'placeholders'}[ $1 - 1 ];
+            return 1;
+        }
+        foreach my $col ( grep ref $_ eq 'HASH', $rhs, $_[0]->{'lhs'} ) {
+            my $tmp = $col;
+            while ( $tmp ) {
+                if ( my $phs = $tmp->{'placeholders'} ) {
+                    for ( my $i = 0; $i < @$phs; $i++ ) {
+                        my $ph = $phs->[$i];
+                        next unless defined $ph;
+                        next if ref $ph;
+                        $phs->[$i] = $meta->{'placeholders'}[ $ph - 1 ];
+                    }
+                }
+                $tmp = $tmp->{previous};
+            };
+        }
+        return 1;
+    } );
 
-    return $right_alias;
+    $self->apply_query_tree( $tree, $alias );
+
+    return $alias;
 }
 
 sub parse_condition {
