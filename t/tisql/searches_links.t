@@ -9,7 +9,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 2;
+use constant TESTS_PER_DRIVER => 29;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -38,6 +38,23 @@ SKIP: {
         $count = init_data( 'TestApp::Link', $handle );
         ok( $count,  "init data" );
     }
+
+    my $clean_obj = TestApp::TaskCollection->new( handle => $handle );
+    my $tasks_obj = $clean_obj->clone;
+    is_deeply( $tasks_obj, $clean_obj, 'after Clone looks the same');
+
+    run_our_cool_tests(
+        $tasks_obj,
+        ".from_links.dst_id = 2" => [qw(1_m_of_2)],
+        ".from_links{'member_of'}.dst_id = 2" => [qw(1_m_of_2)],
+        ".from_links{}{'task'}.dst_id = 2" => [qw(1_m_of_2)],
+        ".from_links{'member_of'}{'task'}.dst_id = 2" => [qw(1_m_of_2)],
+        ".to_links{'member_of'}{'task'}.src_id = 1" => [qw(2_has_m_1)],
+# TODO   ".linked_tasks.subject = '2_has_m_1'" => [qw(qwe)],
+        ".linked_to_tasks.subject = '2_has_m_1'" => [qw(1_m_of_2)],
+        ".linked_from_tasks.subject = '1_m_of_2'" => [qw(2_has_m_1)],
+        ".member_of.subject = '2_has_m_1'" => [qw(1_m_of_2)],
+    );
 
     cleanup_schema( 'TestApp', $handle );
 
@@ -113,18 +130,34 @@ our $VERSION = '0.01';
 use Jifty::DBI::Schema;
 use Jifty::DBI::Record schema {
     column subject => type is 'varchar(32)';
+
     column links => refers_to TestApp::LinkCollection
-        by tisql => '((links.src_model = "Task" AND links.src_id = .id)
-            OR (links.dst_model = "Task" AND dst_id = .id))';
-    column to_links => refers_to TestApp::LinkCollection
-        by tisql => '(links.dst_model = "Task" AND dst_id = .id)';
-    column from_links => refers_to TestApp::LinkCollection
-        by tisql => '(links.src_model = "Task" AND src_id = .id)';
+        by tisql => 'links.type = %1 AND ((links.src_model = "task" AND links.src_id = .id)
+            OR (links.dst_model = "task" AND dst_id = .id))';
+    column links_from => refers_to TestApp::LinkCollection
+        by tisql => 'links_from.dst_model = "task" AND links_from.dst_id = .id'
+            .' AND links_from.type = %1 AND links_from.src_model = %2';
+    column links_to => refers_to TestApp::LinkCollection
+        by tisql => 'links_to.src_model = "task" AND links_to.src_id = .id'
+            .' AND links_to.type = %1 AND links_to.dst_model = %2';
+
+    column linked_tasks => refers_to TestApp::TaskCollection
+        by tisql => 'linked_tasks.id = .links_from{%1}{"task"}.src_id OR linked_tasks.id = .links_to{%1}{"task"}.dst_id';
+
+    column linked_to_tasks => refers_to TestApp::TaskCollection
+        by tisql => 'linked_to_tasks.id = .from_links{%1}{"task"}.dst_id';
+    column linked_from_tasks => refers_to TestApp::TaskCollection
+        by tisql => 'linked_from_tasks.id = .to_links{%1}{"task"}.src_id';
+
+    column member_of => refers_to TestApp::TaskCollection
+        by tisql => 'member_of.id = .from_links{"member_of"}{"task"}.dst_id';
 };
 
 sub init_data {
     return (
         ['subject'],
+        ['1_m_of_2'],
+        ['2_has_m_1'],
     );
 }
 
@@ -142,6 +175,7 @@ use Jifty::DBI::Record schema {
 sub init_data {
     return (
         ['src_model', 'src_id', 'type', 'dst_model', 'dst_id'],
+        ['task', 1, 'member_of', 'task', 2],
     );
 }
 
