@@ -51,8 +51,8 @@ SKIP: {
         # has [no] tags
         ".tags.id IS NULL"     => [qw(a m)],
         ".tags.id IS NOT NULL" => [qw(aa at axy mm mt mqwe)],
-        "has .tags"    => [qw(a m)],
-        "has no .tags" => [qw(aa at axy mm mt mqwe)],
+        "has no .tags"    => [qw(a m)],
+        "has .tags" => [qw(aa at axy mm mt mqwe)],
 
         # has [no] tags and/or type
         ".tags.id IS NULL     AND .type = 'article'" => [qw(a)],
