@@ -270,7 +270,7 @@ sub resolve_tisql_join {
     my $meta = shift;
 
     my $alias = $self->{'collection'}->new_alias(
-        $meta->{'refers_to'}->new_item
+        $meta->{'refers_to'}->new_item, 'LEFT'
     );
 
     my $tree = $self->as_array(
