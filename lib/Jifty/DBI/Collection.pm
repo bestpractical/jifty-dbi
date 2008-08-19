@@ -1754,8 +1754,10 @@ a search.
 =cut
 
 sub new_alias {
-    my $self = shift;
+    my $self      = shift;
     my $refers_to = shift || die "Missing parameter";
+    my $type      = shift || 'CROSS';
+
     my $table;
     my $class = undef;
     if ( $refers_to->can('table') ) {
@@ -1770,9 +1772,10 @@ sub new_alias {
     $self->{'joins'}{$alias} = {
         alias => $alias,
         table => $table,
-        type  => 'CROSS',
+        type  => $type,
         ( $class ? ( class => $class ) : () ),
-        alias_string => " CROSS JOIN $table $alias ",
+        alias_string => " $type JOIN $table $alias ",
+        depends_on => 'main',
     };
 
     return $alias;
