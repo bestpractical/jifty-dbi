@@ -323,7 +323,7 @@ sub parse_condition {
     my $string = shift;
     my $cb = shift;
 
-    if ( $string =~ /^(has(\s+no)?\s+)?($re_column)\s*($re_sql_op_bin)\s*($re_value)$/io ) {
+    if ( $string =~ /^(has(\s+no)?\s+)?($re_column)\s*($re_sql_op_bin)\s*($re_value_ph)$/io ) {
         my ($lhs, $op, $rhs) = ($cb->($3), $4, $5);
         my $prefix;
         $prefix = 'has' if $1;
@@ -357,8 +357,6 @@ sub parse_condition {
         die "$string is not a tisql condition";
     }
 }
-
-my $re_ph_keep = qr{($re_field)($re_ph_access)*};
 
 sub parse_column {
     my $self = shift;
