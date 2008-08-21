@@ -45,11 +45,11 @@ SKIP: {
 
     run_our_cool_tests(
         $tasks_obj,
-        ".from_links.dst_id = 2" => [qw(1_m_of_2)],
-        ".from_links{'member_of'}.dst_id = 2" => [qw(1_m_of_2)],
-        ".from_links{}{'task'}.dst_id = 2" => [qw(1_m_of_2)],
-        ".from_links{'member_of'}{'task'}.dst_id = 2" => [qw(1_m_of_2)],
-        ".to_links{'member_of'}{'task'}.src_id = 1" => [qw(2_has_m_1)],
+        ".links_to.dst_id = 2" => [qw(1_m_of_2)],
+        ".links_to{'member_of'}.dst_id = 2" => [qw(1_m_of_2)],
+        ".links_to{}{'task'}.dst_id = 2" => [qw(1_m_of_2)],
+        ".links_to{'member_of'}{'task'}.dst_id = 2" => [qw(1_m_of_2)],
+        ".links_from{'member_of'}{'task'}.src_id = 1" => [qw(2_has_m_1)],
 # TODO   ".linked_tasks.subject = '2_has_m_1'" => [qw(qwe)],
         ".linked_to_tasks.subject = '2_has_m_1'" => [qw(1_m_of_2)],
         ".linked_from_tasks.subject = '1_m_of_2'" => [qw(2_has_m_1)],
@@ -145,12 +145,12 @@ use Jifty::DBI::Record schema {
         by tisql => 'linked_tasks.id = .links_from{%1}{"task"}.src_id OR linked_tasks.id = .links_to{%1}{"task"}.dst_id';
 
     column linked_to_tasks => refers_to TestApp::TaskCollection
-        by tisql => 'linked_to_tasks.id = .from_links{%1}{"task"}.dst_id';
+        by tisql => 'linked_to_tasks.id = .links_to{%1}{"task"}.dst_id';
     column linked_from_tasks => refers_to TestApp::TaskCollection
-        by tisql => 'linked_from_tasks.id = .to_links{%1}{"task"}.src_id';
+        by tisql => 'linked_from_tasks.id = .links_from{%1}{"task"}.src_id';
 
     column member_of => refers_to TestApp::TaskCollection
-        by tisql => 'member_of.id = .from_links{"member_of"}{"task"}.dst_id';
+        by tisql => 'member_of.id = .links_to{"member_of"}{"task"}.dst_id';
 };
 
 sub init_data {
