@@ -1332,6 +1332,20 @@ sub limit {
         }
     }
 
+    if ( $args{'leftjoin'} && $args{'alias'} ne $args{'leftjoin'} ) {
+        my $deps = $self->{'joins'}{ $args{'leftjoin'} }{'depends_on'};
+        unless ( grep $_ eq $args{'alias'}, @$deps ) {
+            push @$deps, $args{'alias'};
+        }
+    }
+    if ( $args{'leftjoin'} && !$args{'quote_value'} && ($args{'value'}||'') =~ /^(\w+)\./ ) {
+        my $alias = $1;
+        my $deps = $self->{'joins'}{ $args{'leftjoin'} }{'depends_on'};
+        if ( $alias ne $args{'leftjoin'} && !grep $_ eq $alias, @$deps ) {
+            push @$deps, $alias;
+        }
+    }
+
     if ( $value_ref eq 'ARRAY' ) {
         croak
             'Limits with an array ref are only allowed with operator \'IN\' or \'=\''
@@ -1775,7 +1789,7 @@ sub new_alias {
         type  => $type,
         ( $class ? ( class => $class ) : () ),
         alias_string => " $type JOIN $table $alias ",
-        depends_on => 'main',
+        depends_on => [],
     };
 
     return $alias;

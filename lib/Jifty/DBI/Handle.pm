@@ -966,7 +966,7 @@ sub join {
         $meta->{'alias_string'} = " JOIN " . $args{'table2'} . " $alias ";
         $meta->{'type'}         = 'NORMAL';
     }
-    $meta->{'depends_on'}       = $args{'alias1'};
+    $meta->{'depends_on'}       = [ $args{'alias1'} ];
     $meta->{'is_distinct'}      = $args{'is_distinct'};
     $meta->{'class'}            = $args{'class2'} if $args{'class2'};
     $meta->{'entry_aggregator'} = $args{'entry_aggregator'}
@@ -990,7 +990,7 @@ sub _build_joins {
     my $self       = shift;
     my $collection = shift;
 
-    $self->_optimize_joins( collection => $collection );
+    #$self->_optimize_joins( collection => $collection );
 
     my @cross = grep { lc $_->{type} eq "cross" }
         values %{ $collection->{'joins'} };
@@ -1005,12 +1005,15 @@ sub _build_joins {
     my %processed = map { $_->{alias} => 1 } @cross;
     $processed{'main'} = 1;
 
-# get a @list of joins that have not been processed yet, but depend on processed join
     my $joins = $collection->{'joins'};
-    while ( my @list = grep !$processed{$_}
-        && $processed{ $joins->{$_}{'depends_on'} }, keys %$joins )
-    {
+    while ( my @list = grep !$processed{$_}, keys %$joins ) {
+        # if all not yet processed joins have unsatisfied dependencies then
+        # we should barf
+        my $joined_at_least_one = 0;
         foreach my $join (@list) {
+            my $deps = $joins->{$join}{'depends_on'};
+            next if grep !$processed{$_}, @$deps;
+
             $processed{$join}++;
 
             my $meta = $joins->{$join};
@@ -1031,7 +1034,9 @@ sub _build_joins {
             # delete last aggregator
             pop @tmp;
             $join_clause .= CORE::join ' ', @tmp;
+            $joined_at_least_one++
         }
+        last unless $joined_at_least_one;
     }
 
 # here we could check if there is recursion in joins by checking that all joins
