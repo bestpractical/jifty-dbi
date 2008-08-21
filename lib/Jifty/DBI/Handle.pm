@@ -990,7 +990,7 @@ sub _build_joins {
     my $self       = shift;
     my $collection = shift;
 
-    #$self->_optimize_joins( collection => $collection );
+    $self->_optimize_joins( collection => $collection );
 
     my @cross = grep { lc $_->{type} eq "cross" }
         values %{ $collection->{'joins'} };
@@ -1064,11 +1064,17 @@ sub _optimize_joins {
 # but we should process nodes on this level at the end, so we build FILO ordered list.
 # finally we'll get ordered list with leafes in the beginning and top most nodes at
 # the end.
-    while ( my @list = grep !$processed{$_}
-        && $processed{ $joins->{$_}{'depends_on'} }, keys %$joins )
-    {
-        unshift @ordered, @list;
-        $processed{$_}++ foreach @list;
+    while ( my @list = grep !$processed{$_}, keys %$joins ) {
+        my $joined_at_least_one = 0;
+        foreach my $join (@list) {
+            my $deps = $joins->{$join}{'depends_on'};
+            next if grep !$processed{$_}, @$deps;
+
+            unshift @ordered, $join;
+            $processed{ $join }++;
+            $joined_at_least_one = 1;
+        }
+        last unless $joined_at_least_one;
     }
 
     foreach my $join (@ordered) {
@@ -1121,7 +1127,7 @@ sub may_be_null {
         # left joins on the left side so later we'll get 1 AND x expression
         # which equal to x, so we just skip it
         next if $join->{'type'} eq 'LEFT';
-        next unless $join->{'depends_on'} && ($join->{'depends_on'} eq $args{'alias'});
+        next unless $join->{'depends_on'} && (grep $_ eq $args{'alias'}, @{$join->{'depends_on'}});
 
         my @tmp = map { ( '(', @$_, ')', $join->{'entry_aggregator'} ) }
             values %{ $join->{'criteria'} };
