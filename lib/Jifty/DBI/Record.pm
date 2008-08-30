@@ -1026,7 +1026,15 @@ matches all keys.
 The hash's keys are the columns to look at.
 
 The hash's values are either: scalar values to look for OR hash
-references which contain 'operator' and 'value'
+references which contain 'operator', 'value', 'case_sensitive' 
+or 'function'
+
+To load something case sensitively on a case insensitive database,
+you can do:
+
+  $record->load_by_cols( column => { operator => '=',
+                                     value => 'Foo',
+                                     case_sensitive => 1 } );
 
 =cut
 
