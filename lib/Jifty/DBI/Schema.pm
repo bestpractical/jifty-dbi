@@ -389,6 +389,7 @@ sub _init_column_for {
                 # Note the original column
                 $virtual_column->aliased_as($aliased_as);
                 $virtual_column->alias_for_column($name);
+                $virtual_column->virtual(1);
 
                 # Create the helper methods for the virtual column too
                 $from->_init_methods_for_column($virtual_column);
