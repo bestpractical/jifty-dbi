@@ -9,7 +9,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 140;
+use constant TESTS_PER_DRIVER => 152;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -95,6 +95,14 @@ SKIP: {
         ".tags.value != 'x' AND .tags.value = 'y'" => [qw()],
         ".tags.value != 'x' OR  .tags.value = 'y'" => [qw(a aa at axy m mm mt mqwe)],
 
+        # tag != x and/or tag != y
+        ".tags.value != 'no' AND .tags.value != 't'" => [qw(a aa axy m mm mqwe)],
+        ".tags.value != 'no' OR  .tags.value != 't'" => [qw(a aa at axy m mm mt mqwe)],
+        ".tags.value != 'a' AND .tags.value != 't'" => [qw(a axy m mm mqwe)],
+        ".tags.value != 'a' OR  .tags.value != 't'" => [qw(a aa at axy m mm mt mqwe)],
+        ".tags.value != 'x' AND .tags.value != 'y'" => [qw(a aa at m mm mt mqwe)],
+        ".tags.value != 'x' OR  .tags.value != 'y'" => [qw(a aa at m mm mt mqwe)],
+
         # has .tag != x
         "has .tags.value != 'no'" => [qw(aa at axy mm mt mqwe)],
         "has .tags.value != 'a'" => [qw(at axy mm mt mqwe)],
@@ -108,11 +116,11 @@ SKIP: {
         "has no .tags.value != 'q'"  => [qw(a m)],
 
         # crazy things
-
+### XXX, TODO, FIXME
         # get all nodes that have intersection in tags with article #3 (at)
-        ".tags.nodes.id = 3" => [qw(at mt)],
+#        ".tags.nodes.id = 3" => [qw(at mt)],
         # get all nodes that have intersactions in tags with nodes that have tag 't'
-        ".tags.nodes.tags.value = 't'" => [qw(at mt)],
+#        ".tags.nodes.tags.value = 't'" => [qw(at mt)],
 
     );
 
@@ -166,6 +174,23 @@ q{ CREATE table tags (
     node integer not null,
     value varchar(36)
 ) },
+] }
+
+sub schema_mysql { [
+q{ CREATE table nodes (
+    id integer primary key auto_increment,
+    type varchar(36),
+    subject varchar(36)
+) },
+q{ CREATE table tags (
+    id integer primary key auto_increment,
+    node integer not null,
+    value varchar(36)
+) },
+] }
+sub cleanup_schema_mysql { [
+    "DROP table tags", 
+    "DROP table nodes", 
 ] }
 
 package TestApp::TagCollection;

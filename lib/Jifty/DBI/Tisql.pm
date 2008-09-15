@@ -87,12 +87,16 @@ sub query {
             $meta->{'name'} = $name;
         }
     }
+    my $operand_cb = sub {
+        my $rv = $self->parse_condition( 
+            $_[0], sub { $self->find_column( $_[0], $tree->{'aliases'} ) }
+        );
+        #push @{ $self->{'cache'}{ $rv->{'lhs'}{'string'} } ||= [] }, $rv;
+        return $rv;
+    };
 
     $tree->{'conditions'} = $self->as_array(
-        $string,
-        operand_cb => sub { return $self->parse_condition( 
-            $_[0], sub { $self->find_column( $_[0], $tree->{'aliases'} ) }
-        ) },
+        $string, operand_cb => $operand_cb,
     );
     $self->{'tisql'}{'conditions'} = $tree->{'conditions'};
     $self->apply_query_tree( $tree->{'conditions'} );
@@ -145,6 +149,38 @@ sub apply_query_condition {
     }
     $prefix ||= 'has';
 
+    my $bundling = $long && !$join && $self->{'joins_bundling'};
+    my $bundled = 0;
+    if ( $bundling ) {
+        my $bundles = $self->{'cache'}{'condition_bundles'}{ $condition->{'lhs'}{'string'} }{ $prefix } ||= [];
+        foreach my $bundle ( @$bundles ) {
+            my %tmp;
+            $tmp{$_}++ foreach map refaddr($_), @$bundle;
+            my $cur_refaddr = refaddr( $condition );
+            my $filtered = 
+                $self->filter(
+                    $self->{'tisql'}{'conditions'},
+                    sub { my $ra = refaddr($_[0]); return $ra == $cur_refaddr || $tmp{ $ra } },
+                );
+            if ( $prefix eq 'has' ) {
+                next unless $self->solve(
+                    $filtered,
+                    sub { return refaddr($_[0]) != $cur_refaddr },
+                );
+            } else {
+                next if $self->solve(
+                    $filtered,
+                    sub { return refaddr($_[0]) == $cur_refaddr },
+                );
+            }
+            $condition->{'lhs'}{'previous'}{'sql_alias'} = $bundle->[-1]{'lhs'}{'previous'}{'sql_alias'};
+            push @$bundle, $condition;
+            $bundled = 1;
+            last;
+        }
+        push @$bundles, [ $condition ] unless $bundled;
+    }
+
     if ( $prefix eq 'has' ) {
         my %limit = (
             subclause        => 'tisql',
@@ -195,7 +231,7 @@ sub apply_query_condition {
 
         $collection->limit(
             %limit,
-            entry_aggregator => 'AND',
+            entry_aggregator => $bundled? 'OR': 'AND',
             leftjoin         => $limit{'alias'},
         );
 
@@ -262,7 +298,7 @@ sub resolve_join {
             . (ref($refers) || $refers)
             ."' that is not record or collection";
     }
-    return $res;
+    return $meta->{'sql_alias'} = $res;
 }
 
 sub resolve_tisql_join {

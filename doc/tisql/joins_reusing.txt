@@ -1,34 +1,117 @@
-Ok, we've figured out syntax, let's play with number of joins.
+=head1 JOINS REUSING
 
-'.tag.value = "zoo" OR .tag.value = "bar"'
+=head2 Introduction
 
-This is the simplest query when we can bundle conditions and use on
-join, but this rule applies only to OR binary operator, when AND
-operator with positive conditions requires at least two joins. In the
-case of AND you have to use different joins as the same record you
-join can not be 'foo' and 'bar' at the same time.
+Let's start with simple example - tags.
 
-'.tag.value != "zoo"'
+    .tag.value = "foo" OR .tag.value = "bar"
 
-Do you remember I wrote about positive conditions is such queries. I
-was talking in such way because if we implement this condition in the
-same way as '.tag.value = "zoo"' then we'll get wrong results, we'll
-find all objects that have at least one tag that is not 'zoo' instead
-we have to use positive condition in a left join and check that the
-right part is empty. Something like:
- SELECT o.* FROM o LEFT JOIN t ON t.object = o.id AND t.value = 'zoo'
-WHERE t.value IS NULL;
-Note that we invert operator, so query is more closer to "NOT
-(.tag.value = 'zoo')"
+This is the simplest query when we can bundle conditions and use one
+join for both. Final query will look something like:
 
-'.tag.value != "zoo" AND .tag.value != "bar"'
+    SELECT o.* FROM o LEFT JOIN t ON t.object = o.id
+    WHERE t.value = 'foo' OR t.value = 'bar'
 
-Smoothly we move to bundling negative conditions joined by AND binary
-operator. Using boolean logic we can rewrite the query into 'NOT(
-.tag.value = "zoo" OR .tag.value = "bar" )' and things are clearer
-now.
+Left join here degenerate into cross join and JDBI for a long time
+has such optimization and some DBs optimize it these days too, so
+in tisql we don't care much.
 
-What about more complex examples? I use Parse::BooleanLogic, then I've
-implemented filter that  leaves two conditions in the structure, so we
-can figure out relation between any pair of conditions in the query.
+This rule applies only to OR binary operator, when AND
+operator with positive conditions requires at least two joins. It's
+pretty obvious from the query above that AND between two conditions
+will result in impossible condition and most DBs return empty set
+without looking into DB.
+
+Opposite situation with the following condition:
+
+    .tag.value != "foo"
+
+As we have seen in the doc describing tisql syntax this condition
+is equivalent to 'has no .tag.value = "foo"'. All conditions
+can be expressed using either 'has' or 'has no' prefix. Conditions
+with 'has no' prefix in SQL look like:
+
+    SELECT o.* FROM o LEFT JOIN t ON t.object = o.id AND (t.value = "foo")
+    WHERE t.id IS NULL
+
+It's a check that a related collection with some filter applied is
+empty. If we put t.value = "foo" OR t.value = "bar" clause into
+ON clause of the join then we will get 't.value != "foo" and t.value != "bar"'
+tisql expression.
+
+=head2 Which combinations of these conditions can be bundled?
+
+    cond1             bop     cond2             can bundle?
+    has    X = A      OR      has    X =  B     1
+    has    X = A      AND     has    X =  B     0
+    has    X = A      OR      has no X =  B     0
+    has    X = A      AND     has no X =  B     0
+    has    X = A      OR      has    X != B     1
+    has    X = A      AND     has    X != B     0
+    has    X = A      OR      has no X != B     0
+    has    X = A      AND     has no X != B     0
+    has no X = A      OR      has    X =  B     0
+    has no X = A      AND     has    X =  B     0
+    has no X = A      OR      has no X =  B     0
+    has no X = A      AND     has no X =  B     1
+    has no X = A      OR      has    X != B     0
+    has no X = A      AND     has    X != B     0
+    has no X = A      OR      has no X != B     0
+    has no X = A      AND     has no X != B     1
+    ...
+
+We can continue this table, but it's pretty obvious that conditions
+with 'has' prefix and OR relation can be bundled together, as well as
+'has no' conditions with AND relation.
+
+=head2 Implementation details
+
+Our conditions is a boolean expression which can filter leave only
+parts in which we're interested leaving information about relations.
+Then we can solve boolean expression replacing conditions with true
+or false value. This can be used to build our bundled joins.
+
+Let's consider following tree:
+
+    X AND (( foo AND (X OR bar)) OR zoo)
+
+Where X is some condition, for example .status = 'const', we're not
+interested in them so we will leave them alone. We start from
+'t.value = "foo"', all bundles are empty and we just generate a new
+one, generate new alias for tags table and apply condition to our
+query. Then we continue building query and find "bar". We have a
+bundle around and do next things:
+
+    1) we filter our query and leave only conditions from the bundle
+    and condition we want to check
+    2) replace all conditions from bundle with falses
+    3) replace candidate with true value
+    4) solve expression and if we get true result then our candidate
+    can be bundled with this bundle
+    5) otherwise we move to the next one
+
+Let's look at the process on our example:
+
+    * X AND (( foo AND (X OR bar)) OR zoo)
+    * foo AND bar
+    * 0 AND bar
+    * 0 AND 1
+    * 0
+
+Expression is solved and we can not bundle foo and bar. We generate new
+bundle and continue to 'zoo' part:
+
+    * X AND (( foo AND (X OR bar)) OR zoo)
+    * foo OR zoo
+    * 0 OR zoo
+    * 0 OR 1
+    * 1
+
+Woot, zoo condition can use foo's join. The query will look like:
+    
+    
+    SELECT o.* FROM o
+    LEFT JOIN t AS t1 ON t1.object = o.id
+    LEFT JOIN t AS t2 ON t2.object = o.id
+    WHERE X AND (( t1.value = 'foo' AND (X OR t2.value = 'bar')) OR t1.value = "zoo")
 

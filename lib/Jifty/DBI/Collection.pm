@@ -2246,7 +2246,7 @@ sub _cloned_attributes {
 sub tisql {
     my $self = shift;
     require Jifty::DBI::Tisql;
-    return Jifty::DBI::Tisql->new( collection => $self );
+    return Jifty::DBI::Tisql->new( joins_bundling => 1, @_, collection => $self );
 }
 
 1;
