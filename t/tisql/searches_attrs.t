@@ -9,7 +9,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 116;
+use constant TESTS_PER_DRIVER => 227;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -114,11 +114,13 @@ SKIP: {
 
 sub run_our_cool_tests {
     my $collection = shift;
+    my $bundling;
+    $bundling = shift if @_ % 2;
     my %tests = @_;
     while (my ($q, $check) = each %tests ) {
         $check = { map {$_ => 1} @$check };
         $collection->clean_slate;
-        $collection->tisql->query( $q );
+        $collection->tisql( joins_bundling => $bundling )->query( $q );
         my $expected_count = scalar grep $_, values %$check;
         is($collection->count, $expected_count, "count is correct for $q")
             or diag "wrong count query: ". $collection->build_select_count_query;
@@ -141,6 +143,7 @@ sub run_our_cool_tests {
         diag "wrong select query: ". $collection->build_select_query
             if $fault;
     }
+    return run_our_cool_tests( $collection, 1, %tests ) unless $bundling;
 }
 1;
 
