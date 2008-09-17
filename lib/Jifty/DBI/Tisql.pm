@@ -88,11 +88,9 @@ sub query {
         }
     }
     my $operand_cb = sub {
-        my $rv = $self->parse_condition( 
+        return $self->parse_condition( 
             $_[0], sub { $self->find_column( $_[0], $tree->{'aliases'} ) }
         );
-        #push @{ $self->{'cache'}{ $rv->{'lhs'}{'string'} } ||= [] }, $rv;
-        return $rv;
     };
 
     $tree->{'conditions'} = $self->as_array(
