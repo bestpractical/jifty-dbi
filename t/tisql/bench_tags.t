@@ -16,9 +16,9 @@ plan tests => $total;
 
 my @types = qw(article memo note);
 my @tags = qw(foo bar baz ball box apple orange fruit juice pearl gem briliant qwe asd zxc qwerty ytr dsa cxz boo bla);
-my $total_objs = 30000;
+my $total_objs = 3000;
 my $max_tags = 3;
-my $time_it = -10;
+my $time_it = -1;
 
 use Data::Dumper;
 
@@ -67,6 +67,8 @@ use Benchmark qw(cmpthese);
 sub run_our_cool_tests {
     my $collection = shift;
     my $handle = shift;
+    # turn off query cache in mysql
+    $handle->dbh->do("SET SESSION query_cache_type = OFF") if ref($handle) =~ /mysql/;
     my @tests = @_;
     foreach my $t ( @tests ) {
         diag "without bundling: ". do {
@@ -84,18 +86,16 @@ sub run_our_cool_tests {
             $collection->build_select_query;
         };
         cmpthese( $time_it, {
-            "  $t" => sub { 
+            "  $t" => sub {
                 my $collection = TestApp::NodeCollection->new( handle => $handle );
-                my $tisql = $collection->tisql;
-                $tisql->{'joins_bundling'} = 0;
-                $tisql->query( $t );
+                $collection->tisql( joins_bundling => 0 )->query( $t );
+                $collection->rows_per_page(10);
                 $collection->next;
             },
             "b $t" => sub { 
                 my $collection = TestApp::NodeCollection->new( handle => $handle );
-                my $tisql = $collection->tisql;
-                $tisql->{'joins_bundling'} = 1;
-                $tisql->query( $t );
+                $collection->tisql( joins_bundling => 1 )->query( $t );
+                $collection->rows_per_page(10);
                 $collection->next;
             } }
         );
@@ -161,8 +161,8 @@ use Jifty::DBI::Record schema {
 };
 }
 
-my @xxx = ('a'..'z');
 sub init_data {
+    my @xxx = ('a'..'z');
     my @res = (
         [ 'type', 'subject' ],
     );
