@@ -155,20 +155,25 @@ sub apply_query_condition {
             my %tmp;
             $tmp{$_}++ foreach map refaddr($_), @$bundle;
             my $cur_refaddr = refaddr( $condition );
-            my $filtered = 
-                $self->filter(
-                    $self->{'tisql'}{'conditions'},
-                    sub { my $ra = refaddr($_[0]); return $ra == $cur_refaddr || $tmp{ $ra } },
-                );
             if ( $prefix eq 'has' ) {
-                next unless $self->solve(
-                    $filtered,
-                    sub { return refaddr($_[0]) != $cur_refaddr },
+                next unless $self->fsolve(
+                    $self->{'tisql'}{'conditions'},
+                    sub {
+                        my $ra = refaddr($_[0]);
+                        return 1 if $ra == $cur_refaddr;
+                        return 0 if $tmp{ $ra };
+                        return undef;
+                    },
                 );
             } else {
-                next if $self->solve(
-                    $filtered,
-                    sub { return refaddr($_[0]) == $cur_refaddr },
+                next if $self->fsolve(
+                    $self->{'tisql'}{'conditions'},
+                    sub {
+                        my $ra = refaddr($_[0]);
+                        return 1 if $ra == $cur_refaddr;
+                        return 0 if $tmp{ $ra };
+                        return undef;
+                    },
                 );
             }
             $condition->{'lhs'}{'previous'}{'sql_alias'} = $bundle->[-1]{'lhs'}{'previous'}{'sql_alias'};
