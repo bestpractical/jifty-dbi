@@ -219,8 +219,10 @@ sub _do_search {
     );
 
     my @order;
+    my $i = 1;
     while ( my $base_row = $records->fetchrow_hashref() ) {
         my $main_pkey = $base_row->{ $names[0] };
+        $main_pkey = 'unique-'.$i++ if $self->{group_by};
         push @order, $main_pkey
             unless ( $order[0] && $order[-1] eq $main_pkey );
 
@@ -2108,7 +2110,8 @@ sub column {
 
 =head2 columns LIST
 
-Specify that we want to load only the columns in LIST, which is a 
+Specify that we want to load only the columns in LIST, which should be
+a list of column names.
 
 =cut
 
