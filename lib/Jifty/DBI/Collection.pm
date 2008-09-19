@@ -1170,10 +1170,10 @@ is numeric.
 sub limit {
     my $self = shift;
     my %args = (
-        table            => $self->table,
+        table            => undef,
+        alias            => undef,
         column           => undef,
         value            => undef,
-        alias            => undef,
         quote_value      => 1,
         entry_aggregator => 'or',
         case_sensitive   => undef,
@@ -1200,7 +1200,7 @@ sub limit {
     unless ( defined $args{'alias'} ) {
 
         #if the table we're looking at is the same as the main table
-        if ( $args{'table'} eq $self->table ) {
+        if ( !defined $args{'table'} || $args{'table'} eq $self->table ) {
 
             # TODO this code assumes no self joins on that table.
             # if someone can name a case where we'd want to do that,
