@@ -1158,12 +1158,9 @@ sub load_from_hash {
     $self->{'values'} = {};
     $self->{'fetched'} = {};
 
-    #foreach my $f ( keys %$hashref ) { $self->{'fetched'}{  $f } = 1; }
-    foreach my $col ( map { $_->name } $self->columns ) {
-        next unless exists $hashref->{ lc($col) };
+    foreach my $col ( grep exists $hashref->{ lc $_ }, map $_->name, $self->columns ) {
         $self->{'fetched'}{$col} = 1;
-        $self->{'values'}->{$col} = $hashref->{ lc($col) };
-
+        $self->{'values'}{$col} = $hashref->{ lc $col };
     }
 
     #$self->{'values'}  = $hashref;
