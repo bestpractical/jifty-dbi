@@ -75,6 +75,12 @@ sub case_sensitive {
     return (undef);
 }
 
+sub _optimize_joins {
+    my $self = shift;
+    return $self->SUPER::_optimize_joins if $self->database_version =~ /^[34]/;
+    return;
+}
+
 1;
 
 __END__
