@@ -68,7 +68,7 @@ use Data::Page;
 use Clone;
 use Carp qw/croak/;
 use base qw/Class::Accessor::Fast/;
-__PACKAGE__->mk_accessors(qw/pager prefetch_related derived/);
+__PACKAGE__->mk_accessors(qw/pager prefetch_related derived _handle _is_limited rows_per_page/);
 
 =head1 METHODS
 
@@ -152,7 +152,6 @@ sub clean_slate {
     $self->{'order'}            = "";
     $self->{'alias_count'}      = 0;
     $self->{'first_row'}        = 0;
-    $self->{'show_rows'}        = 0;
 
     delete $self->{$_} for qw(
         items
@@ -165,6 +164,7 @@ sub clean_slate {
         criteria_count
     );
 
+    $self->rows_per_page(0);
     $self->implicit_clauses(%args);
     $self->_is_limited(0);
 }
@@ -184,14 +184,6 @@ sub implicit_clauses { }
 Get or set this object's L<Jifty::DBI::Handle> object.
 
 =cut
-
-sub _handle {
-    my $self = shift;
-    if (@_) {
-        $self->{'DBIxhandle'} = shift;
-    }
-    return ( $self->{'DBIxhandle'} );
-}
 
 =head2 _do_search
 
@@ -462,15 +454,6 @@ C<-1> means "we should return all rows. We want no where clause"
 C<0> means "no limits have been applied yet.
 
 =cut
-
-sub _is_limited {
-    my $self = shift;
-    if (@_) {
-        $self->{'is_limited'} = shift;
-    } else {
-        return ( $self->{'is_limited'} );
-    }
-}
 
 =head2 build_select_query
 
@@ -1871,13 +1854,6 @@ an integer which restricts the # of rows returned in a result Returns
 the number of rows the database should display.
 
 =cut
-
-sub rows_per_page {
-    my $self = shift;
-    $self->{'show_rows'} = shift if (@_);
-
-    return ( $self->{'show_rows'} );
-}
 
 =head2 first_row
 
