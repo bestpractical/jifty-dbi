@@ -1768,11 +1768,7 @@ sub _get_alias {
     my $self  = shift;
     my $table = shift;
 
-    $self->{'alias_count'}++;
-    my $alias = $table . "_" . $self->{'alias_count'};
-
-    return ($alias);
-
+    return $table . "_" . ++$self->{'alias_count'};
 }
 
 =head2 join
