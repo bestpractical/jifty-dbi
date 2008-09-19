@@ -68,8 +68,8 @@ sub output_filters {
         return @values;
     }
 
-    my @values = @{ $self->_output_filters_accessor || [] };
-    return @values if @values;
+    my $values = $self->_output_filters_accessor;
+    return @$values if $values && @$values;
 
     return reverse $self->input_filters;
 }
