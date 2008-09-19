@@ -11,7 +11,7 @@ requires('Class::Trigger', 0.12);
 requires('Clone');
 requires('DBI');
 requires('DBIx::DBSchema' => '0.34');
-requires('Data::Page');
+requires('Data::Page' => '2.0');
 requires('DateTime' => 0.34);
 requires('DateTime::Format::ISO8601');
 requires('DateTime::Format::Strptime');

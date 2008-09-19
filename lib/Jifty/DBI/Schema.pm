@@ -349,14 +349,21 @@ sub _init_column_for {
 #            $refclass->require();
             die $UNIVERSAL::require::ERROR if ($UNIVERSAL::require::ERROR);
         }
-        # References assume a refernce to an integer ID unless told otherwise
-        $column->type('integer') unless ( $column->type );
-
         # A one-to-one or one-to-many relationship is requested
         if ( UNIVERSAL::isa( $refclass, 'Jifty::DBI::Record' ) ) {
 
+            my $by = $column->by;
+            unless ( $column->type ) {
+                # XXX, TODO: we must set column type to the same value
+                # as column we refer to.
+                #
+                # my $referenced_column = $refclass->column( $by );
+                # $column->type( $referenced_column->type );
+                $column->type('integer');
+            }
+
             # Handle *_id reference columns specially
-            if ( $name =~ /(.*)_id$/ ) {
+            if ( $name =~ /(.*)_\Q$by\E$/ ) {
                 my $aliased_as = $1;
                 my $virtual_column = $from->add_column($aliased_as);
 
@@ -373,8 +380,24 @@ sub _init_column_for {
 
                 # Create the helper methods for the virtual column too
                 $from->_init_methods_for_column($virtual_column);
-            }
+            } else {
+                my $aliased_as = $name .'_'. $by;
+                my $virtual_column = $from->add_column($aliased_as);
 
+                # Clone ourselves into the virtual column
+                %$virtual_column = %$column;
+
+                # This column is now just the ID, the virtual holds the ref
+                $virtual_column->refers_to(undef); $virtual_column->by(undef);
+
+                # Note the original column
+                $virtual_column->aliased_as($aliased_as);
+                $virtual_column->alias_for_column($name);
+                $virtual_column->virtual(1);
+
+                # Create the helper methods for the virtual column too
+                $from->_init_methods_for_column($virtual_column);
+            }
         } elsif ( UNIVERSAL::isa( $refclass, 'Jifty::DBI::Collection' ) ) {
             $column->virtual('1');
         } else {
@@ -437,23 +460,84 @@ __END__
 =head2 references
 
 Indicates that the column references an object or a collection of objects in another
-class.  You may refer to either a class that inherits from Jifty::Record by a primary
-key in that class or to a class that inherits from Jifty::Collection.
+class.  You may refer to either a class that inherits from L<Jifty::Record> by a primary
+key in that class or to a class that inherits from L<Jifty::Collection>.
+
+=head3 referencing a record
 
 Correct usage is C<references Application::Model::OtherClass by 'column_name'>, where
-Application::Model::OtherClass is a valid Jifty model and C<'column_name'> is
-a column containing unique values in OtherClass.  You can omit C<by 'column_name'> and
-the column name 'id' will be used.
+Application::Model::OtherClass is a valid Jifty model, subclass of L<Jifty::Record>,
+and C<'column_name'> is a distinct column of OtherClass. You can omit C<by 'column_name'>
+and the column name 'id' will be used.
 
-If you are referring to a Jifty::Collection then you must specify C<by 'column_name'>.
+At this moment you must specify type of the column your self to match type of the column
+you refer to.
 
-When accessing the value in the column the actual object referenced will be returned for
-refernces to Jifty::Records and a reference to a Jifty::Collection will be returned for
-columns referring to Jifty::Collections.
+You can name a column as combination of 'name' and 'by', for example:
 
-For columns referring to Jifty::Records you can access the actual value of the column
-instead of the object reference by appending '_id' to the column name.  As a result,
-you may not end any column name which uses 'references' using '_id'.
+    column user_name => references App::Model::User by 'name', type is 'varchar(64)';
+
+Then user, user_name and respective setters will be generated. user method will return
+object, user_name will return actual value. Note that if you're using some magic on load
+for user records then to get real name of loaded record you should use C<< $record->user->name >>
+instead.
+
+In the above case name of the column in the DB will be 'user_name'. If you don't like
+suffixes like '_id', '_name' and other in the DB then you can name column without suffix,
+for example:
+
+    column user => references App::Model::User by 'name', type is 'varchar(64)';
+
+In this case name of the column in the DB will be 'user', accessors will be the same
+as in above example.
+
+=head3 referencing a collection
+
+Correct usage is C<references Application::Model::OtherCollection by 'column_name'>, where
+Application::Model::OtherCollection is a valid Jifty model, subclass of L<Jifty::Collection>,
+and C<'column_name'> is a column of records in OtherCollection. In this case  C<by 'column_name'>
+is not optional.
+
+Columns that refers to a collection are virtual and can be changed. So such columns in a model
+doesn't create real columns in the DB, but instead it's way to name collection of records that
+refer to this records.
+
+=head3 example
+
+Simple model with users and multiple phone records per user:
+
+    package TestApp::Model::User;
+    use Jifty::DBI::Schema;
+    use Jifty::DBI::Record schema {
+        column name  => type is 'varchar(18)';
+        ...
+        column phones => references TestApp::Model::PhoneCollection by 'user';
+    };
+
+    package TestApp::Model::Phone;
+    use Jifty::DBI::Schema;
+    use Jifty::DBI::Record schema {
+        column user  => references TestApp::Model::User by 'id',
+            is mandatory;
+        column type  => ...;
+        column value => ...;
+    };
+
+From a user record you get his phones and do something:
+
+    my $phones = $user->phones;
+    while ( my $phone = $phones->next ) {
+        ...
+    }
+
+From a phone record you can get its owner or change it:
+
+    my $user_object = $phone->user;
+    my $user_id = $phone->user_id;
+
+    $phone->set_user( $new_owner_object );
+    $phone->set_user( 123 );    # using id
+    $phone->set_user_id( 123 ); # the same, but only using id
 
 =head2 refers_to
 

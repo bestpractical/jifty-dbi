@@ -58,7 +58,7 @@ Returns the mysql version, trimming off any -foo identifier
 
 sub database_version {
     my $self = shift;
-    my $v    = $self->SUPER::database_version();
+    my $v    = $self->SUPER::database_version(@_);
 
     $v =~ s/\-.*$//;
     return ($v);
@@ -73,6 +73,12 @@ Returns undef, since mysql's searches are not case sensitive by default
 sub case_sensitive {
     my $self = shift;
     return (undef);
+}
+
+sub _optimize_joins {
+    my $self = shift;
+    return $self->SUPER::_optimize_joins if $self->database_version =~ /^[34]/;
+    return;
 }
 
 1;

@@ -43,7 +43,8 @@ sub input_filters {
     my $self = shift;
     if (@_) {    # setting
         my @values = map { UNIVERSAL::isa( $_, 'ARRAY' ) ? @$_ : $_ } @_;
-        $self->_input_filters_accessor( [@values] );
+        $self->_input_filters_accessor( \@values );
+        return @values;
     }
 
     return @{ $self->_input_filters_accessor || [] };
@@ -63,14 +64,14 @@ sub output_filters {
     my $self = shift;
     if (@_) {    # setting
         my @values = map { UNIVERSAL::isa( $_, 'ARRAY' ) ? @$_ : $_ } @_;
-        $self->_output_filters_accessor( [@values] );
+        $self->_output_filters_accessor( \@values );
+        return @values;
     }
 
-    my @values = @{ $self->_output_filters_accessor || [] };
-    return @values if @values;
+    my $values = $self->_output_filters_accessor;
+    return @$values if $values && @$values;
 
-    @values = reverse $self->input_filters;
-    return @values;
+    return reverse $self->input_filters;
 }
 
 =head2 filters FILTERS

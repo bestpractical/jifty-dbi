@@ -258,6 +258,8 @@ sub _init_methods_for_column {
     # Check for the correct column type when the Storable filter is in use
     if ( grep { $_ eq 'Jifty::DBI::Filter::Storable' }
         ( $column->input_filters, $column->output_filters )
+         and not grep { $_ eq 'Jifty::DBI::Filter::base64' }
+        ( $column->input_filters, $column->output_filters )
             and !$column->is_binary )
     {
         die "Column '$column_name' in @{[$column->record_class]} "
@@ -1027,7 +1029,15 @@ matches all keys.
 The hash's keys are the columns to look at.
 
 The hash's values are either: scalar values to look for OR hash
-references which contain 'operator' and 'value'
+references which contain 'operator', 'value', 'case_sensitive' 
+or 'function'
+
+To load something case sensitively on a case insensitive database,
+you can do:
+
+  $record->load_by_cols( column => { operator => '=',
+                                     value => 'Foo',
+                                     case_sensitive => 1 } );
 
 =cut
 
@@ -1141,28 +1151,21 @@ record's loaded values hash.
 =cut
 
 sub load_from_hash {
-    my $class   = shift;
+    my $self    = shift;
     my $hashref = shift;
-    my ($self);
 
-    if ( ref($class) ) {
-        ( $self, $class ) = ( $class, undef );
-    } else {
-        $self = $class->new(
-            handle => ( delete $hashref->{'_handle'} || undef ) );
+    unless ( ref $self ) {
+        $self = $self->new( handle => delete $hashref->{'_handle'} );
     }
 
-    $self->{values} = {};
+    $self->{'values'} = {};
+    $self->{'fetched'} = {};
 
-    #foreach my $f ( keys %$hashref ) { $self->{'fetched'}{  $f } = 1; }
-    foreach my $col ( map { $_->name } $self->columns ) {
-        next unless exists $hashref->{ lc($col) };
+    foreach my $col ( grep exists $hashref->{ lc $_ }, map $_->name, $self->columns ) {
         $self->{'fetched'}{$col} = 1;
-        $self->{'values'}->{$col} = $hashref->{ lc($col) };
-
+        $self->{'values'}{$col} = $hashref->{ lc $col };
     }
 
-    #$self->{'values'}  = $hashref;
     $self->{'decoded'} = {};
     return $self->id();
 }
@@ -1555,6 +1558,7 @@ sub _apply_output_filters {
     return (shift)->_apply_filters( direction => 'output', @_ );
 }
 
+{ my %cache = ();
 sub _apply_filters {
     my $self = shift;
     my %args = (
@@ -1567,14 +1571,20 @@ sub _apply_filters {
     my @filters = $self->_filters(%args);
     my $action = $args{'direction'} eq 'output' ? 'decode' : 'encode';
     foreach my $filter_class (@filters) {
-        local $UNIVERSAL::require::ERROR;
-        $filter_class->require()
-            unless $INC{ join( '/', split( /::/, $filter_class ) ) . ".pm" };
-
-        if ($UNIVERSAL::require::ERROR) {
-            warn $UNIVERSAL::require::ERROR;
+        unless ( exists $cache{ $filter_class } ) {
+            local $UNIVERSAL::require::ERROR;
+            $filter_class->require;
+            if ($UNIVERSAL::require::ERROR) {
+                warn $UNIVERSAL::require::ERROR;
+                $cache{ $filter_class } = 0;
+                next;
+            }
+            $cache{ $filter_class } = 1;
+        }
+        elsif ( !$cache{ $filter_class } ) {
             next;
         }
+
         my $filter = $filter_class->new(
             record    => $self,
             column    => $args{'column'},
@@ -1585,7 +1595,7 @@ sub _apply_filters {
         # XXX TODO error proof this
         $filter->$action();
     }
-}
+} }
 
 =head2 is_distinct COLUMN_NAME, VALUE
 
@@ -1666,7 +1676,7 @@ sub has_canonicalizer_for_column {
     }
 }
 
-=head2 run_validation_for_column column => 'COLUMN', value => 'VALUE'
+=head2 run_validation_for_column column => 'COLUMN', value => 'VALUE' [extra => \@ARGS]
 
 Runs all validators for the specified column.
 
@@ -1677,13 +1687,14 @@ sub run_validation_for_column {
     my %args = (
         column => undef,
         value  => undef,
+        extra  => [],
         @_
     );
     my $key  = $args{'column'};
     my $attr = $args{'value'};
 
     my ( $ret, $results )
-        = $self->_run_callback( name => "validate_" . $key, args => $attr );
+        = $self->_run_callback( name => "validate_" . $key, args => $attr, extra => $args{'extra'} );
 
     if ( defined $ret ) {
         return ( 1, 'Validation ok' );
@@ -1718,6 +1729,7 @@ sub _run_callback {
         name => undef,
         args => undef,
         short_circuit => 1,
+        extra => [],
         @_
     );
 
@@ -1725,11 +1737,11 @@ sub _run_callback {
     my $method = $args{'name'};
     my @results;
     if ( my $func = $self->can($method) ) {
-        @results = $func->( $self, $args{args} );
+        @results = $func->( $self, $args{args}, @{$args{'extra'}} );
         return ( wantarray ? ( undef, [ [@results] ] ) : undef )
             if $args{short_circuit} and not $results[0];
     }
-    $ret = $self->call_trigger( $args{'name'} => $args{args} );
+    $ret = $self->call_trigger( $args{'name'} => $args{args}, @{$args{'extra'}} );
     return (
         wantarray
         ? ( $ret, [ [@results], @{ $self->last_trigger_results } ] )

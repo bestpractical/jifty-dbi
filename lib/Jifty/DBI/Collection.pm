@@ -68,7 +68,7 @@ use Data::Page;
 use Clone;
 use Carp qw/croak/;
 use base qw/Class::Accessor::Fast/;
-__PACKAGE__->mk_accessors(qw/pager prefetch_related derived/);
+__PACKAGE__->mk_accessors(qw/pager prefetch_related derived _handle _is_limited rows_per_page/);
 
 =head1 METHODS
 
@@ -123,11 +123,7 @@ sub _init {
 
 sub _init_pager {
     my $self = shift;
-    $self->pager( Data::Page->new );
-
-    $self->pager->total_entries(0);
-    $self->pager->entries_per_page(10);
-    $self->pager->current_page(1);
+    return $self->pager( Data::Page->new(0, 10, 1) );
 }
 
 =head2 clean_slate
@@ -152,7 +148,6 @@ sub clean_slate {
     $self->{'order'}            = "";
     $self->{'alias_count'}      = 0;
     $self->{'first_row'}        = 0;
-    $self->{'show_rows'}        = 0;
 
     delete $self->{$_} for qw(
         items
@@ -164,6 +159,7 @@ sub clean_slate {
         criteria_count
     );
 
+    $self->rows_per_page(0);
     $self->implicit_clauses(%args);
     $self->_is_limited(0);
 }
@@ -183,14 +179,6 @@ sub implicit_clauses { }
 Get or set this object's L<Jifty::DBI::Handle> object.
 
 =cut
-
-sub _handle {
-    my $self = shift;
-    if (@_) {
-        $self->{'DBIxhandle'} = shift;
-    }
-    return ( $self->{'DBIxhandle'} );
-}
 
 =head2 _do_search
 
@@ -213,25 +201,39 @@ sub _do_search {
     my @names = @{ $records->{NAME_lc} };
     my $data  = {};
 
-    my @tables = (
-        "main", map { $_->{alias} } values %{ $self->prefetch_related || {} }
-    );
+    my @tables = map { $_->{alias} } values %{ $self->prefetch_related || {} };
+
+    unless ( @tables ) {
+        while ( my $row = $records->fetchrow_hashref() ) {
+            $row->{ substr($_, 5) } = delete $row->{ $_ }
+                foreach grep rindex($_, "main_", 0) == 0, keys %$row;
+            my $item = $self->new_item;
+            $item->load_from_hash($row);
+            $self->add_record($item);
+        }
+        if ( $records->err ) {
+            $self->{'must_redo_search'} = 0;
+        }
+
+        return $self->_record_count;
+    }
 
     my @order;
+    my $i = 1;
     while ( my $base_row = $records->fetchrow_hashref() ) {
         my $main_pkey = $base_row->{ $names[0] };
+        $main_pkey = 'unique-'.$i++ if $self->{group_by};
         push @order, $main_pkey
             unless ( $order[0] && $order[-1] eq $main_pkey );
 
         # let's chop the row into subrows;
-        foreach my $table (@tables) {
-            for ( keys %$base_row ) {
-                if (/^$table\_(.*)$/) {
-                    $data->{$main_pkey}->{$table}
-                        ->{ ( $base_row->{ $table . '_id' } || $main_pkey ) }
-                        ->{$1} = $base_row->{$_};
-                }
+        foreach my $table ('main', @tables) {
+            my %tmp = ();
+            for my $k( grep rindex($_, $table ."_", 0) == 0, keys %$base_row ) {
+                $tmp{ substr($k, length($table)+1) } = $base_row->{ $k };
             }
+            $data->{$main_pkey}{$table}{ $base_row->{ $table . '_id' } || $main_pkey }
+                = \%tmp if keys %tmp;
         }
     }
 
@@ -460,15 +462,6 @@ C<0> means "no limits have been applied yet.
 
 =cut
 
-sub _is_limited {
-    my $self = shift;
-    if (@_) {
-        $self->{'is_limited'} = shift;
-    } else {
-        return ( $self->{'is_limited'} );
-    }
-}
-
 =head2 build_select_query
 
 Builds a query string for a "SELECT rows from Tables" statement for
@@ -516,11 +509,10 @@ sub query_columns {
     my $self = shift;
 
     my @cols = ();
-    my $item = $self->new_item;
     if ( $self->{columns} and @{ $self->{columns} } ) {
         push @cols, @{ $self->{columns} };
     } else {
-        push @cols, $self->_qualified_record_columns( 'main' => $item );
+        push @cols, $self->_qualified_record_columns( 'main' => $self->new_item );
     }
     my %prefetch_related = %{ $self->prefetch_related || {} };
     foreach my $alias ( keys %prefetch_related ) {
@@ -528,7 +520,7 @@ sub query_columns {
 
         my $reference;
         if ( $class->isa('Jifty::DBI::Collection') ) {
-            $reference = $class->new->new_item( $self->_new_collection_args );
+            $reference = $class->new( $self->_new_collection_args )->new_item;
         } elsif ( $class->isa('Jifty::DBI::Record') ) {
             $reference = $class->new( $self->_new_record_args );
         }
@@ -560,15 +552,8 @@ sub _qualified_record_columns {
     my $self  = shift;
     my $alias = shift;
     my $item  = shift;
-    grep {$_} map {
-        my $col = $_;
-        if ( $col->virtual ) {
-            undef;
-        } else {
-            $col = $col->name;
-            $alias . "." . $col . " as " . $alias . "_" . $col;
-        }
-    } $item->columns;
+    return map $alias ."." . $_ ." as ". $alias ."_". $_,
+        map $_->name, grep !$_->virtual, $item->columns;
 }
 
 =head2 prefetch PARAMHASH
@@ -997,9 +982,16 @@ sub items_array_ref {
 =head2 new_item
 
 Should return a new object of the correct type for the current collection.
+L</record_class> method is used to determine class of the object.
+
+Each record class at least once is loaded using require. This method is
+called each time a record fetched so load atemts are cached to avoid
+penalties. If you're sure that all record classes are loaded before
+first use then you can override this method.
 
 =cut
 
+{ my %cache = ();
 sub new_item {
     my $self  = shift;
     my $class = $self->record_class();
@@ -1007,15 +999,17 @@ sub new_item {
     die "Jifty::DBI::Collection needs to be subclassed; override new_item\n"
         unless $class;
 
-    warn "$self $class\n" if $class =~ /::$/;
-    $class->require();
+    unless ( exists $cache{$class} ) {
+        $class->require;
+        $cache{$class} = undef;
+    }
     return $class->new( $self->_new_record_args );
-}
+} }
 
 =head2 record_class
 
 Returns the record class which this is a collection of; override this
-to subclass.  Or, pass it the name of a class an an argument after
+to subclass.  Or, pass it the name of a class as an argument after
 creating a C<Jifty::DBI::Collection> object to create an 'anonymous'
 collection class.
 
@@ -1023,9 +1017,9 @@ If you haven't specified a record class, this returns a best guess at
 the name of the record class for this collection.
 
 It uses a simple heuristic to determine the record class name -- It
-chops "Collection" off its own name. If you want to name your records
-and collections differently, go right ahead, but don't say we didn't
-warn you.
+chops "Collection" or "s" off its own name. If you want to name your
+records and collections differently, go right ahead, but don't say we
+didn't warn you.
 
 =cut
 
@@ -1037,7 +1031,7 @@ sub record_class {
             if ref $self->{record_class};
     } elsif ( not ref $self or not $self->{record_class} ) {
         my $class = ref($self) || $self;
-        $class =~ s/(Collection|s)$//
+        $class =~ s/(?<!:)(Collection|s)$//
             || die "Can't guess record class from $class";
         return $class unless ref $self;
         $self->{record_class} = $class;
@@ -1180,10 +1174,10 @@ is numeric.
 sub limit {
     my $self = shift;
     my %args = (
-        table            => $self->table,
+        table            => undef,
+        alias            => undef,
         column           => undef,
         value            => undef,
-        alias            => undef,
         quote_value      => 1,
         entry_aggregator => 'or',
         case_sensitive   => undef,
@@ -1210,7 +1204,7 @@ sub limit {
     unless ( defined $args{'alias'} ) {
 
         #if the table we're looking at is the same as the main table
-        if ( $args{'table'} eq $self->table ) {
+        if ( !defined $args{'table'} || $args{'table'} eq $self->table ) {
 
             # TODO this code assumes no self joins on that table.
             # if someone can name a case where we'd want to do that,
@@ -1315,17 +1309,21 @@ sub limit {
 
     # If it's a new value or we're overwriting this sort of restriction,
 
-    my $case_sensitive = $column_obj ? $column_obj->case_sensitive : 0;
-    $case_sensitive = $args{'case_sensitive'}
-        if defined $args{'case_sensitive'};
-    if (   $self->_handle->case_sensitive
-        && defined $args{'value'}
-        && $args{'quote_value'}
-        && !$case_sensitive )
-    {
+    if ( defined $args{'value'} && $args{'quote_value'} ) {
+        my $case_sensitive = 0;
+        if ( defined $args{'case_sensitive'} ) {
+            $case_sensitive = $args{'case_sensitive'};
+        }
+        elsif ( $column_obj ) {
+            $case_sensitive = $column_obj->case_sensitive;
+        }
+        # don't worry about case for numeric columns_in_db
+        # only be case insensitive when we KNOW it's a text
+        if ( $column_obj && !$case_sensitive && !$column_obj->is_string ) {
+            $case_sensitive = 1;
+        }
 
-# don't worry about case for numeric columns_in_db - only be case insensitive when we KNOW it's a blob
-        if ( defined $column_obj ? $column_obj->is_string : 0 ) {
+        if ( !$case_sensitive && $self->_handle->case_sensitive ) {
             ( $qualified_column, $args{'operator'}, $args{'value'} )
                 = $self->_handle->_make_clause_case_insensitive(
                 $qualified_column, $args{'operator'}, $args{'value'} );
@@ -1804,11 +1802,7 @@ sub _get_alias {
     my $self  = shift;
     my $table = shift;
 
-    $self->{'alias_count'}++;
-    my $alias = $table . "_" . $self->{'alias_count'};
-
-    return ($alias);
-
+    return $table . "_" . ++$self->{'alias_count'};
 }
 
 =head2 join
@@ -1898,13 +1892,6 @@ an integer which restricts the # of rows returned in a result Returns
 the number of rows the database should display.
 
 =cut
-
-sub rows_per_page {
-    my $self = shift;
-    $self->{'show_rows'} = shift if (@_);
-
-    return ( $self->{'show_rows'} );
-}
 
 =head2 first_row
 
@@ -2137,7 +2124,8 @@ sub column {
 
 =head2 columns LIST
 
-Specify that we want to load only the columns in LIST, which is a 
+Specify that we want to load only the columns in LIST, which should be
+a list of column names.
 
 =cut
 

@@ -56,7 +56,7 @@ sub _key_cache {
     my $self  = shift;
     my $cache = $self->_handle->dsn
         . "-KEYS--"
-        . ( $self->{'_class'} ||= ref($self) );
+        . ( $self->{'_class'} || $self->table );
     $self->_setup_cache($cache) unless exists( $_CACHES{$cache} );
     return ( $_CACHES{$cache} );
 
@@ -72,14 +72,14 @@ sub _flush_key_cache {
     my $self  = shift;
     my $cache = $self->_handle->dsn
         . "-KEYS--"
-        . ( $self->{'_class'} ||= ref($self) );
+        . ( $self->{'_class'} || $self->table );
     $self->_setup_cache($cache);
 }
 
 sub _record_cache {
     my $self = shift;
     my $cache
-        = $self->_handle->dsn . "--" . ( $self->{'_class'} ||= ref($self) );
+        = $self->_handle->dsn . "--" . ( $self->{'_class'} || $self->table );
     $self->_setup_cache($cache) unless exists( $_CACHES{$cache} );
     return ( $_CACHES{$cache} );
 

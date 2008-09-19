@@ -86,16 +86,15 @@ sub new {
     );
     my $self = {};
     bless $self, $class;
+    
+    $self->$_( delete $args{$_} )
+        foreach qw(record column value_ref handle);
 
-    for ( keys %args ) {
-        if ( $self->can($_) ) {
-            $self->$_( $args{$_} );
-        }
-
+    for ( grep $self->can($_), keys %args ) {
+        $self->$_( $args{$_} );
     }
 
     return ($self);
-
 }
 
 =head2 encode
