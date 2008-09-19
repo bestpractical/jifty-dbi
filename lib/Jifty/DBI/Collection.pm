@@ -206,9 +206,22 @@ sub _do_search {
     my @names = @{ $records->{NAME_lc} };
     my $data  = {};
 
-    my @tables = (
-        "main", map { $_->{alias} } values %{ $self->prefetch_related || {} }
-    );
+    my @tables = map { $_->{alias} } values %{ $self->prefetch_related || {} };
+
+    unless ( @tables ) {
+        while ( my $row = $records->fetchrow_hashref() ) {
+            $row->{ substr($_, 5) } = delete $row->{ $_ }
+                foreach grep rindex($_, "main_", 0) == 0, keys %$row;
+            my $item = $self->new_item;
+            $item->load_from_hash($row);
+            $self->add_record($item);
+        }
+        if ( $records->err ) {
+            $self->{'must_redo_search'} = 0;
+        }
+
+        return $self->_record_count;
+    }
 
     my @order;
     my $i = 1;
@@ -219,14 +232,13 @@ sub _do_search {
             unless ( $order[0] && $order[-1] eq $main_pkey );
 
         # let's chop the row into subrows;
-        foreach my $table (@tables) {
-            for ( keys %$base_row ) {
-                if (/^$table\_(.*)$/) {
-                    $data->{$main_pkey}->{$table}
-                        ->{ ( $base_row->{ $table . '_id' } || $main_pkey ) }
-                        ->{$1} = $base_row->{$_};
-                }
+        foreach my $table ('main', @tables) {
+            my %tmp = ();
+            for my $k( grep rindex($_, $table ."_", 0) == 0, keys %$base_row ) {
+                $tmp{ substr($k, length($table)+1) } = $base_row->{ $k };
             }
+            $data->{$main_pkey}{$table}{ $base_row->{ $table . '_id' } || $main_pkey }
+                = \%tmp if keys %tmp;
         }
     }
 
