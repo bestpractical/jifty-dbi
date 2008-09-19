@@ -90,7 +90,11 @@ diag "LEFT JOIN with IS NOT NULL on the right side" if $ENV{'TEST_VERBOSE'};
     );
     ok( $alias, "Join returns alias" );
     $users_obj->limit( alias => $alias, column => 'id', operator => 'IS NOT', value => 'NULL' );
-    ok( $users_obj->build_select_query !~ /LEFT JOIN/, 'LJ is optimized away');
+    if ( $d eq 'mysql' && $handle->database_version =~ /^[34]/ ) {
+        ok( $users_obj->build_select_query !~ /LEFT JOIN/, 'LJ is optimized away');
+    } else {
+        ok( 1, 'mysql >= 5.0 dont need this optimization' );
+    }
     is( $users_obj->count, 3, "users whos is memebers of at least one group" );
 }
 
@@ -178,7 +182,11 @@ diag "cascaded LEFT JOIN optimization" if $ENV{'TEST_VERBOSE'};
         column2 => 'id'
     );
     $users_obj->limit( alias => $alias, column => 'id', operator => 'IS NOT', value => 'NULL' );
-    ok( $users_obj->build_select_query !~ /LEFT JOIN/, 'both LJs are optimized away');
+    if ( $d eq 'mysql' && $handle->database_version =~ /^[34]/ ) {
+        ok( $users_obj->build_select_query !~ /LEFT JOIN/, 'both LJs are optimized away');
+    } else {
+        ok( 1, 'mysql >= 5.0 dont need this optimization' );
+    }
     is( $users_obj->count, 3, "users whos is memebers of at least one group" );
 }
 
