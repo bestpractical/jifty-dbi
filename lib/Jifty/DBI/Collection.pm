@@ -123,11 +123,7 @@ sub _init {
 
 sub _init_pager {
     my $self = shift;
-    $self->pager( Data::Page->new );
-
-    $self->pager->total_entries(0);
-    $self->pager->entries_per_page(10);
-    $self->pager->current_page(1);
+    return $self->pager( Data::Page->new(0, 10, 1) );
 }
 
 =head2 clean_slate
