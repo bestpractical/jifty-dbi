@@ -987,9 +987,16 @@ sub items_array_ref {
 =head2 new_item
 
 Should return a new object of the correct type for the current collection.
+L</record_class> method is used to determine class of the object.
+
+Each record class at least once is loaded using require. This method is
+called each time a record fetched so load atemts are cached to avoid
+penalties. If you're sure that all record classes are loaded before
+first use then you can override this method.
 
 =cut
 
+{ my %cache = ();
 sub new_item {
     my $self  = shift;
     my $class = $self->record_class();
@@ -997,15 +1004,17 @@ sub new_item {
     die "Jifty::DBI::Collection needs to be subclassed; override new_item\n"
         unless $class;
 
-    warn "$self $class\n" if $class =~ /::$/;
-    $class->require();
+    unless ( exists $cache{$class} ) {
+        $class->require;
+        $cache{$class} = undef;
+    }
     return $class->new( $self->_new_record_args );
-}
+} }
 
 =head2 record_class
 
 Returns the record class which this is a collection of; override this
-to subclass.  Or, pass it the name of a class an an argument after
+to subclass.  Or, pass it the name of a class as an argument after
 creating a C<Jifty::DBI::Collection> object to create an 'anonymous'
 collection class.
 
