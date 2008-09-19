@@ -1305,17 +1305,21 @@ sub limit {
 
     # If it's a new value or we're overwriting this sort of restriction,
 
-    my $case_sensitive = $column_obj ? $column_obj->case_sensitive : 0;
-    $case_sensitive = $args{'case_sensitive'}
-        if defined $args{'case_sensitive'};
-    if (   $self->_handle->case_sensitive
-        && defined $args{'value'}
-        && $args{'quote_value'}
-        && !$case_sensitive )
-    {
+    if ( defined $args{'value'} && $args{'quote_value'} ) {
+        my $case_sensitive = 0;
+        if ( defined $args{'case_sensitive'} ) {
+            $case_sensitive = $args{'case_sensitive'};
+        }
+        elsif ( $column_obj ) {
+            $case_sensitive = $column_obj->case_sensitive;
+        }
+        # don't worry about case for numeric columns_in_db
+        # only be case insensitive when we KNOW it's a text
+        if ( $column_obj && !$case_sensitive && !$column_obj->is_string ) {
+            $case_sensitive = 1;
+        }
 
-# don't worry about case for numeric columns_in_db - only be case insensitive when we KNOW it's a blob
-        if ( defined $column_obj ? $column_obj->is_string : 0 ) {
+        if ( !$case_sensitive && $self->_handle->case_sensitive ) {
             ( $qualified_column, $args{'operator'}, $args{'value'} )
                 = $self->_handle->_make_clause_case_insensitive(
                 $qualified_column, $args{'operator'}, $args{'value'} );
