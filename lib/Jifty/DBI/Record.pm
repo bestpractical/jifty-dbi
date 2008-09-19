@@ -1555,6 +1555,7 @@ sub _apply_output_filters {
     return (shift)->_apply_filters( direction => 'output', @_ );
 }
 
+{ my %cache = ();
 sub _apply_filters {
     my $self = shift;
     my %args = (
@@ -1567,14 +1568,20 @@ sub _apply_filters {
     my @filters = $self->_filters(%args);
     my $action = $args{'direction'} eq 'output' ? 'decode' : 'encode';
     foreach my $filter_class (@filters) {
-        local $UNIVERSAL::require::ERROR;
-        $filter_class->require()
-            unless $INC{ join( '/', split( /::/, $filter_class ) ) . ".pm" };
-
-        if ($UNIVERSAL::require::ERROR) {
-            warn $UNIVERSAL::require::ERROR;
+        unless ( exists $cache{ $filter_class } ) {
+            local $UNIVERSAL::require::ERROR;
+            $filter_class->require;
+            if ($UNIVERSAL::require::ERROR) {
+                warn $UNIVERSAL::require::ERROR;
+                $cache{ $filter_class } = 0;
+                next;
+            }
+            $cache{ $filter_class } = 1;
+        }
+        elsif ( !$cache{ $filter_class } ) {
             next;
         }
+
         my $filter = $filter_class->new(
             record    => $self,
             column    => $args{'column'},
@@ -1585,7 +1592,7 @@ sub _apply_filters {
         # XXX TODO error proof this
         $filter->$action();
     }
-}
+} }
 
 =head2 is_distinct COLUMN_NAME, VALUE
 
