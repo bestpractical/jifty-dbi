@@ -1155,7 +1155,8 @@ sub load_from_hash {
         $self = $self->new( handle => delete $hashref->{'_handle'} );
     }
 
-    $self->{values} = {};
+    $self->{'values'} = {};
+    $self->{'fetched'} = {};
 
     #foreach my $f ( keys %$hashref ) { $self->{'fetched'}{  $f } = 1; }
     foreach my $col ( map { $_->name } $self->columns ) {
