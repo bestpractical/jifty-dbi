@@ -58,7 +58,7 @@ Returns the mysql version, trimming off any -foo identifier
 
 sub database_version {
     my $self = shift;
-    my $v    = $self->SUPER::database_version();
+    my $v    = $self->SUPER::database_version(@_);
 
     $v =~ s/\-.*$//;
     return ($v);
