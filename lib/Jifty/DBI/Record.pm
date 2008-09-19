@@ -1163,7 +1163,6 @@ sub load_from_hash {
         $self->{'values'}{$col} = $hashref->{ lc $col };
     }
 
-    #$self->{'values'}  = $hashref;
     $self->{'decoded'} = {};
     return $self->id();
 }
