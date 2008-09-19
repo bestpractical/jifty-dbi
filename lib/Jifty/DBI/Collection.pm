@@ -1013,9 +1013,9 @@ If you haven't specified a record class, this returns a best guess at
 the name of the record class for this collection.
 
 It uses a simple heuristic to determine the record class name -- It
-chops "Collection" off its own name. If you want to name your records
-and collections differently, go right ahead, but don't say we didn't
-warn you.
+chops "Collection" or "s" off its own name. If you want to name your
+records and collections differently, go right ahead, but don't say we
+didn't warn you.
 
 =cut
 
@@ -1027,7 +1027,7 @@ sub record_class {
             if ref $self->{record_class};
     } elsif ( not ref $self or not $self->{record_class} ) {
         my $class = ref($self) || $self;
-        $class =~ s/(Collection|s)$//
+        $class =~ s/(?<!:)(Collection|s)$//
             || die "Can't guess record class from $class";
         return $class unless ref $self;
         $self->{record_class} = $class;
