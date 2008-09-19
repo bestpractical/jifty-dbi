@@ -525,7 +525,7 @@ sub query_columns {
 
         my $reference;
         if ( $class->isa('Jifty::DBI::Collection') ) {
-            $reference = $class->new->new_item( $self->_new_collection_args );
+            $reference = $class->new( $self->_new_collection_args )->new_item;
         } elsif ( $class->isa('Jifty::DBI::Record') ) {
             $reference = $class->new( $self->_new_record_args );
         }
