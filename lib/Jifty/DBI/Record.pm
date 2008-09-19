@@ -1148,15 +1148,11 @@ record's loaded values hash.
 =cut
 
 sub load_from_hash {
-    my $class   = shift;
+    my $self    = shift;
     my $hashref = shift;
-    my ($self);
 
-    if ( ref($class) ) {
-        ( $self, $class ) = ( $class, undef );
-    } else {
-        $self = $class->new(
-            handle => ( delete $hashref->{'_handle'} || undef ) );
+    unless ( ref $self ) {
+        $self = $self->new( handle => delete $hashref->{'_handle'} );
     }
 
     $self->{values} = {};
