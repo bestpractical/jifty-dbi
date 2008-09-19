@@ -514,11 +514,10 @@ sub query_columns {
     my $self = shift;
 
     my @cols = ();
-    my $item = $self->new_item;
     if ( $self->{columns} and @{ $self->{columns} } ) {
         push @cols, @{ $self->{columns} };
     } else {
-        push @cols, $self->_qualified_record_columns( 'main' => $item );
+        push @cols, $self->_qualified_record_columns( 'main' => $self->new_item );
     }
     my %prefetch_related = %{ $self->prefetch_related || {} };
     foreach my $alias ( keys %prefetch_related ) {
