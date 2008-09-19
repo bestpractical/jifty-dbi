@@ -71,8 +71,7 @@ sub output_filters {
     my @values = @{ $self->_output_filters_accessor || [] };
     return @values if @values;
 
-    @values = reverse $self->input_filters;
-    return @values;
+    return reverse $self->input_filters;
 }
 
 =head2 filters FILTERS
