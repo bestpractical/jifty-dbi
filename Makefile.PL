@@ -48,5 +48,6 @@ features(
     ],
 );
 auto_install();
+tests("t/*.t t/*/*.t");
 &WriteAll;
 

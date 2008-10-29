@@ -13,11 +13,13 @@ my $re_delim      = qr{$RE{delimited}{-delim=>qq{\'\"}}};
 my $re_field      = qr{[a-zA-Z][a-zA-Z0-9_]*};
 my $re_alias_name = $re_field;
 my $re_ph         = qr{%[1-9][0-9]*};
+my $re_binding    = qr{\?};
 
 my $re_value      = qr{$re_delim|[0-9.]+};
 my $re_value_ph   = qr{$re_value|$re_ph};
+my $re_value_ph_b = qr{$re_value_ph|$re_binding};
 my $re_cs_values  = qr{$re_value(?:\s*,\s*$re_value)*};
-my $re_ph_access  = qr{{\s*(?:$re_cs_values|$re_ph)?\s*}};
+my $re_ph_access  = qr{{\s*(?:$re_cs_values|$re_ph|$re_binding)?\s*}};
 my $re_column     = qr{$re_alias_name?(?:\.$re_field$re_ph_access*)+};
 my $re_alias      = qr{$re_column\s+AS\s+$re_alias_name}i;
 
@@ -38,6 +40,19 @@ my %invert_op = (
     '<' => '>=',
     '<=' => '>',
 );
+
+sub enq {
+    if ( defined wantarray ) {
+        my $s = $_[0];
+        $s =~ s/'/\\'/g;
+        return "'$s'";
+    } else {
+        $_[0] =~ s/'/\\'/g;
+        substr($_[0], 0, 0) = "'";
+        $_[0] .= "'";
+        return;
+    }
+}
 
 sub dq {
     my $s = $_[0];
@@ -71,8 +86,9 @@ sub add_reference {
 }
 
 sub query {
-    my $self = shift;
+    my $self   = shift;
     my $string = shift;
+    my @binds  = @_;
 
     my $tree = {
         aliases => {},
@@ -92,10 +108,11 @@ sub query {
             $_[0], sub { $self->find_column( $_[0], $tree->{'aliases'} ) }
         );
     };
-
+    $self->{'bindings'} = \@binds;
     $tree->{'conditions'} = $self->as_array(
         $string, operand_cb => $operand_cb,
     );
+    $self->{'bindings'} = undef;
     $self->{'tisql'}{'conditions'} = $tree->{'conditions'};
     $self->apply_query_tree( $tree->{'conditions'} );
     return $self;
@@ -362,8 +379,9 @@ sub parse_condition {
     my $string = shift;
     my $cb = shift;
 
-    if ( $string =~ /^(has(\s+no)?\s+)?($re_column)\s*($re_sql_op_bin)\s*($re_value_ph)$/io ) {
+    if ( $string =~ /^(has(\s+no)?\s+)?($re_column)\s*($re_sql_op_bin)\s*($re_value_ph_b)$/io ) {
         my ($lhs, $op, $rhs) = ($cb->($3), $4, $5);
+        enq( $rhs = shift @{ $self->{'bindings'} } ) if $rhs eq '?';
         my $prefix;
         $prefix = 'has' if $1;
         $prefix .= ' no' if $2;
@@ -419,6 +437,9 @@ sub parse_column {
         foreach my $ph ( grep defined, @phs ) {
             if ( $ph =~ /^%([0-9]+)$/ ) {
                 $ph = $1;
+            }
+            elsif ( $ph eq '?' ) {
+                enq( $ph = shift @{ $self->{'bindings'} } );
             }
             else {
                 my @values;
