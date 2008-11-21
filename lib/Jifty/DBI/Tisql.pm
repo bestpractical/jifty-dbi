@@ -3,10 +3,12 @@ package Jifty::DBI::Tisql;
 use strict;
 use warnings;
 
-use base qw(Parse::BooleanLogic);
 use Scalar::Util qw(refaddr blessed);
 
 use Data::Dumper;
+
+use Parse::BooleanLogic;
+my $parser = new Parse::BooleanLogic;
 
 use Regexp::Common qw(delimited);
 my $re_delim      = qr{$RE{delimited}{-delim=>qq{\'\"}}};
@@ -40,6 +42,11 @@ my %invert_op = (
     '<' => '>=',
     '<=' => '>',
 );
+
+sub new {
+    my $proto = shift;
+    return bless { @_ }, ref($proto)||$proto;
+}
 
 sub enq {
     if ( defined wantarray ) {
@@ -109,7 +116,7 @@ sub query {
         );
     };
     $self->{'bindings'} = \@binds;
-    $tree->{'conditions'} = $self->as_array(
+    $tree->{'conditions'} = $parser->as_array(
         $string, operand_cb => $operand_cb,
     );
     $self->{'bindings'} = undef;
@@ -173,7 +180,7 @@ sub apply_query_condition {
             $tmp{$_}++ foreach map refaddr($_), @$bundle;
             my $cur_refaddr = refaddr( $condition );
             if ( $prefix eq 'has' ) {
-                next unless $self->fsolve(
+                next unless $parser->fsolve(
                     $self->{'tisql'}{'conditions'},
                     sub {
                         my $ra = refaddr($_[0]);
@@ -183,7 +190,7 @@ sub apply_query_condition {
                     },
                 );
             } else {
-                next if $self->fsolve(
+                next if $parser->fsolve(
                     $self->{'tisql'}{'conditions'},
                     sub {
                         my $ra = refaddr($_[0]);
@@ -329,7 +336,7 @@ sub resolve_tisql_join {
         $meta->{'refers_to'}->new_item, 'LEFT'
     );
 
-    my $tree = $self->as_array(
+    my $tree = $parser->as_array(
         $meta->{'column'}->tisql,
         operand_cb => sub { return $self->parse_condition( 
             $_[0], sub { return $self->find_column(
@@ -582,7 +589,7 @@ sub external_reference {
         substr($str, 0, length($name)) = '' if 0 == rindex $str, "$name.", 0;
         return $self->find_column($str, $aliases);
     };
-    my $conditions = $self->as_array(
+    my $conditions = $parser->as_array(
         $column->tisql,
         operand_cb => sub {
             return $self->parse_condition( $_[0], $column_cb )
