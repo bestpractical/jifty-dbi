@@ -766,6 +766,64 @@ sub _value {
     return $value;
 }
 
+=head2 __raw_value
+
+Takes a column name and returns that column's raw value.
+Subclasses should never override __raw_value.
+
+=cut
+
+sub __raw_value {
+    my $self = shift;
+
+    my $column = $self->resolve_column( shift );
+    return unless $column;
+
+    my $column_name = $column->name;
+
+    # In the default case of "yeah, we have a value", return it as
+    # fast as we can.
+    return $self->{'raw_values'}{$column_name}
+      if $self->{'raw_fetched'}{$column_name};
+
+    if ( !$self->{'raw_fetched'}{$column_name} and my $id = $self->id() ) {
+        my $pkey = $self->_primary_key();
+        my $query_string =
+            "SELECT "
+          . $column_name
+          . " FROM "
+          . $self->table
+          . " WHERE $pkey = ?";
+        my $sth = $self->_handle->simple_query( $query_string, $id );
+        my ($value) = eval { $sth->fetchrow_array() };
+        $self->{'raw_values'}{$column_name}  = $value;
+        $self->{'raw_fetched'}{$column_name} = 1;
+    }
+
+    return $self->{'raw_values'}{$column_name};
+}
+
+=head2 resolve_column
+
+given a column name, resolve it, even if it's actually an alias 
+return the column object
+
+=cut
+
+sub resolve_column {
+    my $self = shift;
+    my $column_name = shift;
+    return unless $column_name;
+
+    # If the requested column is actually an alias for another, resolve it.
+    my $column = $self->column($column_name);
+    if ( $column and defined $column->alias_for_column ) {
+        $column      = $self->column( $column->alias_for_column() );
+    }
+    return unless $column;
+    return $column;
+}
+
 =head2 __value
 
 Takes a column name and returns that column's value. Subclasses should
@@ -776,16 +834,11 @@ never override __value.
 sub __value {
     my $self = shift;
 
-    my $column_name = shift;
+    my $column = $self->resolve_column( shift );
+    return unless $column;
 
-    # If the requested column is actually an alias for another, resolve it.
-    my $column = $self->column($column_name);
-    if ( $column and defined $column->alias_for_column ) {
-        $column      = $self->column( $column->alias_for_column() );
-        $column_name = $column->name;
-    }
+    my $column_name = $column->name;
 
-    return unless ($column);
 
     # In the default case of "yeah, we have a value", return it as
     # fast as we can.
@@ -793,19 +846,9 @@ sub __value {
         if ( $self->{'fetched'}{$column_name}
         && $self->{'decoded'}{$column_name} );
 
-    if ( !$self->{'fetched'}{$column_name} and my $id = $self->id() ) {
-        my $pkey = $self->_primary_key();
-        my $query_string
-            = "SELECT "
-            . $column_name
-            . " FROM "
-            . $self->table
-            . " WHERE $pkey = ?";
-        my $sth = $self->_handle->simple_query( $query_string, $id );
-        my ($value) = eval { $sth->fetchrow_array() };
-        $self->{'values'}{$column_name}  = $value;
-        $self->{'fetched'}{$column_name} = 1;
-    }
+    $self->{'values'}{$column_name}  = $self->__raw_value( $column_name )
+        unless $self->{'fetched'}{$column_name};
+
     unless ( $self->{'decoded'}{$column_name} ) {
         $self->_apply_output_filters(
             column    => $column,
@@ -993,6 +1036,7 @@ sub __set {
         # XXX TODO primary_keys
         $self->load_by_cols( id => $self->id );
     } else {
+        $self->{'raw_values'}{ $column->name }  = $unmunged_value;
         $self->{'values'}{ $column->name }  = $unmunged_value;
         $self->{'decoded'}{ $column->name } = 0;
     }
@@ -1157,6 +1201,8 @@ sub load_from_hash {
 
     $self->{'values'} = {};
     $self->{'fetched'} = {};
+    $self->{'raw_values'} = {};
+    $self->{'raw_fetched'} = {};
 
     foreach my $col ( grep exists $hashref->{ lc $_ }, map $_->name, $self->columns ) {
         $self->{'fetched'}{$col} = 1;
@@ -1185,7 +1231,9 @@ sub _load_from_sql {
     return ( 0, "Couldn't execute query" ) unless $sth;
 
     my $hashref = $sth->fetchrow_hashref;
-    delete $self->{values};
+    delete $self->{'values'};
+    delete $self->{'raw_values'};
+    $self->{'raw_fetched'} = {};
     $self->{'fetched'} = {};
     $self->{'decoded'} = {};
 
@@ -1756,7 +1804,7 @@ fetched from the database next time it is queried.
 sub unload_value {
     my $self = shift;
     my $column = shift;
-    delete $self->{$_}{$column} for qw/values fetched decoded _prefetched/;
+    delete $self->{$_}{$column} for qw/values raw_values fetched raw_fetched decoded _prefetched/;
 }
 
 1;
