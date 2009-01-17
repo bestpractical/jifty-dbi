@@ -186,7 +186,7 @@ sub import {
     }
 
     if (my $triggers_for_column =  $self->can('register_triggers_for_column') ) {
-        for my $column (map { $_->name } $caller->columns) {
+        for my $column (keys %{$caller->_columns_hashref}) {
             $triggers_for_column->($caller, $column)
         }
     }
