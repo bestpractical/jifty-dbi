@@ -954,7 +954,7 @@ sub __set {
         value_ref => \$args{'value'}
     );
 
-    # if value is not fetched or it's allready decoded
+    # if value is not fetched or it's already decoded
     # then we don't check eqality
     # we also don't call __value because it decodes value, but
     # we need encoded value
