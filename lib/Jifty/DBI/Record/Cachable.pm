@@ -245,6 +245,8 @@ sub _store (\$) {
             table   => $self->table,
             fetched => $self->{'fetched'},
             decoded => $self->{'decoded'},
+            raw_values => $self->{'raw_values'},
+            raw_fetched => $self->{'raw_fetched'},
         }
     );
 }

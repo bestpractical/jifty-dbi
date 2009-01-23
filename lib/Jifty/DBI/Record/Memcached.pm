@@ -182,7 +182,9 @@ sub _store (\$) {
     $MEMCACHED->set( $self->_primary_cache_key,
         {   values  => $self->{'values'},
             table   => $self->table,
-            fetched => $self->{'fetched'}
+            fetched => $self->{'fetched'},
+            raw_values => $self->{'raw_values'},
+            raw_fetched => $self->{'raw_fetched'},
         },
         $self->_cache_config->{'cache_for_sec'}
     );

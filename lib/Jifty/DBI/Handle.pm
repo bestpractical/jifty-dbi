@@ -19,8 +19,7 @@ if ( my $pattern = $ENV{JIFTY_DBQUERY_CALLER} ) {
         'Jifty::DBI::Handle::simple_query',
         pre => sub {
             return unless $_[1] =~ m/$pattern/;
-            warn $_[1] . '   ' . CORE::join( ',', @_[ 2 .. $#_ ] ) . "\n";
-            Carp::cluck;
+            Carp::cluck($_[1] . '   ' . CORE::join( ',', @_[ 2 .. $#_ ] ));
         }
     );
 }

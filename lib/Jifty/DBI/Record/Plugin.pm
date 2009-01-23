@@ -176,8 +176,8 @@ sub import {
     my $self = shift;
     my $caller = caller;
     for ($self->columns) {
-            $caller->COLUMNS->{$_->name} = $_ ;
-            $caller->_init_methods_for_column($_);
+        $caller->_init_methods_for_column($_);
+        $caller->COLUMNS->{ $_->name } = $_ unless $_->virtual;
     }
     $self->export_to_level(1,undef);
     
@@ -186,7 +186,7 @@ sub import {
     }
 
     if (my $triggers_for_column =  $self->can('register_triggers_for_column') ) {
-        for my $column (map { $_->name } $caller->columns) {
+        for my $column (keys %{$caller->_columns_hashref}) {
             $triggers_for_column->($caller, $column)
         }
     }
