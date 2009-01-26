@@ -7,7 +7,7 @@ use Scalar::Util qw(refaddr blessed);
 
 use Data::Dumper;
 
-use Parse::BooleanLogic;
+use Parse::BooleanLogic 0.07;
 my $parser = new Parse::BooleanLogic;
 
 use Regexp::Common qw(delimited);
@@ -46,28 +46,6 @@ my %invert_op = (
 sub new {
     my $proto = shift;
     return bless { @_ }, ref($proto)||$proto;
-}
-
-sub enq {
-    if ( defined wantarray ) {
-        my $s = $_[0];
-        $s =~ s/'/\\'/g;
-        return "'$s'";
-    } else {
-        $_[0] =~ s/'/\\'/g;
-        substr($_[0], 0, 0) = "'";
-        $_[0] .= "'";
-        return;
-    }
-}
-
-sub dq {
-    my $s = $_[0];
-    return $s unless $s =~ /^$re_delim$/o;
-    substr( $s, 0, 1 ) = '';
-    substr( $s, -1   ) = '';
-    $s =~ s/\\(?=["'])//g;
-    return $s;
 }
 
 sub add_reference {
@@ -224,9 +202,9 @@ sub apply_query_condition {
                 .'.'. $condition->{'rhs'}{'column'}->name;
         } else {
             if ( ref $condition->{'rhs'} eq 'ARRAY' ) {
-                $_ = dq( $_ ) foreach @{ $condition->{'rhs'} };
+                $parser->dq( $_ ) foreach @{ $condition->{'rhs'} };
             } else {
-                $condition->{'rhs'} = dq( $condition->{'rhs'} );
+                $parser->dq( $condition->{'rhs'} );
             }
             $limit{'value'} = $condition->{'rhs'};
         }
@@ -249,9 +227,9 @@ sub apply_query_condition {
                 .'.'. $condition->{'rhs'}{'column'}->name;
         } else {
             if ( ref $condition->{'rhs'} eq 'ARRAY' ) {
-                $_ = dq( $_ ) foreach @{ $condition->{'rhs'} };
+                $parser->dq( $_ ) foreach @{ $condition->{'rhs'} };
             } else {
-                $condition->{'rhs'} = dq( $condition->{'rhs'} );
+                $parser->dq( $condition->{'rhs'} );
             }
             $limit{'value'} = $condition->{'rhs'};
         }
@@ -388,7 +366,7 @@ sub parse_condition {
 
     if ( $string =~ /^(has(\s+no)?\s+)?($re_column)\s*($re_sql_op_bin)\s*($re_value_ph_b)$/io ) {
         my ($lhs, $op, $rhs) = ($cb->($3), $4, $5);
-        enq( $rhs = shift @{ $self->{'bindings'} } ) if $rhs eq '?';
+        $parser->fq( $rhs = shift @{ $self->{'bindings'} } ) if $rhs eq '?';
         my $prefix;
         $prefix = 'has' if $1;
         $prefix .= ' no' if $2;
@@ -446,7 +424,7 @@ sub parse_column {
                 $ph = $1;
             }
             elsif ( $ph eq '?' ) {
-                enq( $ph = shift @{ $self->{'bindings'} } );
+                $parser->fq( $ph = shift @{ $self->{'bindings'} } );
             }
             else {
                 my @values;
