@@ -84,6 +84,7 @@ sub query {
     if ( $string =~ s/^\s*FROM\s+($re_alias(?:\s*,\s*$re_alias)*)\s+WHERE\s+//oi ) {
         $tree->{'aliases'}->{ $_->[1] } = $self->find_column( $_->[0], $tree->{'aliases'} )
             foreach map [split /\s+AS\s+/i, $_], split /\s*,\s*/, $1;
+
         while ( my ($name, $meta) = each %{ $tree->{aliases} } ) {
             $meta->{'name'} = $name;
         }
@@ -104,13 +105,13 @@ sub query {
 }
 
 sub apply_query_tree {
-    my ($self, $current, $join, $ea) = @_;
+    my ($self, $tree, $join, $ea) = @_;
     $ea ||= 'AND';
 
     my $collection = $self->{'collection'};
 
     $collection->open_paren('tisql', $join);
-    foreach my $element ( @$current ) {
+    foreach my $element ( @$tree ) {
         unless ( ref $element ) {
             $ea = $element;
             next;
@@ -268,51 +269,42 @@ sub resolve_join {
     }
     return $prev_alias unless $resolve_last;
 
-    my $res;
     my $column = $meta->{'column'};
+
     my $refers = $meta->{'refers_to'};
-    if ( UNIVERSAL::isa( $refers, 'Jifty::DBI::Collection' ) ) {
-        my $item = $refers->new_item;
-        if ( my $tisql = $column->tisql ) {
-            $res = $self->resolve_tisql_join( $meta );
-        } else {
-            $res = $collection->new_alias( $item );
-            $collection->join(
-                subclause => 'tisql',
-                type    => 'left',
-                alias1  => $prev_alias,
-                column1 => 'id',
-                alias2  => $res,
-                column2 => $column->by || 'id',
-            );
-        }
-    }
-    elsif ( UNIVERSAL::isa( $refers, 'Jifty::DBI::Record' ) ) {
-        $res = $collection->new_alias( $refers );
-        $collection->join(
-            subclause => 'tisql',
-            type    => 'left',
-            alias1  => $prev_alias,
-            column1 => $column->name,
-            alias2  => $res,
-            column2 => $column->by || 'id',
-        );
-    }
-    else { 
+    $refers = $refers->new_item
+        if UNIVERSAL::isa( $refers, 'Jifty::DBI::Collection' );
+
+    unless ( UNIVERSAL::isa( $refers, 'Jifty::DBI::Record' ) ) { 
         die "Column '". $column->name ."' refers to '"
             . (ref($refers) || $refers)
             ."' that is not record or collection";
     }
+
+    my $res = $collection->new_alias( $refers, 'LEFT' );
+    if ( $column->tisql ) {
+        $self->resolve_tisql_join( $res, $meta );
+    } else {
+        $collection->limit(
+            leftjoin    => $res,
+            subclause   => 'tisql-join',
+            alias       => $prev_alias,
+            column      => $column->virtual? 'id' : $column->name,
+            operator    => '=',
+            quote_value => 0,
+            value       => $res .'.'. ($column->by || 'id')
+        );
+    }
     return $meta->{'sql_alias'} = $res;
 }
 
+    use Data::Dumper; use Carp ();
+
 sub resolve_tisql_join {
     my $self = shift;
+    my $alias = shift;
     my $meta = shift;
-
-    my $alias = $self->{'collection'}->new_alias(
-        $meta->{'refers_to'}->new_item, 'LEFT'
-    );
+    Test::More::diag( Carp::cluck( Dumper($meta) ) );
 
     my $tree = $parser->as_array(
         $meta->{'column'}->tisql,
@@ -449,6 +441,7 @@ sub find_column {
     my $collection = shift || $self->{'collection'};
 
     my $meta = $self->parse_column($string);
+
     my $start_from = $meta->{'alias'};
     my ($item, $last);
     if ( !$start_from && !$aliases->{''} ) {
