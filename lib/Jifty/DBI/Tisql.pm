@@ -553,51 +553,5 @@ sub external_reference {
     return $self;
 }
 
-{
-my %cache;
-my $i = 0;
-my $aliases;
-my $merge_joins_cb = sub {
-    my $meta = shift;
-    my @parts = split /\./, $meta->{'string'};
-    while ( @parts > 2 ) {
-        my $new_str = join '.', splice @parts, 0, 2;
-        my $m = $cache{ $new_str };
-        unless ( $m ) {
-            my $name = 'a'. ++$i;
-            $name = "a". ++$i while exists $aliases->{ $name };
-            $m = {
-                name     => $name,
-                string   => $new_str,
-                column    => $meta->{'column'},
-                previous => $meta->{'previous'},
-            };
-            $cache{ $new_str } = $aliases->{ $name } = $m;
-        }
-        # XXX: no more chain
-        shift @{ $meta->{'chain'} };
-        unshift @parts, $m->{'name'};
-        $meta->{'previous'} = $m;
-        $meta->{'string'} = join '.', @parts;
-    }
-};
-
-sub merge_joins {
-    my $self = shift;
-    my $tree = shift;
-    %cache = ();
-    $aliases = $tree->{'aliases'};
-
-    $merge_joins_cb->( $_ ) foreach values %$aliases;
-    $self->apply_callback_to_tree(
-        $tree->{'conditions'},
-        sub {
-            my $condition = shift;
-            $merge_joins_cb->( $_ ) foreach
-                grep ref $_, map $condition->{$_}, qw(lhs rhs);
-        }
-    );
-}
-}
 
 1;
