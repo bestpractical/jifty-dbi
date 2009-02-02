@@ -137,30 +137,30 @@ sub apply_query_condition {
     die "left hand side must be always column specififcation"
         unless ref $condition->{'lhs'} eq 'HASH';
 
-    my $prefix = $condition->{'prefix'};
+    my $modifier = $condition->{'modifier'};
     my $op     = $condition->{'op'};
     my $long   = do {
         my @tmp = split /\./, $condition->{'lhs'}{'string'};
         @tmp > 2 ? 1 : 0
     };
-    if ( $long && !$prefix && $op =~ $re_negative_op ) {
-        $prefix = 'has no';
+    if ( $long && !$modifier && $op =~ $re_negative_op ) {
+        $modifier = 'has no';
         $op = $invert_op{ lc $op };
     }
-    elsif ( $prefix && !$long ) {
+    elsif ( $modifier && !$long ) {
         die "'has no' and 'has' prefixes are only applicable on columns of related records";
     }
-    $prefix ||= 'has';
+    $modifier ||= 'has';
 
     my $bundling = $long && !$join && $self->{'joins_bundling'};
     my $bundled = 0;
     if ( $bundling ) {
-        my $bundles = $self->{'cache'}{'condition_bundles'}{ $condition->{'lhs'}{'string'} }{ $prefix } ||= [];
+        my $bundles = $self->{'cache'}{'condition_bundles'}{ $condition->{'lhs'}{'string'} }{ $modifier } ||= [];
         foreach my $bundle ( @$bundles ) {
             my %tmp;
             $tmp{$_}++ foreach map refaddr($_), @$bundle;
             my $cur_refaddr = refaddr( $condition );
-            if ( $prefix eq 'has' ) {
+            if ( $modifier eq 'has' ) {
                 next unless $parser->fsolve(
                     $self->{'tisql'}{'conditions'},
                     sub {
@@ -189,7 +189,7 @@ sub apply_query_condition {
         push @$bundles, [ $condition ] unless $bundled;
     }
 
-    if ( $prefix eq 'has' ) {
+    if ( $modifier eq 'has' ) {
         my %limit = (
             subclause        => 'tisql',
             leftjoin         => $join,
@@ -409,7 +409,7 @@ sub apply_join_condition {
 
 
     my $op = $condition->{'op'};
-    if ( $condition->{'prefix'} && $condition->{'prefix'} eq 'has no' ) {
+    if ( $condition->{'modifier'} && $condition->{'modifier'} eq 'has no' ) {
         die "'has' and 'has no' prefixes are only allowed in query, not in joins";
     }
 
