@@ -184,7 +184,6 @@ sub _store (\$) {
             table   => $self->table,
             fetched => $self->{'fetched'},
             raw_values => $self->{'raw_values'},
-            raw_fetched => $self->{'raw_fetched'},
         },
         $self->_cache_config->{'cache_for_sec'}
     );

@@ -6,7 +6,7 @@ use File::Spec;
 use Test::More;
 BEGIN { require "t/utils.pl" }
 
-use constant TESTS_PER_DRIVER => 35;
+use constant TESTS_PER_DRIVER => 42;
 
 our (@available_drivers);
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
@@ -116,6 +116,30 @@ SKIP: {
 
         Jifty::DBI::Record::Cachable->flush_cache;
 
+        {
+            my $rec = TestApp::Address->new( handle => $handle );
+            my ($id) = $rec->create( name => 'Metadata', metadata => { some => "values" } );
+            ok( $id, "Created record #$id" );
+
+            # Do a search, but only load the 'id' column
+            my $search = TestApp::AddressCollection->new( handle => $handle );
+            $search->columns(qw/id/);
+            $search->limit( column => 'name', value => 'Metadata');
+
+            $rec = $search->first;
+            is( $rec->id, $id, "The record has its id" );
+            is_deeply( $rec->metadata, { some => "values" } , "Got decoded values");
+
+            my $cache = TestApp::Address->new( handle => $handle );
+            my ( $status, $msg ) = $cache->load($id);
+            ok( $status, 'loaded record' );
+            is( $cache->id, $id, 'the same record as we created' );
+            is( $msg, 'Fetched from cache', 'we fetched record from cache' );
+            is_deeply( $cache->metadata, { some => "values" } , "Got decoded values");
+        }
+
+        Jifty::DBI::Record::Cachable->flush_cache;
+
         cleanup_schema( 'TestApp::Address', $handle );
         disconnect_handle($handle);
     }
@@ -134,6 +158,7 @@ CREATE TEMPORARY table addresses (
         phone varchar(18),
         address varchar(50),
         employee_id int(8),
+        metadata text,
         PRIMARY KEY (id))
 EOF
 
@@ -146,7 +171,8 @@ CREATE TEMPORARY table addresses (
         name varchar,
         phone varchar,
         address varchar,
-        employee_id integer
+        employee_id integer,
+        metadata text
 )
 EOF
 
@@ -160,7 +186,8 @@ CREATE table addresses (
         name varchar(36),
         phone varchar(18),
         address varchar(50),
-        employee_id int(8))
+        employee_id int(8),
+        metadata text)
 EOF
 
 }
@@ -171,7 +198,8 @@ sub schema_oracle { [
         id integer CONSTRAINT addresses_key PRIMARY KEY,
         name varchar(36),
         phone varchar(18),
-        employee_id integer
+        employee_id integer,
+        metadata text
     )",
 ] }
 
@@ -197,6 +225,14 @@ BEGIN {
         default is '';
 
     column employee_id => type is 'int(8)';
+
+    column metadata => type is 'text',
+        filters are 'Jifty::DBI::Filter::YAML';
     }
 }
+
+package TestApp::AddressCollection;
+use base qw/Jifty::DBI::Collection/;
+use constant table => "addresses";
+
 1;
