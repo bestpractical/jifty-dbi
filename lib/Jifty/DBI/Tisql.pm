@@ -467,7 +467,7 @@ sub describe_join {
             op_type => 'col_op_col',
             lhs => {
                 alias  => '',
-                chain  => [{ name => $via }],
+                chain  => [{ name => $column->virtual? "id" : $via }],
             },
             op => '=',
             rhs => {
@@ -505,20 +505,22 @@ sub linearize_join {
     my $attach_to = shift;
     my $place_of_attachment = shift;
 
-    my @res (
+    my $inverse_on = $inverse? '' : $join->{'left'}{'column'}->name; 
+
+    my @res = (
         $attach_to || { model => $join->{'left'}{'model'} },
         { model => $join->{'right'}{'model'} },
     );
-    my ($left, $right) = @res;
+    my ($orig_left, $orig_right) = @res;
+    @res = reverse @res if $inverse;
 
     my $transfer_short = sub {
         my %new = ();
-        $new{'table'} = $_[0]->{'alias'}? $right : $left;
+        $new{'table'} = $_[0]->{'alias'}? $orig_right : $orig_left;
         weaken($new{'table'});
         $new{'column'} = $_[0]->{'chain'}[0]{'name'};
         return \%new;
     };
-
 
     my ($tree, $node, @pnodes);
     my %callback;
@@ -530,44 +532,115 @@ sub linearize_join {
     $callback{'operator'}    = sub { push @$node, $_[0] };
     $callback{'operand'}     = sub {
         my $cond = $_[0];
+        #Test::More::diag( "dealing with condition ". Dumper($cond) );
         my %new_cond = %$cond;
 
+        foreach my $side (qw(lhs rhs)) {
+            next unless ref $cond->{$side} eq 'HASH';
+            next if $cond->{$side}{'is_long'};
+            $new_cond{$side} = $transfer_short->( $cond->{$side} );
+        }
         if ( $cond->{'op_type'} eq 'col_op_col' ) {
             if ( !$cond->{'lhs'}{'is_long'} && !$cond->{'rhs'}{'is_long'} ) {
+                push @$node, \%new_cond;
+            } else {
+                my $deliver_to;
                 foreach my $side (qw(lhs rhs)) {
-                    $new_cond{$side} = $transfer_short->( $cond->{$side} );
+                    next unless $cond->{$side}{'is_long'};
+                    #Test::More::diag( "condition on $side side ". Dumper($cond->{$side}) );
+                    my @chain = @{ $cond->{$side}{'chain'} };
+                    my $last_column = pop @chain;
+
+                    my ($last_join, $conditions) = ( undef, [] );
+                    my $model = ($cond->{$side}{'alias'}? $orig_right : $orig_left)->{'model'};
+                    foreach my $ref ( @chain ) {
+                        my $description = $self->describe_join( $model => $ref->{'name'} );
+                        if ( $cond->{$side}{'alias'} eq $inverse_on ) {
+                            my $linear = $self->linearize_join(
+                                $description, 'inverse', $res[-1], $conditions
+                            );
+                            $last_join = $deliver_to = $linear->[0];
+                            splice @res, -1, 1, @$linear;
+                        } else {
+
+                            #Test::More::diag( "attaching to left of ". Dumper( \@res ) );
+                            my $linear = $self->linearize_join(
+                                $description, undef, $res[0]
+                            );
+                            #Test::More::diag( "linear ". Dumper( $linear ) );
+                            $last_join = $linear->[-1];
+                            splice @res, 0, 1, @$linear;
+                        }
+
+                        $model = $model->column( $ref->{'name'} )->refers_to->new;
+                    }
+                    push @$node, [ shift @$conditions, map +( 'AND' => $_ ), @$conditions ]
+                        if @$conditions;
+
+                    $new_cond{$side} = {
+                        table => $last_join,
+                        column => $last_column->{'name'},
+                    };
+
+                }
+                if ( $deliver_to ) {
+                    $deliver_to->{'conditions'} = [ \%new_cond ];
+                } else {
+                    push @$node, \%new_cond;
                 }
             }
         } else {
             unless ( $cond->{'lhs'}{'is_long'} ) {
-                $new_cond{'lhs'} = $transfer_short->( $cond->{'lhs'} );
+                push @$node, \%new_cond;
             } else {
-                my @chain = @{ $cond->{'lhs'}{'chain'} };
+                my $side = 'lhs';
+                my @chain = @{ $cond->{$side}{'chain'} };
                 my $last_column = pop @chain;
 
-                my $conditions = [];
+                my $deliver_to;
 
-                my $model = ($cond->{'lhs'}{'alias'}? $right : $left)->{'model'};
+                my ($last_join, $conditions) = ( undef, [] );
+                my $model = ($cond->{$side}{'alias'}? $orig_right : $orig_left)->{'model'};
                 foreach my $ref ( @chain ) {
                     my $description = $self->describe_join( $model => $ref->{'name'} );
-                    my $linear = $self->linearize_join(
-                        $description,
-                        $cond->{'lhs'}{'alias'}
-                            ? ('inverse', $right, $conditions)
-                            : (undef, $left)
-                    );
+                    if ( $cond->{$side}{'alias'} eq $inverse_on ) {
+                        my $linear = $self->linearize_join(
+                            $description, 'inverse', $res[-1], $conditions
+                        );
+                        $last_join = $deliver_to = $linear->[0];
+                        splice @res, -1, 1, @$linear;
+                    } else {
+
+                        #Test::More::diag( "attaching to left of ". Dumper( \@res ) );
+                        my $linear = $self->linearize_join(
+                            $description, undef, $res[0]
+                        );
+                        #Test::More::diag( "linear ". Dumper( $linear ) );
+                        $last_join = $linear->[-1];
+                        splice @res, 0, 1, @$linear;
+                    }
 
                     $model = $model->column( $ref->{'name'} )->refers_to->new;
                 }
+                push @$node, [ shift @$conditions, map +( 'AND' => $_ ), @$conditions ]
+                    if @$conditions;
+
+                $new_cond{$side} = {
+                    table => $last_join,
+                    column => $last_column->{'name'},
+                };
+
+                if ( $deliver_to ) {
+                    $deliver_to->{'conditions'} = [ \%new_cond ];
+                } else {
+                    push @$node, \%new_cond;
+                }
             }
         }
-        push @$node, \%new_cond;
     };
 
     $tree = $node = [];
     $parser->walk( $join->{'tree'}, \%callback );
-
-    @res = reverse @res if $inverse;
 
     if ( $place_of_attachment ) {
         push @{ $place_of_attachment }, $tree;
@@ -593,7 +666,6 @@ sub _linearize_join {
             next;
         }
         elsif ( ref $element eq 'HASH' ) {
-            Test::More::diag( Dumper($element) );
             if ( $element->{'lhs'}{'string'} =~ /^([^.]+)\.[^.]+\./ ) {
                 # it's subjoin in join: a column described using tisql and has more
                 # than just target.x = .source, but something like: target.x.y = ...
