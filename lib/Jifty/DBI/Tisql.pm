@@ -650,43 +650,6 @@ sub linearize_join {
     return \@res;
 }
 
-sub _linearize_join {
-    my ($self, $tree, $ea, $join, @rest) = @_;
-    $ea ||= 'AND';
-
-    my $collection = $self->{'collection'};
-    $collection->open_paren('tisql', $join);
-    foreach my $element ( @$tree ) {
-        unless ( ref $element ) {
-            $ea = $element;
-            next;
-        }
-        elsif ( ref $element eq 'ARRAY' ) {
-            $self->apply_join_tree( $element, $ea, $join, @rest );
-            next;
-        }
-        elsif ( ref $element eq 'HASH' ) {
-            if ( $element->{'lhs'}{'string'} =~ /^([^.]+)\.[^.]+\./ ) {
-                # it's subjoin in join: a column described using tisql and has more
-                # than just target.x = .source, but something like: target.x.y = ...
-
-                # here we have
-                my $alias = $1;
-
-                $collection->open_paren('tisql', $join);
-
-                die "here we are";
-
-                $collection->close_paren('tisql', $join);
-            }
-            $self->apply_join_condition( $collection, $ea, $element, $join, @rest );
-        } else {
-            die "wrong query tree";
-        }
-    }
-    $collection->close_paren('tisql', $join);
-}
-
 sub parse_condition {
     my ($self, $type, $string, $cb) = @_;
 
@@ -880,18 +843,6 @@ sub find_column {
     }
 
     return $last;
-}
-
-sub apply_callback_to_tree {
-    my ($self, $tree, $cb) = @_;
-
-    foreach my $entry ( @$tree ) {
-        if ( ref $entry eq 'ARRAY' ) {
-            $self->apply_callback_to_tree( $entry, $cb );
-        } elsif ( ref $entry eq 'HASH' ) {
-            $cb->( $entry );
-        }
-    }
 }
 
 sub external_reference {
