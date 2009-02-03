@@ -1259,9 +1259,6 @@ sub _load_from_sql {
         return ( 0, "Missing a primary key?" );
     }
 
-    foreach my $f ( keys %{ $self->{'values'} } ) {
-        $self->{'fetched'}{$f} = 1;
-    }
     return ( 1, "Found object" );
 
 }
