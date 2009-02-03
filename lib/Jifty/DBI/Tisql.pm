@@ -77,29 +77,24 @@ sub query {
     my $string = shift;
     my @binds  = @_;
 
-    my $tree = {
-        aliases => {},
-        conditions => undef,
-    };
-
-    # parse "FROM..." prefix into $tree->{'aliases'}
+    # parse "FROM..." prefix into aliases
+    my %aliases;
     if ( $string =~ s/^\s*FROM\s+($re_alias(?:\s*,\s*$re_alias)*)\s+WHERE\s+//oi ) {
-        $tree->{'aliases'}->{ $_->[1] } = $self->find_column( $_->[0], $tree->{'aliases'} )
+        $aliases{ $_->[1] } = $self->parse_column( $_->[0] )
             foreach map [split /\s+AS\s+/i, $_], split /\s*,\s*/, $1;
-
-        while ( my ($name, $meta) = each %{ $tree->{aliases} } ) {
-            $meta->{'name'} = $name;
-        }
     }
-    my $operand_cb = sub {
-        return $self->parse_condition( 
-            'query', $_[0], sub { $self->find_column( $_[0], $tree->{'aliases'} ) }
-        );
-    };
+
+    my $tree = {};
+
     $self->{'bindings'} = \@binds;
     $tree->{'conditions'} = $parser->as_array(
-        $string, operand_cb => $operand_cb,
+        $string, operand_cb => sub {
+            return $self->parse_condition( 
+                'query', $_[0], sub { $self->parse_column( $_[0] ) }
+            );
+        },
     );
+
     $self->{'bindings'} = undef;
     $self->{'tisql'}{'conditions'} = $tree->{'conditions'};
     $self->apply_query_tree( $tree->{'conditions'} );
@@ -107,28 +102,28 @@ sub query {
 }
 
 sub apply_query_tree {
-    my ($self, $tree, $join, $ea) = @_;
+    my ($self, $tree, $ea) = @_;
     $ea ||= 'AND';
 
     my $collection = $self->{'collection'};
 
-    $collection->open_paren('tisql', $join);
+    $collection->open_paren('tisql');
     foreach my $element ( @$tree ) {
         unless ( ref $element ) {
             $ea = $element;
             next;
         }
         elsif ( ref $element eq 'ARRAY' ) {
-            $self->apply_query_tree( $element, $join, $ea );
+            $self->apply_query_tree( $element, $ea );
             next;
         }
         elsif ( ref $element eq 'HASH' ) {
-            $self->apply_query_condition( $collection, $ea, $element, $join );
+            $self->apply_query_condition( $collection, $ea, $element );
         } else {
             die "wrong query tree";
         }
     }
-    $collection->close_paren('tisql', $join);
+    $collection->close_paren('tisql');
 }
 
 sub apply_query_condition {
@@ -195,14 +190,14 @@ sub apply_query_condition {
             leftjoin         => $join,
             entry_aggregator => $ea,
             alias            => $self->resolve_join( $condition->{'lhs'} ),
-            column           => $condition->{'lhs'}{'column'}->name,
+            column           => $condition->{'lhs'}{'chain'}[-1]{'name'},
             operator         => $op,
         );
         if ( ref $condition->{'rhs'} eq 'HASH' ) {
             $limit{'quote_value'} = 0;
             $limit{'value'} =
                 $self->resolve_join( $condition->{'rhs'} )
-                .'.'. $condition->{'rhs'}{'column'}->name;
+                .'.'. $condition->{'rhs'}{'chain'}[-1]{'name'};
         } else {
             if ( ref $condition->{'rhs'} eq 'ARRAY' ) {
                 $parser->dq( $_ ) foreach @{ $condition->{'rhs'} };
@@ -220,14 +215,14 @@ sub apply_query_condition {
         my %limit = (
             subclause        => 'tisql',
             alias            => $self->resolve_join( $condition->{'lhs'} ),
-            column           => $condition->{'lhs'}{'column'}->name,
+            column           => $condition->{'lhs'}{'chain'}[-1]{'name'},
             operator         => $op,
         );
         if ( ref $condition->{'rhs'} eq 'HASH' ) {
             $limit{'quote_value'} = 0;
             $limit{'value'} =
                 $self->resolve_join( $condition->{'rhs'} )
-                .'.'. $condition->{'rhs'}{'column'}->name;
+                .'.'. $condition->{'rhs'}{'chain'}[-1]{'name'};
         } else {
             if ( ref $condition->{'rhs'} eq 'ARRAY' ) {
                 $parser->dq( $_ ) foreach @{ $condition->{'rhs'} };
@@ -258,184 +253,81 @@ sub apply_query_condition {
 sub resolve_join {
     my $self = shift;
     my $meta = shift;
-    my $resolve_last = shift;
+    my $aliases = shift || {};
+    my $resolve_last = shift || 0;
 
-    return $meta->{'sql_alias'}
-        if $meta->{'sql_alias'} && $resolve_last;
+    return $meta->{'chain'}[-1]{'sql_alias'}
+        if $resolve_last && $meta->{'chain'}[-1]{'sql_alias'};
+
+    if ( my $prev = $meta->{'chain'}[-2] ) {
+        return $prev->{'sql_alias'} if !$resolve_last && $prev->{'sql_alias'};
+    }
+
+    #Test::More::diag( Dumper $meta );
 
     my $collection = $self->{'collection'};
 
-    my ($prev_alias) = ('main');
-    if ( my $prev = $meta->{'previous'} ) {
-        $prev_alias = $self->resolve_join( $prev, 'resolve_last' );
-    }
-    return $prev_alias unless $resolve_last;
-
-    my $column = $meta->{'column'};
-
-    my $refers = $meta->{'refers_to'};
-    $refers = $refers->new_item
-        if UNIVERSAL::isa( $refers, 'Jifty::DBI::Collection' );
-
-    unless ( UNIVERSAL::isa( $refers, 'Jifty::DBI::Record' ) ) {
-        die "Column '". $column->name ."' refers to '"
-            . (ref($refers) || $refers)
-            ."' that is not record or collection";
-    }
-
-    my $sql_alias = $meta->{'sql_alias'}
-        = $collection->new_alias( $refers, 'LEFT' );
-
-    if ( $column->tisql ) {
-        local $self->{'right_part_of_join'} = {
-            %$meta
-        };
-        $self->resolve_tisql_join( $sql_alias, $meta );
-    } else {
-        my %limit = (
-            subclause   => 'tisql-join',
-            alias       => $prev_alias,
-            column      => $column->virtual? 'id' : $column->name,
-            operator    => '=',
-            quote_value => 0,
-            value       => $sql_alias .'.'. ($column->by || 'id')
+    my %last;
+    if ( my $alias = $meta->{'alias'} ) {
+        %last = (
+            sql_alias => 'main',
+            item => $collection,
         );
-
-        if ( $self->{'inside_left_join'} ) {
-            $limit{'leftjoin'} = $sql_alias;
-        } else {
-            $limit{'leftjoin'} = $sql_alias;
-        }
-        $collection->limit( %limit );
-    }
-    return $sql_alias;
-}
-
-sub resolve_tisql_join {
-    my $self = shift;
-    my $alias = shift;
-    my $meta = shift;
-
-    my $tree = $parser->as_array(
-        $meta->{'column'}->tisql,
-        operand_cb => sub { return $self->parse_condition(
-            'join', $_[0], sub { return $self->find_column(
-                $_[0],
-                {
-                    '' => $meta->{'previous'},
-                    $meta->{'column'}->name => {
-                        %$meta,
-                        sql_alias => $alias,
-                    } 
-                },
-            ) }
-        ) },
-    );
-
-
-    # fill in placeholders
-    $tree = $parser->filter( $tree, sub {
-        my $rhs = $_[0]->{'rhs'};
-        if ( $rhs && !ref $rhs && $rhs =~ /^%([0-9]+)$/ ) {
-            return 0 unless defined $meta->{'placeholders'}[ $1 - 1 ];
-            $_[0]->{'rhs'} = $meta->{'placeholders'}[ $1 - 1 ];
-            return 1;
-        }
-        foreach my $col ( grep ref $_ eq 'HASH', $rhs, $_[0]->{'lhs'} ) {
-            my $tmp = $col;
-            while ( $tmp ) {
-                if ( my $phs = $tmp->{'placeholders'} ) {
-                    for ( my $i = 0; $i < @$phs; $i++ ) {
-                        my $ph = $phs->[$i];
-                        next unless defined $ph;
-                        next if ref $ph;
-                        $phs->[$i] = $meta->{'placeholders'}[ $ph - 1 ];
-                    }
-                }
-                $tmp = $tmp->{previous};
-            }
-        }
-        return 1;
-    } );
-
-#    Test::More::diag( Dumper $tree );
-
-    $self->apply_join_tree( $tree, undef, $alias );
-}
-
-sub apply_join_tree {
-    my ($self, $tree, $ea, $join, @rest) = @_;
-    $ea ||= 'AND';
-
-    my $collection = $self->{'collection'};
-    $collection->open_paren('tisql', $join);
-    foreach my $element ( @$tree ) {
-        unless ( ref $element ) {
-            $ea = $element;
-            next;
-        }
-        elsif ( ref $element eq 'ARRAY' ) {
-            $self->apply_join_tree( $element, $ea, $join, @rest );
-            next;
-        }
-        elsif ( ref $element eq 'HASH' ) {
-            Test::More::diag( Dumper($element) );
-            if ( $element->{'lhs'}{'string'} =~ /^([^.]+)\.[^.]+\./ ) {
-                # it's subjoin in join: a column described using tisql and has more
-                # than just target.x = .source, but something like: target.x.y = ...
-
-                # here we have
-                my $alias = $1;
-
-                $collection->open_paren('tisql', $join);
-
-                die "here we are";
-
-                $collection->close_paren('tisql', $join);
-            }
-            $self->apply_join_condition( $collection, $ea, $element, $join, @rest );
-        } else {
-            die "wrong query tree";
-        }
-    }
-    $collection->close_paren('tisql', $join);
-}
-
-sub apply_join_condition {
-    my ($self, $collection, $ea, $condition, $join) = @_;
-
-    die "left hand side must be always column specififcation"
-        unless ref $condition->{'lhs'} eq 'HASH';
-
-
-    my $op = $condition->{'op'};
-    if ( $condition->{'modifier'} && $condition->{'modifier'} eq 'has no' ) {
-        die "'has' and 'has no' prefixes are only allowed in query, not in joins";
-    }
-
-    my %limit = (
-        subclause        => 'tisql',
-        leftjoin         => $join,
-        entry_aggregator => $ea,
-        alias            => $self->resolve_join( $condition->{'lhs'} ),
-        column           => $condition->{'lhs'}{'column'}->name,
-        operator         => $op,
-    );
-    if ( ref $condition->{'rhs'} eq 'HASH' ) {
-        $limit{'quote_value'} = 0;
-        $limit{'value'} =
-            $self->resolve_join( $condition->{'rhs'} )
-            .'.'. $condition->{'rhs'}{'column'}->name;
     } else {
-        if ( ref $condition->{'rhs'} eq 'ARRAY' ) {
-            $parser->dq( $_ ) foreach @{ $condition->{'rhs'} };
-        } else {
-            $parser->dq( $condition->{'rhs'} );
-        }
-        $limit{'value'} = $condition->{'rhs'};
+        %last = (
+            sql_alias => 'main',
+            item => $collection,
+        );
     }
 
-    $collection->limit( %limit );
+    my @chain = @{ $meta->{'chain'} };
+    pop @chain unless $resolve_last;
+    
+    while ( my $joint = shift @chain ) {
+        my $description = $self->describe_join($last{'item'}, $joint->{'name'});
+        my $linear = $self->linearize_join( $description );
+
+        $linear->[0]{'sql_alias'} = $last{'sql_alias'};
+        $_->{'sql_alias'} = $collection->new_alias( $_->{'model'}, 'LEFT' )
+            foreach @{$linear}[1 .. @$linear - 1];
+
+        foreach my $table ( @$linear ) {
+            next unless $table->{'conditions'};
+            my $ea = 'AND';
+            $parser->walk( $table->{'conditions'}, {
+                open_paren  => sub { $collection->open_paren('tisql-join', $_[1]) },
+                close_paren => sub { $collection->close_paren('tisql-join', $_[1]) },
+                operator    => sub { ${$_[3]} = $_[0] },
+                operand     => sub {
+                    my ($cond, $collection, $alias, $ea) = @_;
+                    my %limit = (
+                        subclause   => 'tisql-join',
+                        leftjoin    => $alias,
+                        entry_aggregator => $$ea,
+                        alias       => $cond->{'lhs'}{'table'}{'sql_alias'},
+                        column      => $cond->{'lhs'}{'column'},
+                        operator    => $cond->{'op'},
+                    );
+                    if ( ref($cond->{'rhs'}) eq 'HASH' ) {
+                        $limit{'quote_value'} = 0;
+                        $limit{'value'} = $cond->{'rhs'}{'table'}{'sql_alias'} .'.'. $cond->{'rhs'}{'column'};
+                    }
+                    elsif ( $cond->{'rhs'} eq '?' ) {
+                        die "not yet";
+                    }
+                    else {
+                        $limit{'value'} = $cond->{'rhs'};
+                    }
+                    $collection->limit( %limit );
+                },
+            }, $collection, $table->{'sql_alias'}, \$ea );
+        }
+
+        $last{'sql_alias'} = $joint->{'sql_alias'} = $linear->[-1]{'sql_alias'};
+        $last{'item'}  = $linear->[-1]{'model'};
+    }
+
+    return $last{'sql_alias'};
 }
 
 sub describe_join {
@@ -514,14 +406,6 @@ sub linearize_join {
     my ($orig_left, $orig_right) = @res;
     @res = reverse @res if $inverse;
 
-    my $transfer_short = sub {
-        my %new = ();
-        $new{'table'} = $_[0]->{'alias'}? $orig_right : $orig_left;
-        weaken($new{'table'});
-        $new{'column'} = $_[0]->{'chain'}[0]{'name'};
-        return \%new;
-    };
-
     my ($tree, $node, @pnodes);
     my %callback;
     $callback{'open_paren'} = sub {
@@ -532,111 +416,62 @@ sub linearize_join {
     $callback{'operator'}    = sub { push @$node, $_[0] };
     $callback{'operand'}     = sub {
         my $cond = $_[0];
-        #Test::More::diag( "dealing with condition ". Dumper($cond) );
         my %new_cond = %$cond;
 
+        my $set_condition_on;
+
         foreach my $side (qw(lhs rhs)) {
-            next unless ref $cond->{$side} eq 'HASH';
-            next if $cond->{$side}{'is_long'};
-            $new_cond{$side} = $transfer_short->( $cond->{$side} );
-        }
-        if ( $cond->{'op_type'} eq 'col_op_col' ) {
-            if ( !$cond->{'lhs'}{'is_long'} && !$cond->{'rhs'}{'is_long'} ) {
-                push @$node, \%new_cond;
-            } else {
-                my $deliver_to;
-                foreach my $side (qw(lhs rhs)) {
-                    next unless $cond->{$side}{'is_long'};
-                    #Test::More::diag( "condition on $side side ". Dumper($cond->{$side}) );
-                    my @chain = @{ $cond->{$side}{'chain'} };
-                    my $last_column = pop @chain;
+            next unless ref $cond->{ $side } eq 'HASH';
 
-                    my ($last_join, $conditions) = ( undef, [] );
-                    my $model = ($cond->{$side}{'alias'}? $orig_right : $orig_left)->{'model'};
-                    foreach my $ref ( @chain ) {
-                        my $description = $self->describe_join( $model => $ref->{'name'} );
-                        if ( $cond->{$side}{'alias'} eq $inverse_on ) {
-                            my $linear = $self->linearize_join(
-                                $description, 'inverse', $res[-1], $conditions
-                            );
-                            $last_join = $deliver_to = $linear->[0];
-                            splice @res, -1, 1, @$linear;
-                        } else {
+            my $col = $cond->{ $side };
 
-                            #Test::More::diag( "attaching to left of ". Dumper( \@res ) );
-                            my $linear = $self->linearize_join(
-                                $description, undef, $res[0]
-                            );
-                            #Test::More::diag( "linear ". Dumper( $linear ) );
-                            $last_join = $linear->[-1];
-                            splice @res, 0, 1, @$linear;
-                        }
-
-                        $model = $model->column( $ref->{'name'} )->refers_to->new;
-                    }
-                    push @$node, [ shift @$conditions, map +( 'AND' => $_ ), @$conditions ]
-                        if @$conditions;
-
-                    $new_cond{$side} = {
-                        table => $last_join,
-                        column => $last_column->{'name'},
-                    };
-
-                }
-                if ( $deliver_to ) {
-                    $deliver_to->{'conditions'} = [ \%new_cond ];
-                } else {
-                    push @$node, \%new_cond;
-                }
-            }
-        } else {
-            unless ( $cond->{'lhs'}{'is_long'} ) {
-                push @$node, \%new_cond;
-            } else {
-                my $side = 'lhs';
-                my @chain = @{ $cond->{$side}{'chain'} };
-                my $last_column = pop @chain;
-
-                my $deliver_to;
-
-                my ($last_join, $conditions) = ( undef, [] );
-                my $model = ($cond->{$side}{'alias'}? $orig_right : $orig_left)->{'model'};
-                foreach my $ref ( @chain ) {
-                    my $description = $self->describe_join( $model => $ref->{'name'} );
-                    if ( $cond->{$side}{'alias'} eq $inverse_on ) {
-                        my $linear = $self->linearize_join(
-                            $description, 'inverse', $res[-1], $conditions
-                        );
-                        $last_join = $deliver_to = $linear->[0];
-                        splice @res, -1, 1, @$linear;
-                    } else {
-
-                        #Test::More::diag( "attaching to left of ". Dumper( \@res ) );
-                        my $linear = $self->linearize_join(
-                            $description, undef, $res[0]
-                        );
-                        #Test::More::diag( "linear ". Dumper( $linear ) );
-                        $last_join = $linear->[-1];
-                        splice @res, 0, 1, @$linear;
-                    }
-
-                    $model = $model->column( $ref->{'name'} )->refers_to->new;
-                }
-                push @$node, [ shift @$conditions, map +( 'AND' => $_ ), @$conditions ]
-                    if @$conditions;
-
-                $new_cond{$side} = {
-                    table => $last_join,
-                    column => $last_column->{'name'},
+            unless ( $col->{'is_long'} ) {
+                $new_cond{ $side } = {
+                    table  => $col->{'alias'}? $orig_right : $orig_left,
+                    column => $col->{'chain'}[0]{'name'},
                 };
-
-                if ( $deliver_to ) {
-                    $deliver_to->{'conditions'} = [ \%new_cond ];
-                } else {
-                    push @$node, \%new_cond;
-                }
+                weaken($new_cond{ $side }{'table'});
+                next;
             }
+
+            my @chain = @{ $col->{'chain'} };
+            my $last_column = pop @chain;
+
+            my ($last_join, $conditions) = ( undef, [] );
+            my $model = ($col->{'alias'}? $orig_right : $orig_left)->{'model'};
+            foreach my $ref ( @chain ) {
+                my $description = $self->describe_join( $model => $ref->{'name'} );
+                if ( $cond->{$side}{'alias'} eq $inverse_on ) {
+                    my $linear = $self->linearize_join(
+                        $description, 'inverse', $res[-1], $conditions
+                    );
+                    $last_join = $set_condition_on = $linear->[0];
+                    splice @res, -1, 1, @$linear;
+                } else {
+                    my $linear = $self->linearize_join(
+                        $description, undef, $res[0]
+                    );
+                    $last_join = $linear->[-1];
+                    splice @res, 0, 1, @$linear;
+                }
+
+                $model = $model->column( $ref->{'name'} )->refers_to->new;
+            }
+            push @$node, [ shift @$conditions, map +( 'AND' => $_ ), @$conditions ]
+                if @$conditions;
+
+            $new_cond{$side} = {
+                table => $last_join,
+                column => $last_column->{'name'},
+            };
+
         }
+        if ( $set_condition_on ) {
+            $set_condition_on->{'conditions'} = [ \%new_cond ];
+        } else {
+            push @$node, \%new_cond;
+        }
+        return;
     };
 
     $tree = $node = [];
@@ -664,8 +499,7 @@ sub parse_condition {
     );
 
     if ( $type eq 'query' ) {
-        # TODO: query can not have placeholders %##
-        if ( $string =~ /^(has(\s+no)?\s+)?($re_column)\s*($re_sql_op_bin)\s*($re_value_ph_b)$/io ) {
+        if ( $string =~ /^(has(\s+no)?\s+)?($re_column)\s*($re_sql_op_bin)\s*($re_value|$re_binding)$/io ) {
             $res{'modifier'} = $2? 'has no': $1? 'has': '';
             @res{qw(op_type lhs op rhs)} = ('col_op_val', $cb->($3), $4, $5);
         }
@@ -685,8 +519,7 @@ sub parse_condition {
         }
     }
     elsif ( $type eq 'join' ) {
-        # TODO: join can not have bindings (?)
-        if ( $string =~ /^($re_column)\s*($re_sql_op_bin)\s*($re_value_ph_b)$/io ) {
+        if ( $string =~ /^($re_column)\s*($re_sql_op_bin)\s*($re_value|$re_ph)$/io ) {
             @res{qw(op_type lhs op rhs)} = ('col_op_val', $cb->($1), $2, $3);
         }
         elsif ( $string =~ /^($re_column)\s*($re_sql_op_un)$/o ) {
@@ -745,7 +578,9 @@ sub parse_column {
     my $self = shift;
     my $string = shift;
 
-    my (%res, @columns);
+    my %res = (@_);
+
+    my @columns;
     $res{'string'} = $string;
     ($res{'alias'}, @columns) = split /\.($re_field$re_ph_access*)/o, $string;
     @columns = grep defined && length, @columns;
@@ -756,7 +591,7 @@ sub parse_column {
         my $string = $col;
         $col =~ s/^($re_field)//;
         my $field = $1;
-        my @phs = split /{\s*($re_cs_values|$re_ph)?\s*}/, $col;
+        my @phs = split /{\s*($re_cs_values|$re_ph|$re_binding)?\s*}/, $col;
         @phs = grep !defined || length, @phs;
         $col = {
             name => $field,
