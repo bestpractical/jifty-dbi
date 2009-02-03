@@ -1242,6 +1242,7 @@ sub _load_from_sql {
         next unless exists $hashref->{ lc($col) };
         $self->{'fetched'}{$col} = 1;
         $self->{'values'}->{$col} = $hashref->{ lc($col) };
+        $self->{'raw_values'}->{$col} = $hashref->{ lc($col) };
     }
     if ( !$self->{'values'} && $sth->err ) {
         return ( 0, "Couldn't fetch row: " . $sth->err );
