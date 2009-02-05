@@ -101,7 +101,7 @@ sub query {
 
     my $tree = {};
 
-    $self->{'bindings'} = \@binds;
+    local $self->{'bindings'} = \@binds;
     $tree->{'conditions'} = $parser->as_array(
         $string, operand_cb => sub {
             return $self->parse_condition( 
@@ -110,7 +110,6 @@ sub query {
         },
     );
 
-    $self->{'bindings'} = undef;
     $self->{'tisql'}{'conditions'} = $tree->{'conditions'};
     $self->apply_query_tree( $tree->{'conditions'} );
     return $self;
@@ -213,12 +212,15 @@ sub apply_query_condition {
             $limit{'value'} =
                 $self->resolve_join( $condition->{'rhs'} )
                 .'.'. $condition->{'rhs'}{'chain'}[-1]{'name'};
+        } elsif ( ref $condition->{'rhs'} eq 'ARRAY' ) {
+            $parser->dq( $_ ) foreach @{ $condition->{'rhs'} };
+            $limit{'value'} = $condition->{'rhs'};
+        } elsif ( $condition->{'rhs'} eq '?' ) {
+            die "Not enough binding values provided for the query"
+                unless @{ $self->{'bindings'} };
+            $limit{'value'} = shift @{ $self->{'bindings'} };
         } else {
-            if ( ref $condition->{'rhs'} eq 'ARRAY' ) {
-                $parser->dq( $_ ) foreach @{ $condition->{'rhs'} };
-            } else {
-                $parser->dq( $condition->{'rhs'} );
-            }
+            $parser->dq( $condition->{'rhs'} );
             $limit{'value'} = $condition->{'rhs'};
         }
 
