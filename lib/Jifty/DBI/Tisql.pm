@@ -72,6 +72,20 @@ sub add_reference {
     return $self;
 }
 
+sub get_reference {
+    my $self = shift;
+    my $model = shift;
+    my $name = shift || die "illegal column name";
+
+    my $res = $self->{'additional_columns'}{ ref($model) || $model }{ $name };
+    $res ||= $model->column( $name );
+
+    die "no column '$name' on model ". (ref($model) || $model)
+        unless $res;
+
+    return $res;
+}
+
 sub query {
     my $self   = shift;
     my $string = shift;
@@ -83,6 +97,7 @@ sub query {
         $aliases{ $_->[1] } = $self->parse_column( $_->[0] )
             foreach map [split /\s+AS\s+/i, $_], split /\s*,\s*/, $1;
     }
+    $self->{'aliases'} = \%aliases;
 
     my $tree = {};
 
@@ -253,7 +268,7 @@ sub apply_query_condition {
 sub resolve_join {
     my $self = shift;
     my $meta = shift;
-    my $aliases = shift || {};
+    my $aliases = shift || $self->{'aliases'} || {};
     my $resolve_last = shift || 0;
 
     return $meta->{'chain'}[-1]{'sql_alias'}
@@ -263,15 +278,18 @@ sub resolve_join {
         return $prev->{'sql_alias'} if !$resolve_last && $prev->{'sql_alias'};
     }
 
-    #Test::More::diag( Dumper $meta );
-
     my $collection = $self->{'collection'};
 
     my %last;
     if ( my $alias = $meta->{'alias'} ) {
+        die "Couldn't find alias $alias"
+            unless $aliases->{ $alias };
+        my $target = $self->qualify_column( $aliases->{ $alias }, $aliases, $collection );
+        my $item = $target->{'chain'}[-1]{'refers_to'}
+            or die "Last column of alias '$alias' is not a reference";
         %last = (
-            sql_alias => 'main',
-            item => $collection,
+            sql_alias => $self->resolve_join( $aliases->{ $alias }, $aliases, 1 ),
+            item => $item,
         );
     } else {
         %last = (
@@ -339,8 +357,7 @@ sub describe_join {
         ? $model->new_item
         : $model;
 
-    my $column = $model->column( $via )
-        or die "no column";
+    my $column = $self->get_reference( $model => $via );
 
     my $refers_to = $column->refers_to->new;
     $refers_to = $refers_to->new_item
@@ -455,7 +472,7 @@ sub linearize_join {
                     splice @res, 0, 1, @$linear;
                 }
 
-                $model = $model->column( $ref->{'name'} )->refers_to->new;
+                $model = $self->get_reference( $model => $ref->{'name'} )->refers_to->new;
             }
             push @$node, [ shift @$conditions, map +( 'AND' => $_ ), @$conditions ]
                 if @$conditions;
@@ -619,13 +636,13 @@ sub parse_column {
     return \%res;
 }
 
-sub find_column {
+sub qualify_column {
     my $self = shift;
-    my $string = shift;
+    my $meta = shift;
     my $aliases = shift;
     my $collection = shift || $self->{'collection'};
 
-    my $meta = $self->parse_column($string);
+    return $meta if $meta->{'is_qualified'}++;
 
     my $start_from = $meta->{'alias'};
     my ($item, $last);
@@ -633,10 +650,12 @@ sub find_column {
         $item = $collection->new_item;
     } else {
         my $alias = $aliases->{ $start_from }
-            || die "alias '$start_from' is not declared";
+            || die "Couldn't find alias '$start_from'";
+
+        $self->qualify_column( $alias, $aliases, $collection );
 
         $last = $alias;
-        $item = $alias->{'refers_to'};
+        $item = $alias->{'chain'}[-1]{'refers_to'};
         unless ( $item ) {
             die "last column in alias '$start_from' is not a reference";
         }
@@ -646,38 +665,32 @@ sub find_column {
     my @chain = @{ $meta->{'chain'} };
     while ( my $joint = shift @chain ) {
         my $name = $joint->{'name'};
-        my $column =
-            $self->{'additional_columns'}{ref $item}{$name}
-            || $item->column( $name );
-        die ref($item) ." has no column '$name'" unless $column;
 
-        my %res = (
-            string       => $joint->{'string'},
-            previous     => $last,
-            column       => $column,
-            placeholders => $joint->{'placeholders'},
-        );
+        my $column = $self->get_reference( $item => $name );
+
+        $joint->{'column'} = $column;
+        $joint->{'on'} = $item;
 
         my $classname = $column->refers_to;
         if ( !$classname && @chain ) {
-            die "column '$name' of ". ref($item) ." is not a reference, but used so in '$string'";
+            die "column '$name' of ". ref($item) ." is not a reference, but used so in '". $meta->{'string'} ."'";
         }
-        return \%res unless $classname;
+        return $meta unless $classname;
 
         if ( UNIVERSAL::isa( $classname, 'Jifty::DBI::Collection' ) ) {
-            $res{'refers_to'} = $classname->new( handle => $collection->_handle );
-            $item = $res{'refers_to'}->new_item;
+            $joint->{'refers_to'} = $classname->new( handle => $collection->_handle );
+            $item = $joint->{'refers_to'}->new_item;
         }
         elsif ( UNIVERSAL::isa( $classname, 'Jifty::DBI::Record' ) ) {
-            $res{'refers_to'} = $item = $classname->new( handle => $collection->_handle )
+            $joint->{'refers_to'} = $item = $classname->new( handle => $collection->_handle )
         }
         else {
             die "Column '$name' refers to '$classname' which is not record or collection";
         }
-        $last = \%res;
+        $last = $joint;
     }
 
-    return $last;
+    return $meta;
 }
 
 sub external_reference {
@@ -688,19 +701,24 @@ sub external_reference {
     my $column = $args{'column'};
     my $name   = $column->name;
 
-    my $aliases = { __record__ => {
-        string    => '__record__',
-        previous  => undef,
-        column    => $column,
-        refers_to => $column->refers_to->new( handle => $self->{'collection'}->_handle ),
-        sql_alias => $self->{'collection'}->new_alias( $record ),
+    my $aliases;
+    local $self->{'aliases'} = $aliases = { __record__ => {
+        string       => '.__record__',
+        alias        => '',
+        is_long      => 0,
+        is_qualified => 1,
+        chain        => [ {
+            name      => '__record__',
+            refers_to => $record,
+            sql_alias => $self->{'collection'}->new_alias( $record ),
+        } ],
     } };
 
     my $column_cb = sub {
         my $str = shift;
         $str = "__record__". $str if 0 == rindex $str, '.', 0;
         substr($str, 0, length($name)) = '' if 0 == rindex $str, "$name.", 0;
-        return $self->find_column($str, $aliases);
+        return $self->qualify_column($self->parse_column($str), $aliases);
     };
     my $conditions = $parser->as_array(
         $column->tisql,
@@ -711,11 +729,7 @@ sub external_reference {
     $conditions = [
         $conditions, 'AND',
         {
-            lhs => {
-                string   => '__record__.id',
-                previous => $aliases->{'__record__'},
-                column   => $record->column('id'),
-            },
+            lhs => $self->qualify_column($self->parse_column('__record__.id'), $aliases),
             op => '=',
             rhs => $record->id || 0,
         },
@@ -724,6 +738,5 @@ sub external_reference {
 
     return $self;
 }
-
 
 1;
