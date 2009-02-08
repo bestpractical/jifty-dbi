@@ -302,10 +302,9 @@ sub resolve_join {
 
     my @chain = @{ $meta->{'chain'} };
     pop @chain unless $resolve_last;
-    
+
     while ( my $joint = shift @chain ) {
-        my $description = $self->describe_join($last{'item'}, $joint->{'name'});
-        my $linear = $self->linearize_join( $description );
+        my $linear = $self->linearize_join( $last{'item'}, $joint->{'name'} );
 
         $linear->[0]{'sql_alias'} = $last{'sql_alias'};
         $_->{'sql_alias'} = $collection->new_alias( $_->{'model'}, 'LEFT' )
@@ -332,11 +331,28 @@ sub resolve_join {
                         $limit{'quote_value'} = 0;
                         $limit{'value'} = $cond->{'rhs'}{'table'}{'sql_alias'} .'.'. $cond->{'rhs'}{'column'};
                     }
+                    elsif ( $cond->{'rhs'} =~ /^%(\d+)$/ ) {
+                        return unless exists $joint->{'placeholders'}[ $1 - 1 ];
+
+                        my $phs = $joint->{'placeholders'}[ $1 - 1 ];
+                        return unless defined $phs;
+                        if ( ref $phs ) {
+                            $limit{'value'} = [ map $parser->dq($_), @{ $phs } ],
+                        }
+                        elsif ( $phs eq '?' ) {
+                            die "Not enough binding values provided for the query"
+                                unless @{ $self->{'bindings'} };
+                            $limit{'value'} = shift @{ $self->{'bindings'} };
+                        }
+                        else {
+                            die "$phs is not supported placeholder argument";
+                        }
+                    }
                     elsif ( $cond->{'rhs'} eq '?' ) {
-                        die "not yet";
+                        die "Can not use bindings ('?') in join condition";
                     }
                     else {
-                        $limit{'value'} = $cond->{'rhs'};
+                        $limit{'value'} = $parser->dq( $cond->{'rhs'} );
                     }
                     $collection->limit( %limit );
                 },
@@ -397,30 +413,32 @@ sub describe_join {
             $tree->[0]{'rhs'}{'string'};
     }
     my $res = {
-        left => {
-            model => $model,
-            column => $column,
-        },
-        right => {
-            model => $refers_to,
-        },
-        tree => $tree,
+        left  => $model,
+        via   => $column,
+        right => $refers_to,
+        tree  => $tree,
     };
     return $res;
 }
 
 sub linearize_join {
     my $self = shift;
-    my $join = shift;
-    my $inverse = shift;
-    my $attach_to = shift;
-    my $place_of_attachment = shift;
+    my $left = shift;
+    my $via  = shift;
+    return $self->_linearize_join( $self->describe_join($left, $via) );
+}
 
-    my $inverse_on = $inverse? '' : $join->{'left'}{'column'}->name; 
+sub _linearize_join {
+    my $self    = shift;
+    my $join    = shift;
+    my $inverse = shift;
+    my $attach  = shift || {};
+
+    my $inverse_on = $inverse? '' : $join->{'via'}->name; 
 
     my @res = (
-        $attach_to || { model => $join->{'left'}{'model'} },
-        { model => $join->{'right'}{'model'} },
+        $attach->{'to'} || { model => $join->{'left'} },
+        { model => $join->{'right'} },
     );
     my ($orig_left, $orig_right) = @res;
     @res = reverse @res if $inverse;
@@ -443,8 +461,10 @@ sub linearize_join {
             next unless ref $cond->{ $side } eq 'HASH';
 
             my $col = $cond->{ $side };
+            my @chain = @{ $col->{'chain'} };
 
-            unless ( $col->{'is_long'} ) {
+            unless ( @chain > 1 ) {
+                # simple case
                 $new_cond{ $side } = {
                     table  => $col->{'alias'}? $orig_right : $orig_left,
                     column => $col->{'chain'}[0]{'name'},
@@ -453,7 +473,6 @@ sub linearize_join {
                 next;
             }
 
-            my @chain = @{ $col->{'chain'} };
             my $last_column = pop @chain;
 
             my ($last_join, $conditions) = ( undef, [] );
@@ -461,14 +480,14 @@ sub linearize_join {
             foreach my $ref ( @chain ) {
                 my $description = $self->describe_join( $model => $ref->{'name'} );
                 if ( $cond->{$side}{'alias'} eq $inverse_on ) {
-                    my $linear = $self->linearize_join(
-                        $description, 'inverse', $res[-1], $conditions
+                    my $linear = $self->_linearize_join(
+                        $description, 'inverse', { to => $res[-1], place => $conditions },
                     );
                     $last_join = $set_condition_on = $linear->[0];
                     splice @res, -1, 1, @$linear;
                 } else {
-                    my $linear = $self->linearize_join(
-                        $description, undef, $res[0]
+                    my $linear = $self->_linearize_join(
+                        $description, undef, { to => $res[0] },
                     );
                     $last_join = $linear->[-1];
                     splice @res, 0, 1, @$linear;
@@ -483,7 +502,6 @@ sub linearize_join {
                 table => $last_join,
                 column => $last_column->{'name'},
             };
-
         }
         if ( $set_condition_on ) {
             $set_condition_on->{'conditions'} = [ \%new_cond ];
@@ -496,8 +514,8 @@ sub linearize_join {
     $tree = $node = [];
     $parser->walk( $join->{'tree'}, \%callback );
 
-    if ( $place_of_attachment ) {
-        push @{ $place_of_attachment }, $tree;
+    if ( $attach->{'place'} ) {
+        push @{ $attach->{'place'} }, $tree;
     } else {
         $res[-1]{'conditions'} = $tree;
     }
@@ -577,7 +595,6 @@ sub check_query_condition {
 # {
 #   'string'  => 'nodes.attr{"category"}.value',
 #   'alias'   => 'nodes',                            # alias or ''
-#   'is_long' => 1,                                  # 1 or 0
 #   'chain'   => [
 #        {
 #          'name' => 'attr',
@@ -603,7 +620,6 @@ sub parse_column {
     $res{'string'} = $string;
     ($res{'alias'}, @columns) = split /\.($re_field$re_ph_access*)/o, $string;
     @columns = grep defined && length, @columns;
-    $res{'is_long'} = @columns > 1? 1 : 0;
 
     my $prev = $res{'alias'};
     foreach my $col (@columns) {
@@ -618,7 +634,7 @@ sub parse_column {
         };
         $col->{'placeholders'} = \@phs if @phs;
         foreach my $ph ( grep defined, @phs ) {
-            if ( $ph =~ /^%([0-9]+)$/ ) {
+            if ( $ph =~ /^(%[0-9]+)$/ ) {
                 $ph = $1;
             }
             elsif ( $ph eq '?' ) {
@@ -707,7 +723,6 @@ sub external_reference {
     local $self->{'aliases'} = $aliases = { __record__ => {
         string       => '.__record__',
         alias        => '',
-        is_long      => 0,
         is_qualified => 1,
         chain        => [ {
             name      => '__record__',
