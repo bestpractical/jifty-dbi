@@ -22,70 +22,59 @@ sub parse_ok($$) {
 
 parse_ok ".col" => {
     alias   => '',
-    is_long => 0,
     chain   => [{ name => 'col', string => '.col' }],
 };
 
 parse_ok "alias.col" => {
     alias   => 'alias',
-    is_long => 0,
     chain   => [{ name => 'col', string => 'alias.col' }],
 };
 
 parse_ok ".col.id" => {
     alias   => '',
-    is_long => 1,
     chain   => [{ name => 'col', string => '.col' }, { name => 'id', string => '.col.id' }],
 };
 
 parse_ok "alias.col.id" => {
     alias   => 'alias',
-    is_long => 1,
     chain   => [{ name => 'col', string => 'alias.col' }, { name => 'id', string => 'alias.col.id' }],
 };
 
 # place holders
 parse_ok ".col{'v'}" => {
     alias   => '',
-    is_long => 0,
     chain   => [{ name => 'col', string => ".col{'v'}", placeholders => [["'v'"]] }],
 };
 
 parse_ok ".col{'v1', 'v2'}" => {
     alias   => '',
-    is_long => 0,
     chain   => [{ name => 'col', string => ".col{'v1', 'v2'}", placeholders => [["'v1'", "'v2'"]] }],
 };
 
 parse_ok ".col{'v11', 'v12'}{'v21', 'v22'}" => {
     alias   => '',
-    is_long => 0,
     chain   => [{ name => 'col', string => ".col{'v11', 'v12'}{'v21', 'v22'}", placeholders => [["'v11'", "'v12'"], ["'v21'", "'v22'"]] }],
 };
 
 # bindings in placeholder
 parse_ok ".col{?}" => {
     alias   => '',
-    is_long => 0,
     chain   => [{ name => 'col', string => ".col{?}", placeholders => ['?'] }],
 };
 
 parse_ok ".col{?}{?}" => {
     alias   => '',
-    is_long => 0,
     chain   => [{ name => 'col', string => ".col{?}{?}", placeholders => ['?', '?'] }],
 };
 
 parse_ok ".col{%1}" => {
     alias   => '',
-    is_long => 0,
-    chain   => [{ name => 'col', string => ".col{%1}", placeholders => [1] }],
+    chain   => [{ name => 'col', string => ".col{%1}", placeholders => ['%1'] }],
 };
 
 parse_ok ".col{%1}{%3}" => {
     alias   => '',
-    is_long => 0,
-    chain   => [{ name => 'col', string => ".col{%1}{%3}", placeholders => [1, 3] }],
+    chain   => [{ name => 'col', string => ".col{%1}{%3}", placeholders => ['%1', '%3'] }],
 };
 
 1;
