@@ -345,8 +345,7 @@ sub _init_column_for {
         # Load the class we reference
         unless (UNIVERSAL::isa($refclass, 'Jifty::DBI::Record') || UNIVERSAL::isa($refclass, 'Jifty::DBI::Collection')) {
             local $UNIVERSAL::require::ERROR;
-# TISQL XXX: comment out until it's figured out how to avoid problem
-#            $refclass->require();
+            $refclass->require();
             die $UNIVERSAL::require::ERROR if ($UNIVERSAL::require::ERROR);
         }
         # A one-to-one or one-to-many relationship is requested

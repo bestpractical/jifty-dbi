@@ -1767,7 +1767,7 @@ a search.
 
 sub new_alias {
     my $self      = shift;
-    my $refers_to = shift || die "Missing parameter";
+    my $refers_to = shift || croak("First parameter of new_alias method must be table or record object");
     my $type      = shift || 'CROSS';
 
     my $table;

@@ -3,9 +3,11 @@ package Jifty::DBI::Tisql;
 use strict;
 use warnings;
 
-use Scalar::Util qw(refaddr blessed);
+use Scalar::Util qw(refaddr blessed weaken);
 
 use Data::Dumper;
+use Carp ();
+
 
 use Parse::BooleanLogic 0.07;
 my $parser = new Parse::BooleanLogic;
@@ -70,63 +72,72 @@ sub add_reference {
     return $self;
 }
 
+sub get_reference {
+    my $self = shift;
+    my $model = shift;
+    my $name = shift || die "illegal column name";
+
+    my $res = $self->{'additional_columns'}{ ref($model) || $model }{ $name };
+    $res ||= $model->column( $name );
+
+    die "no column '$name' on model ". (ref($model) || $model)
+        unless $res;
+
+    return $res;
+}
+
 sub query {
     my $self   = shift;
     my $string = shift;
     my @binds  = @_;
 
-    my $tree = {
-        aliases => {},
-        conditions => undef,
-    };
-
-    # parse "FROM..." prefix into $tree->{'aliases'}
+    # parse "FROM..." prefix into aliases
+    my %aliases;
     if ( $string =~ s/^\s*FROM\s+($re_alias(?:\s*,\s*$re_alias)*)\s+WHERE\s+//oi ) {
-        $tree->{'aliases'}->{ $_->[1] } = $self->find_column( $_->[0], $tree->{'aliases'} )
+        $aliases{ $_->[1] } = $self->parse_column( $_->[0] )
             foreach map [split /\s+AS\s+/i, $_], split /\s*,\s*/, $1;
-
-        while ( my ($name, $meta) = each %{ $tree->{aliases} } ) {
-            $meta->{'name'} = $name;
-        }
     }
-    my $operand_cb = sub {
-        return $self->parse_condition( 
-            $_[0], sub { $self->find_column( $_[0], $tree->{'aliases'} ) }
-        );
-    };
-    $self->{'bindings'} = \@binds;
+    $self->{'aliases'} = \%aliases;
+
+    my $tree = {};
+
+    local $self->{'bindings'} = \@binds;
     $tree->{'conditions'} = $parser->as_array(
-        $string, operand_cb => $operand_cb,
+        $string, operand_cb => sub {
+            return $self->parse_condition( 
+                'query', $_[0], sub { $self->parse_column( $_[0] ) }
+            );
+        },
     );
-    $self->{'bindings'} = undef;
+
     $self->{'tisql'}{'conditions'} = $tree->{'conditions'};
     $self->apply_query_tree( $tree->{'conditions'} );
     return $self;
 }
 
 sub apply_query_tree {
-    my ($self, $tree, $join, $ea) = @_;
+    my ($self, $tree, $ea) = @_;
     $ea ||= 'AND';
 
     my $collection = $self->{'collection'};
 
-    $collection->open_paren('tisql', $join);
+    $collection->open_paren('tisql');
     foreach my $element ( @$tree ) {
         unless ( ref $element ) {
             $ea = $element;
             next;
         }
         elsif ( ref $element eq 'ARRAY' ) {
-            $self->apply_query_tree( $element, $join, $ea );
+            $self->apply_query_tree( $element, $ea );
             next;
         }
-        elsif ( ref $element ne 'HASH' ) {
+        elsif ( ref $element eq 'HASH' ) {
+            $self->apply_query_condition( $collection, $ea, $element );
+        } else {
             die "wrong query tree";
         }
-
-        $self->apply_query_condition( $collection, $ea, $element, $join );
     }
-    $collection->close_paren('tisql', $join);
+    $collection->close_paren('tisql');
 }
 
 sub apply_query_condition {
@@ -135,30 +146,30 @@ sub apply_query_condition {
     die "left hand side must be always column specififcation"
         unless ref $condition->{'lhs'} eq 'HASH';
 
-    my $prefix = $condition->{'prefix'};
+    my $modifier = $condition->{'modifier'};
     my $op     = $condition->{'op'};
     my $long   = do {
         my @tmp = split /\./, $condition->{'lhs'}{'string'};
         @tmp > 2 ? 1 : 0
     };
-    if ( $long && !$prefix && $op =~ $re_negative_op ) {
-        $prefix = 'has no';
+    if ( $long && !$modifier && $op =~ $re_negative_op ) {
+        $modifier = 'has no';
         $op = $invert_op{ lc $op };
     }
-    elsif ( $prefix && !$long ) {
+    elsif ( $modifier && !$long ) {
         die "'has no' and 'has' prefixes are only applicable on columns of related records";
     }
-    $prefix ||= 'has';
+    $modifier ||= 'has';
 
     my $bundling = $long && !$join && $self->{'joins_bundling'};
     my $bundled = 0;
     if ( $bundling ) {
-        my $bundles = $self->{'cache'}{'condition_bundles'}{ $condition->{'lhs'}{'string'} }{ $prefix } ||= [];
+        my $bundles = $self->{'cache'}{'condition_bundles'}{ $condition->{'lhs'}{'string'} }{ $modifier } ||= [];
         foreach my $bundle ( @$bundles ) {
             my %tmp;
             $tmp{$_}++ foreach map refaddr($_), @$bundle;
             my $cur_refaddr = refaddr( $condition );
-            if ( $prefix eq 'has' ) {
+            if ( $modifier eq 'has' ) {
                 next unless $parser->fsolve(
                     $self->{'tisql'}{'conditions'},
                     sub {
@@ -187,26 +198,29 @@ sub apply_query_condition {
         push @$bundles, [ $condition ] unless $bundled;
     }
 
-    if ( $prefix eq 'has' ) {
+    if ( $modifier eq 'has' ) {
         my %limit = (
             subclause        => 'tisql',
             leftjoin         => $join,
             entry_aggregator => $ea,
             alias            => $self->resolve_join( $condition->{'lhs'} ),
-            column           => $condition->{'lhs'}{'column'}->name,
+            column           => $condition->{'lhs'}{'chain'}[-1]{'name'},
             operator         => $op,
         );
         if ( ref $condition->{'rhs'} eq 'HASH' ) {
             $limit{'quote_value'} = 0;
             $limit{'value'} =
                 $self->resolve_join( $condition->{'rhs'} )
-                .'.'. $condition->{'rhs'}{'column'}->name;
+                .'.'. $condition->{'rhs'}{'chain'}[-1]{'name'};
+        } elsif ( ref $condition->{'rhs'} eq 'ARRAY' ) {
+            $parser->dq( $_ ) foreach @{ $condition->{'rhs'} };
+            $limit{'value'} = $condition->{'rhs'};
+        } elsif ( $condition->{'rhs'} eq '?' ) {
+            die "Not enough binding values provided for the query"
+                unless @{ $self->{'bindings'} };
+            $limit{'value'} = shift @{ $self->{'bindings'} };
         } else {
-            if ( ref $condition->{'rhs'} eq 'ARRAY' ) {
-                $parser->dq( $_ ) foreach @{ $condition->{'rhs'} };
-            } else {
-                $parser->dq( $condition->{'rhs'} );
-            }
+            $parser->dq( $condition->{'rhs'} );
             $limit{'value'} = $condition->{'rhs'};
         }
 
@@ -218,14 +232,14 @@ sub apply_query_condition {
         my %limit = (
             subclause        => 'tisql',
             alias            => $self->resolve_join( $condition->{'lhs'} ),
-            column           => $condition->{'lhs'}{'column'}->name,
+            column           => $condition->{'lhs'}{'chain'}[-1]{'name'},
             operator         => $op,
         );
         if ( ref $condition->{'rhs'} eq 'HASH' ) {
             $limit{'quote_value'} = 0;
             $limit{'value'} =
                 $self->resolve_join( $condition->{'rhs'} )
-                .'.'. $condition->{'rhs'}{'column'}->name;
+                .'.'. $condition->{'rhs'}{'chain'}[-1]{'name'};
         } else {
             if ( ref $condition->{'rhs'} eq 'ARRAY' ) {
                 $parser->dq( $_ ) foreach @{ $condition->{'rhs'} };
@@ -256,169 +270,375 @@ sub apply_query_condition {
 sub resolve_join {
     my $self = shift;
     my $meta = shift;
-    my $resolve_last = shift;
+    my $aliases = shift || $self->{'aliases'} || {};
+    my $resolve_last = shift || 0;
 
-    return $meta->{'sql_alias'}
-        if $meta->{'sql_alias'} && $resolve_last;
+    return $meta->{'chain'}[-1]{'sql_alias'}
+        if $resolve_last && $meta->{'chain'}[-1]{'sql_alias'};
+
+    if ( my $prev = $meta->{'chain'}[-2] ) {
+        return $prev->{'sql_alias'} if !$resolve_last && $prev->{'sql_alias'};
+    }
 
     my $collection = $self->{'collection'};
 
-    my ($prev_alias) = ('main');
-    if ( my $prev = $meta->{'previous'} ) {
-        $prev_alias = $self->resolve_join( $prev, 'resolve_last' );
-    }
-    return $prev_alias unless $resolve_last;
-
-    my $column = $meta->{'column'};
-
-    my $refers = $meta->{'refers_to'};
-    $refers = $refers->new_item
-        if UNIVERSAL::isa( $refers, 'Jifty::DBI::Collection' );
-
-    unless ( UNIVERSAL::isa( $refers, 'Jifty::DBI::Record' ) ) { 
-        die "Column '". $column->name ."' refers to '"
-            . (ref($refers) || $refers)
-            ."' that is not record or collection";
-    }
-
-    my $res = $collection->new_alias( $refers, 'LEFT' );
-    if ( $column->tisql ) {
-        $self->resolve_tisql_join( $res, $meta );
+    my %last;
+    if ( my $alias = $meta->{'alias'} ) {
+        die "Couldn't find alias $alias"
+            unless $aliases->{ $alias };
+        my $target = $self->qualify_column( $aliases->{ $alias }, $aliases, $collection );
+        my $item = $target->{'chain'}[-1]{'refers_to'}
+            or die "Last column of alias '$alias' is not a reference";
+        %last = (
+            sql_alias => $self->resolve_join( $aliases->{ $alias }, $aliases, 1 ),
+            item => $item,
+        );
     } else {
-        $collection->limit(
-            leftjoin    => $res,
-            subclause   => 'tisql-join',
-            alias       => $prev_alias,
-            column      => $column->virtual? 'id' : $column->name,
-            operator    => '=',
-            quote_value => 0,
-            value       => $res .'.'. ($column->by || 'id')
+        %last = (
+            sql_alias => 'main',
+            item => $collection,
         );
     }
-    return $meta->{'sql_alias'} = $res;
+
+    my @chain = @{ $meta->{'chain'} };
+    pop @chain unless $resolve_last;
+
+    while ( my $joint = shift @chain ) {
+        my $linear = $self->linearize_join( $last{'item'}, $joint->{'name'} );
+
+        $linear->[0]{'sql_alias'} = $last{'sql_alias'};
+        $_->{'sql_alias'} = $collection->new_alias( $_->{'model'}, 'LEFT' )
+            foreach @{$linear}[1 .. @$linear - 1];
+
+        foreach my $table ( @$linear ) {
+            next unless $table->{'conditions'};
+            my $ea = 'AND';
+            $parser->walk( $table->{'conditions'}, {
+                open_paren  => sub { $collection->open_paren('tisql-join', $_[1]) },
+                close_paren => sub { $collection->close_paren('tisql-join', $_[1]) },
+                operator    => sub { ${$_[3]} = $_[0] },
+                operand     => sub {
+                    my ($cond, $collection, $alias, $ea) = @_;
+                    my %limit = (
+                        subclause   => 'tisql-join',
+                        leftjoin    => $alias,
+                        entry_aggregator => $$ea,
+                        alias       => $cond->{'lhs'}{'table'}{'sql_alias'},
+                        column      => $cond->{'lhs'}{'column'},
+                        operator    => $cond->{'op'},
+                    );
+                    if ( ref($cond->{'rhs'}) eq 'HASH' ) {
+                        $limit{'quote_value'} = 0;
+                        $limit{'value'} = $cond->{'rhs'}{'table'}{'sql_alias'} .'.'. $cond->{'rhs'}{'column'};
+                    }
+                    elsif ( $cond->{'rhs'} =~ /^%(\d+)$/ ) {
+                        return unless exists $joint->{'placeholders'}[ $1 - 1 ];
+
+                        my $phs = $joint->{'placeholders'}[ $1 - 1 ];
+                        return unless defined $phs;
+                        if ( ref $phs ) {
+                            $limit{'value'} = [ map $parser->dq($_), @{ $phs } ],
+                        }
+                        elsif ( $phs eq '?' ) {
+                            die "Not enough binding values provided for the query"
+                                unless @{ $self->{'bindings'} };
+                            $limit{'value'} = shift @{ $self->{'bindings'} };
+                        }
+                        else {
+                            die "$phs is not supported placeholder argument";
+                        }
+                    }
+                    elsif ( $cond->{'rhs'} eq '?' ) {
+                        die "Can not use bindings ('?') in join condition";
+                    }
+                    else {
+                        $limit{'value'} = $parser->dq( $cond->{'rhs'} );
+                    }
+                    $collection->limit( %limit );
+                },
+            }, $collection, $table->{'sql_alias'}, \$ea );
+        }
+
+        $last{'sql_alias'} = $joint->{'sql_alias'} = $linear->[-1]{'sql_alias'};
+        $last{'item'}  = $linear->[-1]{'model'};
+    }
+
+    return $last{'sql_alias'};
 }
 
-    use Data::Dumper; use Carp ();
+sub describe_join {
+    my $self  = shift;
+    my $model = shift;
+    my $via   = shift;
 
-sub resolve_tisql_join {
+    $model = UNIVERSAL::isa( $model, 'Jifty::DBI::Collection' )
+        ? $model->new_item
+        : $model;
+
+    my $column = $self->get_reference( $model => $via );
+
+    my $refers_to = $column->refers_to->new;
+    $refers_to = $refers_to->new_item
+        if $refers_to->isa('Jifty::DBI::Collection');
+
+    my $tree;
+    if ( my $tisql = $column->tisql ) {
+        $tree = $parser->as_array( $tisql, operand_cb => sub {
+            return $self->parse_condition(
+                'join', $_[0], sub { $self->parse_column( $_[0] ) }
+            )
+        } );
+    } else {
+        $tree = [ {
+            type    => 'join',
+            op_type => 'col_op_col',
+            lhs => {
+                alias  => '',
+                chain  => [{ name => $column->virtual? "id" : $via }],
+            },
+            op => '=',
+            rhs => {
+                alias  => $via,
+                chain  => [{ name => $column->by || 'id' }],
+            },
+        } ];
+        foreach ( map $tree->[0]{$_}, qw(lhs rhs) ) {
+            $_->{'chain'}[0]{'string'} = $_->{'alias'} .'.'. $_->{'chain'}[0]{'name'};
+            $_->{'string'} = $_->{'chain'}[-1]{'string'};
+        }
+        $tree->[0]{'string'} =
+            join ' ',
+            $tree->[0]{'lhs'}{'string'},
+            $tree->[0]{'op'},
+            $tree->[0]{'rhs'}{'string'};
+    }
+    my $res = {
+        left  => $model,
+        via   => $column,
+        right => $refers_to,
+        tree  => $tree,
+    };
+    return $res;
+}
+
+sub linearize_join {
     my $self = shift;
-    my $alias = shift;
-    my $meta = shift;
-    Test::More::diag( Carp::cluck( Dumper($meta) ) );
+    my $left = shift;
+    my $via  = shift;
+    return $self->_linearize_join( $self->describe_join($left, $via) );
+}
 
-    my $tree = $parser->as_array(
-        $meta->{'column'}->tisql,
-        operand_cb => sub { return $self->parse_condition( 
-            $_[0], sub { return $self->find_column(
-                $_[0],
-                {
-                    '' => $meta->{'previous'},
-                    $meta->{'column'}->name => {
-                        %$meta,
-                        sql_alias => $alias,
-                    } 
-                },
-            ) }
-        ) },
+sub _linearize_join {
+    my $self    = shift;
+    my $join    = shift;
+    my $inverse = shift;
+    my $attach  = shift || {};
+
+    my $inverse_on = $inverse? '' : $join->{'via'}->name; 
+
+    my @res = (
+        $attach->{'to'} || { model => $join->{'left'} },
+        { model => $join->{'right'} },
     );
+    my ($orig_left, $orig_right) = @res;
+    @res = reverse @res if $inverse;
 
+    my ($tree, $node, @pnodes);
+    my %callback;
+    $callback{'open_paren'} = sub {
+        push @pnodes, $node;
+        push @{ $pnodes[-1] }, $node = []
+    };
+    $callback{'close_paren'} = sub { $node = pop @pnodes };
+    $callback{'operator'}    = sub { push @$node, $_[0] };
+    $callback{'operand'}     = sub {
+        my $cond = $_[0];
+        my %new_cond = %$cond;
 
-    # fill in placeholders
-    $tree = $parser->filter( $tree, sub {
-        my $rhs = $_[0]->{'rhs'};
-        if ( $rhs && !ref $rhs && $rhs =~ /^%([0-9]+)$/ ) {
-            return 0 unless defined $meta->{'placeholders'}[ $1 - 1 ];
-            $_[0]->{'rhs'} = $meta->{'placeholders'}[ $1 - 1 ];
-            return 1;
-        }
-        foreach my $col ( grep ref $_ eq 'HASH', $rhs, $_[0]->{'lhs'} ) {
-            my $tmp = $col;
-            while ( $tmp ) {
-                if ( my $phs = $tmp->{'placeholders'} ) {
-                    for ( my $i = 0; $i < @$phs; $i++ ) {
-                        my $ph = $phs->[$i];
-                        next unless defined $ph;
-                        next if ref $ph;
-                        $phs->[$i] = $meta->{'placeholders'}[ $ph - 1 ];
-                    }
-                }
-                $tmp = $tmp->{previous};
+        my $set_condition_on;
+
+        foreach my $side (qw(lhs rhs)) {
+            next unless ref $cond->{ $side } eq 'HASH';
+
+            my $col = $cond->{ $side };
+            my @chain = @{ $col->{'chain'} };
+
+            unless ( @chain > 1 ) {
+                # simple case
+                $new_cond{ $side } = {
+                    table  => $col->{'alias'}? $orig_right : $orig_left,
+                    column => $col->{'chain'}[0]{'name'},
+                };
+                weaken($new_cond{ $side }{'table'});
+                next;
             }
+
+            my $last_column = pop @chain;
+
+            my ($last_join, $conditions) = ( undef, [] );
+            my $model = ($col->{'alias'}? $orig_right : $orig_left)->{'model'};
+            foreach my $ref ( @chain ) {
+                my $description = $self->describe_join( $model => $ref->{'name'} );
+                if ( $cond->{$side}{'alias'} eq $inverse_on ) {
+                    my $linear = $self->_linearize_join(
+                        $description, 'inverse', { to => $res[-1], place => $conditions },
+                    );
+                    $last_join = $set_condition_on = $linear->[0];
+                    splice @res, -1, 1, @$linear;
+                } else {
+                    my $linear = $self->_linearize_join(
+                        $description, undef, { to => $res[0] },
+                    );
+                    $last_join = $linear->[-1];
+                    splice @res, 0, 1, @$linear;
+                }
+
+                $model = $self->get_reference( $model => $ref->{'name'} )->refers_to->new;
+            }
+            push @$node, [ shift @$conditions, map +( 'AND' => $_ ), @$conditions ]
+                if @$conditions;
+
+            $new_cond{$side} = {
+                table => $last_join,
+                column => $last_column->{'name'},
+            };
         }
-        return 1;
-    } );
+        if ( $set_condition_on ) {
+            $set_condition_on->{'conditions'} = [ \%new_cond ];
+        } else {
+            push @$node, \%new_cond;
+        }
+        return;
+    };
 
-    $self->apply_query_tree( $tree, $alias );
+    $tree = $node = [];
+    $parser->walk( $join->{'tree'}, \%callback );
 
-    return $alias;
+    if ( $attach->{'place'} ) {
+        push @{ $attach->{'place'} }, $tree;
+    } else {
+        $res[-1]{'conditions'} = $tree;
+    }
+    return \@res;
 }
 
 sub parse_condition {
-    my $self = shift;
-    my $string = shift;
-    my $cb = shift;
+    my ($self, $type, $string, $cb) = @_;
 
-    if ( $string =~ /^(has(\s+no)?\s+)?($re_column)\s*($re_sql_op_bin)\s*($re_value_ph_b)$/io ) {
-        my ($lhs, $op, $rhs) = ($cb->($3), $4, $5);
-        $parser->fq( $rhs = shift @{ $self->{'bindings'} } ) if $rhs eq '?';
-        my $prefix;
-        $prefix = 'has' if $1;
-        $prefix .= ' no' if $2;
-        die "Last column in '". $lhs->{'string'} ."' is virtual and can not be used in condition '$string'" 
-            if $lhs->{'column'}->virtual;
-        return { string => $string, prefix => $prefix, lhs => $lhs, op => $op, rhs => $rhs };
+    my %res = (
+        string   => $string,
+        type     => $type,
+        op_type  => undef,    # 'col_op', 'col_op_val' or 'col_op_col'
+        modifier => '',       # '', 'has' or 'has no'
+        lhs      => undef,
+        op       => undef,
+        rhs      => undef,
+    );
+
+    if ( $type eq 'query' ) {
+        if ( $string =~ /^(has(\s+no)?\s+)?($re_column)\s*($re_sql_op_bin)\s*($re_value|$re_binding)$/io ) {
+            $res{'modifier'} = $2? 'has no': $1? 'has': '';
+            @res{qw(op_type lhs op rhs)} = ('col_op_val', $cb->($3), $4, $5);
+        }
+        elsif ( $string =~ /^($re_column)\s*($re_sql_op_un)$/o ) {
+            my ($lhs, $op) = ($cb->($1), $2);
+            @res{qw(op_type lhs op rhs)} = ('col_op', $lhs, split /\s*(?=null)/i, $op );
+        }
+        elsif ( $string =~ /^(has(\s+no)?\s+)?($re_column)\s*($re_sql_op_bin)\s*($re_column)$/o ) {
+            $res{'modifier'} = $2? 'has no': $1? 'has': '';
+            @res{qw(op_type lhs op rhs)} = ('col_op_col', $cb->($3), $4, $cb->($5));
+        }
+        elsif ( $string =~ /^has(\s+no)?\s+($re_column)$/o ) {
+            @res{qw(op_type lhs op rhs)} = ('col_op', $cb->( $2 .'.id' ), $1? 'IS': 'IS NOT', 'NULL');
+        }
+        else {
+            die "$string is not a tisql $type condition";
+        }
     }
-    elsif ( $string =~ /^($re_column)\s*($re_sql_op_un)$/o ) {
-        my ($lhs, $op, $rhs) = ($cb->($1), $2, $3);
-        ($op, $rhs) = split /\s*(?=null)/i, $op;
-        die "Last column in '". $lhs->{'string'} ."' is virtual and can not be used in condition '$string'" 
-            if $lhs->{'column'}->virtual;
-        return { string => $string, lhs => $lhs, op => $op, rhs => $rhs };
-    }
-    elsif ( $string =~ /^(has(\s+no)?\s+)?($re_column)\s*($re_sql_op_bin)\s*($re_column)$/o ) {
-        my ($lhs, $op, $rhs) = ($cb->($3), $4, $cb->($5));
-        my $prefix;
-        $prefix = 'has' if $1;
-        $prefix .= ' no' if $2;
-        die "Last column in '". $lhs->{'string'} ."' is virtual and can not be used in condition '$string'" 
-            if $lhs->{'column'}->virtual;
-        die "Last column in '". $rhs->{'string'} ."' is virtual and can not be used in condition '$string'" 
-            if $rhs->{'column'}->virtual;
-        return { string => $string, prefix => $prefix, lhs => $lhs, op => $op, rhs => $rhs };
-    }
-    elsif ( $string =~ /^has(\s+no)?\s+($re_column)$/o ) {
-        return { string => $string, lhs => $cb->( $2 .'.id' ), op => $1? 'IS': 'IS NOT', rhs => 'NULL' };
+    elsif ( $type eq 'join' ) {
+        if ( $string =~ /^($re_column)\s*($re_sql_op_bin)\s*($re_value|$re_ph)$/io ) {
+            @res{qw(op_type lhs op rhs)} = ('col_op_val', $cb->($1), $2, $3);
+        }
+        elsif ( $string =~ /^($re_column)\s*($re_sql_op_un)$/o ) {
+            my ($lhs, $op) = ($cb->($1), $2);
+            @res{qw(op_type lhs op rhs)} = ('col_op', $lhs, split /\s*(?=null)/i, $op );
+        }
+        elsif ( $string =~ /^($re_column)\s*($re_sql_op_bin)\s*($re_column)$/o ) {
+            @res{qw(op_type lhs op rhs)} = ('col_op_col', $cb->($1), $2, $cb->($3));
+        }
+        else {
+            die "$string is not a tisql $type condition";
+        }
     }
     else {
-        die "$string is not a tisql condition";
+        die "$type is not valid type of a condition";
     }
+    return \%res;
 }
+
+sub check_query_condition {
+    my ($self, $cond) = @_;
+
+    die "Last column in '". $cond->{'lhs'}{'string'} ."' is virtual" 
+        if $cond->{'lhs'}{'column'}->virtual;
+
+    if ( $cond->{'op_type'} eq 'col_op_col' ) {
+        die "Last column in '". $cond->{'rhs'}{'string'} ."' is virtual" 
+            if $cond->{'rhs'}{'column'}->virtual;
+    }
+
+    return $cond;
+}
+
+
+# returns something like:
+# {
+#   'string'  => 'nodes.attr{"category"}.value',
+#   'alias'   => 'nodes',                            # alias or ''
+#   'chain'   => [
+#        {
+#          'name' => 'attr',
+#          'string' => 'nodes.attr{"category"}',
+#          'placeholders' => ['"category"'],
+#        },
+#        {
+#          'name' => 'value',
+#          'string' => 'nodes.attr{"category"}.value'
+#        }
+#   ],
+# }
+# no look ups, everything returned as is,
+# even placeholders' strings are not de-escaped
 
 sub parse_column {
     my $self = shift;
     my $string = shift;
 
-    my (%res, @columns);
+    my %res = (@_);
+
+    my @columns;
+    $res{'string'} = $string;
     ($res{'alias'}, @columns) = split /\.($re_field$re_ph_access*)/o, $string;
     @columns = grep defined && length, @columns;
-    my $prev;
+
+    my $prev = $res{'alias'};
     foreach my $col (@columns) {
         my $string = $col;
         $col =~ s/^($re_field)//;
         my $field = $1;
-        my @phs = split /{\s*($re_cs_values|$re_ph)?\s*}/, $col;
+        my @phs = split /{\s*($re_cs_values|$re_ph|$re_binding)?\s*}/, $col;
         @phs = grep !defined || length, @phs;
         $col = {
             name => $field,
-            string => ($prev? $prev->{'string'} : $res{'alias'}) .".$string",
+            string => $prev .".$string",
         };
         $col->{'placeholders'} = \@phs if @phs;
         foreach my $ph ( grep defined, @phs ) {
-            if ( $ph =~ /^%([0-9]+)$/ ) {
+            if ( $ph =~ /^(%[0-9]+)$/ ) {
                 $ph = $1;
             }
             elsif ( $ph eq '?' ) {
-                $parser->fq( $ph = shift @{ $self->{'bindings'} } );
+                $ph = '?';
             }
             else {
                 my @values;
@@ -428,19 +648,19 @@ sub parse_column {
                 $ph = \@values;
             }
         }
-        $prev = $col;
+        $prev = $col->{'string'};
     }
     $res{'chain'} = \@columns;
     return \%res;
 }
 
-sub find_column {
+sub qualify_column {
     my $self = shift;
-    my $string = shift;
+    my $meta = shift;
     my $aliases = shift;
     my $collection = shift || $self->{'collection'};
 
-    my $meta = $self->parse_column($string);
+    return $meta if $meta->{'is_qualified'}++;
 
     my $start_from = $meta->{'alias'};
     my ($item, $last);
@@ -448,10 +668,12 @@ sub find_column {
         $item = $collection->new_item;
     } else {
         my $alias = $aliases->{ $start_from }
-            || die "alias '$start_from' is not declared";
+            || die "Couldn't find alias '$start_from'";
+
+        $self->qualify_column( $alias, $aliases, $collection );
 
         $last = $alias;
-        $item = $alias->{'refers_to'};
+        $item = $alias->{'chain'}[-1]{'refers_to'};
         unless ( $item ) {
             die "last column in alias '$start_from' is not a reference";
         }
@@ -459,53 +681,34 @@ sub find_column {
     }
 
     my @chain = @{ $meta->{'chain'} };
-
     while ( my $joint = shift @chain ) {
         my $name = $joint->{'name'};
-        my $column =
-            $self->{'additional_columns'}{ref $item}{$name}
-            || $item->column( $name );
-        die ref($item) ." has no column '$name'" unless $column;
 
-        my %res = (
-            string       => $joint->{'string'},
-            previous     => $last,
-            column       => $column,
-            placeholders => $joint->{'placeholders'},
-        );
+        my $column = $self->get_reference( $item => $name );
+
+        $joint->{'column'} = $column;
+        $joint->{'on'} = $item;
 
         my $classname = $column->refers_to;
         if ( !$classname && @chain ) {
-            die "column '$name' of ". ref($item) ." is not a reference, but used so in '$string'";
+            die "column '$name' of ". ref($item) ." is not a reference, but used so in '". $meta->{'string'} ."'";
         }
-        return \%res unless $classname;
+        return $meta unless $classname;
 
         if ( UNIVERSAL::isa( $classname, 'Jifty::DBI::Collection' ) ) {
-            $res{'refers_to'} = $classname->new( handle => $collection->_handle );
-            $item = $res{'refers_to'}->new_item;
+            $joint->{'refers_to'} = $classname->new( handle => $collection->_handle );
+            $item = $joint->{'refers_to'}->new_item;
         }
         elsif ( UNIVERSAL::isa( $classname, 'Jifty::DBI::Record' ) ) {
-            $res{'refers_to'} = $item = $classname->new( handle => $collection->_handle )
+            $joint->{'refers_to'} = $item = $classname->new( handle => $collection->_handle )
         }
         else {
             die "Column '$name' refers to '$classname' which is not record or collection";
         }
-        $last = \%res;
+        $last = $joint;
     }
 
-    return $last;
-}
-
-sub apply_callback_to_tree {
-    my ($self, $tree, $cb) = @_;
-
-    foreach my $entry ( @$tree ) {
-        if ( ref $entry eq 'ARRAY' ) {
-            $self->apply_callback_to_tree( $entry, $cb );
-        } elsif ( ref $entry eq 'HASH' ) {
-            $cb->( $entry );
-        }
-    }
+    return $meta;
 }
 
 sub external_reference {
@@ -516,34 +719,34 @@ sub external_reference {
     my $column = $args{'column'};
     my $name   = $column->name;
 
-    my $aliases = { __record__ => {
-        string    => '__record__',
-        previous  => undef,
-        column    => $column,
-        refers_to => $column->refers_to->new( handle => $self->{'collection'}->_handle ),
-        sql_alias => $self->{'collection'}->new_alias( $record ),
+    my $aliases;
+    local $self->{'aliases'} = $aliases = { __record__ => {
+        string       => '.__record__',
+        alias        => '',
+        is_qualified => 1,
+        chain        => [ {
+            name      => '__record__',
+            refers_to => $record,
+            sql_alias => $self->{'collection'}->new_alias( $record ),
+        } ],
     } };
 
     my $column_cb = sub {
         my $str = shift;
         $str = "__record__". $str if 0 == rindex $str, '.', 0;
         substr($str, 0, length($name)) = '' if 0 == rindex $str, "$name.", 0;
-        return $self->find_column($str, $aliases);
+        return $self->qualify_column($self->parse_column($str), $aliases);
     };
     my $conditions = $parser->as_array(
         $column->tisql,
         operand_cb => sub {
-            return $self->parse_condition( $_[0], $column_cb )
+            return $self->parse_condition( 'join', $_[0], $column_cb )
         },
     );
     $conditions = [
         $conditions, 'AND',
         {
-            lhs => {
-                string   => '__record__.id',
-                previous => $aliases->{'__record__'},
-                column   => $record->column('id'),
-            },
+            lhs => $self->qualify_column($self->parse_column('__record__.id'), $aliases),
             op => '=',
             rhs => $record->id || 0,
         },
@@ -551,53 +754,6 @@ sub external_reference {
     $self->apply_query_tree( $conditions );
 
     return $self;
-}
-
-{
-my %cache;
-my $i = 0;
-my $aliases;
-my $merge_joins_cb = sub {
-    my $meta = shift;
-    my @parts = split /\./, $meta->{'string'};
-    while ( @parts > 2 ) {
-        my $new_str = join '.', splice @parts, 0, 2;
-        my $m = $cache{ $new_str };
-        unless ( $m ) {
-            my $name = 'a'. ++$i;
-            $name = "a". ++$i while exists $aliases->{ $name };
-            $m = {
-                name     => $name,
-                string   => $new_str,
-                column    => $meta->{'column'},
-                previous => $meta->{'previous'},
-            };
-            $cache{ $new_str } = $aliases->{ $name } = $m;
-        }
-        # XXX: no more chain
-        shift @{ $meta->{'chain'} };
-        unshift @parts, $m->{'name'};
-        $meta->{'previous'} = $m;
-        $meta->{'string'} = join '.', @parts;
-    }
-};
-
-sub merge_joins {
-    my $self = shift;
-    my $tree = shift;
-    %cache = ();
-    $aliases = $tree->{'aliases'};
-
-    $merge_joins_cb->( $_ ) foreach values %$aliases;
-    $self->apply_callback_to_tree(
-        $tree->{'conditions'},
-        sub {
-            my $condition = shift;
-            $merge_joins_cb->( $_ ) foreach
-                grep ref $_, map $condition->{$_}, qw(lhs rhs);
-        }
-    );
-}
 }
 
 1;
