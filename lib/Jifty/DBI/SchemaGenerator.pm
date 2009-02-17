@@ -277,12 +277,25 @@ sub _db_schema_table_from_model {
         next if (!$model->can('schema_version') or !defined $model->schema_version)
             and defined $column->till;
 
+        # Encode default values
+        my $default = $column->default;
+        if (defined $default) {
+            $model->_handle($self->handle);
+            $model->_apply_input_filters(
+                column    => $column,
+                value_ref => \$default,
+            );
+            $model->_handle(undef);
+        } else {
+            $default = '';
+        }
+
         push @cols,
             DBIx::DBSchema::Column->new(
             {   name     => $column->name,
                 type     => $column->type,
                 null     => $column->mandatory ? 0 : 1,
-                default  => $column->default ||'',
+                default  => $default,
             }
             );
 
