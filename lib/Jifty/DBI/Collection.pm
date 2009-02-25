@@ -152,6 +152,7 @@ sub clean_slate {
     delete $self->{$_} for qw(
         items
         joins
+        explicit_joins_order
         raw_rows
         count_all
         subclauses
