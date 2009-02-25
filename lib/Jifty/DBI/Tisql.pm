@@ -231,7 +231,7 @@ sub apply_query_condition {
 
         my %limit = (
             subclause        => 'tisql',
-            alias            => $self->resolve_join( $condition->{'lhs'} ),
+            alias            => $self->resolve_join( $condition->{'lhs'}, use_subjoin => 1 ),
             column           => $condition->{'lhs'}{'chain'}[-1]{'name'},
             operator         => $op,
         );
@@ -270,14 +270,19 @@ sub apply_query_condition {
 sub resolve_join {
     my $self = shift;
     my $meta = shift;
+    my %args = (
+        aliases => undef,
+        resolve_last => 0,
+        use_subjoin => 0,
+        @_
+    );
     my $aliases = shift || $self->{'aliases'} || {};
-    my $resolve_last = shift || 0;
 
     return $meta->{'chain'}[-1]{'sql_alias'}
-        if $resolve_last && $meta->{'chain'}[-1]{'sql_alias'};
+        if $args{'resolve_last'} && $meta->{'chain'}[-1]{'sql_alias'};
 
     if ( my $prev = $meta->{'chain'}[-2] ) {
-        return $prev->{'sql_alias'} if !$resolve_last && $prev->{'sql_alias'};
+        return $prev->{'sql_alias'} if !$args{'resolve_last'} && $prev->{'sql_alias'};
     }
 
     my $collection = $self->{'collection'};
@@ -290,7 +295,7 @@ sub resolve_join {
         my $item = $target->{'chain'}[-1]{'refers_to'}
             or die "Last column of alias '$alias' is not a reference";
         %last = (
-            sql_alias => $self->resolve_join( $aliases->{ $alias }, $aliases, 1 ),
+            sql_alias => $self->resolve_join( $aliases->{ $alias }, aliases => $aliases, resolve_last => 1 ),
             item => $item,
         );
     } else {
@@ -301,14 +306,18 @@ sub resolve_join {
     }
 
     my @chain = @{ $meta->{'chain'} };
-    pop @chain unless $resolve_last;
+    pop @chain unless $args{'resolve_last'};
 
+
+    my @aliases = ();
     while ( my $joint = shift @chain ) {
         my $linear = $self->linearize_join( $last{'item'}, $joint->{'name'} );
 
         $linear->[0]{'sql_alias'} = $last{'sql_alias'};
-        $_->{'sql_alias'} = $collection->new_alias( $_->{'model'}, 'LEFT' )
-            foreach @{$linear}[1 .. @$linear - 1];
+        foreach ( @{$linear}[1 .. @$linear - 1] ) {
+            $_->{'sql_alias'} = $collection->new_alias( $_->{'model'}, 'LEFT' );
+            push @aliases, $_->{'sql_alias'};
+        }
 
         foreach my $table ( @$linear ) {
             next unless $table->{'conditions'};
@@ -362,6 +371,19 @@ sub resolve_join {
         $last{'sql_alias'} = $joint->{'sql_alias'} = $linear->[-1]{'sql_alias'};
         $last{'item'}  = $linear->[-1]{'model'};
     }
+    if ( !$args{'use_subjoin'} || @aliases < 2 ) {
+        push @{ $collection->{'explicit_joins_order'} ||= [] }, @aliases;
+    } else {
+        push @{ $collection->{'explicit_joins_order'} ||= [] }, {
+            chain => \@aliases,
+            criteria => delete $collection->{'joins'}{$aliases[0]}{'criteria'},
+        };
+        foreach ( @aliases ) {
+            $collection->{'joins'}{ $_ }{'type'} = 'CROSS';
+            $collection->{'joins'}{ $_ }{'alias_string'} =~ s/LEFT //i;
+        }
+    }
+#    Test::More::diag( Dumper($meta, $collection, \@aliases) );
 
     return $last{'sql_alias'};
 }
