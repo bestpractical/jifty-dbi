@@ -963,7 +963,7 @@ sub join {
 
     } else {
         $meta->{'alias_string'} = " JOIN " . $args{'table2'} . " $alias ";
-        $meta->{'type'}         = 'NORMAL';
+        $meta->{'type'}         = 'CROSS';
     }
     $meta->{'depends_on'}       = [ $args{'alias1'} ];
     $meta->{'is_distinct'}      = $args{'is_distinct'};
@@ -982,6 +982,65 @@ sub join {
     return ($alias);
 }
 
+sub _explicit_joins {
+    my $self = shift;
+    my %args = (
+        collection => undef,
+        chain      => undef,
+        add_main   => 1,
+        @_
+    );
+    my $collection = $args{'collection'};
+
+    my @chain = @{ $args{'chain'} };
+
+    my $join_clause = '';
+    if ( $args{'add_main'} ) {
+        $join_clause .= $collection->table . " main";
+    }
+    else {
+        my $meta = $collection->{'joins'}{ shift @chain };
+        die "boo ". Data::Dumper::Dumper($meta) if $meta->{'criteria'};
+        $join_clause .= $meta->{'table'} .' '. $meta->{'alias'};
+    }
+
+    foreach my $alias ( @chain ) {
+        my $meta = undef;
+        if ( ref $alias ) {
+            $meta = $alias;
+            my $clause = $self->_explicit_joins( collection => $collection, chain => $alias->{'chain'}, add_main => 0 );
+            $meta->{'alias_string'} = " LEFT JOIN ( $clause )";
+        } else {
+            $meta = $collection->{'joins'}{ $alias };
+        }
+
+        my $aggregator = $meta->{'entry_aggregator'} || 'AND';
+        my @tmp = map {
+            ref($_)
+                ? $_->{'column'} . ' '
+                . $_->{'operator'} . ' '
+                . $_->{'value'}
+                : $_
+        } map {
+            ( '(', @$_, ')', $aggregator )
+        } values %{ $meta->{'criteria'} };
+
+        # delete last aggregator
+        pop @tmp;
+        my $on_clause = CORE::join ' ', @tmp;
+
+        my $type = uc $meta->{'type'};
+        if ( !$on_clause && $type eq 'CROSS' ) {
+            $join_clause .= ' CROSS';
+        }
+        $join_clause .= $meta->{'alias_string'};
+
+        $join_clause .= ' ON '. $on_clause if $on_clause;
+    }
+
+    return $join_clause;
+}
+
 # this code is all hacky and evil. but people desperately want _something_ and I'm
 # super tired. refactoring gratefully appreciated.
 
@@ -990,6 +1049,9 @@ sub _build_joins {
     my $collection = shift;
 
     $self->_optimize_joins( collection => $collection );
+
+    return $self->_explicit_joins( collection => $collection, chain => $collection->{'explicit_joins_order'} )
+        if $collection->{'explicit_joins_order'};
 
     my @cross = grep { lc $_->{type} eq "cross" }
         values %{ $collection->{'joins'} };
@@ -1084,7 +1146,7 @@ sub _optimize_joins {
             );
 
         $joins->{$join}{'alias_string'} =~ s/^\s*LEFT\s+/ /i;
-        $joins->{$join}{'type'} = 'NORMAL';
+        $joins->{$join}{'type'} = 'CROSS';
     }
 
 }
