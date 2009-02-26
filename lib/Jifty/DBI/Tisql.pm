@@ -276,7 +276,7 @@ sub resolve_join {
         use_subjoin => 0,
         @_
     );
-    my $aliases = shift || $self->{'aliases'} || {};
+    my $aliases = $args{'aliases'} || $self->{'aliases'} || {};
 
     return $meta->{'chain'}[-1]{'sql_alias'}
         if $args{'resolve_last'} && $meta->{'chain'}[-1]{'sql_alias'};
