@@ -455,6 +455,7 @@ sub _linearize_join {
     my $join    = shift;
     my $inverse = shift;
     my $attach  = shift || {};
+    my $placeholders = shift;
 
     my $inverse_on = $inverse? '' : $join->{'via'}->name; 
 
@@ -471,7 +472,12 @@ sub _linearize_join {
         push @pnodes, $node;
         push @{ $pnodes[-1] }, $node = []
     };
-    $callback{'close_paren'} = sub { $node = pop @pnodes };
+    $callback{'close_paren'} = sub {
+        $node = pop @pnodes;
+        # filter out parens without conditions inside
+        splice( @{ $node->[-1] }, -2 )
+            unless @{ $node->[-1] };
+    };
     $callback{'operator'}    = sub { push @$node, $_[0] };
     $callback{'operand'}     = sub {
         my $cond = $_[0];
@@ -480,7 +486,23 @@ sub _linearize_join {
         my $set_condition_on;
 
         foreach my $side (qw(lhs rhs)) {
-            next unless ref $cond->{ $side } eq 'HASH';
+            unless ( ref $cond->{ $side } eq 'HASH' ) {
+                if ( $placeholders && $cond->{ $side } =~ /^%([0-9])+$/ ) {
+                    if ( exists $placeholders->[ $1 - 1 ] && defined $placeholders->[ $1 - 1 ] ) {
+                        my $phs = $placeholders->[ $1 - 1 ];
+                        if ( ref $phs ) {
+                            $phs = [ map $parser->dq($_), @{ $phs } ];
+                            $phs = $phs->[0] if @{ $phs } == 1;
+                        }
+                        $new_cond{ $side } = $phs;
+                    } else {
+                        # we have to drop condition
+                        pop @{ $node }; # delete operand
+                        return;
+                    }
+                }
+                next;
+            }
 
             my $col = $cond->{ $side };
             my @chain = @{ $col->{'chain'} };
@@ -503,13 +525,13 @@ sub _linearize_join {
                 my $description = $self->describe_join( $model => $ref->{'name'} );
                 if ( $cond->{$side}{'alias'} eq $inverse_on ) {
                     my $linear = $self->_linearize_join(
-                        $description, 'inverse', { to => $res[-1], place => $conditions },
+                        $description, 'inverse', { to => $res[-1], place => $conditions }, $ref->{'placeholders'} || [],
                     );
                     $last_join = $set_condition_on = $linear->[0];
                     splice @res, -1, 1, @$linear;
                 } else {
                     my $linear = $self->_linearize_join(
-                        $description, undef, { to => $res[0] },
+                        $description, undef, { to => $res[0] }, $ref->{'placeholders'} || [],
                     );
                     $last_join = $linear->[-1];
                     splice @res, 0, 1, @$linear;
@@ -655,20 +677,12 @@ sub parse_column {
             string => $prev .".$string",
         };
         $col->{'placeholders'} = \@phs if @phs;
-        foreach my $ph ( grep defined, @phs ) {
-            if ( $ph =~ /^(%[0-9]+)$/ ) {
-                $ph = $1;
+        foreach my $ph ( grep defined && $_ ne '?' && !/^%[0-9]+$/, @phs ) {
+            my @values;
+            while ( $ph =~ s/^($re_value)\s*,?\s*// ) {
+                push @values, $1;
             }
-            elsif ( $ph eq '?' ) {
-                $ph = '?';
-            }
-            else {
-                my @values;
-                while ( $ph =~ s/^($re_value)\s*,?\s*// ) {
-                    push @values, $1;
-                }
-                $ph = \@values;
-            }
+            $ph = \@values;
         }
         $prev = $col->{'string'};
     }
