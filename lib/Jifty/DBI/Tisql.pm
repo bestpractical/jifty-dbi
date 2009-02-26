@@ -308,7 +308,6 @@ sub resolve_join {
     my @chain = @{ $meta->{'chain'} };
     pop @chain unless $args{'resolve_last'};
 
-
     my @aliases = ();
     while ( my $joint = shift @chain ) {
         my $linear = $self->linearize_join( $last{'item'}, $joint->{'name'} );
@@ -346,7 +345,8 @@ sub resolve_join {
                         my $phs = $joint->{'placeholders'}[ $1 - 1 ];
                         return unless defined $phs;
                         if ( ref $phs ) {
-                            $limit{'value'} = [ map $parser->dq($_), @{ $phs } ],
+                            $limit{'value'} = [ map $parser->dq($_), @{ $phs } ];
+                            $limit{'value'} = $limit{'value'}->[0] if @{ $limit{'value'} } == 1;
                         }
                         elsif ( $phs eq '?' ) {
                             die "Not enough binding values provided for the query"
