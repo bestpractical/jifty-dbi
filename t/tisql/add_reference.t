@@ -130,8 +130,8 @@ CREATE TEMPORARY table users (
 q{
 CREATE TEMPORARY table user_to_groups (
     id integer primary key AUTO_INCREMENT,
-    user_id  integer,
-    group_id integer
+    person integer,
+    grp integer
 ) },
 q{
 CREATE TEMPORARY table groups (
@@ -151,8 +151,8 @@ CREATE TEMPORARY table users (
 q{
 CREATE TEMPORARY table user_to_groups (
     id serial primary key,
-    user_id integer,
-    group_id integer
+    person integer,
+    grp integer
 ) },
 q{
 CREATE TEMPORARY table groups (
@@ -171,8 +171,8 @@ sub schema_oracle { [
     "CREATE SEQUENCE user_to_groups_seq",
     "CREATE table user_to_groups (
         id integer CONSTRAINT user_to_groups_Key PRIMARY KEY,
-        user_id integer,
-        group_id integer
+        person integer,
+        grp integer
     )",
     "CREATE SEQUENCE groups_seq",
     "CREATE table groups (

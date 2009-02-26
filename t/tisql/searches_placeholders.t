@@ -93,7 +93,9 @@ sub schema_mysql {
 q{
 CREATE TEMPORARY table users (
     id integer primary key AUTO_INCREMENT,
-    login varchar(36)
+    test varchar(36),
+    login varchar(36),
+    name varchar(36)
 ) },
 ]
 }
@@ -103,7 +105,9 @@ sub schema_pg {
 q{
 CREATE TEMPORARY table users (
     id serial primary key,
-    login varchar(36)
+    test varchar(36),
+    login varchar(36),
+    name varchar(36)
 ) },
 ]
 }
@@ -112,7 +116,9 @@ sub schema_oracle { [
     "CREATE SEQUENCE users_seq",
     "CREATE table users (
         id integer CONSTRAINT users_Key PRIMARY KEY,
-        login varchar(36)
+        test varchar(36),
+        login varchar(36),
+        name varchar(36)
     )",
 ] }
 

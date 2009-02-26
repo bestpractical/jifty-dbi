@@ -65,7 +65,8 @@ SKIP: {
     ok $user->id, "loaded bob's record";
     my $attrs = $user->attrs;
     $attrs->order_by(column => 'value', order => 'asc');
-    is $attrs->count, 3, "found three bob's attribute";
+    is $attrs->count, 3, "found three bob's attribute"
+        or diag "bad sql query: ". $attrs->build_select_query;
     is $attrs->next->value, 'bar', "correct value";
     is $attrs->next->value, 'foo', "correct value";
     is $attrs->next->value, 'zoo', "correct value";
