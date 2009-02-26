@@ -755,6 +755,9 @@ sub external_reference {
     my $column = $args{'column'};
     my $name   = $column->name;
 
+    my $sql_alias = $self->{'collection'}->new_alias( $record );
+    push @{ $self->{'collection'}{'explicit_joins_order'} ||= [] }, $sql_alias;
+
     my $aliases;
     local $self->{'aliases'} = $aliases = { __record__ => {
         string       => '.__record__',
@@ -763,7 +766,7 @@ sub external_reference {
         chain        => [ {
             name      => '__record__',
             refers_to => $record,
-            sql_alias => $self->{'collection'}->new_alias( $record ),
+            sql_alias => $sql_alias,
         } ],
     } };
 
