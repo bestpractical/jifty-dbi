@@ -203,7 +203,7 @@ sub apply_query_condition {
             subclause        => 'tisql',
             leftjoin         => $join,
             entry_aggregator => $ea,
-            alias            => $self->resolve_join( $condition->{'lhs'} ),
+            alias            => $self->resolve_join( $condition->{'lhs'}, use_subjoin => (($op =~ /^is\b/i)? 1 : 0) ),
             column           => $condition->{'lhs'}{'chain'}[-1]{'name'},
             operator         => $op,
         );
