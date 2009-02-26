@@ -1787,7 +1787,6 @@ sub new_alias {
         table => $table,
         type  => $type,
         ( $class ? ( class => $class ) : () ),
-        alias_string => " $type JOIN $table $alias ",
         depends_on => [],
     };
 

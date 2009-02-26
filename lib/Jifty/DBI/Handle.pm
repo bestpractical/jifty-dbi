@@ -920,8 +920,9 @@ sub join {
     }
 
     if ( $args{'alias2'} ) {
-        if ( $args{'collection'}{'joins'}{ $args{alias2} } and lc $args{'collection'}{'joins'}{ $args{alias2} }{type} eq "cross" ) {
-            my $join = $args{'collection'}{'joins'}{ $args{alias2} };
+        my $joins = $args{'collection'}{'joins'};
+        if ( $joins->{ $args{alias2} } and lc $joins->{ $args{alias2} }{type} eq "cross" ) {
+            my $join = $joins->{ $args{alias2} };
             $args{'table2'} = $join->{table};
             $alias = $join->{alias};
         } else {
@@ -930,8 +931,8 @@ sub join {
             @args{qw/alias1 alias2/}   = @args{qw/alias2 alias1/};
             @args{qw/column1 column2/} = @args{qw/column2 column1/};
 
-            if ( $args{'collection'}{'joins'}{ $args{alias2} } and lc $args{'collection'}{'joins'}{ $args{alias2} }{type} eq "cross" ) {
-                my $join = $args{'collection'}{'joins'}{ $args{alias2} };
+            if ( $joins->{ $args{alias2} } and lc $joins->{ $args{alias2} }{type} eq "cross" ) {
+                my $join = $joins->{ $args{alias2} };
                 $args{'table2'} = $join->{table};
                 $alias = $join->{alias};
             } else {
@@ -955,15 +956,12 @@ sub join {
     }
 
     my $meta = $args{'collection'}->{'joins'}{$alias} ||= {};
-    $meta->{alias} = $alias;
+    $meta->{'table'} = $args{'table2'};
+    $meta->{'alias'} = $alias;
     if ( $args{'type'} =~ /LEFT/i ) {
-        $meta->{'alias_string'}
-            = " LEFT JOIN " . $args{'table2'} . " $alias ";
         $meta->{'type'} = 'LEFT';
-
     } else {
-        $meta->{'alias_string'} = " JOIN " . $args{'table2'} . " $alias ";
-        $meta->{'type'}         = 'CROSS';
+        $meta->{'type'} = 'CROSS';
     }
     $meta->{'depends_on'}       = [ $args{'alias1'} ];
     $meta->{'is_distinct'}      = $args{'is_distinct'};
@@ -1009,9 +1007,10 @@ sub _explicit_joins {
         if ( ref $alias ) {
             $meta = $alias;
             my $clause = $self->_explicit_joins( collection => $collection, chain => $alias->{'chain'}, add_main => 0 );
-            $meta->{'alias_string'} = " LEFT JOIN ( $clause )";
+            $join_clause .= " LEFT JOIN ( $clause )";
         } else {
             $meta = $collection->{'joins'}{ $alias };
+            $join_clause .= ' '. CORE::join(' ', $meta->{'type'}, 'JOIN', @{ $meta }{'table', 'alias'} );
         }
 
         my $aggregator = $meta->{'entry_aggregator'} || 'AND';
@@ -1027,15 +1026,12 @@ sub _explicit_joins {
 
         # delete last aggregator
         pop @tmp;
-        my $on_clause = CORE::join ' ', @tmp;
 
-        my $type = uc $meta->{'type'};
-        if ( !$on_clause && $type eq 'CROSS' ) {
-            $join_clause .= ' CROSS';
+        if ( @tmp ) {
+            $join_clause =~ s/CROSS //i
+                if $meta->{'type'} eq 'CROSS';
+            $join_clause .= ' ON '. CORE::join ' ', @tmp;
         }
-        $join_clause .= $meta->{'alias_string'};
-
-        $join_clause .= ' ON '. $on_clause if $on_clause;
     }
 
     return $join_clause;
@@ -1055,8 +1051,11 @@ sub _build_joins {
 
     my @cross = grep { lc $_->{type} eq "cross" }
         values %{ $collection->{'joins'} };
-    my $join_clause = ( $collection->table . " main" )
-        . CORE::join( " ", map { $_->{alias_string} } @cross );
+    my $join_clause = CORE::join( " ", 
+        ($collection->table ." main"),
+        map { ($_->{'type'}, 'JOIN', $_->{'table'}, $_->{'alias'}) }
+            @cross
+    );
     foreach my $j ( grep $_->{'criteria'}, @cross ) {
         while (my ($k, $v) = each %{ $j->{'criteria'} } ) {
             $collection->{restrictions}{ $j->{'alias'} . $k } = $v;
@@ -1080,7 +1079,7 @@ sub _build_joins {
             my $meta = $joins->{$join};
             my $aggregator = $meta->{'entry_aggregator'} || 'AND';
 
-            $join_clause .= $meta->{'alias_string'} . " ON ";
+            $join_clause .= ' '. CORE::join(' ', $meta->{'type'}, 'JOIN', @{$meta}{'table', 'alias'} ) . " ON ";
             my @tmp = map {
                 ref($_)
                     ? $_->{'column'} . ' '
@@ -1145,7 +1144,6 @@ sub _optimize_joins {
             alias      => $join
             );
 
-        $joins->{$join}{'alias_string'} =~ s/^\s*LEFT\s+/ /i;
         $joins->{$join}{'type'} = 'CROSS';
     }
 
