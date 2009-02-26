@@ -375,12 +375,12 @@ sub resolve_join {
         push @{ $collection->{'explicit_joins_order'} ||= [] }, @aliases;
     } else {
         push @{ $collection->{'explicit_joins_order'} ||= [] }, {
+            type => 'LEFT',
             chain => \@aliases,
             criteria => delete $collection->{'joins'}{$aliases[0]}{'criteria'},
         };
         foreach ( @aliases ) {
             $collection->{'joins'}{ $_ }{'type'} = 'CROSS';
-            $collection->{'joins'}{ $_ }{'alias_string'} =~ s/LEFT //i;
         }
     }
 #    Test::More::diag( Dumper($meta, $collection, \@aliases) );
