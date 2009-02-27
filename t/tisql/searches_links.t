@@ -46,11 +46,11 @@ SKIP: {
     run_our_cool_tests(
         $tasks_obj,
         ".links_to.dst_id = 2" => [qw(1_m_of_2)],
-        ".links_to{'member_of'}.dst_id = 2" => [qw(1_m_of_2)],
-        ".links_to{}{'task'}.dst_id = 2" => [qw(1_m_of_2)],
-        ".links_to{'member_of'}{'task'}.dst_id = 2" => [qw(1_m_of_2)],
-        ".links_from{'member_of'}{'task'}.src_id = 1" => [qw(2_has_m_1)],
-# TODO   ".linked_tasks.subject = '2_has_m_1'" => [qw(qwe)],
+        ".links_to{type => 'member_of'}.dst_id = 2" => [qw(1_m_of_2)],
+        ".links_to{model => 'task'}.dst_id = 2" => [qw(1_m_of_2)],
+        ".links_to{type => 'member_of'}{model => 'task'}.dst_id = 2" => [qw(1_m_of_2)],
+        ".links_from{type => 'member_of'}{model => 'task'}.src_id = 1" => [qw(2_has_m_1)],
+# TODO:        ".linked_tasks.subject = '2_has_m_1'" => [qw(qwe)],
         ".linked_to_tasks.subject = '2_has_m_1'" => [qw(1_m_of_2)],
         ".linked_from_tasks.subject = '1_m_of_2'" => [qw(2_has_m_1)],
         ".member_of.subject = '2_has_m_1'" => [qw(1_m_of_2)],
@@ -132,25 +132,26 @@ use Jifty::DBI::Record schema {
     column subject => type is 'varchar(32)';
 
     column links => refers_to TestApp::LinkCollection
-        by tisql => 'links.type = %1 AND ((links.src_model = "task" AND links.src_id = .id)
+        by tisql => 'links.type = %type AND ((links.src_model = "task" AND links.src_id = .id)
             OR (links.dst_model = "task" AND dst_id = .id))';
     column links_from => refers_to TestApp::LinkCollection
         by tisql => 'links_from.dst_model = "task" AND links_from.dst_id = .id'
-            .' AND links_from.type = %1 AND links_from.src_model = %2';
+            .' AND links_from.type = %type AND links_from.src_model = %model';
     column links_to => refers_to TestApp::LinkCollection
         by tisql => 'links_to.src_model = "task" AND links_to.src_id = .id'
-            .' AND links_to.type = %1 AND links_to.dst_model = %2';
+            .' AND links_to.type = %type AND links_to.dst_model = %model';
 
     column linked_tasks => refers_to TestApp::TaskCollection
-        by tisql => 'linked_tasks.id = .links_from{%1}{"task"}.src_id OR linked_tasks.id = .links_to{%1}{"task"}.dst_id';
+        by tisql => 'linked_tasks.id = .links_from{type => %type}{model => "task"}.src_id'
+            .' OR linked_tasks.id = .links_to{type => %type}{model => "task"}.dst_id';
 
     column linked_to_tasks => refers_to TestApp::TaskCollection
-        by tisql => 'linked_to_tasks.id = .links_to{%1}{"task"}.dst_id';
+        by tisql => 'linked_to_tasks.id = .links_to{type => %type}{model => "task"}.dst_id';
     column linked_from_tasks => refers_to TestApp::TaskCollection
-        by tisql => 'linked_from_tasks.id = .links_from{%1}{"task"}.src_id';
+        by tisql => 'linked_from_tasks.id = .links_from{type => %type}{model => "task"}.src_id';
 
     column member_of => refers_to TestApp::TaskCollection
-        by tisql => 'member_of.id = .links_to{"member_of"}{"task"}.dst_id';
+        by tisql => 'member_of.id = .links_to{type => "member_of"}{model => "task"}.dst_id';
 };
 
 sub init_data {

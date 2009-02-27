@@ -51,39 +51,39 @@ SKIP: {
         # has no attrs
         ".attrs.id IS NULL"       => [qw(a- m-)],
         "has no .attrs"           => [qw(a- m-)],
-        ".attrs{'a'}.id IS NULL"  => [qw(a- m- aba abb abc acc mba mbb mbc mcc)],
-        "has no .attrs{'a'}"      => [qw(a- m- aba abb abc acc mba mbb mbc mcc)],
-        "has no .attrs{'a', 'b'}" => [qw(a- m- acc mcc)],
+        ".attrs{ name => 'a'}.id IS NULL"  => [qw(a- m- aba abb abc acc mba mbb mbc mcc)],
+        "has no .attrs{name => 'a'}"      => [qw(a- m- aba abb abc acc mba mbb mbc mcc)],
+        "has no .attrs{name => 'a', 'b'}" => [qw(a- m- acc mcc)],
 
         # has attrs
         ".attrs.id IS NOT NULL" => [qw(aaa aab aac aaaab aabac aacaa aba abb abc acc maa mab mac maaab mabac macaa mba mbb mbc mcc)],
         "has .attrs"            => [qw(aaa aab aac aaaab aabac aacaa aba abb abc acc maa mab mac maaab mabac macaa mba mbb mbc mcc)],
-        ".attrs{'a'}.id IS NOT NULL" => [qw(aaa aab aac aaaab aabac aacaa maa mab mac maaab mabac macaa)],
-        "has .attrs{'a'}"            => [qw(aaa aab aac aaaab aabac aacaa maa mab mac maaab mabac macaa)],
-        "has .attrs{'b','c'}"            => [qw(aba abb abc acc mba mbb mbc mcc)],
+        ".attrs{name => 'a'}.id IS NOT NULL" => [qw(aaa aab aac aaaab aabac aacaa maa mab mac maaab mabac macaa)],
+        "has .attrs{name => 'a'}"            => [qw(aaa aab aac aaaab aabac aacaa maa mab mac maaab mabac macaa)],
+        "has .attrs{name => 'b','c'}"            => [qw(aba abb abc acc mba mbb mbc mcc)],
 
         # attr = x
         ".attrs.value = 'no'" => [qw()],
         ".attrs.value = 'a'" => [qw(aaa aaaab aacaa aba maa maaab macaa mba)],
-        ".attrs{'a'}.value = 'a'" => [qw(aaa aaaab aacaa maa maaab macaa)],
-        ".attrs{'a', 'b'}.value = 'c'" => [qw(aac aacaa aabac abc mac macaa mabac mbc)],
+        ".attrs{name => 'a'}.value = 'a'" => [qw(aaa aaaab aacaa maa maaab macaa)],
+        ".attrs{name => 'a', 'b'}.value = 'c'" => [qw(aac aacaa aabac abc mac macaa mabac mbc)],
         "has .attrs.value = 'no'" => [qw()],
         "has .attrs.value = 'a'" => [qw(aaa aaaab aacaa aba maa maaab macaa mba)],
-        "has .attrs{'a'}.value = 'a'" => [qw(aaa aaaab aacaa maa maaab macaa)],
-        "has .attrs{'a', 'b'}.value = 'c'" => [qw(aac aacaa aabac abc mac macaa mabac mbc)],
+        "has .attrs{name => 'a'}.value = 'a'" => [qw(aaa aaaab aacaa maa maaab macaa)],
+        "has .attrs{name => 'a', 'b'}.value = 'c'" => [qw(aac aacaa aabac abc mac macaa mabac mbc)],
 
         # attr != x
         ".attrs.value != 'no'" => [qw(a- aaa aab aac aaaab aabac aacaa aba abb abc acc m- maa mab mac maaab mabac macaa mba mbb mbc mcc)],
         ".attrs.value != 'a'" => [qw(a- aab aac aabac abb abc acc m- mab mac mabac mbb mbc mcc)],
-        ".attrs{'a'}.value != 'a'" => [qw(a- aab aac aabac aba abb abc acc m- mab mac mabac mba mbb mbc mcc)],
+        ".attrs{name => 'a'}.value != 'a'" => [qw(a- aab aac aabac aba abb abc acc m- mab mac mabac mba mbb mbc mcc)],
 
         # attr = x and/or attr = y
         ".attrs.value = 'no' AND .attrs.value = 'a'" => [qw()],
         ".attrs.value = 'no' OR  .attrs.value = 'a'" => [qw(aaa aaaab aacaa aba maa maaab macaa mba)],
         ".attrs.value = 'a' AND .attrs.value = 'b'" => [qw(aaaab maaab)],
         ".attrs.value = 'a' OR  .attrs.value = 'b'" => [qw(aaa aaaab aacaa aba maa maaab macaa mba aab abb mab mbb aabac mabac)],
-        ".attrs{'a'}.value = 'a' AND .attrs{'b'}.value = 'b'" => [qw()],
-        ".attrs{'a'}.value = 'a' OR .attrs{'b'}.value = 'b'" => [qw(aaa aaaab aacaa abb maa maaab macaa mbb)],
+        ".attrs{name => 'a'}.value = 'a' AND .attrs{name => 'b'}.value = 'b'" => [qw()],
+        ".attrs{name => 'a'}.value = 'a' OR .attrs{name => 'b'}.value = 'b'" => [qw(aaa aaaab aacaa abb maa maaab macaa mbb)],
 
 
         # tag != x and/or tag = y
@@ -91,12 +91,12 @@ SKIP: {
         ".attrs.value != 'no' OR  .attrs.value = 'a'" => [qw(a- aab aac aabac abb abc m- mab mac mabac mbb mbc acc mcc aaa aaaab aacaa aba maa maaab macaa mba)],
         ".attrs.value != 'a' AND .attrs.value = 'b'" => [qw(abb mbb aab aabac mab mabac)],
         ".attrs.value != 'a' OR  .attrs.value = 'b'" => [qw(a- aab aac aabac abb abc m- mab mac mabac mbb mbc acc mcc aaaab maaab)],
-        ".attrs{'a'}.value != 'a' AND .attrs{'b'}.value = 'b'" => [qw(abb mbb)],
-        ".attrs{'a'}.value != 'a' OR .attrs{'b'}.value = 'b'" => [qw(a- aab aac aabac aba abc m- mab mac mabac mba mbc acc mcc abb mbb)],
+        ".attrs{name => 'a'}.value != 'a' AND .attrs{name => 'b'}.value = 'b'" => [qw(abb mbb)],
+        ".attrs{name => 'a'}.value != 'a' OR .attrs{name => 'b'}.value = 'b'" => [qw(a- aab aac aabac aba abc m- mab mac mabac mba mbc acc mcc abb mbb)],
 
         # has .tag != x
         "has .attrs.value != 'a'" => [qw(aab aac aaaab aabac aacaa abb abc mab mac maaab mabac macaa mbb mbc acc mcc)],
-        "has .attrs{'a'}.value != 'b'" => [qw(aaa aac aaaab aabac aacaa maa mac maaab mabac macaa)],
+        "has .attrs{name => 'a'}.value != 'b'" => [qw(aaa aac aaaab aabac aacaa maa mac maaab mabac macaa)],
 
 #        # has no .tag != x
 #        "has no .attrs.value != 'no'" => [qw(a m)],
@@ -186,7 +186,7 @@ use Jifty::DBI::Record schema {
     column type => type is 'varchar(36)';
     column subject => type is 'varchar(36)';
     column attrs => refers_to TestApp::AttributeCollection
-        by tisql => "attrs.node = .id AND attrs.name = %1";
+        by tisql => "attrs.node = .id AND attrs.name = %name";
 };
 }
 

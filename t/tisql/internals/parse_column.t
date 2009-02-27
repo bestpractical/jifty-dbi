@@ -22,59 +22,65 @@ sub parse_ok($$) {
 
 parse_ok ".col" => {
     alias   => '',
-    chain   => [{ name => 'col', string => '.col' }],
+    chain   => [{ name => 'col', string => '.col', placeholders => {} }],
 };
 
 parse_ok "alias.col" => {
     alias   => 'alias',
-    chain   => [{ name => 'col', string => 'alias.col' }],
+    chain   => [{ name => 'col', string => 'alias.col', placeholders => {} }],
 };
 
 parse_ok ".col.id" => {
     alias   => '',
-    chain   => [{ name => 'col', string => '.col' }, { name => 'id', string => '.col.id' }],
+    chain   => [
+        { name => 'col', string => '.col', placeholders => {} },
+        { name => 'id', string => '.col.id', placeholders => {} },
+    ],
 };
 
 parse_ok "alias.col.id" => {
     alias   => 'alias',
-    chain   => [{ name => 'col', string => 'alias.col' }, { name => 'id', string => 'alias.col.id' }],
+    chain   => [
+        { name => 'col', string => 'alias.col', placeholders => {} },
+        { name => 'id', string => 'alias.col.id', placeholders => {} },
+    ],
 };
 
 # place holders
-parse_ok ".col{'v'}" => {
+parse_ok ".col{k=>'v'}" => {
     alias   => '',
-    chain   => [{ name => 'col', string => ".col{'v'}", placeholders => [["'v'"]] }],
+    chain   => [{ name => 'col', string => ".col{k=>'v'}", placeholders => { k => ["'v'"] } }],
 };
 
-parse_ok ".col{'v1', 'v2'}" => {
+parse_ok ".col{ k => 'v1', 'v2' }" => {
     alias   => '',
-    chain   => [{ name => 'col', string => ".col{'v1', 'v2'}", placeholders => [["'v1'", "'v2'"]] }],
+    chain   => [{ name => 'col', string => ".col{ k => 'v1', 'v2' }", placeholders => { k => ["'v1'", "'v2'"] } }],
 };
 
-parse_ok ".col{'v11', 'v12'}{'v21', 'v22'}" => {
+parse_ok ".col{ foo =>'v11', 'v12'}{bar=> 'v21', 'v22'}" => {
     alias   => '',
-    chain   => [{ name => 'col', string => ".col{'v11', 'v12'}{'v21', 'v22'}", placeholders => [["'v11'", "'v12'"], ["'v21'", "'v22'"]] }],
+    chain   => [{ name => 'col', string => ".col{ foo =>'v11', 'v12'}{bar=> 'v21', 'v22'}", placeholders => { foo => ["'v11'", "'v12'"], bar => ["'v21'", "'v22'"]} }],
 };
 
 # bindings in placeholder
-parse_ok ".col{?}" => {
+parse_ok ".col{k => ?}" => {
     alias   => '',
-    chain   => [{ name => 'col', string => ".col{?}", placeholders => ['?'] }],
+    chain   => [{ name => 'col', string => ".col{k => ?}", placeholders => { k => '?' } }],
 };
 
-parse_ok ".col{?}{?}" => {
+parse_ok ".col{foo => ?}{ bar => ? }" => {
     alias   => '',
-    chain   => [{ name => 'col', string => ".col{?}{?}", placeholders => ['?', '?'] }],
+    chain   => [{ name => 'col', string => ".col{foo => ?}{ bar => ? }", placeholders => { foo => '?', bar => '?' } }],
 };
 
-parse_ok ".col{%1}" => {
+parse_ok ".col{ foo => %bar }" => {
     alias   => '',
-    chain   => [{ name => 'col', string => ".col{%1}", placeholders => ['%1'] }],
+    chain   => [{ name => 'col', string => ".col{ foo => %bar }", placeholders => { foo => '%bar' } }],
 };
 
-parse_ok ".col{%1}{%3}" => {
+parse_ok ".col{ foo => %foo }{bar=>%zoo}" => {
     alias   => '',
-    chain   => [{ name => 'col', string => ".col{%1}{%3}", placeholders => ['%1', '%3'] }],
+    chain   => [{ name => 'col', string => ".col{ foo => %foo }{bar=>%zoo}", placeholders => { foo => '%foo', bar => '%zoo' } }],
 };
 
 1;

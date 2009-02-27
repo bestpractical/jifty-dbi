@@ -16,14 +16,15 @@ use Regexp::Common qw(delimited);
 my $re_delim      = qr{$RE{delimited}{-delim=>qq{\'\"}}};
 my $re_field      = qr{[a-zA-Z][a-zA-Z0-9_]*};
 my $re_alias_name = $re_field;
-my $re_ph         = qr{%[1-9][0-9]*};
+my $re_ph_name    = qr{[a-z][a-z_]*};
+my $re_ph         = qr{%$re_ph_name};
 my $re_binding    = qr{\?};
 
 my $re_value      = qr{$re_delim|[0-9.]+};
 my $re_value_ph   = qr{$re_value|$re_ph};
 my $re_value_ph_b = qr{$re_value_ph|$re_binding};
 my $re_cs_values  = qr{$re_value(?:\s*,\s*$re_value)*};
-my $re_ph_access  = qr{{\s*(?:$re_cs_values|$re_ph|$re_binding)?\s*}};
+my $re_ph_access  = qr{{\s*$re_ph_name\s*=>\s*(?:$re_cs_values|$re_ph|$re_binding)\s*}};
 my $re_column     = qr{$re_alias_name?(?:\.$re_field$re_ph_access*)+};
 my $re_alias      = qr{$re_column\s+AS\s+$re_alias_name}i;
 
@@ -339,11 +340,10 @@ sub resolve_join {
                         $limit{'quote_value'} = 0;
                         $limit{'value'} = $cond->{'rhs'}{'table'}{'sql_alias'} .'.'. $cond->{'rhs'}{'column'};
                     }
-                    elsif ( $cond->{'rhs'} =~ /^%(\d+)$/ ) {
-                        return unless exists $joint->{'placeholders'}[ $1 - 1 ];
-
-                        my $phs = $joint->{'placeholders'}[ $1 - 1 ];
+                    elsif ( $cond->{'rhs'} =~ /^%($re_ph_name)$/o ) {
+                        my $phs = $joint->{'placeholders'}{ $1 };
                         return unless defined $phs;
+
                         if ( ref $phs ) {
                             $limit{'value'} = [ map $parser->dq($_), @{ $phs } ];
                             $limit{'value'} = $limit{'value'}->[0] if @{ $limit{'value'} } == 1;
@@ -488,9 +488,8 @@ sub _linearize_join {
 
         foreach my $side (qw(lhs rhs)) {
             unless ( ref $cond->{ $side } eq 'HASH' ) {
-                if ( $placeholders && $cond->{ $side } =~ /^%([0-9])+$/ ) {
-                    if ( exists $placeholders->[ $1 - 1 ] && defined $placeholders->[ $1 - 1 ] ) {
-                        my $phs = $placeholders->[ $1 - 1 ];
+                if ( $placeholders && $cond->{ $side } =~ /^%($re_ph_name)$/o ) {
+                    if ( defined ( my $phs = $placeholders->{ $1 } ) ) {
                         if ( ref $phs ) {
                             $phs = [ map $parser->dq($_), @{ $phs } ];
                             $phs = $phs->[0] if @{ $phs } == 1;
@@ -526,14 +525,14 @@ sub _linearize_join {
                 my $description = $self->describe_join( $model => $ref->{'name'} );
                 if ( $cond->{$side}{'alias'} eq $inverse_on ) {
                     my $linear = $self->_linearize_join(
-                        $description, 'inverse', { to => $res[$right_border], place => $conditions }, $ref->{'placeholders'} || [],
+                        $description, 'inverse', { to => $res[$right_border], place => $conditions }, $ref->{'placeholders'},
                     );
                     $last_join = $set_condition_on = $linear->[0];
                     splice @res, $right_border, 1, @$linear;
                     $right_border -= (@$linear - 1);
                 } else {
                     my $linear = $self->_linearize_join(
-                        $description, undef, { to => $res[$left_border] }, $ref->{'placeholders'} || [],
+                        $description, undef, { to => $res[$left_border] }, $ref->{'placeholders'},
                     );
                     $last_join = $linear->[-1];
                     splice @res, $left_border, 1, @$linear;
@@ -641,17 +640,18 @@ sub check_query_condition {
 
 # returns something like:
 # {
-#   'string'  => 'nodes.attr{"category"}.value',
+#   'string'  => 'nodes.attr{name => "category"}.value',
 #   'alias'   => 'nodes',                            # alias or ''
 #   'chain'   => [
 #        {
 #          'name' => 'attr',
-#          'string' => 'nodes.attr{"category"}',
-#          'placeholders' => ['"category"'],
+#          'string' => 'nodes.attr{name => "category"}',
+#          'placeholders' => {name => '"category"'},
 #        },
 #        {
 #          'name' => 'value',
-#          'string' => 'nodes.attr{"category"}.value'
+#          'string' => 'nodes.attr{name => "category"}.value'
+#          'placeholders' => {},
 #        }
 #   ],
 # }
@@ -674,14 +674,16 @@ sub parse_column {
         my $string = $col;
         $col =~ s/^($re_field)//;
         my $field = $1;
-        my @phs = split /{\s*($re_cs_values|$re_ph|$re_binding)?\s*}/, $col;
-        @phs = grep !defined || length, @phs;
+
+        my @phs = split /{\s*($re_ph_name)\s*=>\s*($re_cs_values|$re_ph|$re_binding)\s*}/, $col;
+        @phs = grep !defined || length, @phs; # skip delimiters
+
         $col = {
             name => $field,
             string => $prev .".$string",
         };
-        $col->{'placeholders'} = \@phs if @phs;
-        foreach my $ph ( grep defined && $_ ne '?' && !/^%[0-9]+$/, @phs ) {
+        $col->{'placeholders'} = { @phs };
+        foreach my $ph ( grep $_ ne '?' && !/^$re_ph$/o, values %{ $col->{'placeholders'} } ) {
             my @values;
             while ( $ph =~ s/^($re_value)\s*,?\s*// ) {
                 push @values, $1;
