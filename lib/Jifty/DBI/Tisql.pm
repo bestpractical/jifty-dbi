@@ -541,6 +541,7 @@ sub _linearize_join {
                 }
 
                 $model = $self->get_reference( $model => $ref->{'name'} )->refers_to->new;
+                $model = $model->new_item if $model->isa('Jifty::DBI::Collection');
             }
             push @$node, [ shift @$conditions, map +( 'AND' => $_ ), @$conditions ]
                 if @$conditions;
