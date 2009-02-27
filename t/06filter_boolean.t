@@ -6,7 +6,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 136;
+use constant TESTS_PER_DRIVER => 139;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -105,6 +105,9 @@ SKIP: {
     ok($rec->load($id), 'loaded record');
     is($rec->id, $id, 'record id matches');
     is($rec->other_data, 0, 'default mandatory column is false, not undef');
+    is($rec->def_t, 1, 'default is correct if given as "t"');
+    is($rec->def_one, 1, 'default is correct if given as 1');
+    is($rec->def_zero, 0, 'default is correct if given as 0');
 
     $rec->set_other_data(1);
     is($rec->other_data, 1, 'mandatory column is now true');
@@ -126,7 +129,10 @@ sub schema_sqlite {
 CREATE table users (
     id integer primary key,
     my_data boolean,
-    other_data boolean not null
+    other_data boolean not null,
+    def_t boolean default true,
+    def_one boolean default true,
+    def_zero boolean default true
 )
 EOF
 
@@ -138,7 +144,10 @@ sub schema_mysql {
 CREATE TEMPORARY table users (
     id integer auto_increment primary key,
     my_data boolean,
-    other_data boolean not null
+    other_data boolean not null,
+    def_t boolean default true,
+    def_one boolean default true,
+    def_zero boolean default false
 )
 EOF
 
@@ -150,7 +159,10 @@ sub schema_pg {
 CREATE TEMPORARY table users (
     id serial primary key,
     my_data boolean,
-    other_data boolean not null
+    other_data boolean not null,
+    def_t boolean default true,
+    def_one boolean default true,
+    def_zero boolean default false
 )
 EOF
 
@@ -166,6 +178,18 @@ BEGIN {
     column other_data =>
         is boolean,
         is mandatory;
+
+    column def_t =>
+        is boolean,
+        default is 't';
+
+    column def_one =>
+        is boolean,
+        default is 1;
+
+    column def_zero =>
+        is boolean,
+        default is 0;
     }
 }
 

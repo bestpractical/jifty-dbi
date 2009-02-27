@@ -880,7 +880,6 @@ L<Jifty::DBI::Collection> object'.
 
 This performs the join.
 
-
 =cut
 
 sub join {

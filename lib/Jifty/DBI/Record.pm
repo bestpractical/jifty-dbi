@@ -787,9 +787,9 @@ sub __raw_value {
     # In the default case of "yeah, we have a value", return it as
     # fast as we can.
     return $self->{'raw_values'}{$column_name}
-      if $self->{'raw_fetched'}{$column_name};
+      if $self->{'fetched'}{$column_name};
 
-    if ( !$self->{'raw_fetched'}{$column_name} and my $id = $self->id() ) {
+    if ( !$self->{'fetched'}{$column_name} and my $id = $self->id() ) {
         my $pkey = $self->_primary_key();
         my $query_string =
             "SELECT "
@@ -800,7 +800,7 @@ sub __raw_value {
         my $sth = $self->_handle->simple_query( $query_string, $id );
         my ($value) = eval { $sth->fetchrow_array() };
         $self->{'raw_values'}{$column_name}  = $value;
-        $self->{'raw_fetched'}{$column_name} = 1;
+        $self->{'fetched'}{$column_name} = 1;
     }
 
     return $self->{'raw_values'}{$column_name};
@@ -842,15 +842,17 @@ sub __value {
 
     my $column_name = $column->name;
 
-
     # In the default case of "yeah, we have a value", return it as
     # fast as we can.
     return $self->{'values'}{$column_name}
         if ( $self->{'fetched'}{$column_name}
         && $self->{'decoded'}{$column_name} );
 
-    $self->{'values'}{$column_name}  = $self->__raw_value( $column_name )
-        unless $self->{'fetched'}{$column_name};
+    unless ($self->{'fetched'}{$column_name}) {
+        # Fetch it, and mark it as not decoded
+        $self->{'values'}{$column_name} = $self->__raw_value( $column_name );
+        $self->{'decoded'}{$column_name} = 0;
+    }
 
     unless ( $self->{'decoded'}{$column_name} ) {
         $self->_apply_output_filters(
@@ -1203,9 +1205,8 @@ sub load_from_hash {
     }
 
     $self->{'values'} = {};
-    $self->{'fetched'} = {};
     $self->{'raw_values'} = {};
-    $self->{'raw_fetched'} = {};
+    $self->{'fetched'} = {};
 
     foreach my $col ( grep exists $hashref->{ lc $_ }, map $_->name, $self->columns ) {
         $self->{'fetched'}{$col} = 1;
@@ -1236,7 +1237,6 @@ sub _load_from_sql {
     my $hashref = $sth->fetchrow_hashref;
     delete $self->{'values'};
     delete $self->{'raw_values'};
-    $self->{'raw_fetched'} = {};
     $self->{'fetched'} = {};
     $self->{'decoded'} = {};
 
@@ -1245,6 +1245,7 @@ sub _load_from_sql {
         next unless exists $hashref->{ lc($col) };
         $self->{'fetched'}{$col} = 1;
         $self->{'values'}->{$col} = $hashref->{ lc($col) };
+        $self->{'raw_values'}->{$col} = $hashref->{ lc($col) };
     }
     if ( !$self->{'values'} && $sth->err ) {
         return ( 0, "Couldn't fetch row: " . $sth->err );
@@ -1261,9 +1262,6 @@ sub _load_from_sql {
         return ( 0, "Missing a primary key?" );
     }
 
-    foreach my $f ( keys %{ $self->{'values'} } ) {
-        $self->{'fetched'}{$f} = 1;
-    }
     return ( 1, "Found object" );
 
 }
@@ -1807,7 +1805,7 @@ fetched from the database next time it is queried.
 sub unload_value {
     my $self = shift;
     my $column = shift;
-    delete $self->{$_}{$column} for qw/values raw_values fetched raw_fetched decoded _prefetched/;
+    delete $self->{$_}{$column} for qw/values raw_values fetched decoded _prefetched/;
 }
 
 1;

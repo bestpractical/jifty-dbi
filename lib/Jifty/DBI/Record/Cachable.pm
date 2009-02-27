@@ -53,8 +53,9 @@ sub flush_cache {
 }
 
 sub _key_cache {
-    my $self  = shift;
-    my $cache = $self->_handle->dsn
+    my $self = shift;
+    my $cache
+        = $self->_handle->dsn
         . "-KEYS--"
         . ( $self->{'_class'} || $self->table );
     $self->_setup_cache($cache) unless exists( $_CACHES{$cache} );
@@ -69,8 +70,9 @@ Blow away this record type's key cache
 =cut
 
 sub _flush_key_cache {
-    my $self  = shift;
-    my $cache = $self->_handle->dsn
+    my $self = shift;
+    my $cache
+        = $self->_handle->dsn
         . "-KEYS--"
         . ( $self->{'_class'} || $self->table );
     $self->_setup_cache($cache);
@@ -90,7 +92,6 @@ sub _record_cache {
 Overrides the implementation from L<Jifty::DBI::Record> to add caching.
 
 =cut
-
 
 sub load_from_hash {
     my $self = shift;
@@ -127,15 +128,14 @@ sub load_by_cols {
     if ( ref($class) ) {
         ( $self, $class ) = ( $class, undef );
     } else {
-        $self = $class->new(
-            handle => ( delete $attr{'_handle'} || undef ) );
+        $self = $class->new( handle => ( delete $attr{'_handle'} || undef ) );
     }
 
     ## Generate the cache key
     my $alt_key = $self->_gen_record_cache_key(%attr);
     if ( $self->_fetch($alt_key) ) {
-        if ($class) { return $self }
-        else { return ( 1, "Fetched from cache" ) }
+        if   ($class) { return $self }
+        else          { return ( 1, "Fetched from cache" ) }
     }
 
     # Blow away the primary cache key since we're loading.
@@ -191,9 +191,10 @@ sub __delete () {
 
 sub _expire (\$) {
     my $self = shift;
-    $self->_record_cache->set( $self->_primary_record_cache_key, undef, time - 1 );
+    $self->_record_cache->set( $self->_primary_record_cache_key,
+        undef, time - 1 );
 
-    # We should be doing something more surgical to clean out the key cache. but we do need to expire it
+# We should be doing something more surgical to clean out the key cache. but we do need to expire it
     $self->_flush_key_cache;
 
 }
@@ -206,22 +207,20 @@ sub _expire (\$) {
 
 sub _fetch () {
     my ( $self, $cache_key ) = @_;
-        # If the alternate key is really the primary one
-       
-        
-        my $data = $self->_record_cache->fetch($cache_key);
 
-  unless ($data) {
-    $cache_key = $self->_key_cache->fetch( $cache_key );
-    $data = $self->_record_cache->fetch( $cache_key ) if $cache_key;
-  }
+    # If the alternate key is really the primary one
 
-  return undef unless ($data);
+    my $data = $self->_record_cache->fetch($cache_key);
 
-  @{$self}{ keys %$data } = values %$data;    # deserialize
-  return 1;
+    unless ($data) {
+        $cache_key = $self->_key_cache->fetch($cache_key);
+        $data = $self->_record_cache->fetch($cache_key) if $cache_key;
+    }
 
+    return undef unless ($data);
 
+    @{$self}{ keys %$data } = values %$data;    # deserialize
+    return 1;
 }
 
 #sub __value {
@@ -240,17 +239,16 @@ sub _fetch () {
 
 sub _store (\$) {
     my $self = shift;
-    $self->_record_cache->set( $self->_primary_record_cache_key,
-        {   values  => $self->{'values'},
-            table   => $self->table,
-            fetched => $self->{'fetched'},
-            decoded => $self->{'decoded'},
-            raw_values => $self->{'raw_values'},
-            raw_fetched => $self->{'raw_fetched'},
+    $self->_record_cache->set(
+        $self->_primary_record_cache_key,
+        {   values      => $self->{'values'},
+            table       => $self->table,
+            fetched     => $self->{'fetched'},
+            decoded     => $self->{'decoded'},
+            raw_values  => $self->{'raw_values'},
         }
     );
 }
-
 
 # Function: _gen_record_cache_key
 # Type    : private instance
@@ -259,26 +257,25 @@ sub _store (\$) {
 # Desc    : Takes a perl hash and generates a key from it.
 
 sub _gen_record_cache_key {
-  my ( $self, %attr ) = @_;
+    my ( $self, %attr ) = @_;
 
-  my @cols;
+    my @cols;
 
-  while ( my ( $key, $value ) = each %attr ) {
-    unless ( defined $value ) {
-      push @cols, lc($key) . '=__undef';
+    while ( my ( $key, $value ) = each %attr ) {
+        unless ( defined $value ) {
+            push @cols, lc($key) . '=__undef';
+        } elsif ( ref($value) eq "HASH" ) {
+            push @cols,
+                  lc($key)
+                . ( $value->{operator} || '=' )
+                . defined $value->{value} ? $value->{value} : '__undef';
+        } elsif ( blessed $value and $value->isa('Jifty::DBI::Record') ) {
+            push @cols, lc($key) . '=' . ( $value->id );
+        } else {
+            push @cols, lc($key) . "=" . $value;
+        }
     }
-    elsif ( ref($value) eq "HASH" ) {
-      push @cols, lc($key) . ( $value->{operator} || '=' )
-          . defined $value->{value}? $value->{value}: '__undef';
-    }
-    elsif ( blessed $value and $value->isa('Jifty::DBI::Record') ) {
-      push @cols, lc($key) . '=' . ( $value->id );
-    }
-    else {
-      push @cols, lc($key) . "=" . $value;
-    }
-  }
-  return ( $self->table() . ':' . join( ',', @cols ) );
+    return ( $self->table() . ':' . join( ',', @cols ) );
 }
 
 # Function: _fetch_record_cache_key
@@ -306,13 +303,13 @@ sub _primary_record_cache_key {
 
         my @attributes;
         my %pk = $self->primary_keys;
-        while ( my ($key, $value) = each %pk ) {
+        while ( my ( $key, $value ) = each %pk ) {
             return unless defined $value;
-            push @attributes, lc( $key ) . '=' . $value;
+            push @attributes, lc($key) . '=' . $value;
         }
 
-        $self->{'_jifty_cache_pkey'} = $self->table .':'
-            . join ',', @attributes;
+        $self->{'_jifty_cache_pkey'} = $self->table . ':' . join ',',
+            @attributes;
     }
     return ( $self->{'_jifty_cache_pkey'} );
 
