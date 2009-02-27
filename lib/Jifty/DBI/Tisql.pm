@@ -465,6 +465,7 @@ sub _linearize_join {
     );
     my ($orig_left, $orig_right) = @res;
     @res = reverse @res if $inverse;
+    my ($left_border, $right_border) = (0, -1);
 
     my ($tree, $node, @pnodes);
     my %callback;
@@ -525,16 +526,18 @@ sub _linearize_join {
                 my $description = $self->describe_join( $model => $ref->{'name'} );
                 if ( $cond->{$side}{'alias'} eq $inverse_on ) {
                     my $linear = $self->_linearize_join(
-                        $description, 'inverse', { to => $res[-1], place => $conditions }, $ref->{'placeholders'} || [],
+                        $description, 'inverse', { to => $res[$right_border], place => $conditions }, $ref->{'placeholders'} || [],
                     );
                     $last_join = $set_condition_on = $linear->[0];
-                    splice @res, -1, 1, @$linear;
+                    splice @res, $right_border, 1, @$linear;
+                    $right_border -= (@$linear - 1);
                 } else {
                     my $linear = $self->_linearize_join(
-                        $description, undef, { to => $res[0] }, $ref->{'placeholders'} || [],
+                        $description, undef, { to => $res[$left_border] }, $ref->{'placeholders'} || [],
                     );
                     $last_join = $linear->[-1];
-                    splice @res, 0, 1, @$linear;
+                    splice @res, $left_border, 1, @$linear;
+                    $left_border += (@$linear - 1);
                 }
 
                 $model = $self->get_reference( $model => $ref->{'name'} )->refers_to->new;
