@@ -350,6 +350,8 @@ sub _init_column_for {
         }
         # A one-to-one or one-to-many relationship is requested
         if ( UNIVERSAL::isa( $refclass, 'Jifty::DBI::Record' ) ) {
+            # Assume we refer to the ID column unless told otherwise
+            $column->by('id') unless $column->by;
 
             my $by = $column->by;
             unless ( $column->type ) {
@@ -398,6 +400,7 @@ sub _init_column_for {
                 $from->_init_methods_for_column($virtual_column);
             }
         } elsif ( UNIVERSAL::isa( $refclass, 'Jifty::DBI::Collection' ) ) {
+            $column->by('id') unless $column->by;
             $column->virtual('1');
         } else {
             warn "Error in $from: $refclass neither Record nor Collection. Perhaps it couldn't be loaded?";
