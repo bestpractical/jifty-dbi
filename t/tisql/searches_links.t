@@ -9,7 +9,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 29;
+use constant TESTS_PER_DRIVER => 32;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -50,7 +50,7 @@ SKIP: {
         ".links_to{model => 'task'}.dst_id = 2" => [qw(1_m_of_2)],
         ".links_to{type => 'member_of'}{model => 'task'}.dst_id = 2" => [qw(1_m_of_2)],
         ".links_from{type => 'member_of'}{model => 'task'}.src_id = 1" => [qw(2_has_m_1)],
-# TODO:        ".linked_tasks.subject = '2_has_m_1'" => [qw(qwe)],
+        ".linked_tasks.subject = '2_has_m_1'" => [qw(1_m_of_2)],
         ".linked_to_tasks.subject = '2_has_m_1'" => [qw(1_m_of_2)],
         ".linked_from_tasks.subject = '1_m_of_2'" => [qw(2_has_m_1)],
         ".member_of.subject = '2_has_m_1'" => [qw(1_m_of_2)],
@@ -108,6 +108,25 @@ q{ CREATE table links (
     dst_model varchar(32) not null,
     dst_id integer not null
 ) },
+] }
+
+sub schema_mysql { [
+q{ CREATE table tasks (
+    id integer primary key AUTO_INCREMENT,
+    subject varchar(32)
+) },
+q{ CREATE table links (
+    id integer primary key AUTO_INCREMENT,
+    src_model varchar(32) not null,
+    src_id integer not null,
+    type varchar(32) not null,
+    dst_model varchar(32) not null,
+    dst_id integer not null
+) },
+] }
+sub cleanup_schema_mysql { [
+    "DROP table tasks", 
+    "DROP table links", 
 ] }
 
 # definitions below to avoid problems with interdependencies
