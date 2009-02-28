@@ -379,7 +379,7 @@ sub resolve_join {
             chain => \@aliases,
             criteria => delete $collection->{'joins'}{$aliases[0]}{'criteria'},
         };
-        foreach ( @aliases ) {
+        foreach ( @aliases[0, -1] ) {
             $collection->{'joins'}{ $_ }{'type'} = 'CROSS';
         }
     }
