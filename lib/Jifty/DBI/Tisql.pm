@@ -465,7 +465,6 @@ sub _linearize_join {
     );
     my ($orig_left, $orig_right) = @res;
     @res = reverse @res if $inverse;
-    my ($left_border, $right_border) = (0, -1);
 
     my ($tree, $node, @pnodes);
     my %callback;
@@ -487,6 +486,7 @@ sub _linearize_join {
         my $set_condition_on;
 
         foreach my $side (qw(lhs rhs)) {
+            my ($left_border, $right_border) = (0, -1);
             unless ( ref $cond->{ $side } eq 'HASH' ) {
                 if ( $placeholders && $cond->{ $side } =~ /^%($re_ph_name)$/o ) {
                     if ( defined ( my $phs = $placeholders->{ $1 } ) ) {
