@@ -12,6 +12,7 @@ use Carp ();
 use constant _time_zone => 'UTC';
 use constant _strptime  => '%Y-%m-%d %H:%M:%S';
 use constant _parser    => DateTime::Format::ISO8601->new();
+use constant date_only  => 0;
 
 =head1 NAME
 
