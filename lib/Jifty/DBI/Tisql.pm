@@ -311,7 +311,7 @@ sub resolve_join {
 
     my @aliases = ();
     while ( my $joint = shift @chain ) {
-        my $linear = $self->linearize_join( $last{'item'}, $joint->{'name'} );
+        my $linear = $self->linearize_join( $last{'item'}, $joint->{'name'}, $joint->{'placeholders'} );
 
         $linear->[0]{'sql_alias'} = $last{'sql_alias'};
         foreach ( @{$linear}[1 .. @$linear - 1] ) {
@@ -345,8 +345,7 @@ sub resolve_join {
                         return unless defined $phs;
 
                         if ( ref $phs ) {
-                            $limit{'value'} = [ map $parser->dq($_), @{ $phs } ];
-                            $limit{'value'} = $limit{'value'}->[0] if @{ $limit{'value'} } == 1;
+                            $limit{'value'} = @$phs == 1? $phs->[0] : $phs;
                         }
                         elsif ( $phs eq '?' ) {
                             die "Not enough binding values provided for the query"
@@ -392,6 +391,7 @@ sub describe_join {
     my $self  = shift;
     my $model = shift;
     my $via   = shift;
+    my $phs   = shift;
 
     $model = UNIVERSAL::isa( $model, 'Jifty::DBI::Collection' )
         ? $model->new_item
@@ -405,7 +405,15 @@ sub describe_join {
 
     my $tree;
     if ( my $tisql = $column->tisql ) {
-        $tree = $parser->as_array( $tisql, operand_cb => sub {
+        my %props;
+        if ( ref $tisql eq 'CODE' ) {
+            %props = $tisql->( parser => $parser, tisql => $self, placeholders => $phs );
+            die "If tisql join expression is a subroutine then it must return hash with 'query'"
+                unless $props{'query'};
+        } else {
+            $props{'query'} = $tisql;
+        }
+        $tree = $parser->as_array( $props{'query'}, operand_cb => sub {
             return $self->parse_condition(
                 'join', $_[0], sub { $self->parse_column( $_[0] ) }
             )
@@ -444,10 +452,11 @@ sub describe_join {
 }
 
 sub linearize_join {
-    my $self = shift;
-    my $left = shift;
-    my $via  = shift;
-    return $self->_linearize_join( $self->describe_join($left, $via) );
+    my $self  = shift;
+    my $left         = shift;
+    my $via          = shift;
+    my $placeholders = shift;
+    return $self->_linearize_join( $self->describe_join($left, $via, $placeholders) );
 }
 
 sub _linearize_join {
@@ -491,10 +500,10 @@ sub _linearize_join {
                 if ( $placeholders && $cond->{ $side } =~ /^%($re_ph_name)$/o ) {
                     if ( defined ( my $phs = $placeholders->{ $1 } ) ) {
                         if ( ref $phs ) {
-                            $phs = [ map $parser->dq($_), @{ $phs } ];
-                            $phs = $phs->[0] if @{ $phs } == 1;
+                            $new_cond{ $side } = @$phs == 1? $phs->[0] : $phs;
+                        } else {
+                            $new_cond{ $side } = $phs;
                         }
-                        $new_cond{ $side } = $phs;
                     } else {
                         # we have to drop condition
                         pop @{ $node }; # delete operand
@@ -522,7 +531,7 @@ sub _linearize_join {
             my ($last_join, $conditions) = ( undef, [] );
             my $model = ($col->{'alias'}? $orig_right : $orig_left)->{'model'};
             foreach my $ref ( @chain ) {
-                my $description = $self->describe_join( $model => $ref->{'name'} );
+                my $description = $self->describe_join( $model => $ref->{'name'}, $ref->{'placeholders'} );
                 if ( $cond->{$side}{'alias'} eq $inverse_on ) {
                     my $linear = $self->_linearize_join(
                         $description, 'inverse', { to => $res[$right_border], place => $conditions }, $ref->{'placeholders'},
@@ -688,6 +697,7 @@ sub parse_column {
             while ( $ph =~ s/^($re_value)\s*,?\s*// ) {
                 push @values, $1;
             }
+            $parser->dq( $_ ) foreach @values;
             $ph = \@values;
         }
         $prev = $col->{'string'};
