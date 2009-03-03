@@ -112,15 +112,19 @@ sub decode {
         return;
     }
 
-    if ($dt) {
-	my $tz = $self->_time_zone;
-	$dt->set_time_zone($tz) if $tz;
+    return if !$dt;
 
-        $dt->set_formatter($self->formatter);
-        $$value_ref = $dt;
-    } else {
-        return;
+    my $tz = $self->_time_zone;
+    $dt->set_time_zone($tz) if $tz;
+
+    if ($self->date_only) {
+        $dt->set_hour(0);
+        $dt->set_minute(0);
+        $dt->set_second(0);
     }
+
+    $dt->set_formatter($self->formatter);
+    $$value_ref = $dt;
 }
 
 =head1 SEE ALSO
