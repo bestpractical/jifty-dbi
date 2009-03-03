@@ -68,11 +68,11 @@ sub encode {
     return if !defined $$value_ref;
 
     if  ( ! UNIVERSAL::isa( $$value_ref, 'DateTime' )) {
-        if ( $$value_ref !~ /^\d{4}[ -]?\d{2}[ -]?\d{2}/) {
-       $$value_ref = undef;
+        if ($$value_ref !~ /^\d{4}[ -]?\d{2}[ -]?\d{2}/) {
+            $$value_ref = undef;
         }
         return undef;
-   }
+    }
 
     return unless $$value_ref;
     if (my $tz = $self->_time_zone) {
