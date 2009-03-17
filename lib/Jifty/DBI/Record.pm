@@ -1186,6 +1186,15 @@ record's loaded values hash.
 sub load_from_hash {
     my $self    = shift;
     my $hashref = shift;
+    my %args = @_;
+    if ($args{fast}) {
+        # Optimization for loading from database
+        $self->{values} = $hashref;
+        $self->{fetched}{$_} = 1 for keys %{$hashref};
+        $self->{raw_values} = {};
+        $self->{decoded} = {};
+        return $self->{values}{id};
+    }
 
     unless ( ref $self ) {
         $self = $self->new( handle => delete $hashref->{'_handle'} );
