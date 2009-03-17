@@ -776,10 +776,7 @@ Subclasses should never override __raw_value.
 sub __raw_value {
     my $self = shift;
 
-    my $column = $self->resolve_column( shift );
-    return unless $column;
-
-    my $column_name = $column->name;
+    my $column_name = shift;
 
     # In the default case of "yeah, we have a value", return it as
     # fast as we can.
@@ -806,7 +803,7 @@ sub __raw_value {
 =head2 resolve_column
 
 given a column name, resolve it, even if it's actually an alias 
-return the column object
+return the column object.
 
 =cut
 
@@ -814,14 +811,7 @@ sub resolve_column {
     my $self = shift;
     my $column_name = shift;
     return unless $column_name;
-
-    # If the requested column is actually an alias for another, resolve it.
-    my $column = $self->column($column_name);
-    if ( $column and defined $column->alias_for_column ) {
-        $column      = $self->column( $column->alias_for_column() );
-    }
-    return unless $column;
-    return $column;
+    return $self->COLUMNS->{$column_name};
 }
 
 =head2 __value
@@ -834,10 +824,10 @@ never override __value.
 sub __value {
     my $self = shift;
 
-    my $column = $self->resolve_column( shift );
+    my $column = $self->COLUMNS->{ +shift }; # Shortcut around ->resolve_column
     return unless $column;
 
-    my $column_name = $column->name;
+    my $column_name = $column->{name}; # Speed optimization
 
     # In the default case of "yeah, we have a value", return it as
     # fast as we can.
