@@ -22,6 +22,7 @@ requires('Lingua::EN::Inflect');
 requires('Object::Declare' => 0.22);
 requires('UNIVERSAL::require' => 0.11);
 requires('Scalar::Defer' => 0.10);
+requires('Parse::BooleanLogic');
 requires('version');
 #requires('Class::Trigger');
 build_requires('Test::More' => 0.52);
