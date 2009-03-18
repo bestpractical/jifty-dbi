@@ -95,7 +95,7 @@ Grammar:
 
 Alias is optional and most of the time you don't need them, however them
 are desperatedly required in some situations, read about that below XXX
-link goes here. Let's leave them alone.
+link goes here. Let's leave them alone for now.
 
 When you apply a tisql query you do it on a collection of records, for
 example C<MyApp::Model::UserCollection>. Records in this collection have
@@ -106,7 +106,7 @@ column is prefixed with literal dot character, for example:
     .real_name
     .organization
 
-JDBI supports referes_to definition for columns to delare named references
+JDBI supports referes_to definition for columns to declare named references
 to other records and collections. In tisql you can use this advantage and
 continue columns sequence to build conditions based on properties of
 related objects, for example:
@@ -129,8 +129,8 @@ What do you expect to find when you write the following query:
 Most people want to find all records without tag 'X', records without
 tags or records that has no tag 'X'. We're not exceptional to this desire.
 So not equal and negative pattern matching operators on long column sequences
-will as 'find records which have no related objects with properties equal
-or matching a value/pattern'.
+behave as 'find records which have no related objects with properties equal
+or matching the value/pattern'.
 
 More examples:
 
@@ -205,7 +205,7 @@ Considering above "alias.column != 'x'" and other negative conditions
 behave as ".column != 'x'", so "member.first_name != 'John'" will find a
 groups where some members exist and none of them is John.
 
-Is it limitation? Yes and no. It's helpful in in situation above, but has
+Is it limitation? Yes and no. It's helpful in situation as above, but has
 no other big advantages I can think of. As well plenty of situations can be
 effectivly solved by extended references and placeholders. I'm open to
 suggestions about either transforming aliases into something more useful or
@@ -256,11 +256,47 @@ query, for example:
             tisql     => '.gm.grp = member_of.id',
         )->query('.member_of.name = "Sales"');
 
-This columns may be used very often and most probably want to add them
+These columns may be used very often and most probably want to add them
 persistently to the User model, but this is just an example.
 
 =head3 Placeholders
 
-Adding new references all the time 
+Adding new columns for different combinations of joins conditions all the
+time is not an option. As well aliases have some limitations as you may
+want adjust join conditions.
+
+Placeholders is the way to help withthis - join conditions with arguments,
+for example:
+
+    column groups =>
+        references MyApp::Model::GroupCollection
+        by tisql => 'groups.instance = .id'
+            .' AND groups.domain = "role"'
+            .' AND groups.type = %type';
+
+Values for placeholders can be defined using the following syntax:
+
+    .groups{type => 'some'}.
+
+If placeholder is not defined then condition is properly avoided.
+
+Placeholders can be used in other references too, and renamed if
+you like:
+
+    column actor =>
+        references MyApp::Model::UserCollection
+        by tisql => '.groups{type => %role}.member.id = actor.id';
+
+=head3 Using code to choose different join conditions
+
+An reference to a code can be used as join:
+
+    column X =>
+        references MyApp::Model::Y
+        by tisql => sub { ... },
+
+Subroutine is called when join is required and should return
+hash with join query.
 
 =cut
+
