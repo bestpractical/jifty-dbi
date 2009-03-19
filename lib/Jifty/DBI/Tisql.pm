@@ -664,6 +664,8 @@ use overload
     "|"  => "bit_or_op",
     "&=" => "bit_assign_and_op",
     "|=" => "bit_assign_or_op",
+
+    fallback => 1,
 ;
 
 use Scalar::Util qw(blessed);
@@ -777,43 +779,36 @@ sub from_struct {
     return $self->new( %res );
 }
 
-sub bit_and_op {
-    return (shift)->bit_op( @_, 'AND');
-}
-
-sub bit_or_op {
-    return (shift)->bit_op( @_, 'OR');
-}
-
+sub bit_and_op { return (shift)->bit_op( @_, 'AND'); }
+sub bit_or_op { return (shift)->bit_op( @_, 'OR'); }
 sub bit_op {
     my ($self, $other, $invert, $op) = @_;
+
+    die "$other is not a query condition" if $invert;
+
     die "'$other' is not a query condition"
-        unless blessed $other && $other->isa(ref($self));
-    my $res = $invert
-        ? [ $other, $op, $self->{'tree'} ]
-        : [ $self->{'tree'}, $op, $other ];
-    return $self->new( tree => $res );
+        unless blessed $other
+        && ( $other->isa('Jifty::DBI::Tisql::Tree')
+            || $other->isa('Jifty::DBI::Tisql::Condition')
+        );
+
+    return Jifty::DBI::Tisql::Tree->new( $self, $op, $other );
 }
 
-sub bit_assign_and_op {
-    return (shift)->bit_assign_op( @_, 'AND');
-}
-
-sub bit_assign_or_op {
-    return (shift)->bit_assign_op( @_, 'OR');
-}
-
+sub bit_assign_and_op { return (shift)->bit_assign_op( @_, 'AND') }
+sub bit_assign_or_op  { return (shift)->bit_assign_op( @_, 'OR') }
 sub bit_assign_op {
     my ($self, $other, $invert, $op) = @_;
-    die "'$other' is not a query condition"
-        unless blessed $other && $other->isa(ref($self));
 
-    if ( $invert ) {
-        $other->{'tree'} = [ $other->{'tree'}, $op, $self->{'tree'} ];
-    } else {
-        $self->{'tree'} = [ $self->{'tree'}, $op, $other->{'tree'} ];
-    }
-    return $self;
+    die "$other is not a query condition" if $invert;
+
+    die "'$other' is not a query condition"
+        unless blessed $other
+        && ( $other->isa('Jifty::DBI::Tisql::Tree')
+            || $other->isa('Jifty::DBI::Tisql::Condition')
+        );
+
+    return $self = Jifty::DBI::Tisql::Tree->new( $self, $op, $other );
 }
 
 package Jifty::DBI::Tisql::Column;
