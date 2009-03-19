@@ -111,8 +111,6 @@ sub query {
         },
     );
 
-    Test::More::diag( Dumper $tree->{'conditions'} );
-
     $self->{'tisql'}{'conditions'} = $tree->{'conditions'};
     $self->apply_query_tree( $tree->{'conditions'} );
     return $self;
@@ -154,11 +152,9 @@ sub apply_query_condition {
         unless ref $condition->{'lhs'} eq 'Jifty::DBI::Tisql::Column';
 
     my $modifier = $condition->{'modifier'};
-    my $op     = $condition->{'op'};
-    my $long   = do {
-        my @tmp = split /\./, $condition->{'lhs'}{'string'};
-        @tmp > 2 ? 1 : 0
-    };
+    my $op       = $condition->{'op'};
+    my $long     = @{ $condition->{'lhs'}{'chain'} } > 1;
+
     if ( $long && !$modifier && $op =~ $re_negative_op ) {
         $modifier = 'has no';
         $op = $invert_op{ lc $op };
