@@ -8,6 +8,9 @@ use Scalar::Util qw(refaddr blessed weaken);
 use Data::Dumper;
 use Carp ();
 
+use base 'Exporter';
+our @EXPORT = ();
+our @EXPORT_OK = qw(C Q);
 
 use Parse::BooleanLogic 0.07;
 my $parser = new Parse::BooleanLogic;
@@ -86,6 +89,9 @@ sub get_reference {
 
     return $res;
 }
+
+sub C { return Jifty::DBI::Tisql::Column->from_struct(@_) }
+sub Q { return Jifty::DBI::Tisql::Condition->from_struct(@_) }
 
 sub query {
     my $self = shift;
