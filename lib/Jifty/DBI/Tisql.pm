@@ -654,6 +654,62 @@ sub external_reference {
     return $self;
 }
 
+package Jifty::DBI::Tisql::Tree;
+
+use overload
+    "&"  => "bit_and_op",
+    "|"  => "bit_or_op",
+    "&=" => "bit_assign_and_op",
+    "|=" => "bit_assign_or_op",
+
+    fallback => 1,
+;
+
+use Scalar::Util qw(blessed);
+
+sub new {
+    my $proto = shift;
+    return (bless [], ref($proto)||$proto)->init(@_);
+}
+
+sub init {
+    my $self = shift;
+    @$self = @_;
+    return $self;
+}
+
+sub bit_and_op { return (shift)->bit_op( @_, 'AND'); }
+sub bit_or_op { return (shift)->bit_op( @_, 'OR'); }
+sub bit_op {
+    my ($self, $other, $invert, $op) = @_;
+
+    die "$other is not a query condition" if $invert;
+
+    die "'$other' is not a query condition"
+        unless blessed $other
+        && ( $other->isa('Jifty::DBI::Tisql::Tree')
+            || $other->isa('Jifty::DBI::Tisql::Condition')
+        );
+
+    return $self->new( $self, $op, $other );
+}
+
+sub bit_assign_and_op { return (shift)->bit_assign_op( @_, 'AND') }
+sub bit_assign_or_op  { return (shift)->bit_assign_op( @_, 'OR') }
+sub bit_assign_op {
+    my ($self, $other, $invert, $op) = @_;
+
+    die "$other is not a query condition" if $invert;
+
+    die "'$other' is not a query condition"
+        unless blessed $other
+        && ( $other->isa('Jifty::DBI::Tisql::Tree')
+            || $other->isa('Jifty::DBI::Tisql::Condition')
+        );
+
+    return $self = $self->new( $self, $op, $other );
+}
+
 package Jifty::DBI::Tisql::Condition;
 
 use strict;
