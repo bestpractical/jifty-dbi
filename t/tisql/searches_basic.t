@@ -9,12 +9,14 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 36;
+use constant TESTS_PER_DRIVER => 46;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
 
 use Data::Dumper;
+
+use Jifty::DBI::Tisql qw(Q C);
 
 foreach my $d ( @available_drivers ) {
 SKIP: {
@@ -41,15 +43,20 @@ SKIP: {
 
     run_our_cool_tests(
         $users_obj,
-        ".login = 'a'" => { 'aa' => 1, 'ab' => 1, 'ac' => 1 },
-        ".login != 'a'" => { 'ba' => 1, 'bb' => 1, 'bc' => 1, 'ca' => 1, 'cb' => 1, 'cc' => 1 },
+        ".login = 'a'"       => { 'aa' => 1, 'ab' => 1, 'ac' => 1 },
+        Q(C('login') => 'a') => { 'aa' => 1, 'ab' => 1, 'ac' => 1 },
 
-        ".login = 'a' AND .login = 'b'" 
-            => { },
-        ".login != 'a' AND .login = 'b'" 
-            => { ba => 1, bb => 1, bc => 1 },
-        ".login != 'a' AND .login != 'b'" 
-            => { ca => 1, cb => 1, cc => 1 },
+        ".login != 'a'"              => { 'ba' => 1, 'bb' => 1, 'bc' => 1, 'ca' => 1, 'cb' => 1, 'cc' => 1 },
+        Q(C('login') => '!=' => 'a') => { 'ba' => 1, 'bb' => 1, 'bc' => 1, 'ca' => 1, 'cb' => 1, 'cc' => 1 }, 
+
+        ".login = 'a' AND .login = 'b'"             => { },
+        Q(C('login') => 'a') & Q(C('login') => 'b') => { },
+
+        ".login != 'a' AND .login = 'b'"                => { ba => 1, bb => 1, bc => 1 },
+        Q(C('login'), '!=', 'a') & Q(C('login') => 'b') => { ba => 1, bb => 1, bc => 1 },
+
+        ".login != 'a' AND .login != 'b'"                   => { ca => 1, cb => 1, cc => 1 },
+        Q(C('login'), '!=', 'a') & Q(C('login'), '!=', 'b') => { ca => 1, cb => 1, cc => 1 }, 
 
         ".login = 'a' OR .login = 'b'" 
             => { aa => 1, ab => 1, ac => 1, ba => 1, bb => 1, bc => 1 },
@@ -84,8 +91,8 @@ SKIP: {
 
 sub run_our_cool_tests {
     my $collection = shift;
-    my %tests = @_;
-    while (my ($q, $check) = each %tests ) {
+    my @tests = @_;
+    while ( my ($q, $check) = splice @tests, 0, 2 ) {
         $collection->clean_slate;
         $collection->tisql->query( $q );
         my $expected_count = scalar grep $_, values %$check;
@@ -102,6 +109,7 @@ sub run_our_cool_tests {
             or diag "wrong query: ". $collection->build_select_query;
     }
 }
+
 1;
 
 
