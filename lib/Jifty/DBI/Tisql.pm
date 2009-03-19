@@ -1,7 +1,7 @@
-package Jifty::DBI::Tisql;
-
 use strict;
 use warnings;
+
+package Jifty::DBI::Tisql;
 
 use Scalar::Util qw(refaddr blessed weaken);
 
@@ -736,9 +736,6 @@ sub bit_assign_op {
 
 package Jifty::DBI::Tisql::Condition;
 
-use strict;
-use warnings;
-
 use overload
     "&"  => "bit_and_op",
     "|"  => "bit_or_op",
@@ -892,9 +889,6 @@ sub bit_assign_op {
 }
 
 package Jifty::DBI::Tisql::Column;
-
-use strict;
-use warnings;
 
 # represents something like:
 # {
