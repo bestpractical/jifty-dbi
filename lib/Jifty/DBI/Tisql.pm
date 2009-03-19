@@ -111,6 +111,8 @@ sub query {
         },
     );
 
+    Test::More::diag( Dumper $tree->{'conditions'} );
+
     $self->{'tisql'}{'conditions'} = $tree->{'conditions'};
     $self->apply_query_tree( $tree->{'conditions'} );
     return $self;
@@ -132,10 +134,14 @@ sub apply_query_tree {
             $self->apply_query_tree( $element, $ea );
             next;
         }
+        elsif ( blessed $element && $element->isa( 'Jifty::DBI::Tisql::Condition' ) ) {
+            $self->apply_query_condition( $collection, $ea, $element );
+        }
         elsif ( ref $element eq 'HASH' ) {
+            Carp::confess( "booo" );
             $self->apply_query_condition( $collection, $ea, $element );
         } else {
-            die "wrong query tree";
+            die "wrong query tree ". Dumper( $element, $tree );
         }
     }
     $collection->close_paren('tisql');
@@ -145,7 +151,7 @@ sub apply_query_condition {
     my ($self, $collection, $ea, $condition, $join) = @_;
 
     die "left hand side must be always column specififcation"
-        unless ref $condition->{'lhs'} eq 'HASH';
+        unless ref $condition->{'lhs'} eq 'Jifty::DBI::Tisql::Column';
 
     my $modifier = $condition->{'modifier'};
     my $op     = $condition->{'op'};
@@ -208,7 +214,7 @@ sub apply_query_condition {
             column           => $condition->{'lhs'}{'chain'}[-1]{'name'},
             operator         => $op,
         );
-        if ( ref $condition->{'rhs'} eq 'HASH' ) {
+        if ( ref $condition->{'rhs'} eq 'HASH' || ref $condition->{'rhs'} eq 'Jifty::DBI::Tisql::Column' ) {
             $limit{'quote_value'} = 0;
             $limit{'value'} =
                 $self->resolve_join( $condition->{'rhs'} )
@@ -236,7 +242,7 @@ sub apply_query_condition {
             column           => $condition->{'lhs'}{'chain'}[-1]{'name'},
             operator         => $op,
         );
-        if ( ref $condition->{'rhs'} eq 'HASH' ) {
+        if ( ref $condition->{'rhs'} eq 'HASH' || ref $condition->{'rhs'} eq 'Jifty::DBI::Tisql::Column' ) {
             $limit{'quote_value'} = 0;
             $limit{'value'} =
                 $self->resolve_join( $condition->{'rhs'} )
@@ -292,7 +298,7 @@ sub resolve_join {
     if ( my $alias = $meta->{'alias'} ) {
         die "Couldn't find alias $alias"
             unless $aliases->{ $alias };
-        my $target = $self->qualify_column( $aliases->{ $alias }, $aliases, $collection );
+        my $target = $aliases->{ $alias }->qualify( $self, $aliases, $collection );
         my $item = $target->{'chain'}[-1]{'refers_to'}
             or die "Last column of alias '$alias' is not a reference";
         %last = (
@@ -336,7 +342,7 @@ sub resolve_join {
                         column      => $cond->{'lhs'}{'column'},
                         operator    => $cond->{'op'},
                     );
-                    if ( ref($cond->{'rhs'}) eq 'HASH' ) {
+                    if ( ref($cond->{'rhs'}) eq 'HASH' || ref($cond->{'rhs'}) eq 'Jifty::DBI::Tisql::Column' ) {
                         $limit{'quote_value'} = 0;
                         $limit{'value'} = $cond->{'rhs'}{'table'}{'sql_alias'} .'.'. $cond->{'rhs'}{'column'};
                     }
@@ -496,7 +502,9 @@ sub _linearize_join {
 
         foreach my $side (qw(lhs rhs)) {
             my ($left_border, $right_border) = (0, -1);
-            unless ( ref $cond->{ $side } eq 'HASH' ) {
+            unless ( ref $cond->{ $side } eq 'HASH' || ref $cond->{ $side } eq 'Jifty::DBI::Tisql::Column' ) {
+                Carp::confess( "boo") if ref $cond->{ $side } eq 'HASH';
+
                 if ( $placeholders && $cond->{ $side } =~ /^%($re_ph_name)$/o ) {
                     if ( defined ( my $phs = $placeholders->{ $1 } ) ) {
                         if ( ref $phs ) {
@@ -578,7 +586,104 @@ sub _linearize_join {
     return \@res;
 }
 
+sub check_query_condition {
+    my ($self, $cond) = @_;
+
+    die "Last column in '". $cond->{'lhs'}{'string'} ."' is virtual" 
+        if $cond->{'lhs'}{'column'}->virtual;
+
+    if ( $cond->{'op_type'} eq 'col_op_col' ) {
+        die "Last column in '". $cond->{'rhs'}{'string'} ."' is virtual" 
+            if $cond->{'rhs'}{'column'}->virtual;
+    }
+
+    return $cond;
+}
+
 sub parse_condition {
+    my $self = shift;
+    return Jifty::DBI::Tisql::Condition->parse(@_);
+}
+
+sub parse_column {
+    my $self = shift;
+    return Jifty::DBI::Tisql::Column->parse(@_);
+}
+
+sub external_reference {
+    my $self = shift;
+    my %args = @_;
+
+    my $record = $args{'record'};
+    my $column = $args{'column'};
+    my $name   = $column->name;
+
+    my $sql_alias = $self->{'collection'}->new_alias( $record );
+    push @{ $self->{'collection'}{'explicit_joins_order'} ||= [] }, $sql_alias;
+
+    my $aliases;
+    local $self->{'aliases'} = $aliases = { __record__ => Jifty::DBI::Tisql::Column->new(
+        string       => '.__record__',
+        alias        => '',
+        is_qualified => 1,
+        chain        => [ {
+            name      => '__record__',
+            refers_to => $record,
+            sql_alias => $sql_alias,
+        } ],
+    ) };
+
+    my $column_cb = sub {
+        my $str = shift;
+        $str = "__record__". $str if 0 == rindex $str, '.', 0;
+        substr($str, 0, length($name)) = '' if 0 == rindex $str, "$name.", 0;
+        return $self->parse_column($str)->qualify( $self, $aliases );
+    };
+    my $conditions = $parser->as_array(
+        $column->tisql,
+        operand_cb => sub {
+            return $self->parse_condition( 'join', $_[0], $column_cb )
+        },
+    );
+    $conditions = [
+        $conditions,
+        'AND',
+        Jifty::DBI::Tisql::Condition->from_struct(
+            $self->parse_column('__record__.id')->qualify( $self, $aliases),
+            $record->id || 0,
+        ),
+    ];
+    $self->apply_query_tree( $conditions );
+
+    return $self;
+}
+
+package Jifty::DBI::Tisql::Condition;
+
+use strict;
+use warnings;
+
+use overload
+    "&"  => "bit_and_op",
+    "|"  => "bit_or_op",
+    "&=" => "bit_assign_and_op",
+    "|=" => "bit_assign_or_op",
+;
+
+use Scalar::Util qw(blessed);
+
+sub new {
+    my $proto = shift;
+    return (bless { }, ref($proto)||$proto)->init(@_);
+}
+
+sub init {
+    my $self = shift;
+    %$self = @_;
+    return $self;
+}
+
+sub parse {
     my ($self, $type, $string, $cb) = @_;
 
     my %res = (
@@ -629,25 +734,98 @@ sub parse_condition {
     else {
         die "$type is not valid type of a condition";
     }
-    return \%res;
+    return $self->new( %res );
 }
 
-sub check_query_condition {
-    my ($self, $cond) = @_;
+sub from_struct {
+    my $self = shift;
+    my @args = @_;
 
-    die "Last column in '". $cond->{'lhs'}{'string'} ."' is virtual" 
-        if $cond->{'lhs'}{'column'}->virtual;
+    my %res = (
+        type     => 'query',
+        op_type  => undef,    # 'col_op', 'col_op_val' or 'col_op_col'
+        modifier => '',       # '', 'has' or 'has no'
+        lhs      => undef,
+        op       => undef,
+        rhs      => undef,
+    );
 
-    if ( $cond->{'op_type'} eq 'col_op_col' ) {
-        die "Last column in '". $cond->{'rhs'}{'string'} ."' is virtual" 
-            if $cond->{'rhs'}{'column'}->virtual;
+    unless ( blessed $args[0] ) {
+        if ( lc($args[0]) eq 'has' || lc($args[0]) eq 'has no' ) {
+            $res{'modifier'} = lc shift @args;
+        } else {
+            die "First argument should be either operator modifier or column, but not '$args[0]'";
+        }
     }
 
-    return $cond;
+    if ( @args == 2 ) {
+        if ( $args[1] =~ /^$re_sql_op_un$/i ) {
+            @res{qw(op_type lhs op rhs)}
+                = ('col_op', $args[0], split /\s*(?=null)/i, $args[1]);
+        }
+        else {
+            # XXX: do we care about op_type?
+            @res{qw(op_type lhs op rhs)}
+                = ('col_op_val', $args[0], '=', $args[1]);
+        }
+    }
+    elsif ( @args == 3 ) {
+        die "$args[1] is not a valid operator"
+            unless $args[1] =~ /^$re_sql_op_bin$/i;
+        @res{qw(op_type lhs op rhs)}
+            = ('col_op_col', $args[0], $args[1], $args[2]);
+    }
+    else {
+        die "Invalid format";
+    }
+    return $self->new( %res );
 }
 
+sub bit_and_op {
+    return (shift)->bit_op( @_, 'AND');
+}
 
-# returns something like:
+sub bit_or_op {
+    return (shift)->bit_op( @_, 'OR');
+}
+
+sub bit_op {
+    my ($self, $other, $invert, $op) = @_;
+    die "'$other' is not a query condition"
+        unless blessed $other && $other->isa(ref($self));
+    my $res = $invert
+        ? [ $other, $op, $self->{'tree'} ]
+        : [ $self->{'tree'}, $op, $other ];
+    return $self->new( tree => $res );
+}
+
+sub bit_assign_and_op {
+    return (shift)->bit_assign_op( @_, 'AND');
+}
+
+sub bit_assign_or_op {
+    return (shift)->bit_assign_op( @_, 'OR');
+}
+
+sub bit_assign_op {
+    my ($self, $other, $invert, $op) = @_;
+    die "'$other' is not a query condition"
+        unless blessed $other && $other->isa(ref($self));
+
+    if ( $invert ) {
+        $other->{'tree'} = [ $other->{'tree'}, $op, $self->{'tree'} ];
+    } else {
+        $self->{'tree'} = [ $self->{'tree'}, $op, $other->{'tree'} ];
+    }
+    return $self;
+}
+
+package Jifty::DBI::Tisql::Column;
+
+use strict;
+use warnings;
+
+# represents something like:
 # {
 #   'string'  => 'nodes.attr{name => "category"}.value',
 #   'alias'   => 'nodes',                            # alias or ''
@@ -655,7 +833,7 @@ sub check_query_condition {
 #        {
 #          'name' => 'attr',
 #          'string' => 'nodes.attr{name => "category"}',
-#          'placeholders' => {name => '"category"'},
+#          'placeholders' => {name => 'category'},
 #        },
 #        {
 #          'name' => 'value',
@@ -665,9 +843,19 @@ sub check_query_condition {
 #   ],
 # }
 # no look ups, everything returned as is,
-# even placeholders' strings are not de-escaped
 
-sub parse_column {
+sub new {
+    my $proto = shift;
+    return (bless { }, ref($proto)||$proto)->init(@_);
+}
+
+sub init {
+    my $self = shift;
+    %$self = @_;
+    return $self;
+}
+
+sub parse {
     my $self = shift;
     my $string = shift;
 
@@ -703,18 +891,45 @@ sub parse_column {
         $prev = $col->{'string'};
     }
     $res{'chain'} = \@columns;
-    return \%res;
+
+    return bless \%res, ref($self)||$self;
 }
 
-sub qualify_column {
+sub from_struct {
     my $self = shift;
-    my $meta = shift;
+    my @args = @_;
+
+    my %res = (alias => '');
+
+    ($res{'alias'}) = splice @args, 0, 2
+        if @args > 2 && $args[1] eq '.';
+
+    my @columns;
+    foreach my $element ( @args ) {
+        unless ( ref $element ) {
+            push @columns, { name => $element };
+        }
+        elsif ( ref $element eq 'HASH' ) {
+            $columns[-1]{'placeholders'} = $element;
+        }
+        else {
+            die "bla-bla wrong arguments";
+        }
+    }
+    $res{'chain'} = \@columns;
+
+    return bless \%res, ref($self)||$self;
+}
+
+sub qualify {
+    my $self = shift;
+    my $tisql = shift;
     my $aliases = shift;
-    my $collection = shift || $self->{'collection'};
+    my $collection = shift || $tisql->{'collection'};
 
-    return $meta if $meta->{'is_qualified'}++;
+    return $self if $self->{'is_qualified'}++;
 
-    my $start_from = $meta->{'alias'};
+    my $start_from = $self->{'alias'};
     my ($item, $last);
     if ( !$start_from && !$aliases->{''} ) {
         $item = $collection->new_item;
@@ -722,7 +937,7 @@ sub qualify_column {
         my $alias = $aliases->{ $start_from }
             || die "Couldn't find alias '$start_from'";
 
-        $self->qualify_column( $alias, $aliases, $collection );
+        $alias->qualify( $tisql, $aliases, $collection );
 
         $last = $alias;
         $item = $alias->{'chain'}[-1]{'refers_to'};
@@ -732,20 +947,21 @@ sub qualify_column {
         $item = $item->new_item if $item->isa('Jifty::DBI::Collection');
     }
 
-    my @chain = @{ $meta->{'chain'} };
+    my @chain = @{ $self->{'chain'} };
     while ( my $joint = shift @chain ) {
         my $name = $joint->{'name'};
 
-        my $column = $self->get_reference( $item => $name );
+        my $column = $tisql->get_reference( $item => $name );
 
         $joint->{'column'} = $column;
         $joint->{'on'} = $item;
 
         my $classname = $column->refers_to;
         if ( !$classname && @chain ) {
-            die "column '$name' of ". ref($item) ." is not a reference, but used so in '". $meta->{'string'} ."'";
+            die "column '$name' of ". ref($item) ." is not a reference"
+                .", but used so in '". $self->{'string'} ."'";
         }
-        return $meta unless $classname;
+        return $self unless $classname;
 
         if ( UNIVERSAL::isa( $classname, 'Jifty::DBI::Collection' ) ) {
             $joint->{'refers_to'} = $classname->new( handle => $collection->_handle );
@@ -759,54 +975,6 @@ sub qualify_column {
         }
         $last = $joint;
     }
-
-    return $meta;
-}
-
-sub external_reference {
-    my $self = shift;
-    my %args = @_;
-
-    my $record = $args{'record'};
-    my $column = $args{'column'};
-    my $name   = $column->name;
-
-    my $sql_alias = $self->{'collection'}->new_alias( $record );
-    push @{ $self->{'collection'}{'explicit_joins_order'} ||= [] }, $sql_alias;
-
-    my $aliases;
-    local $self->{'aliases'} = $aliases = { __record__ => {
-        string       => '.__record__',
-        alias        => '',
-        is_qualified => 1,
-        chain        => [ {
-            name      => '__record__',
-            refers_to => $record,
-            sql_alias => $sql_alias,
-        } ],
-    } };
-
-    my $column_cb = sub {
-        my $str = shift;
-        $str = "__record__". $str if 0 == rindex $str, '.', 0;
-        substr($str, 0, length($name)) = '' if 0 == rindex $str, "$name.", 0;
-        return $self->qualify_column($self->parse_column($str), $aliases);
-    };
-    my $conditions = $parser->as_array(
-        $column->tisql,
-        operand_cb => sub {
-            return $self->parse_condition( 'join', $_[0], $column_cb )
-        },
-    );
-    $conditions = [
-        $conditions, 'AND',
-        {
-            lhs => $self->qualify_column($self->parse_column('__record__.id'), $aliases),
-            op => '=',
-            rhs => $record->id || 0,
-        },
-    ];
-    $self->apply_query_tree( $conditions );
 
     return $self;
 }
