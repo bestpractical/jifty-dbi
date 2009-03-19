@@ -12,7 +12,7 @@ use base 'Exporter';
 our @EXPORT = ();
 our @EXPORT_OK = qw(C Q);
 
-use Parse::BooleanLogic 0.07;
+use Parse::BooleanLogic 0.09;
 my $parser = new Parse::BooleanLogic;
 
 use Regexp::Common qw(delimited);
