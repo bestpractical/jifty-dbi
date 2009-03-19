@@ -88,6 +88,15 @@ sub get_reference {
 }
 
 sub query {
+    my $self = shift;
+    return $self->query_struct(@_)
+        if blessed $_[0]
+        && ($_[0]->isa('Jifty::DBI::Tisql::Condition')
+            || $_[0]->isa('Jifty::DBI::Tisql::Tree'));
+    return $self->query_string(@_);
+}
+
+sub query_string {
     my $self   = shift;
     my $string = shift;
     my @binds  = @_;
@@ -113,6 +122,15 @@ sub query {
 
     $self->{'tisql'}{'conditions'} = $tree->{'conditions'};
     $self->apply_query_tree( $tree->{'conditions'} );
+    return $self;
+}
+
+sub query_struct {
+    my $self = shift;
+    my $tree = shift;
+
+    $self->{'tisql'}{'conditions'} = [ $tree->isa('HASH')? $tree : @$tree ]; #xxx: hack :)
+    $self->apply_query_tree( $self->{'tisql'}{'conditions'} );
     return $self;
 }
 
