@@ -108,7 +108,7 @@ sub decode {
     eval { $dt  = $self->_parser->parse_datetime($str) };
 
     if ($@) { # if datetime can't decode this, scream loudly with a useful error message
-        Carp::cluck($@);
+        Carp::cluck("Unable to decode $str: $@");
         return;
     }
 
