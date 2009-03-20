@@ -445,28 +445,10 @@ sub describe_join {
             )
         } );
     } else {
-        $tree = [ {
-            type    => 'join',
-            op_type => 'col_op_col',
-            lhs => {
-                alias  => '',
-                chain  => [{ name => $column->virtual? "id" : $via }],
-            },
-            op => '=',
-            rhs => {
-                alias  => $via,
-                chain  => [{ name => $column->by || 'id' }],
-            },
-        } ];
-        foreach ( map $tree->[0]{$_}, qw(lhs rhs) ) {
-            $_->{'chain'}[0]{'string'} = $_->{'alias'} .'.'. $_->{'chain'}[0]{'name'};
-            $_->{'string'} = $_->{'chain'}[-1]{'string'};
-        }
-        $tree->[0]{'string'} =
-            join ' ',
-            $tree->[0]{'lhs'}{'string'},
-            $tree->[0]{'op'},
-            $tree->[0]{'rhs'}{'string'};
+        $tree = [ Q(
+            C( $column->virtual? "id" : $via )
+                => C( $via, '.', $column->by || 'id' )
+        ) ];
     }
     my $res = {
         left  => $model,
