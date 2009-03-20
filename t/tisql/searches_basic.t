@@ -9,7 +9,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 46;
+use constant TESTS_PER_DRIVER => 68;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -43,44 +43,60 @@ SKIP: {
 
     run_our_cool_tests(
         $users_obj,
-        ".login = 'a'"       => { 'aa' => 1, 'ab' => 1, 'ac' => 1 },
-        Q(C('login') => 'a') => { 'aa' => 1, 'ab' => 1, 'ac' => 1 },
+        ".login = 'a'"    => { 'aa' => 1, 'ab' => 1, 'ac' => 1 },
+        Q('login' => 'a') => { 'aa' => 1, 'ab' => 1, 'ac' => 1 },
 
-        ".login != 'a'"              => { 'ba' => 1, 'bb' => 1, 'bc' => 1, 'ca' => 1, 'cb' => 1, 'cc' => 1 },
-        Q(C('login') => '!=' => 'a') => { 'ba' => 1, 'bb' => 1, 'bc' => 1, 'ca' => 1, 'cb' => 1, 'cc' => 1 }, 
+        ".login != 'a'"           => { 'ba' => 1, 'bb' => 1, 'bc' => 1, 'ca' => 1, 'cb' => 1, 'cc' => 1 },
+        Q('login' => '!=' => 'a') => { 'ba' => 1, 'bb' => 1, 'bc' => 1, 'ca' => 1, 'cb' => 1, 'cc' => 1 }, 
 
-        ".login = 'a' AND .login = 'b'"             => { },
-        Q(C('login') => 'a') & Q(C('login') => 'b') => { },
+        ".login = 'a' AND .login = 'b'"       => { },
+        Q('login' => 'a') & Q('login' => 'b') => { },
 
-        ".login != 'a' AND .login = 'b'"                => { ba => 1, bb => 1, bc => 1 },
-        Q(C('login'), '!=', 'a') & Q(C('login') => 'b') => { ba => 1, bb => 1, bc => 1 },
+        ".login != 'a' AND .login = 'b'"          => { ba => 1, bb => 1, bc => 1 },
+        Q('login', '!=', 'a') & Q('login' => 'b') => { ba => 1, bb => 1, bc => 1 },
 
-        ".login != 'a' AND .login != 'b'"                   => { ca => 1, cb => 1, cc => 1 },
-        Q(C('login'), '!=', 'a') & Q(C('login'), '!=', 'b') => { ca => 1, cb => 1, cc => 1 }, 
+        ".login != 'a' AND .login != 'b'"             => { ca => 1, cb => 1, cc => 1 },
+        Q('login', '!=', 'a') & Q('login', '!=', 'b') => { ca => 1, cb => 1, cc => 1 }, 
 
         ".login = 'a' OR .login = 'b'" 
             => { aa => 1, ab => 1, ac => 1, ba => 1, bb => 1, bc => 1 },
+        Q('login' => 'a') | Q('login' => 'b')
+            => { aa => 1, ab => 1, ac => 1, ba => 1, bb => 1, bc => 1 },
+
         ".login != 'a' OR .login = 'b'" 
             => { ba => 1, bb => 1, bc => 1, ca => 1, cb => 1, cc => 1 },
+        Q('login', '!=', 'a') | Q('login' => 'b')
+            => { ba => 1, bb => 1, bc => 1, ca => 1, cb => 1, cc => 1 },
+
         ".login != 'a' OR .login != 'b'" 
             => { aa => 1, ab => 1, ac => 1, ba => 1, bb => 1, bc => 1, ca => 1, cb => 1, cc => 1 },
+        Q('login', '!=', 'a') | Q('login', '!=', 'b')
+            => { aa => 1, ab => 1, ac => 1, ba => 1, bb => 1, bc => 1, ca => 1, cb => 1, cc => 1 },
 
-        ".login = 'a' AND .name = 'b'" 
-            => { ab => 1 },
-        ".login != 'a' AND .name = 'b'" 
-            => { bb => 1, cb => 1 },
-        ".login = 'a' AND .name != 'b'" 
-            => { aa => 1, ac => 1 },
-        ".login != 'a' AND .name != 'b'" 
-            => { ba => 1, bc => 1, ca => 1, cc => 1 },
+        ".login = 'a' AND .name = 'b'"       => { ab => 1 },
+        Q(login => 'a')   & Q(name => 'b')   => { ab => 1 },
+        ".login != 'a' AND .name = 'b'"      => { bb => 1, cb => 1 },
+        Q(qw(login != a)) & Q(name => 'b')   => { bb => 1, cb => 1 },
+        ".login = 'a' AND .name != 'b'"      => { aa => 1, ac => 1 },
+        Q(login => 'a')   & Q(qw(name != b)) => { aa => 1, ac => 1 },
+        ".login != 'a' AND .name != 'b'"     => { ba => 1, bc => 1, ca => 1, cc => 1 },
+        Q(qw(login != a)) & Q(qw(name != b)) => { ba => 1, bc => 1, ca => 1, cc => 1 },
 
         ".login = 'a' OR .name = 'b'" 
             => { aa => 1, ab => 1, ac => 1, bb => 1, cb => 1 },
+        Q(login => 'a')   | Q(name => 'b')
+            => { aa => 1, ab => 1, ac => 1, bb => 1, cb => 1 },
         ".login != 'a' OR .name = 'b'" 
+            => { ab => 1, ba => 1, bb => 1, bc => 1, ca => 1, cb => 1, cc => 1 },
+        Q(qw(login != a)) | Q(name => 'b')
             => { ab => 1, ba => 1, bb => 1, bc => 1, ca => 1, cb => 1, cc => 1 },
         ".login = 'a' OR .name != 'b'" 
             => { aa => 1, ab => 1, ac => 1, ba => 1, bc => 1, ca => 1, cc => 1 },
+        Q(login => 'a')   | Q(qw(name != b))
+            => { aa => 1, ab => 1, ac => 1, ba => 1, bc => 1, ca => 1, cc => 1 },
         ".login != 'a' OR .name != 'b'" 
+            => { aa => 1, ac => 1, ba => 1, bb => 1, bc => 1, ca => 1, cb => 1, cc => 1 },
+        Q(qw(login != a)) | Q(qw(name != b))
             => { aa => 1, ac => 1, ba => 1, bb => 1, bc => 1, ca => 1, cb => 1, cc => 1 },
     );
 
