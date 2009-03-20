@@ -79,7 +79,7 @@ sub encode {
         $$value_ref = $$value_ref->clone;
         $$value_ref->set_time_zone($tz);
     }
-    $$value_ref = $$value_ref->strftime($self->_strptime);
+    $$value_ref = $$value_ref->DateTime::strftime($self->_strptime);
     return 1;
 }
 
