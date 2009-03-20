@@ -191,7 +191,7 @@ sub apply_query_condition {
     my $bundling = $long && !$join && $self->{'joins_bundling'};
     my $bundled = 0;
     if ( $bundling ) {
-        my $bundles = $self->{'cache'}{'condition_bundles'}{ $condition->{'lhs'}{'string'} }{ $modifier } ||= [];
+        my $bundles = $self->{'cache'}{'condition_bundles'}{ $condition->{'lhs'} }{ $modifier } ||= [];
         foreach my $bundle ( @$bundles ) {
             my %tmp;
             $tmp{$_}++ foreach map refaddr($_), @$bundle;
@@ -609,11 +609,11 @@ sub _linearize_join {
 sub check_query_condition {
     my ($self, $cond) = @_;
 
-    die "Last column in '". $cond->{'lhs'}{'string'} ."' is virtual" 
+    die "Last column in '". $cond->{'lhs'} ."' is virtual" 
         if $cond->{'lhs'}{'column'}->virtual;
 
     if ( $cond->{'op_type'} eq 'col_op_col' ) {
-        die "Last column in '". $cond->{'rhs'}{'string'} ."' is virtual" 
+        die "Last column in '". $cond->{'rhs'} ."' is virtual" 
             if $cond->{'rhs'}{'column'}->virtual;
     }
 
@@ -643,7 +643,6 @@ sub external_reference {
 
     my $aliases;
     local $self->{'aliases'} = $aliases = { __record__ => Jifty::DBI::Tisql::Column->new(
-        string       => '.__record__',
         alias        => '',
         is_qualified => 1,
         chain        => [ {
@@ -681,10 +680,12 @@ sub external_reference {
 package Jifty::DBI::Tisql::Tree;
 
 use overload
-    "&"  => "bit_and_op",
-    "|"  => "bit_or_op",
-    "&=" => "bit_assign_and_op",
-    "|=" => "bit_assign_or_op",
+    '&'  => 'bit_and_op',
+    '|'  => 'bit_or_op',
+    '&=' => 'bit_assign_and_op',
+    '|=' => 'bit_assign_or_op',
+
+    '""' => "stringify",
 
     fallback => 1,
 ;
@@ -734,13 +735,20 @@ sub bit_assign_op {
     return $self = $self->new( $self, $op, $other );
 }
 
+sub stringify {
+    my $self = shift;
+    return join ' ', '(', @$self, ')';
+}
+
 package Jifty::DBI::Tisql::Condition;
 
 use overload
-    "&"  => "bit_and_op",
-    "|"  => "bit_or_op",
-    "&=" => "bit_assign_and_op",
-    "|=" => "bit_assign_or_op",
+    '&'  => 'bit_and_op',
+    '|'  => 'bit_or_op',
+    '&=' => 'bit_assign_and_op',
+    '|=' => 'bit_assign_or_op',
+
+    '""' => 'stringify',
 
     fallback => 1,
 ;
@@ -888,21 +896,29 @@ sub bit_assign_op {
     return $self = Jifty::DBI::Tisql::Tree->new( $self, $op, $other );
 }
 
+sub stringify {
+    my $self = shift;
+    return join ' ', grep defined && length, @{ $self }{'modifier', 'lhs', 'op', 'rhs'};
+}
+
 package Jifty::DBI::Tisql::Column;
+
+use overload
+    '""' => 'stringify',
+
+    fallback => 1,
+;
 
 # represents something like:
 # {
-#   'string'  => 'nodes.attr{name => "category"}.value',
 #   'alias'   => 'nodes',                            # alias or ''
 #   'chain'   => [
 #        {
 #          'name' => 'attr',
-#          'string' => 'nodes.attr{name => "category"}',
 #          'placeholders' => {name => 'category'},
 #        },
 #        {
 #          'name' => 'value',
-#          'string' => 'nodes.attr{name => "category"}.value'
 #          'placeholders' => {},
 #        }
 #   ],
@@ -927,7 +943,6 @@ sub parse {
     my %res = (@_);
 
     my @columns;
-    $res{'string'} = $string;
     ($res{'alias'}, @columns) = split /\.($re_field$re_ph_access*)/o, $string;
     @columns = grep defined && length, @columns;
 
@@ -942,7 +957,6 @@ sub parse {
 
         $col = {
             name => $field,
-            string => $prev .".$string",
         };
         $col->{'placeholders'} = { @phs };
         foreach my $ph ( grep $_ ne '?' && !/^$re_ph$/o, values %{ $col->{'placeholders'} } ) {
@@ -953,7 +967,6 @@ sub parse {
             $parser->dq( $_ ) foreach @values;
             $ph = \@values;
         }
-        $prev = $col->{'string'};
     }
     $res{'chain'} = \@columns;
 
@@ -1041,7 +1054,41 @@ sub qualify {
         $last = $joint;
     }
 
-    return $self;
+    return $res;
+}
+
+sub clone {
+    my $self = shift;
+    require Storable;
+    my %args = (
+        disqualify => 1,
+        @_,
+    );
+
+    my $res = $self->new( %$self );
+    $res->{'chain'} = Storable::dclone( $res->{'chain'} );
+    if ( $args{'disqualify'} ) {
+        delete @{ $_ }{'on', 'column', 'refers_to'} foreach @{ $res->{'chain'} };
+        delete $res->{'is_qualified'};
+    }
+    return $res;
+}
+
+sub stringify {
+    my $self = shift;
+    my @parts = $self->{'alias'};
+    foreach my $joint ( @{ $self->{'chain'} } ) {
+        push @parts, $joint->{'name'};
+        while ( my ($k, $v) = each %{ $joint->{'placeholders'} } ) {
+            if ( ref $v ) {
+                $parts[-1] .= "{ $k => ". join( ', ', map $parser->qq($_), @$v ) ." }";
+            }
+            else {
+                $parts[-1] .= "{ $k => $v }";
+            }
+        }
+    }
+    return join '.', @parts;
 }
 
 1;
