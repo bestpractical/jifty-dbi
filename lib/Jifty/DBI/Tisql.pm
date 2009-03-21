@@ -318,7 +318,7 @@ sub resolve_join {
     if ( my $alias = $meta->{'alias'} ) {
         die "Couldn't find alias $alias"
             unless $aliases->{ $alias };
-        my $target = $aliases->{ $alias }->qualify( $self, $aliases, $collection );
+        my $target = $aliases->{ $alias }->qualify( tisql => $self, aliases => $aliases, new => 0 );
         my $item = $target->{'chain'}[-1]{'refers_to'}
             or die "Last column of alias '$alias' is not a reference";
         %last = (
@@ -638,7 +638,7 @@ sub external_reference {
         my $str = shift;
         $str = "__record__". $str if 0 == rindex $str, '.', 0;
         substr($str, 0, length($name)) = '' if 0 == rindex $str, "$name.", 0;
-        return $self->parse_column($str)->qualify( $self, $aliases );
+        return $self->parse_column($str)->qualify( tisql => $self, aliases => $aliases );
     };
     my $conditions = $parser->as_array(
         $column->tisql,
@@ -650,7 +650,7 @@ sub external_reference {
         $conditions,
         'AND',
         Jifty::DBI::Tisql::Condition->from_struct(
-            $self->parse_column('__record__.id')->qualify( $self, $aliases),
+            $self->parse_column('__record__.id')->qualify( tisql => $self, aliases => $aliases ),
             $record->id || 0,
         ),
     ];
@@ -991,13 +991,23 @@ sub from_struct {
 
 sub qualify {
     my $self = shift;
-    my $tisql = shift;
-    my $aliases = shift;
-    my $collection = shift || $tisql->{'collection'};
+    my %args = (
+        tisql      => undef,
+        aliases    => undef,
+        collection => undef,
+        new        => 1,
+        @_
+    );
+    return $self if $self->{'is_qualified'};
 
-    return $self if $self->{'is_qualified'}++;
+    my $tisql      = $args{'tisql'};
+    my $aliases    = $args{'aliases'};
+    my $collection = $args{'collection'} || $tisql->{'collection'};
 
-    my $start_from = $self->{'alias'};
+    my $res = $args{'new'}? $self->clone( disqualify => 0 ) : $self;
+    $res->{'is_qualified'} = 1;
+
+    my $start_from = $res->{'alias'};
     my ($item, $last);
     if ( !$start_from && !$aliases->{''} ) {
         $item = $collection->new_item;
@@ -1005,7 +1015,7 @@ sub qualify {
         my $alias = $aliases->{ $start_from }
             || die "Couldn't find alias '$start_from'";
 
-        $alias->qualify( $tisql, $aliases, $collection );
+        $alias->qualify( tisql => $tisql, aliases => $aliases, collection => $collection, new => 0 );
 
         $last = $alias;
         $item = $alias->{'chain'}[-1]{'refers_to'};
@@ -1015,7 +1025,7 @@ sub qualify {
         $item = $item->new_item if $item->isa('Jifty::DBI::Collection');
     }
 
-    my @chain = @{ $self->{'chain'} };
+    my @chain = @{ $res->{'chain'} };
     while ( my $joint = shift @chain ) {
         my $name = $joint->{'name'};
 
@@ -1027,9 +1037,9 @@ sub qualify {
         my $classname = $column->refers_to;
         if ( !$classname && @chain ) {
             die "column '$name' of ". ref($item) ." is not a reference"
-                .", but used so in '". $self->{'string'} ."'";
+                .", but used so in '$res'";
         }
-        return $self unless $classname;
+        return $res unless $classname;
 
         if ( UNIVERSAL::isa( $classname, 'Jifty::DBI::Collection' ) ) {
             $joint->{'refers_to'} = $classname->new( handle => $collection->_handle );
