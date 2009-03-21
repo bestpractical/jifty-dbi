@@ -148,7 +148,7 @@ sub apply_query_tree {
 
     $collection->open_paren('tisql');
     foreach my $element ( @$tree ) {
-        elsif ( ref $element eq 'ARRAY' ) {
+        if ( ref $element eq 'ARRAY' ) {
             $self->apply_query_tree( $element, $ea );
         }
         elsif ( ref $element ) {
