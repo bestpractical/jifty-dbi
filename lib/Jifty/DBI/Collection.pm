@@ -209,7 +209,7 @@ sub _do_search {
             $row->{ substr($_, 5) } = delete $row->{ $_ }
                 foreach grep rindex($_, "main_", 0) == 0, keys %$row;
             my $item = $self->new_item;
-            $item->load_from_hash($row);
+            $item->load_from_hash($row, fast => 1);
             $self->add_record($item);
         }
         if ( $records->err ) {
@@ -242,7 +242,7 @@ sub _do_search {
         my $item;
         foreach my $row ( values %{ $data->{$row_id}->{'main'} } ) {
             $item = $self->new_item();
-            $item->load_from_hash($row);
+            $item->load_from_hash($row, fast => 1);
         }
         foreach my $alias ( grep { $_ ne 'main' } keys %{ $data->{$row_id} } )
         {
@@ -260,7 +260,7 @@ sub _do_search {
                     derived => 1 );
                 foreach my $row (@rows) {
                     my $entry = $collection->new_item;
-                    $entry->load_from_hash($row);
+                    $entry->load_from_hash($row, fast => 1);
                     $collection->add_record($entry);
                 }
 
@@ -269,7 +269,7 @@ sub _do_search {
                 warn "Multiple rows returned for $class in prefetch"
                     if @rows > 1;
                 my $entry = $class->new( $self->_new_record_args );
-                $entry->load_from_hash( shift @rows ) if @rows;
+                $entry->load_from_hash( shift(@rows), fast => 1 ) if @rows;
                 $item->prefetched( $col_name => $entry );
             } else {
                 Carp::cluck(

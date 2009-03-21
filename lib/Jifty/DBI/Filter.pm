@@ -84,12 +84,13 @@ sub new {
         handle    => undef,
         @_
     );
-    my $self = {};
-    bless $self, $class;
+    my $self = $class->SUPER::new( {
+        record    => delete $args{record},
+        column    => delete $args{column},
+        value_ref => delete $args{value_ref},
+        handle    => delete $args{handle},
+    } );
     
-    $self->$_( delete $args{$_} )
-        foreach qw(record column value_ref handle);
-
     for ( grep $self->can($_), keys %args ) {
         $self->$_( $args{$_} );
     }

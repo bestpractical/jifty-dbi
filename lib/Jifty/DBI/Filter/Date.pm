@@ -7,6 +7,7 @@ use base qw|Jifty::DBI::Filter::DateTime|;
 
 use constant _time_zone => 'floating';
 use constant _strptime  => '%Y-%m-%d';
+use constant date_only  => 1;
 
 =head1 NAME
 

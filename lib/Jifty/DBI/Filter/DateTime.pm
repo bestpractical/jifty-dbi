@@ -12,6 +12,7 @@ use Carp ();
 use constant _time_zone => 'UTC';
 use constant _strptime  => '%Y-%m-%d %H:%M:%S';
 use constant _parser    => DateTime::Format::ISO8601->new();
+use constant date_only  => 0;
 
 =head1 NAME
 
@@ -67,18 +68,18 @@ sub encode {
     return if !defined $$value_ref;
 
     if  ( ! UNIVERSAL::isa( $$value_ref, 'DateTime' )) {
-        if ( $$value_ref !~ /^\d{4}[ -]?\d{2}[ -]?[\d{2}]/) {
-       $$value_ref = undef;
+        if ($$value_ref !~ /^\d{4}[ -]?\d{2}[ -]?\d{2}/) {
+            $$value_ref = undef;
         }
         return undef;
-   }
+    }
 
     return unless $$value_ref;
     if (my $tz = $self->_time_zone) {
         $$value_ref = $$value_ref->clone;
         $$value_ref->set_time_zone($tz);
     }
-    $$value_ref = $$value_ref->strftime($self->_strptime);
+    $$value_ref = $$value_ref->DateTime::strftime($self->_strptime);
     return 1;
 }
 
@@ -107,19 +108,23 @@ sub decode {
     eval { $dt  = $self->_parser->parse_datetime($str) };
 
     if ($@) { # if datetime can't decode this, scream loudly with a useful error message
-        Carp::cluck($@);
+        Carp::cluck("Unable to decode $str: $@");
         return;
     }
 
-    if ($dt) {
-	my $tz = $self->_time_zone;
-	$dt->set_time_zone($tz) if $tz;
+    return if !$dt;
 
-        $dt->set_formatter($self->formatter);
-        $$value_ref = $dt;
-    } else {
-        return;
+    my $tz = $self->_time_zone;
+    $dt->set_time_zone($tz) if $tz;
+
+    if ($self->date_only) {
+        $dt->set_hour(0);
+        $dt->set_minute(0);
+        $dt->set_second(0);
     }
+
+    $dt->set_formatter($self->formatter);
+    $$value_ref = $dt;
 }
 
 =head1 SEE ALSO

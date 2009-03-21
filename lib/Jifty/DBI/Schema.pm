@@ -381,6 +381,7 @@ sub _init_column_for {
 
                 # Create the helper methods for the virtual column too
                 $from->_init_methods_for_column($virtual_column);
+                $from->COLUMNS->{$aliased_as} = $virtual_column;
             } else {
                 my $aliased_as = $name .'_'. $by;
                 my $virtual_column = $from->add_column($aliased_as);
@@ -398,6 +399,7 @@ sub _init_column_for {
 
                 # Create the helper methods for the virtual column too
                 $from->_init_methods_for_column($virtual_column);
+                $from->COLUMNS->{$aliased_as} = $virtual_column;
             }
         } elsif ( UNIVERSAL::isa( $refclass, 'Jifty::DBI::Collection' ) ) {
             $column->by('id') unless $column->by;
