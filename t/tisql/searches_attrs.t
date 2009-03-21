@@ -9,12 +9,14 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 227;
+use constant TESTS_PER_DRIVER => 485;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
 
 use Data::Dumper;
+
+use Jifty::DBI::Tisql qw(Q C);
 
 foreach my $d ( @available_drivers ) {
 SKIP: {
@@ -45,58 +47,123 @@ SKIP: {
 
     run_our_cool_tests(
         $nodes_obj,
-        ".type = 'article'" => [qw(a- aaa aab aac aaaab aabac aacaa aba abb abc acc)],
-        ".type = 'memo'"    => [qw(m- maa mab mac maaab mabac macaa mba mbb mbc mcc)],
+        ".type = 'article'"  => [qw(a- aaa aab aac aaaab aabac aacaa aba abb abc acc)],
+        Q(type => 'article') => [qw(a- aaa aab aac aaaab aabac aacaa aba abb abc acc)],
+        ".type = 'memo'"     => [qw(m- maa mab mac maaab mabac macaa mba mbb mbc mcc)],
+        Q(type => 'memo')    => [qw(m- maa mab mac maaab mabac macaa mba mbb mbc mcc)],
 
         # has no attrs
-        ".attrs.id IS NULL"       => [qw(a- m-)],
-        "has no .attrs"           => [qw(a- m-)],
-        ".attrs{ name => 'a'}.id IS NULL"  => [qw(a- m- aba abb abc acc mba mbb mbc mcc)],
-        "has no .attrs{name => 'a'}"      => [qw(a- m- aba abb abc acc mba mbb mbc mcc)],
-        "has no .attrs{name => 'a', 'b'}" => [qw(a- m- acc mcc)],
+        ".attrs.id IS NULL"             => [qw(a- m-)],
+        Q(C(qw(attrs id)) => 'IS NULL') => [qw(a- m-)],
+        "has no .attrs"                 => [qw(a- m-)],
+        Q('has no' => 'attrs')          => [qw(a- m-)],
+
+        ".attrs{ name => 'a'}.id IS NULL"               => [qw(a- m- aba abb abc acc mba mbb mbc mcc)],
+        Q(C('attrs', {name => 'a'}, 'id') => 'IS NULL') => [qw(a- m- aba abb abc acc mba mbb mbc mcc)],
+        "has no .attrs{name => 'a'}"                    => [qw(a- m- aba abb abc acc mba mbb mbc mcc)],
+        Q('has no' => C('attrs', {name => 'a'}))        => [qw(a- m- aba abb abc acc mba mbb mbc mcc)],
+        "has no .attrs{name => 'a', 'b'}"               => [qw(a- m- acc mcc)],
+        Q('has no' => C('attrs', {name => ['a', 'b']})) => [qw(a- m- acc mcc)],
 
         # has attrs
-        ".attrs.id IS NOT NULL" => [qw(aaa aab aac aaaab aabac aacaa aba abb abc acc maa mab mac maaab mabac macaa mba mbb mbc mcc)],
-        "has .attrs"            => [qw(aaa aab aac aaaab aabac aacaa aba abb abc acc maa mab mac maaab mabac macaa mba mbb mbc mcc)],
-        ".attrs{name => 'a'}.id IS NOT NULL" => [qw(aaa aab aac aaaab aabac aacaa maa mab mac maaab mabac macaa)],
-        "has .attrs{name => 'a'}"            => [qw(aaa aab aac aaaab aabac aacaa maa mab mac maaab mabac macaa)],
-        "has .attrs{name => 'b','c'}"            => [qw(aba abb abc acc mba mbb mbc mcc)],
+        ".attrs.id IS NOT NULL"
+            => [qw(aaa aab aac aaaab aabac aacaa aba abb abc acc maa mab mac maaab mabac macaa mba mbb mbc mcc)],
+        Q(C(qw(attrs id)) => 'IS NOT NULL')
+            => [qw(aaa aab aac aaaab aabac aacaa aba abb abc acc maa mab mac maaab mabac macaa mba mbb mbc mcc)],
+        "has .attrs"      => [qw(aaa aab aac aaaab aabac aacaa aba abb abc acc maa mab mac maaab mabac macaa mba mbb mbc mcc)],
+        Q(has => 'attrs') => [qw(aaa aab aac aaaab aabac aacaa aba abb abc acc maa mab mac maaab mabac macaa mba mbb mbc mcc)],
+
+        ".attrs{name => 'a'}.id IS NOT NULL"                => [qw(aaa aab aac aaaab aabac aacaa maa mab mac maaab mabac macaa)],
+        Q(C('attrs', {name => 'a'}, 'id') => 'IS NOT NULL') => [qw(aaa aab aac aaaab aabac aacaa maa mab mac maaab mabac macaa)],
+        "has .attrs{name => 'a'}"                           => [qw(aaa aab aac aaaab aabac aacaa maa mab mac maaab mabac macaa)],
+        Q(has => C('attrs', {name => 'a'}))                 => [qw(aaa aab aac aaaab aabac aacaa maa mab mac maaab mabac macaa)],
+        "has .attrs{name => 'b','c'}"                       => [qw(aba abb abc acc mba mbb mbc mcc)],
+        Q(has => C('attrs', {name => ['b', 'c']}))          => [qw(aba abb abc acc mba mbb mbc mcc)],
 
         # attr = x
-        ".attrs.value = 'no'" => [qw()],
-        ".attrs.value = 'a'" => [qw(aaa aaaab aacaa aba maa maaab macaa mba)],
-        ".attrs{name => 'a'}.value = 'a'" => [qw(aaa aaaab aacaa maa maaab macaa)],
-        ".attrs{name => 'a', 'b'}.value = 'c'" => [qw(aac aacaa aabac abc mac macaa mabac mbc)],
-        "has .attrs.value = 'no'" => [qw()],
-        "has .attrs.value = 'a'" => [qw(aaa aaaab aacaa aba maa maaab macaa mba)],
-        "has .attrs{name => 'a'}.value = 'a'" => [qw(aaa aaaab aacaa maa maaab macaa)],
-        "has .attrs{name => 'a', 'b'}.value = 'c'" => [qw(aac aacaa aabac abc mac macaa mabac mbc)],
+        ".attrs.value = 'no'"                                      => [qw()],
+        Q(C(qw(attrs value)) => 'no')                              => [qw()],
+        ".attrs.value = 'a'"                                       => [qw(aaa aaaab aacaa aba maa maaab macaa mba)],
+        Q(C(qw(attrs value)) => 'a')                               => [qw(aaa aaaab aacaa aba maa maaab macaa mba)],
+        ".attrs{name => 'a'}.value = 'a'"                          => [qw(aaa aaaab aacaa maa maaab macaa)],
+        Q(C(attrs => {name => 'a'}, 'value') => 'a')               => [qw(aaa aaaab aacaa maa maaab macaa)],
+        ".attrs{name => 'a', 'b'}.value = 'c'"                     => [qw(aac aacaa aabac abc mac macaa mabac mbc)],
+        Q(C(attrs => {name => ['a', 'b']}, 'value') => 'c')        => [qw(aac aacaa aabac abc mac macaa mabac mbc)],
+        "has .attrs.value = 'no'"                                  => [qw()],
+        Q(has => C(qw(attrs value)) => 'no')                       => [qw()],
+        "has .attrs.value = 'a'"                                   => [qw(aaa aaaab aacaa aba maa maaab macaa mba)],
+        Q(has => C(qw(attrs value)) => 'a')                        => [qw(aaa aaaab aacaa aba maa maaab macaa mba)],
+        "has .attrs{name => 'a'}.value = 'a'"                      => [qw(aaa aaaab aacaa maa maaab macaa)],
+        Q(has => C(attrs => {name => 'a'}, 'value') => 'a')        => [qw(aaa aaaab aacaa maa maaab macaa)],
+        "has .attrs{name => 'a', 'b'}.value = 'c'"                 => [qw(aac aacaa aabac abc mac macaa mabac mbc)],
+        Q(has => C(attrs => {name => ['a', 'b']}, 'value') => 'c') => [qw(aac aacaa aabac abc mac macaa mabac mbc)],
 
         # attr != x
-        ".attrs.value != 'no'" => [qw(a- aaa aab aac aaaab aabac aacaa aba abb abc acc m- maa mab mac maaab mabac macaa mba mbb mbc mcc)],
-        ".attrs.value != 'a'" => [qw(a- aab aac aabac abb abc acc m- mab mac mabac mbb mbc mcc)],
-        ".attrs{name => 'a'}.value != 'a'" => [qw(a- aab aac aabac aba abb abc acc m- mab mac mabac mba mbb mbc mcc)],
+        ".attrs.value != 'no'"
+            => [qw(a- aaa aab aac aaaab aabac aacaa aba abb abc acc m- maa mab mac maaab mabac macaa mba mbb mbc mcc)],
+        Q(C(qw(attrs value)), '!=', 'no')
+            => [qw(a- aaa aab aac aaaab aabac aacaa aba abb abc acc m- maa mab mac maaab mabac macaa mba mbb mbc mcc)],
+        ".attrs.value != 'a'"
+            => [qw(a- aab aac aabac abb abc acc m- mab mac mabac mbb mbc mcc)],
+        Q(C(qw(attrs value)), '!=', 'a')
+            => [qw(a- aab aac aabac abb abc acc m- mab mac mabac mbb mbc mcc)],
+        ".attrs{name => 'a'}.value != 'a'"
+            => [qw(a- aab aac aabac aba abb abc acc m- mab mac mabac mba mbb mbc mcc)],
+        Q(C(attrs => {name => 'a'}, 'value'), '!=', 'a')
+            => [qw(a- aab aac aabac aba abb abc acc m- mab mac mabac mba mbb mbc mcc)],
+        "has no .attrs.value = 'no'"
+            => [qw(a- aaa aab aac aaaab aabac aacaa aba abb abc acc m- maa mab mac maaab mabac macaa mba mbb mbc mcc)],
+        Q('has no', C(qw(attrs value)) => 'no')
+            => [qw(a- aaa aab aac aaaab aabac aacaa aba abb abc acc m- maa mab mac maaab mabac macaa mba mbb mbc mcc)],
+        "has no .attrs.value = 'a'"
+            => [qw(a- aab aac aabac abb abc acc m- mab mac mabac mbb mbc mcc)],
+        Q('has no' => C(qw(attrs value)) => 'a')
+            => [qw(a- aab aac aabac abb abc acc m- mab mac mabac mbb mbc mcc)],
+        "has no .attrs{name => 'a'}.value = 'a'"
+            => [qw(a- aab aac aabac aba abb abc acc m- mab mac mabac mba mbb mbc mcc)],
+        Q('has no' => C(attrs => {name => 'a'}, 'value'), '=', 'a')
+            => [qw(a- aab aac aabac aba abb abc acc m- mab mac mabac mba mbb mbc mcc)],
 
         # attr = x and/or attr = y
         ".attrs.value = 'no' AND .attrs.value = 'a'" => [qw()],
+        Q(C(qw(attrs value)) => 'no') & Q(C(qw(attrs value)) => 'a') => [qw()],
         ".attrs.value = 'no' OR  .attrs.value = 'a'" => [qw(aaa aaaab aacaa aba maa maaab macaa mba)],
+        Q(C(qw(attrs value)) => 'no') | Q(C(qw(attrs value)) => 'a') => [qw(aaa aaaab aacaa aba maa maaab macaa mba)],
         ".attrs.value = 'a' AND .attrs.value = 'b'" => [qw(aaaab maaab)],
+        Q(C(qw(attrs value)) => 'a') & Q(C(qw(attrs value)) => 'b') => [qw(aaaab maaab)],
         ".attrs.value = 'a' OR  .attrs.value = 'b'" => [qw(aaa aaaab aacaa aba maa maaab macaa mba aab abb mab mbb aabac mabac)],
+        Q(C(qw(attrs value)) => 'a') | Q(C(qw(attrs value)) => 'b') => [qw(aaa aaaab aacaa aba maa maaab macaa mba aab abb mab mbb aabac mabac)],
         ".attrs{name => 'a'}.value = 'a' AND .attrs{name => 'b'}.value = 'b'" => [qw()],
+        Q(C(attrs => {name => 'a'}, 'value') => 'a') & Q(C(attrs => {name => 'b'}, 'value') => 'b') => [qw()],
         ".attrs{name => 'a'}.value = 'a' OR .attrs{name => 'b'}.value = 'b'" => [qw(aaa aaaab aacaa abb maa maaab macaa mbb)],
+        Q(C(attrs => {name => 'a'}, 'value') => 'a') | Q(C(attrs => {name => 'b'}, 'value') => 'b') => [qw(aaa aaaab aacaa abb maa maaab macaa mbb)],
 
 
         # tag != x and/or tag = y
-        ".attrs.value != 'no' AND .attrs.value = 'a'" => [qw(aaa aaaab aacaa aba maa maaab macaa mba)],
-        ".attrs.value != 'no' OR  .attrs.value = 'a'" => [qw(a- aab aac aabac abb abc m- mab mac mabac mbb mbc acc mcc aaa aaaab aacaa aba maa maaab macaa mba)],
-        ".attrs.value != 'a' AND .attrs.value = 'b'" => [qw(abb mbb aab aabac mab mabac)],
-        ".attrs.value != 'a' OR  .attrs.value = 'b'" => [qw(a- aab aac aabac abb abc m- mab mac mabac mbb mbc acc mcc aaaab maaab)],
-        ".attrs{name => 'a'}.value != 'a' AND .attrs{name => 'b'}.value = 'b'" => [qw(abb mbb)],
-        ".attrs{name => 'a'}.value != 'a' OR .attrs{name => 'b'}.value = 'b'" => [qw(a- aab aac aabac aba abc m- mab mac mabac mba mbc acc mcc abb mbb)],
+        ".attrs.value != 'no' AND .attrs.value = 'a'"                    => [qw(aaa aaaab aacaa aba maa maaab macaa mba)],
+        Q(C(qw(attrs value)), '!=', 'no') & Q(C(qw(attrs value)) => 'a') => [qw(aaa aaaab aacaa aba maa maaab macaa mba)],
+        ".attrs.value != 'no' OR  .attrs.value = 'a'"
+            => [qw(a- aab aac aabac abb abc m- mab mac mabac mbb mbc acc mcc aaa aaaab aacaa aba maa maaab macaa mba)],
+        Q(C(qw(attrs value)), '!=', 'no') | Q(C(qw(attrs value)) => 'a')
+            => [qw(a- aab aac aabac abb abc m- mab mac mabac mbb mbc acc mcc aaa aaaab aacaa aba maa maaab macaa mba)],
+        ".attrs.value != 'a' AND .attrs.value = 'b'"                    => [qw(abb mbb aab aabac mab mabac)],
+        Q(C(qw(attrs value)), '!=', 'a') & Q(C(qw(attrs value)) => 'b') => [qw(abb mbb aab aabac mab mabac)],
+        ".attrs.value != 'a' OR  .attrs.value = 'b'"
+            => [qw(a- aab aac aabac abb abc m- mab mac mabac mbb mbc acc mcc aaaab maaab)],
+        Q(C(qw(attrs value)), '!=', 'a') | Q(C(qw(attrs value)) => 'b')
+            => [qw(a- aab aac aabac abb abc m- mab mac mabac mbb mbc acc mcc aaaab maaab)],
+        ".attrs{name => 'a'}.value != 'a' AND .attrs{name => 'b'}.value = 'b'"                          => [qw(abb mbb)],
+        Q(C(attrs => {name => 'a'}, 'value'), '!=', 'a') & Q(C(attrs => {name => 'b'}, 'value') => 'b') => [qw(abb mbb)],
+        ".attrs{name => 'a'}.value != 'a' OR .attrs{name => 'b'}.value = 'b'"
+            => [qw(a- aab aac aabac aba abc m- mab mac mabac mba mbc acc mcc abb mbb)],
+        Q(C(attrs => {name => 'a'}, 'value'), '!=', 'a') | Q(C(attrs => {name => 'b'}, 'value') => 'b')
+            => [qw(a- aab aac aabac aba abc m- mab mac mabac mba mbc acc mcc abb mbb)],
 
         # has .tag != x
         "has .attrs.value != 'a'" => [qw(aab aac aaaab aabac aacaa abb abc mab mac maaab mabac macaa mbb mbc acc mcc)],
+        Q(has => C(attrs => 'value'), '!=', 'a') => [qw(aab aac aaaab aabac aacaa abb abc mab mac maaab mabac macaa mbb mbc acc mcc)],
         "has .attrs{name => 'a'}.value != 'b'" => [qw(aaa aac aaaab aabac aacaa maa mac maaab mabac macaa)],
+        Q(has => C(attrs => {name => 'a'}, 'value'), '!=', 'b') => [qw(aaa aac aaaab aabac aacaa maa mac maaab mabac macaa)],
 
 #        # has no .tag != x
 #        "has no .attrs.value != 'no'" => [qw(a m)],
@@ -116,8 +183,11 @@ sub run_our_cool_tests {
     my $collection = shift;
     my $bundling;
     $bundling = shift if @_ % 2;
-    my %tests = @_;
-    while (my ($q, $check) = each %tests ) {
+    my (@tmp, @tests);
+    @tmp = @tests = @_;
+    while (my ($q, $check) = splice @tests, 0, 2 ) {
+#        use Data::Dumper;
+#        diag( Dumper $q );
         $check = { map {$_ => 1} @$check };
         $collection->clean_slate;
         $collection->tisql( joins_bundling => $bundling )->query( $q );
@@ -143,8 +213,10 @@ sub run_our_cool_tests {
         diag "wrong select query: ". $collection->build_select_query
             if $fault;
     }
-    return run_our_cool_tests( $collection, 1, %tests ) unless $bundling;
+
+    return run_our_cool_tests( $collection, 1, @tmp ) unless $bundling;
 }
+
 1;
 
 
