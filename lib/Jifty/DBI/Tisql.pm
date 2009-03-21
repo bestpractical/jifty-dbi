@@ -826,7 +826,12 @@ sub from_struct {
         }
     }
 
-    if ( @args == 2 ) {
+    if ( @args == 1 && $res{'modifier'} ) {
+        @res{qw(op_type lhs op rhs)} = ('col_op', $args[0], $res{'modifier'} eq 'has'? 'IS NOT': 'IS', 'NULL');
+        $res{'modifier'} = '';
+        push @{ $res{'lhs'}{'chain'} }, { name => 'id', placeholders => {} };
+    }
+    elsif ( @args == 2 ) {
         if ( $args[1] =~ /^$re_sql_op_un$/i ) {
             @res{qw(op_type lhs op rhs)}
                 = ('col_op', $args[0], split /\s*(?=null)/i, $args[1]);
