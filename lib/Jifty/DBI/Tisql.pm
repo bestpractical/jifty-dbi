@@ -163,7 +163,7 @@ sub apply_query_tree {
 }
 
 sub apply_query_condition {
-    my ($self, $collection, $ea, $condition, $join) = @_;
+    my ($self, $collection, $ea, $condition) = @_;
 
     die "left hand side must be always column specififcation"
         unless ref $condition->{'lhs'} eq 'Jifty::DBI::Tisql::Column';
@@ -181,7 +181,7 @@ sub apply_query_condition {
     }
     $modifier ||= 'has';
 
-    my $bundling = $long && !$join && $self->{'joins_bundling'};
+    my $bundling = $long && $self->{'joins_bundling'};
     my $bundled = 0;
     if ( $bundling ) {
         my $bundles = $self->{'cache'}{'condition_bundles'}{ $condition->{'lhs'} }{ $modifier } ||= [];
@@ -221,7 +221,6 @@ sub apply_query_condition {
     if ( $modifier eq 'has' ) {
         my %limit = (
             subclause        => 'tisql',
-            leftjoin         => $join,
             entry_aggregator => $ea,
             alias            => $self->resolve_join( $condition->{'lhs'}, use_subjoin => (($op =~ /^is\b/i)? 1 : 0) ),
             column           => $condition->{'lhs'}{'chain'}[-1]{'name'},
@@ -247,8 +246,6 @@ sub apply_query_condition {
         $collection->limit( %limit );
     }
     else {
-        die "not yet implemented: it's a join" if $join;
-
         my %limit = (
             subclause        => 'tisql',
             alias            => $self->resolve_join( $condition->{'lhs'}, use_subjoin => 1 ),
