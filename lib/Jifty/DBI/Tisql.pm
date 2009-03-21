@@ -818,8 +818,11 @@ sub from_struct {
     unless ( blessed $args[0] ) {
         if ( lc($args[0]) eq 'has' || lc($args[0]) eq 'has no' ) {
             $res{'modifier'} = lc shift @args;
+            unless ( blessed $args[0] ) {
+                $args[0] = Jifty::DBI::Tisql::Column->from_struct( $args[0] );
+            }
         } else {
-            die "First argument should be either operator modifier or column, but not '$args[0]'";
+            $args[0] = Jifty::DBI::Tisql::Column->from_struct( $args[0] );
         }
     }
 
