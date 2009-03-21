@@ -148,25 +148,18 @@ sub apply_query_tree {
 
     $collection->open_paren('tisql');
     foreach my $element ( @$tree ) {
-        unless ( ref $element ) {
-            $ea = $element;
-            next;
-        }
         elsif ( ref $element eq 'ARRAY' ) {
             $self->apply_query_tree( $element, $ea );
-            next;
         }
-        elsif ( blessed $element && $element->isa( 'Jifty::DBI::Tisql::Condition' ) ) {
+        elsif ( ref $element ) {
             $self->apply_query_condition( $collection, $ea, $element );
         }
-        elsif ( ref $element eq 'HASH' ) {
-            Carp::confess( "booo" );
-            $self->apply_query_condition( $collection, $ea, $element );
-        } else {
-            die "wrong query tree ". Dumper( $element, $tree );
+        else {
+            $ea = $element;
         }
     }
     $collection->close_paren('tisql');
+    return $self;
 }
 
 sub apply_query_condition {
