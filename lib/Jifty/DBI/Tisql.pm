@@ -969,6 +969,9 @@ sub from_struct {
         }
         elsif ( ref $element eq 'HASH' ) {
             $columns[-1]{'placeholders'} = $element;
+            foreach ( grep !ref $element->{ $_ }, keys %$element ) {
+                $element->{ $_ } = [ $element->{ $_ } ];
+            }
         }
         else {
             die "bla-bla wrong arguments";
