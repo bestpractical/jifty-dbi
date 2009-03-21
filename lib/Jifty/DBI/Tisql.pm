@@ -950,7 +950,7 @@ sub parse {
     }
     $res{'chain'} = \@columns;
 
-    return bless \%res, ref($self)||$self;
+    return $self->new( %res );
 }
 
 sub from_struct {
@@ -976,7 +976,7 @@ sub from_struct {
     }
     $res{'chain'} = \@columns;
 
-    return bless \%res, ref($self)||$self;
+    return $self->new( %res );
 }
 
 sub qualify {
