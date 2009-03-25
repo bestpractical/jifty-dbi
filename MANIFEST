@@ -70,6 +70,7 @@ t/02records_object.t
 t/02searches_joins.t
 t/03rebless.t
 t/04memcached.t
+t/05raw_value.t
 t/06filter.t
 t/06filter_boolean.t
 t/06filter_datetime.t

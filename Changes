@@ -1,5 +1,104 @@
 Revision history for Perl extension Jifty::DBI.
 
+0.53 Wed Mar 25 15:27:03 EDT 2009
+- Major bugfixes:
+   * On rollback, flush the record cache.  This fixes a bug when SQLite
+     reuses primary keys after rollback, and thus the record cache is
+     wrong.
+   * Apply filters to "default is ..." values, so "is boolean, default is
+     0" works on postgres, for instance
+   * $self->_new_collection_args is passed to the ->new constructor of a
+     collection, not its ->new_item method
+
+- Performance fixes:
+   * Don't call accessor twice when we have values around
+   * Don't create temporary variables we don't need around, just return
+   * Optimize for the case when there are no output filters
+   * Play with self/class only when passed argument is not a reference
+   * In _do_search, separate prefetch and non-prefetch paths; the latter
+     is a much tighter loop
+   * Refactor first pass over results in prefetch path
+   * Move a ->new_item call where we only need it
+   * Jifty::DBI::Handle::SQLite - LOWER() in SQLite is expensive; it's
+     easier just put COLLATE NOCASE on the column side.  Bump DBD::SQLite
+     to 1.14 which gives us COLLATE NOCASE.
+   * Cache on record table, not record class so subclasses also get
+     cached correctly.  If the data in the underlying table changes,
+     regardless of the class you're using, you want to load the new data.
+   * Refactor _qualified_record_columns
+   * call ->table for defaulting only when we actually want defaulting
+   * Selay some method calls when possible in limit
+   * Minor refactoring of _get_alias
+   * grep before looping to loop over fewer values in load_from_hash
+   * Cache load attempts in new_item in a local static cache
+   * Cache filter class load attempts in _apply_filters
+   * Save some slow Class::Accessor calls in Jifty::DBI::Filter
+   * Stick aliases into COLUMNS as well, for faster lookup
+   * Provide a faster load_from_hash for when we're being called from
+     do_search
+
+- Datetime fixes:
+   * _formatter is *inheritable* class data.  If it happens to get set by
+     the DateTime filter before getting set by one of its subclasses (the
+     Date and Time filters), than it is stuck on the DateTime _formatter
+     setting because the subclasses don't override it.  There are a
+     couple solutions, the simplest being to check the value of _strptime
+     and update/override _formatter if it is different, which is what
+     I've done here.  (This may not be the most optimized solution.)
+   * Require Time::Duration::Parse 0.06 to win us decimal durations like
+     1.5h
+   * Fix a broken regex that just happened to work because we only fed it
+     correct data
+   * Add date_only method in date and datetime filters
+   * For date-only timestamps, set hour, minute, and second to zero
+   * Include the datetime string we're trying to decode in parse failure
+     cluck
+   * Use DateTime's strptime since we don't want additional logic
+
+- Documentation fixes:
+   * Minor POD improvement for debian lintian in Jifty::DBI::Column
+   * Adding an example of open_paren/close_paren and limit subclause.
+   * Added documentation for "IS" on limit().
+   * Additional docs for load_by_cols
+   * Update record_class' docs
+
+- Minor bugfixes:
+   * Perltidy, primarily for indentation fixes
+   * Update copyright year to 2009
+   * collections can now clear_order_by
+   * requires('perl' => '5.8.3') confuses M:I. the "correct" incantation
+     is perl_version('5.8.3')
+   * Add the ability to unload columns and prefetched values
+   * Use $args{'collection'}->limit instead of
+     $self->Jifty::DBI::Collection::limit so we don't break
+   * We accept IN or = as operators for array ref. values, so match
+     against that (and do it case insensitively to boot)
+   * Allow validators to get extra arguments
+   * Storable with non-bytea is OK if we base64
+   * add double naming schema for record references, using name, name_by
+   * fixed situation with 'column X_not_id refers_to M by "not_id"'
+   * Aliases should be virtual
+   * When we have group_by, the first column may not be enough to
+     distinctify the rows.  But since they're grouped, they're all
+     distinct by definition.
+   * turn _handle _is_limited rows_per_page into accessors
+   * Clean out fetched when we load_from_hash
+   * Pass arguments database_Version to the super method
+   * Don't chomp Collection or s if prev character is ':', die instead,
+     it can happen for annon collections based either on JDBI::Collection
+     or J::Collection
+   * No need to setup the pager, its constructor does that for us;
+     actually it's really questionable that we need to setup pager when
+     there is no paging by default
+   * Don't optimize left joins on mysql 5.0 and newer, may be other DBs
+     can drop this too
+   * $caller->COLUMNS should not contain virtual methods from plugins
+   * Add "raw value" internal values
+   * Plugin import must not call ->columns which causes incorrect
+     caching.
+
+
+
 0.49 Mon Apr 07 22:16:48 EST 2008
 - Major changes:
    * "is boolean" support for cross-database booleans
@@ -91,8 +190,9 @@ Revision history for Perl extension Jifty::DBI.
    * Be a bit cleverer about not always doing a count before doing a select
      (The previous behaviour was pathalogical)
 
-0.48 Thu Nov 29 16:28:11 EST 2007
 
+
+0.48 Thu Nov 29 16:28:11 EST 2007
    * User and password values are excluded from the DSN in a more proper fashion
    * Setting a default for RECORD_MIXINS and altering the mk_classdata() decls
      to avoid any confusion with the mk_accessors() interface.
@@ -117,8 +217,9 @@ Revision history for Perl extension Jifty::DBI.
    * manifest skip pm_to_blib, add new test file to manifest
    * Update Changes
 
-0.47 Fri Nov 16 15:23:28 EST 2007
 
+
+0.47 Fri Nov 16 15:23:28 EST 2007
    or, "The chmrr fixfest"
 
    * Note for posterity why we can't apply acl checks to refers_to columns
@@ -161,13 +262,15 @@ Revision history for Perl extension Jifty::DBI.
    * Whoops, turned off the wrong warning
    * POD coverage
 
-0.46 Wed Nov  7 12:24:08 EST 2007
 
+
+0.46 Wed Nov  7 12:24:08 EST 2007
  - POD Coverage nit
  - Fix for a stray tempfiles bug reported by ANDK
 
-0.45
 
+
+0.45
 Add a warning for mandatory+till until we fix it
 
 Fix the mandatory/inactive tests
