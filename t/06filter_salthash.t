@@ -47,7 +47,7 @@ SKIP: {
 
    # undef/NULL
    $rec->set_password;
-   is_deeply($rec->password, undef, 'set undef value');
+   is($rec->password, undef, 'set undef value');
 
    cleanup_schema('TestApp', $handle);
    disconnect_handle($handle);
