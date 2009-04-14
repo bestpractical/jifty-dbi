@@ -238,6 +238,21 @@ sub print_error {
     return $self->dbh->{PrintError};
 }
 
+=head2 log MESSAGE
+
+Takes a single argument, a message to log.
+
+Currently prints that message to STDERR
+
+=cut
+
+sub log {
+    my $self = shift;
+    my $msg  = shift;
+    warn $msg . "\n";
+
+}
+
 =head2 log_sql_statements BOOL
 
 Takes a boolean argument. If the boolean is true, it will log all SQL
@@ -1247,21 +1262,6 @@ sub distinct_count {
 
     # Prepend select query for DBs which allow DISTINCT on all column types.
     $$statementref = "SELECT COUNT(DISTINCT main.id) FROM $$statementref";
-
-}
-
-=head2 log MESSAGE
-
-Takes a single argument, a message to log.
-
-Currently prints that message to STDERR
-
-=cut
-
-sub log {
-    my $self = shift;
-    my $msg  = shift;
-    warn $msg . "\n";
 
 }
 
