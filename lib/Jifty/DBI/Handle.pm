@@ -1287,6 +1287,34 @@ The default is 0.
 
 sub canonical_false { 0 }
 
+=head2 Schema manipulation methods
+
+=head3 rename_column
+
+Rename a column in a table. Takes 'table', 'column' and new name in 'to'.
+
+=cut
+
+sub rename_column {
+    my $self = shift;
+    my %args = (table => undef, column => undef, to => undef, @_);
+# Oracle: since Oracle 9i R2
+# Pg: 7.4 can this and may be earlier
+    return $self->simple_query(
+        "ALTER TABLE $args{'table'} RENAME COLUMN $args{'column'} TO $args{'to'}"
+    );
+}
+
+=head3 rename_table
+
+=cut
+
+sub rename_table {
+    my $self = shift;
+    my %args = (from => undef, to => undef, @_);
+    return $self->simple_query("RENAME TABLE $args{'from'} TO $args{'to'}");
+}
+
 =head2 DESTROY
 
 When we get rid of the L<Jifty::DBI::Handle>, we need to disconnect
