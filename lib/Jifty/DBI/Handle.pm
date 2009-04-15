@@ -1311,8 +1311,8 @@ sub rename_column {
 
 sub rename_table {
     my $self = shift;
-    my %args = (from => undef, to => undef, @_);
-    return $self->simple_query("RENAME TABLE $args{'from'} TO $args{'to'}");
+    my %args = (table => undef, to => undef, @_);
+    return $self->simple_query("RENAME TABLE $args{'table'} TO $args{'to'}");
 }
 
 =head2 DESTROY
