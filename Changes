@@ -1,6 +1,6 @@
 Revision history for Perl extension Jifty::DBI.
 
-0.54 
+0.55 
 - New features:
    * new methods in ::Handle: rename_table and rename_column
 
