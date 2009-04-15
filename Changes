@@ -1,5 +1,9 @@
 Revision history for Perl extension Jifty::DBI.
 
+0.54 
+- New features:
+   * new methods in ::Handle: rename_table and rename_column
+
 0.53 Wed Mar 25 15:27:03 EDT 2009
 - Major bugfixes:
    * On rollback, flush the record cache.  This fixes a bug when SQLite
