@@ -25,7 +25,9 @@ SKIP: {
     connect_handle($handle);
     isa_ok( $handle->dbh, 'DBI::db' );
 
-    my $sth = $handle->simple_query("DROP TABLE IF EXISTS test") if $d eq 'mysql';
+    my $sth;
+
+    eval { $handle->simple_query("DROP TABLE IF EXISTS test") };
 
     $sth = $handle->simple_query(
         "CREATE TABLE test (a int, x integer not null default 1)"
