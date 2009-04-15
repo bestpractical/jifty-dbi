@@ -1305,14 +1305,19 @@ sub rename_column {
     );
 }
 
+
 =head3 rename_table
+
+Renames a table in the DB. Takes 'table' and new name of it in 'to'.
 
 =cut
 
 sub rename_table {
     my $self = shift;
     my %args = (table => undef, to => undef, @_);
-    return $self->simple_query("RENAME TABLE $args{'table'} TO $args{'to'}");
+# mysql has RENAME TABLE, but alter can rename temporary
+# Oracle, Pg, SQLite are ok with this
+    return $self->simple_query("ALTER TABLE $args{'table'} RENAME TO $args{'to'}");
 }
 
 =head2 DESTROY
