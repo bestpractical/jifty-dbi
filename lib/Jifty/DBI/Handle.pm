@@ -526,7 +526,7 @@ sub simple_query {
     my $sth = $self->dbh->prepare($query_string);
     unless ($sth) {
         my $message = "$self couldn't prepare the query '$query_string': "
-                    . $self->dbh->errstr 
+                    . $self->dbh->errstr;
         if ($DEBUG) {
             die "$message\n";
         } else {
