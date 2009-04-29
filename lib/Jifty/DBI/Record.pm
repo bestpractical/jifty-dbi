@@ -9,6 +9,7 @@ use Jifty::DBI::Column  ();
 use UNIVERSAL::require  ();
 use Scalar::Util qw(blessed);
 use Class::Trigger;    # exports by default
+use Scalar::Defer 'force';
 
 use base qw/
     Class::Data::Inheritable
@@ -1413,7 +1414,11 @@ sub __create {
             and defined $column->default
             and not ref $column->default )
         {
-            $attribs{ $column->name } = $column->default;
+            my $default = force $column->default;
+            $default = $default->id
+                if UNIVERSAL::isa( $default, 'Jifty::DBI::Record' );
+
+            $attribs{ $column->name } = $default;
 
             $self->_apply_input_filters(
                 column    => $column,
