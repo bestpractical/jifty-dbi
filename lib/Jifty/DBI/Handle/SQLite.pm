@@ -98,6 +98,12 @@ sub _make_clause_case_insensitive {
     return("$column COLLATE NOCASE", $operator, $value);
 }
 
+=head2 rename_column ( table => $table, column => $old_column, to => $new_column )
+
+rename column
+
+=cut
+
 sub rename_column {
     my $self = shift;
     my %args = (

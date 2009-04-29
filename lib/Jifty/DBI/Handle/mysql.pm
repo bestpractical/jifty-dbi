@@ -81,6 +81,12 @@ sub _optimize_joins {
     return;
 }
 
+=head2 rename_column ( table => $table, column => $old_column, to => $new_column )
+
+rename column, die if fails
+
+=cut
+
 sub rename_column {
     my $self = shift;
     my %args = (
