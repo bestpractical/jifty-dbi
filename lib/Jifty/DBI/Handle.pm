@@ -525,17 +525,16 @@ sub simple_query {
 
     my $sth = $self->dbh->prepare($query_string);
     unless ($sth) {
+        my $message = "$self couldn't prepare the query '$query_string': "
+                    . $self->dbh->errstr 
         if ($DEBUG) {
-            die "$self couldn't prepare the query '$query_string'"
-                . $self->dbh->errstr . "\n";
+            die "$message\n";
         } else {
-            warn "$self couldn't prepare the query '$query_string'"
-                . $self->dbh->errstr . "\n";
+            warn "$message\n";
             my $ret = Class::ReturnValue->new();
             $ret->as_error(
                 errno   => '-1',
-                message => "Couldn't prepare the query '$query_string'."
-                    . $self->dbh->errstr,
+                message => $message,
                 do_backtrace => undef
             );
             return ( $ret->return_value );
