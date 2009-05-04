@@ -37,6 +37,7 @@ my @attrs = qw/
 my @handy_attrs = qw/
     container
     label hints render_as
+    display_length
     documentation
     valid_values
     available_values
@@ -140,6 +141,8 @@ known attributes are:
 =item     container
 
 =item     label hints render_as
+
+=item     display_length
 
 =item     valid_values
 

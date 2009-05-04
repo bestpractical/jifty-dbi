@@ -706,6 +706,12 @@ A sentence or two to display in long-form user interfaces about what
 might go in this column.  Correct usage is C<hints is 'Used by the
 frobnicator to do strange things'>.
 
+=head2 display_length
+
+The displayed length of form fields. Though you may be able to fit
+500 characters in the field, you would not want to display an HTML
+form with a size 500 input box.
+
 =head2 render_as
 
 Used in user interface generation to know how to render the column.
