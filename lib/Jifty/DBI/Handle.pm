@@ -1328,7 +1328,7 @@ from the database
 
 sub DESTROY {
     my $self = shift;
-    $self->disconnect;
+    $self->disconnect unless $self->dbh and $self->dbh->{InactiveDestroy};
     delete $DBIHandle{$self};
 }
 
