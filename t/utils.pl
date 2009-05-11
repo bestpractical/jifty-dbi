@@ -338,10 +338,10 @@ sub drop_table_if_exists {
     my ($table, $handle) = @_;
     my $d = handle_to_driver( $handle );
     if ( $d eq 'Pg' ) {
-        my $exists = $handle->dbh->selectrow_array(
+        my ($exists) = $handle->dbh->selectrow_array(
             "select 1 from pg_tables where tablename = ?", undef, $table
         );
-        $handle->simple_query("DROP TABLE test") if $exists;
+        $handle->simple_query("DROP TABLE $table") if $exists;
     }
     else {
         local $@;
