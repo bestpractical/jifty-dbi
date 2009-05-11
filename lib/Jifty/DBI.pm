@@ -2,7 +2,7 @@ package Jifty::DBI;
 use warnings;
 use strict;
 
-$Jifty::DBI::VERSION = '0.55';
+$Jifty::DBI::VERSION = '0.56';
 
 =head1 NAME
 

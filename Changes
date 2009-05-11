@@ -1,8 +1,17 @@
 Revision history for Perl extension Jifty::DBI.
 
-0.55 
+0.56
+
+- Fixes:
+   * respect InactiveDestroy
+
 - New features:
    * new methods in ::Handle: rename_table and rename_column
+   * a display_length attribute on columns
+   * if a column's default is a record, call its id method
+
+- Documentation:
+   * make pod-coverage happy
 
 0.53 Wed Mar 25 15:27:03 EDT 2009
 - Major bugfixes:
