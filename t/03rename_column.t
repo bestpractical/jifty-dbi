@@ -27,7 +27,7 @@ SKIP: {
 
     my $sth;
 
-    eval { $handle->simple_query("DROP TABLE IF EXISTS test") };
+    drop_table_if_exists( 'test', $handle );
 
     $sth = $handle->simple_query(
         "CREATE TABLE test (a int, x integer not null default 1)"

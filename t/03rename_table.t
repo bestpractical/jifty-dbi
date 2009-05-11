@@ -26,8 +26,8 @@ SKIP: {
     isa_ok( $handle->dbh, 'DBI::db' );
 
     my $sth;
-    eval { $handle->simple_query("DROP TABLE IF EXISTS test") };
-    eval { $handle->simple_query("DROP TABLE IF EXISTS test1") };
+    drop_table_if_exists( 'test', $handle );
+    drop_table_if_exists( 'test1', $handle );
 
     $sth = $handle->simple_query("CREATE TABLE test (a int)");
     ok $sth, 'created a table';
