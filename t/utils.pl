@@ -309,4 +309,27 @@ sub init_data
         return $count;
 }
 
+=head2 drop_table_if_exists
+
+Takes a table name and handle. Drops the table in the DB if it exists.
+Returns nothing interesting, shouldn't die.
+
+=cut
+
+sub drop_table_if_exists {
+    my ($table, $handle) = @_;
+    my $d = handle_to_driver( $handle );
+    if ( $d eq 'Pg' ) {
+        my $exists = $handle->dbh->selectrow_array(
+            "select 1 from pg_tables where tablename = ?", undef, $table
+        );
+        $handle->simple_query("DROP TABLE test") if $exists;
+    }
+    else {
+        local $@;
+        eval { $handle->simple_query("DROP TABLE IF EXISTS $table") };
+    }
+    return;
+}
+
 1;
