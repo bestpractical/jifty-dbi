@@ -1328,6 +1328,10 @@ from the database
 
 sub DESTROY {
     my $self = shift;
+
+    # eval in DESTROY can cause $@ issues elsewhere
+    local $@;
+
     $self->disconnect
         unless $self->dbh
             and $self->dbh
