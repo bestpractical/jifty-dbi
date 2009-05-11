@@ -1328,7 +1328,13 @@ from the database
 
 sub DESTROY {
     my $self = shift;
-    $self->disconnect unless $self->dbh and $self->dbh->{InactiveDestroy};
+    $self->disconnect
+        unless $self->dbh
+            and $self->dbh
+                # We use an eval {} because DESTROY order during
+                # global destruction is not guaranteed -- the dbh may
+                # no longer be tied, which throws an error.
+            and eval { $self->dbh->{InactiveDestroy} };
     delete $DBIHandle{$self};
 }
 
