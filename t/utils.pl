@@ -34,7 +34,7 @@ that user has installed.
 
 our @available_drivers = grep { eval "require DBD::". $_ } @supported_drivers;
 
-=head1 functionS
+=head1 FUNCTIONS
 
 =head2 get_handle
 
@@ -287,6 +287,24 @@ sub cleanup_schema
 }
 
 =head2 init_data
+
+Takes a class to get data from and the handle, calls C<init_data>
+method in the class, result is used to create new records of that
+class. First row is used for columns names.
+
+Example:
+
+    init_data('TestApp::User', $handle);
+
+    ...
+
+    package TestApp::User;
+    sub init_data { return (
+        ['name', 'email'],
+
+        ['ruz', 'ruz@localhost'],
+        ...
+    ) }
 
 =cut
 
