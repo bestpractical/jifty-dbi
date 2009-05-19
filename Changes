@@ -1,17 +1,41 @@
 Revision history for Perl extension Jifty::DBI.
 
-0.56
-
-- Fixes:
-   * respect InactiveDestroy
+0.57 Tue May 19 08:02:03 EDT 2009
+- Major bugfixes:
+    * Use eval {} in Jifty::DBI::Handle's DESTROY block when manipulating DBI
+        Alterations to the DBI object in the DESTROY block must be wrapped in
+        an eval {}, as object destruction order is not guaranteed during
+        global destruction, and this interacts poorly with DBI's tie'd object.
+    * During DESTROY, don't explicitly disconnect a dbh set InactiveDestroy
+        The InactiveDestroy flag on DBI objects prevent them from being
+        implicitly disconnected when they go out of scope -- for example, in
+        the case where a process has forked, and two processes hold the socket
+        open.
+        However, it does not prevent them from being _explicitly_
+        disconnected, as we were doing in Jifty::DBI::Handle's DESTROY method.
+        This caused InactiveDestroy to never kick in, causing either a shared
+        socket, or two closed handles after a fork.  We prevent this by having
+        Jifty::DBI::Handle respect InactiveDestroy in its DESTROY method.
+    * Do not use Scalar::Defer defaults for columns' defaults in the db
 
 - New features:
-   * new methods in ::Handle: rename_table and rename_column
-   * a display_length attribute on columns
-   * if a column's default is a record, call its id method
+    * Add a display_length attribute on columns
+    * add schema manipulation tables: rename_column and rename_table
+    * If a column's default is a record, call its id method
 
-- Documentation:
-   * make pod-coverage happy
+- Fixes:
+    * Improve SQL error message and avoid its duplication
+    * Pull the input_ and output_filters out of the instance hash
+
+- Tests:
+    * Added a unit test for the SaltHash filter
+    * use drop_table_if_exists in tests
+    * add drop_table_if_exists in t/utils.t
+    * unconditionaly drop tables for testing
+    * test rename_table
+    * add tests for rename_column
+    * SaltHash test does not need an is_deeply()
+
 
 0.53 Wed Mar 25 15:27:03 EDT 2009
 - Major bugfixes:
