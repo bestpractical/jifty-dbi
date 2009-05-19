@@ -59,6 +59,7 @@ SKIP: {
     ok $handle->simple_query("insert into test(a) values(1)"), "DEFAULT is still there";
     is $handle->simple_query("select * from test")->fetchrow_hashref->{'y'},
         1, 'correct value';
+    undef $handle;
 }} # SKIP, foreach blocks
 
 1;
