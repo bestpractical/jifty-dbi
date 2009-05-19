@@ -36,6 +36,7 @@ Revision history for Perl extension Jifty::DBI.
     * add tests for rename_column
     * SaltHash test does not need an is_deeply()
     * Don't explicitly disconnect the handle, DESTROY handles it better
+    * Test for warnings instead of letting them leak into the test output
 
 
 0.53 Wed Mar 25 15:27:03 EDT 2009
