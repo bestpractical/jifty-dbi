@@ -10,7 +10,7 @@ use Jifty::DBI::Handle;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 9;
+use constant TESTS_PER_DRIVER => 11;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -25,11 +25,9 @@ SKIP: {
     connect_handle($handle);
     isa_ok( $handle->dbh, 'DBI::db' );
 
-    my $sth;
-
     drop_table_if_exists( 'test', $handle );
 
-    $sth = $handle->simple_query(
+    my $sth = $handle->simple_query(
         "CREATE TABLE test (a int, x integer not null default 1)"
     );
     ok $sth, 'created a table';
@@ -42,9 +40,20 @@ SKIP: {
     $sth = $handle->simple_query("select * from test");
     is $sth->fetchrow_hashref->{'y'}, 2, 'correct value';
     $sth->finish;
+    undef $sth;
 
-    ok !eval { $handle->simple_query("insert into test(x) values(1)") }, "no x anymore";
-    ok !eval { $handle->simple_query("insert into test(y) values(NULL)") }, "NOT NULL is still there";
+    my @warnings;
+    ok !eval {
+        local $SIG{__WARN__} = sub { push @warnings, @_ };
+        $handle->simple_query("insert into test(x) values(1)");
+    }, "no x anymore";
+    ok((splice @warnings), "we got warnings");
+
+    ok !eval {
+        local $SIG{__WARN__} = sub { push @warnings, @_ };
+        $handle->simple_query("insert into test(y) values(NULL)");
+    }, "NOT NULL is still there";
+    ok((splice @warnings), "we got warnings");
 
     $handle->simple_query("delete from test");
     ok $handle->simple_query("insert into test(a) values(1)"), "DEFAULT is still there";
