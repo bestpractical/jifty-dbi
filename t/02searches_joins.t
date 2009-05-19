@@ -221,7 +221,6 @@ diag "LEFT JOIN optimization and OR clause" if $ENV{'TEST_VERBOSE'};
 }
 
     cleanup_schema( 'TestApp', $handle );
-    disconnect_handle($handle);
 }} # SKIP, foreach blocks
 
 1;
