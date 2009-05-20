@@ -434,24 +434,6 @@ sub _is_distinctly_joined {
     }
 }
 
-# LIMIT clauses are used for restricting ourselves to subsets of the
-# search.
-sub _limit_clause {
-    my $self = shift;
-    my $limit_clause;
-
-    if ( $self->rows_per_page ) {
-        $limit_clause = " LIMIT ";
-        if ( $self->first_row != 0 ) {
-            $limit_clause .= $self->first_row . ", ";
-        }
-        $limit_clause .= $self->rows_per_page;
-    } else {
-        $limit_clause = "";
-    }
-    return $limit_clause;
-}
-
 =head2 _is_limited
 
 If we've limited down this search, return true. Otherwise, return
