@@ -101,14 +101,17 @@ our $SORT_ORDERS = {};
 
 use Exporter::Lite ();
 # TODO - This "sub import" is strictly here to catch the deprecated "length is 40".
-#        Once the deprecation cycle is over we should take this away and rever to
-#        "use Exporter::Lite" in the line above.
+#        Once the deprecation cycle is over we should take the SIGDIE swapping away
 my $old_sig_die;
 
 sub import {
     no warnings qw( uninitialized numeric );
     $old_sig_die ||= $SIG{__DIE__};
     $SIG{__DIE__} = \&filter_die unless $SIG{__DIE__} and $SIG{__DIE__} == \&filter_die;
+
+    strict->import;
+    warnings->import;
+
     goto &Exporter::Lite::import;
 }
 
