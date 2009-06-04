@@ -2,6 +2,7 @@
 
 use strict;
 use File::Temp ();
+use Jifty::DBI::Handle;
 
 =head1 VARIABLES
 
@@ -11,19 +12,7 @@ Array of all supported DBD drivers.
 
 =cut
 
-our @supported_drivers = qw(
-        SQLite
-        Informix
-        mysql
-        mysqlPP
-        ODBC
-        Oracle
-        Pg
-        Sybase
-);
-
-
-
+our @supported_drivers = Jifty::DBI::Handle->supported_drivers;
 
 =head2 @available_drivers
 
@@ -32,7 +21,7 @@ that user has installed.
 
 =cut
 
-our @available_drivers = grep { eval "require DBD::". $_ } @supported_drivers;
+our @available_drivers = Jifty::DBI::Handle->available_drivers;
 
 =head1 FUNCTIONS
 

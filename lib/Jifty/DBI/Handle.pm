@@ -1319,6 +1319,39 @@ sub rename_table {
     return $self->simple_query("ALTER TABLE $args{'table'} RENAME TO $args{'to'}");
 }
 
+=head2 supported_drivers
+
+Returns a list of the drivers L<Jifty::DBI> supports.
+
+=cut
+
+sub supported_drivers {
+    return qw(
+        SQLite
+        Informix
+        mysql
+        mysqlPP
+        ODBC
+        Oracle
+        Pg
+        Sybase
+    );
+}
+
+=head2 available_drivers
+
+Returns a list of the available drivers based on the presence of C<DBD::*>
+modules.
+
+=cut
+
+sub available_drivers {
+    my $self = shift;
+
+    local $@;
+    return grep { eval "require DBD::" . $_ } $self->supported_drivers;
+}
+
 =head2 DESTROY
 
 When we get rid of the L<Jifty::DBI::Handle>, we need to disconnect
