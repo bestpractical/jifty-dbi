@@ -1352,6 +1352,28 @@ sub available_drivers {
     return grep { eval "require DBD::" . $_ } $self->supported_drivers;
 }
 
+=head2 is_available_driver
+
+Returns a boolean indicating whether the provided driver is available.
+
+=cut
+
+do {
+    # lazily memoize
+    my $is_available_driver;
+
+    sub is_available_driver {
+        my $self   = shift;
+        my $driver = shift;
+
+        if (!$is_available_driver) {
+            %$is_available_driver = map { $_ => 1 } $self->available_drivers;
+        }
+
+        return $is_available_driver->{$driver};
+    }
+};
+
 =head2 DESTROY
 
 When we get rid of the L<Jifty::DBI::Handle>, we need to disconnect
