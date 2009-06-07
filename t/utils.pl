@@ -2,6 +2,7 @@
 
 use strict;
 use File::Temp ();
+use Jifty::DBI::Handle;
 
 =head1 VARIABLES
 
@@ -11,19 +12,7 @@ Array of all supported DBD drivers.
 
 =cut
 
-our @supported_drivers = qw(
-        SQLite
-        Informix
-        mysql
-        mysqlPP
-        ODBC
-        Oracle
-        Pg
-        Sybase
-);
-
-
-
+our @supported_drivers = Jifty::DBI::Handle->supported_drivers;
 
 =head2 @available_drivers
 
@@ -32,9 +21,9 @@ that user has installed.
 
 =cut
 
-our @available_drivers = grep { eval "require DBD::". $_ } @supported_drivers;
+our @available_drivers = Jifty::DBI::Handle->available_drivers;
 
-=head1 functionS
+=head1 FUNCTIONS
 
 =head2 get_handle
 
@@ -288,6 +277,24 @@ sub cleanup_schema
 
 =head2 init_data
 
+Takes a class to get data from and the handle, calls C<init_data>
+method in the class, result is used to create new records of that
+class. First row is used for columns names.
+
+Example:
+
+    init_data('TestApp::User', $handle);
+
+    ...
+
+    package TestApp::User;
+    sub init_data { return (
+        ['name', 'email'],
+
+        ['ruz', 'ruz@localhost'],
+        ...
+    ) }
+
 =cut
 
 sub init_data
@@ -307,6 +314,29 @@ sub init_data
                 $count++;
         }
         return $count;
+}
+
+=head2 drop_table_if_exists
+
+Takes a table name and handle. Drops the table in the DB if it exists.
+Returns nothing interesting, shouldn't die.
+
+=cut
+
+sub drop_table_if_exists {
+    my ($table, $handle) = @_;
+    my $d = handle_to_driver( $handle );
+    if ( $d eq 'Pg' ) {
+        my ($exists) = $handle->dbh->selectrow_array(
+            "select 1 from pg_tables where tablename = ?", undef, $table
+        );
+        $handle->simple_query("DROP TABLE $table") if $exists;
+    }
+    else {
+        local $@;
+        eval { $handle->simple_query("DROP TABLE IF EXISTS $table") };
+    }
+    return;
 }
 
 1;

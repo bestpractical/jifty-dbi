@@ -2,7 +2,7 @@ package Jifty::DBI;
 use warnings;
 use strict;
 
-$Jifty::DBI::VERSION = '0.53';
+$Jifty::DBI::VERSION = '0.58';
 
 =head1 NAME
 
@@ -205,7 +205,7 @@ ever else I think of.
 
 =head1 LICENSE
 
-Jifty::DBI is Copyright 2005-2008 Best Practical Solutions, LLC.
+Jifty::DBI is Copyright 2005-2009 Best Practical Solutions, LLC.
 Jifty::DBI is distributed under the same terms as Perl itself.
 
 =cut

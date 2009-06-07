@@ -238,6 +238,21 @@ sub print_error {
     return $self->dbh->{PrintError};
 }
 
+=head2 log MESSAGE
+
+Takes a single argument, a message to log.
+
+Currently prints that message to STDERR
+
+=cut
+
+sub log {
+    my $self = shift;
+    my $msg  = shift;
+    warn $msg . "\n";
+
+}
+
 =head2 log_sql_statements BOOL
 
 Takes a boolean argument. If the boolean is true, it will log all SQL
@@ -510,17 +525,16 @@ sub simple_query {
 
     my $sth = $self->dbh->prepare($query_string);
     unless ($sth) {
+        my $message = "$self couldn't prepare the query '$query_string': "
+                    . $self->dbh->errstr;
         if ($DEBUG) {
-            die "$self couldn't prepare the query '$query_string'"
-                . $self->dbh->errstr . "\n";
+            die "$message\n";
         } else {
-            warn "$self couldn't prepare the query '$query_string'"
-                . $self->dbh->errstr . "\n";
+            warn "$message\n";
             my $ret = Class::ReturnValue->new();
             $ret->as_error(
                 errno   => '-1',
-                message => "Couldn't prepare the query '$query_string'."
-                    . $self->dbh->errstr,
+                message => $message,
                 do_backtrace => undef
             );
             return ( $ret->return_value );
@@ -1327,21 +1341,6 @@ sub distinct_count {
 
 }
 
-=head2 log MESSAGE
-
-Takes a single argument, a message to log.
-
-Currently prints that message to STDERR
-
-=cut
-
-sub log {
-    my $self = shift;
-    my $msg  = shift;
-    warn $msg . "\n";
-
-}
-
 =head2 canonical_true
 
 This returns the canonical true value for this database. For example, in SQLite
@@ -1364,6 +1363,94 @@ The default is 0.
 
 sub canonical_false { 0 }
 
+=head2 Schema manipulation methods
+
+=head3 rename_column
+
+Rename a column in a table. Takes 'table', 'column' and new name in 'to'.
+
+=cut
+
+sub rename_column {
+    my $self = shift;
+    my %args = (table => undef, column => undef, to => undef, @_);
+# Oracle: since Oracle 9i R2
+# Pg: 7.4 can this and may be earlier
+    return $self->simple_query(
+        "ALTER TABLE $args{'table'} RENAME COLUMN $args{'column'} TO $args{'to'}"
+    );
+}
+
+
+=head3 rename_table
+
+Renames a table in the DB. Takes 'table' and new name of it in 'to'.
+
+=cut
+
+sub rename_table {
+    my $self = shift;
+    my %args = (table => undef, to => undef, @_);
+# mysql has RENAME TABLE, but alter can rename temporary
+# Oracle, Pg, SQLite are ok with this
+    return $self->simple_query("ALTER TABLE $args{'table'} RENAME TO $args{'to'}");
+}
+
+=head2 supported_drivers
+
+Returns a list of the drivers L<Jifty::DBI> supports.
+
+=cut
+
+sub supported_drivers {
+    return qw(
+        SQLite
+        Informix
+        mysql
+        mysqlPP
+        ODBC
+        Oracle
+        Pg
+        Sybase
+    );
+}
+
+=head2 available_drivers
+
+Returns a list of the available drivers based on the presence of C<DBD::*>
+modules.
+
+=cut
+
+sub available_drivers {
+    my $self = shift;
+
+    local $@;
+    return grep { eval "require DBD::" . $_ } $self->supported_drivers;
+}
+
+=head2 is_available_driver
+
+Returns a boolean indicating whether the provided driver is available.
+
+=cut
+
+do {
+    # lazily memoize
+    my $is_available_driver;
+
+    sub is_available_driver {
+        my $self   = shift;
+        my $driver = shift;
+
+        if (!$is_available_driver) {
+            %$is_available_driver = map { $_ => 1 } $self->available_drivers;
+        }
+
+        return $is_available_driver->{$driver};
+    }
+};
+
 =head2 DESTROY
 
 When we get rid of the L<Jifty::DBI::Handle>, we need to disconnect
@@ -1373,7 +1460,17 @@ from the database
 
 sub DESTROY {
     my $self = shift;
-    $self->disconnect;
+
+    # eval in DESTROY can cause $@ issues elsewhere
+    local $@;
+
+    $self->disconnect
+        unless $self->dbh
+            and $self->dbh
+                # We use an eval {} because DESTROY order during
+                # global destruction is not guaranteed -- the dbh may
+                # no longer be tied, which throws an error.
+            and eval { $self->dbh->{InactiveDestroy} };
     delete $DBIHandle{$self};
 }
 

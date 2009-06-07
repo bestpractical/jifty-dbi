@@ -101,14 +101,17 @@ our $SORT_ORDERS = {};
 
 use Exporter::Lite ();
 # TODO - This "sub import" is strictly here to catch the deprecated "length is 40".
-#        Once the deprecation cycle is over we should take this away and rever to
-#        "use Exporter::Lite" in the line above.
+#        Once the deprecation cycle is over we should take the SIGDIE swapping away
 my $old_sig_die;
 
 sub import {
     no warnings qw( uninitialized numeric );
     $old_sig_die ||= $SIG{__DIE__};
     $SIG{__DIE__} = \&filter_die unless $SIG{__DIE__} and $SIG{__DIE__} == \&filter_die;
+
+    strict->import;
+    warnings->import;
+
     goto &Exporter::Lite::import;
 }
 
@@ -710,6 +713,12 @@ interfaces.  Correct usage is C<label is 'Your foo value'>.
 A sentence or two to display in long-form user interfaces about what
 might go in this column.  Correct usage is C<hints is 'Used by the
 frobnicator to do strange things'>.
+
+=head2 display_length
+
+The displayed length of form fields. Though you may be able to fit
+500 characters in the field, you would not want to display an HTML
+form with a size 500 input box.
 
 =head2 render_as
 

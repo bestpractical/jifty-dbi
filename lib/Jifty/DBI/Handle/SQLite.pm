@@ -98,6 +98,70 @@ sub _make_clause_case_insensitive {
     return("$column COLLATE NOCASE", $operator, $value);
 }
 
+=head2 rename_column ( table => $table, column => $old_column, to => $new_column )
+
+rename column
+
+=cut
+
+sub rename_column {
+    my $self = shift;
+    my %args = (
+        table  => undef,
+        column => undef,
+        to     => undef,
+        @_
+    );
+
+    my $table   = $args{'table'};
+
+    # Convert columns
+    my ($schema) = $self->fetch_result(
+        "SELECT sql FROM sqlite_master WHERE tbl_name = ? AND type = ?",
+        $table, 'table',
+    );
+    $schema =~ s/(.*create\s+table\s+)\S+(.*?\(\s*)//i
+        or die "Cannot find 'CREATE TABLE' statement in schema for '$table': $schema";
+
+    my $new_table    = join( '_', $table, 'new', $$ );
+    my $new_create_clause = "$1$new_table$2";
+
+    my @column_info = ( split /,/, $schema );
+    my @column_names = map { /^\s*(\S+)/ ? $1 : () } @column_info;
+
+    s/^(\s*)\b\Q$args{column}\E\b/$1$args{to}/i for @column_info;
+
+    my $new_schema = $new_create_clause . join( ',', @column_info );
+    my $copy_columns = join(
+        ', ',
+        map {
+            ( lc($_) eq lc( $args{column} ) )
+              ? "$_ AS $args{to}"
+              : $_
+          } @column_names
+    );
+
+    # Convert indices
+    my $indice_sth = $self->simple_query(
+        "SELECT sql FROM sqlite_master WHERE tbl_name = ? AND type = ?",
+        $table, 'index'
+    );
+    my @indice_sql;
+    while ( my ($index) = $indice_sth->fetchrow_array ) {
+        $index =~ s/^(.*\(.*)\b\Q$args{column}\E\b/$1$args{to}/i;
+        push @indice_sql, $index;
+    }
+    $indice_sth->finish;
+
+    # Run the conversion SQLs
+    $self->begin_transaction;
+    $self->simple_query($new_schema);
+    $self->simple_query("INSERT INTO $new_table SELECT $copy_columns FROM $table");
+    $self->simple_query("DROP TABLE $table");
+    $self->simple_query("ALTER TABLE $new_table RENAME TO $table");
+    $self->simple_query($_) for @indice_sql;
+    $self->commit;
+}
 
 1;
 

@@ -279,7 +279,9 @@ sub _db_schema_table_from_model {
 
         # Encode default values
         my $default = $column->default;
-        if (defined $default) {
+
+        # Scalar::Defer-powered defaults do not get a default in the database
+        if (ref($default) ne '0' && defined $default) {
             $model->_handle($self->handle);
             $model->_apply_input_filters(
                 column    => $column,

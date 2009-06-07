@@ -81,6 +81,39 @@ sub _optimize_joins {
     return;
 }
 
+=head2 rename_column ( table => $table, column => $old_column, to => $new_column )
+
+rename column, die if fails
+
+=cut
+
+sub rename_column {
+    my $self = shift;
+    my %args = (
+        table  => undef,
+        column => undef,
+        to     => undef,
+        @_
+    );
+
+    my ($table, $column, $to) = @args{'table', 'column', 'to'};
+
+    # XXX, FIXME, TODO: this is stupid parser of CREATE TABLE, this should be something based on
+    # column_info, schema tables and show fields. The closest thing is RT 3.8/etc/upgrade/upgrade-mysql-schema.pl
+
+    my $create_table = ($self->simple_query("SHOW CREATE TABLE $table")->fetchrow_array)[1];
+    $create_table =~ /create\s+table\s+\S+\s*\((.*)\)/ims
+        or die "Cannot find 'CREATE TABLE' statement in schema for '$table': $create_table";
+    $create_table = $1;
+
+    my ($column_info) = ($create_table =~ /`$column`(.*?)(?:,|$)/i)
+        or die "Cannot find column '$column' in $create_table";
+    my $sth = $self->simple_query("ALTER TABLE $table CHANGE $column $to $column_info");
+    die "Cannot rename column '$column' in table '$table' to '$to': ". $self->dbh->errstr
+        unless $sth;
+    return $sth;
+}
+
 1;
 
 __END__
