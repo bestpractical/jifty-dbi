@@ -901,7 +901,7 @@ sub join {
     my $self = shift;
     my %args = (
         collection  => undef,
-        type        => 'normal',
+        type        => 'CROSS',
         alias1      => 'main',
         column1     => undef,
         table2      => undef,
@@ -971,11 +971,7 @@ sub join {
     my $meta = $args{'collection'}->{'joins'}{$alias} ||= {};
     $meta->{'table'} = $args{'table2'};
     $meta->{'alias'} = $alias;
-    if ( $args{'type'} =~ /LEFT/i ) {
-        $meta->{'type'} = 'LEFT';
-    } else {
-        $meta->{'type'} = 'CROSS';
-    }
+    $meta->{'type'} = $args{'type'};
     $meta->{'depends_on'}       = [ $args{'alias1'} ];
     $meta->{'is_distinct'}      = $args{'is_distinct'};
     $meta->{'class'}            = $args{'class2'} if $args{'class2'};
