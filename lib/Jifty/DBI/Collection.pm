@@ -1817,18 +1817,8 @@ C<alias2>/C<table2> on an arbitrary expression.
 
 sub join {
     my $self = shift;
-    my %args = (
-        type    => 'normal',
-        column1 => undef,
-        alias1  => 'main',
-        table2  => undef,
-        column2 => undef,
-        alias2  => undef,
-        @_
-    );
-
     return if $self->derived;
-    $self->_handle->join( collection => $self, %args );
+    $self->_handle->join( collection => $self, @_ );
 
 }
 
