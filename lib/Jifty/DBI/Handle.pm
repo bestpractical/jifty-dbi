@@ -932,12 +932,12 @@ sub join {
         $args{'table2'} = $c->table;
     }
 
-    if ( $args{'alias2'} ) {
+    if ( my $alias2 = $args{'alias2'} ) {
         my $joins = $args{'collection'}{'joins'};
-        if ( $joins->{ $args{alias2} } and lc $joins->{ $args{alias2} }{type} eq "cross" ) {
-            my $join = $joins->{ $args{alias2} };
-            $args{'table2'} = $join->{table};
-            $alias = $join->{alias};
+        if ( $joins->{ $alias2 } and lc $joins->{ $alias2 }{'type'} eq 'cross' ) {
+            my $join = $joins->{ $alias2 };
+            $args{'table2'} = $join->{'table'};
+            $alias = $join->{'alias'};
         } else {
 
             # if we can't do that, can we reverse the join and have it work?
@@ -979,12 +979,11 @@ sub join {
         if $args{'entry_aggregator'};
 
     my $criterion = $args{'expression'} || "$args{'alias1'}.$args{'column1'}";
-    $meta->{'criteria'}{'base_criterion'} = [
-        {   column   => $criterion,
-            operator => $args{'operator'},
-            value    => "$alias.$args{'column2'}",
-        }
-    ];
+    $meta->{'criteria'}{"$args{'alias1'}<->$alias"} = [{
+        column   => $criterion,
+        operator => $args{'operator'},
+        value    => "$alias.$args{'column2'}",
+    }];
 
     return ($alias);
 }
@@ -1090,15 +1089,14 @@ sub _build_joins {
 
             $join_clause .= ' '. CORE::join(' ', $meta->{'type'}, 'JOIN', @{$meta}{'table', 'alias'} ) . " ON ";
             my @tmp = map {
-                ref($_)
-                    ? $_->{'column'} . ' '
-                    . $_->{'operator'} . ' '
-                    . $_->{'value'}
-                    : $_
+                    ref($_)
+                        ? $_->{'column'} .' '. $_->{'operator'} .' '. $_->{'value'}
+                        : $_
                 }
                 map {
-                ( '(', @$_, ')', $aggregator )
-                } values %{ $meta->{'criteria'} };
+                    ( '(', @$_, ')', $aggregator )
+                }
+                values %{ $meta->{'criteria'} };
 
             # delete last aggregator
             pop @tmp;
