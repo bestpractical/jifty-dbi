@@ -133,7 +133,9 @@ sub query_string {
 
 sub query_struct {
     my $self = shift;
+
     my $tree = shift;
+    $tree = $tree->clone;
 
     $self->{'tisql'}{'conditions'} = [ $tree->isa('HASH')? $tree : @$tree ]; #xxx: hack :)
     $self->apply_query_tree( $self->{'tisql'}{'conditions'} );
@@ -736,6 +738,22 @@ sub init {
     my $self = shift;
     %$self = @_;
     return $self;
+}
+
+sub clone {
+    my $self = shift;
+
+    require Storable;
+
+    my %new = %$self;
+    foreach (qw(lhs rhs)) {
+        if ( blessed $new{$_} ) {
+            $new{$_} = $new{$_}->clone;
+        } else {
+            $new{$_} = Storable::dclone( $new{$_} );
+        }
+    }
+    return $self->new( %new );
 }
 
 sub parse {
