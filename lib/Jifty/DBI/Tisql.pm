@@ -749,7 +749,7 @@ sub clone {
     foreach (qw(lhs rhs)) {
         if ( blessed $new{$_} ) {
             $new{$_} = $new{$_}->clone;
-        } else {
+        } elsif ( ref $new{$_} ) {
             $new{$_} = Storable::dclone( $new{$_} );
         }
     }
