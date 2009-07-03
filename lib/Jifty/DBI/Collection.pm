@@ -1221,7 +1221,7 @@ sub limit {
         : $self;
     my $column_obj = $class->new_item()->column( $args{column} );
 
-    $self->record_class->new(handle => $self->_handle)->_apply_input_filters(
+    $self->new_item->_apply_input_filters(
         column    => $column_obj,
         value_ref => \$args{'value'},
     ) if $column_obj && $column_obj->encode_on_select;
