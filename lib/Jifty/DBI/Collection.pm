@@ -117,7 +117,7 @@ sub _init {
     );
     $self->_handle( $args{'handle'} )  if ( $args{'handle'} );
     $self->derived( $args{'derived'} ) if ( $args{'derived'} );
-    $self->table( $self->new_item->table() );
+    $self->table( $self->record_class->table() );
     $self->clean_slate(%args);
 }
 
@@ -495,7 +495,7 @@ sub query_columns {
     if ( $self->{columns} and @{ $self->{columns} } ) {
         push @cols, @{ $self->{columns} };
     } else {
-        push @cols, $self->_qualified_record_columns( 'main' => $self->new_item );
+        push @cols, $self->_qualified_record_columns( 'main' => $self->record_class );
     }
     my %prefetch_related = %{ $self->prefetch_related || {} };
     foreach my $alias ( keys %prefetch_related ) {
@@ -503,9 +503,9 @@ sub query_columns {
 
         my $reference;
         if ( $class->isa('Jifty::DBI::Collection') ) {
-            $reference = $class->new( $self->_new_collection_args )->new_item;
+            $reference = $class->record_class;
         } elsif ( $class->isa('Jifty::DBI::Record') ) {
-            $reference = $class->new( $self->_new_record_args );
+            $reference = $class;
         }
 
         push @cols, $self->_qualified_record_columns( $alias => $reference );
@@ -623,7 +623,7 @@ sub prefetch {
     if ( not $args{class} ) {
 
         # Check the column
-        my $column = $self->new_item->column( $args{name} );
+        my $column = $self->record_class->column( $args{name} );
         $args{class} = $column->refers_to if $column;
 
         die "Don't know class" unless $args{class};
@@ -662,7 +662,7 @@ sub find_column {
 
     my $last = pop @names;
     my ( $class, @columns ) = $self->find_class(@names);
-    $class = $class->new_item
+    $class = $class->record_class
         if UNIVERSAL::isa( $class, "Jifty::DBI::Collection" );
     my $column = $class->column($last);
     die "$class has no column '$last'" unless $column;
@@ -684,23 +684,24 @@ sub find_class {
 
     my @res;
     my $object = $self;
-    my $item   = $self->new_item;
+    my $itemclass = $self->record_class;
     while ( my $name = shift @names ) {
-        my $column = $item->column($name);
-        die "$item has no column '$name'" unless $column;
+        my $column = $itemclass->column($name);
+        die "$itemclass has no column '$name'" unless $column;
 
         push @res, $column;
 
         my $classname = $column->refers_to;
         unless ($classname) {
-            die "column '$name' of $item is not a reference";
+            die "column '$name' of $itemclass is not a reference";
         }
 
         if ( UNIVERSAL::isa( $classname, 'Jifty::DBI::Collection' ) ) {
             $object = $classname->new( $self->_new_collection_args );
-            $item   = $object->new_item;
+            $itemclass = $object->record_class;
         } elsif ( UNIVERSAL::isa( $classname, 'Jifty::DBI::Record' ) ) {
-            $object = $item = $classname->new( $self->_new_record_args );
+            $object = $classname->new( $self->_new_record_args );
+            $itemclass = $classname;
         } else {
             die
                 "Column '$name' refers to '$classname' which is not record or collection";
@@ -733,9 +734,7 @@ sub resolve_join {
         }
 
         if ( UNIVERSAL::isa( $classname, 'Jifty::DBI::Collection' ) ) {
-            my $item
-                = $classname->new( $self->_new_collection_args )->new_item;
-            my $right_alias = $self->new_alias($item);
+            my $right_alias = $self->new_alias($classname->record_class);
             $self->join(
                 type        => 'left',
                 alias1      => $last_alias,
@@ -746,8 +745,7 @@ sub resolve_join {
             );
             $last_alias = $right_alias;
         } elsif ( UNIVERSAL::isa( $classname, 'Jifty::DBI::Record' ) ) {
-            my $item        = $classname->new( $self->_new_record_args );
-            my $right_alias = $self->new_alias($item);
+            my $right_alias = $self->new_alias($classname);
             $self->join(
                 type        => 'left',
                 alias1      => $last_alias,
@@ -1219,7 +1217,7 @@ sub limit {
         ? $self->{joins}{ $args{alias} }{class}
         ->new( $self->_new_collection_args )
         : $self;
-    my $column_obj = $class->new_item()->column( $args{column} );
+    my $column_obj = $class->record_class->column( $args{column} );
 
     $self->new_item->_apply_input_filters(
         column    => $column_obj,
