@@ -73,6 +73,10 @@ If you created the handle with
 and there is a Jifty::DBI::Handle::(Driver) subclass for the driver you have chosen,
 the handle will be automatically "upgraded" into that subclass.
 
+If there is an error, an exception will be thrown. If a connection has already
+been established and is still active, C<undef> will be returned (which is not
+an error). Otherwise, if a new connection is made, a true value will be returned.
+
 =cut
 
 sub connect {
@@ -110,7 +114,7 @@ sub connect {
     {
         my $handle
             = DBI->connect( $self->dsn, $args{'user'}, $args{'password'}, $args{'extra'} )
-            || Carp::croak "Connect Failed $DBI::errstr\n";
+            || Carp::croak "Connection failed: $DBI::errstr\n";
 
 #databases do case conversion on the name of columns returned.
 #actually, some databases just ignore case. this smashes it to something consistent

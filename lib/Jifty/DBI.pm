@@ -18,7 +18,7 @@ updating data in a DBI-accessible database.
 This module is the direct descendent of L<DBIx::SearchBuilder>. If you're familiar
 with SearchBuilder, Jifty::DBI should be quite familiar to you.
 
-=head2 What is it trying to do. 
+=head2 Purpose
 
 Jifty::DBI::Record abstracts the agony of writing the common and generally 
 simple SQL statements needed to serialize and de-serialize an object to the

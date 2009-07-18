@@ -1,5 +1,24 @@
 Revision history for Perl extension Jifty::DBI.
 
+0.58 Tue Jul 14 03:21:21 EST 2009
+- Possible incompatibilities:
+    * Modules which use Jifty::DBI::Schema will have strict and warnings
+      automatically applied to them.
+
+- Features:
+    * Jifty::DBI::Handle now has methods for supported_drivers,
+      available_drivers, and is_available_driver.
+
+- Fixes:
+    * Remove unused _limit_clause method
+    * Various error message improvements
+    * Use ->new_item instead of ->record_class->new since it was a performance
+        hit in Jifty
+    * Avoid cals to ->new_item where possible
+
+- Documentation:
+    * Document connect's quirky return value
+
 0.57 Tue May 19 08:02:03 EDT 2009
 - Major bugfixes:
     * Use eval {} in Jifty::DBI::Handle's DESTROY block when manipulating DBI
