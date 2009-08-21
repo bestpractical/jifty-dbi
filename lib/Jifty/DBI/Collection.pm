@@ -2200,7 +2200,7 @@ sub each {
     $self->goto_first_item;
 
     while (my $record = $self->next) {
-        $cb->($record, $idx++, $self);
+        my $ret = $cb->($record, $idx++, $self);
         last if defined($ret) && !$ret;
     }
 
