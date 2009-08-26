@@ -616,12 +616,12 @@ sub readable_attributes {
 
     return @{ $self->_READABLE_COLS_CACHE() || $self->_READABLE_COLS_CACHE([
         map  { $_->name }
-        sort {
+        sort { do {
             no warnings 'uninitialized';
             ($is_primary{$b->name} <=> $is_primary{$a->name})
             ||
             ($a->name cmp $b->name)
-        }
+        } }
         grep { $_->readable }
         $self->columns
     ])};
