@@ -714,6 +714,22 @@ sub stringify {
     return join ' ', '(', @$self, ')';
 }
 
+sub clone {
+    my $self = shift;
+
+    require Storable;
+
+    my @new = @$self;
+    foreach (@new) {
+        if ( blessed $_ ) {
+            $_ = $_->clone;
+        } elsif ( ref $_ ) {
+            $_ = Storable::dclone( $_ );
+        }
+    }
+    return $self->new( @new );
+}
+
 package Jifty::DBI::Tisql::Condition;
 
 use overload
