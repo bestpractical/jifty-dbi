@@ -177,7 +177,7 @@ These prefixes work for other conditions as well.
 
 Let's start from an example:
 
-    .members.first_name = 'John' AND .member.last_name = 'Doe'
+    .members.first_name = 'John' AND .members.last_name = 'Doe'
 
 What will it find? Groups where John Doe is member or some John and some
 Doe are members of the same Group? Without an alias the latter will happen.
