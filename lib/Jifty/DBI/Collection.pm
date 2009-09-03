@@ -2201,6 +2201,31 @@ sub _cloned_attributes {
     );
 }
 
+=head2 each CALLBACK
+
+Executes the callback for each item in the collection. The callback receives as
+arguments each record, its zero-based index, and the collection. The return
+value of C<each> is the original collection.
+
+If the callback returns zero, the iteration ends.
+
+=cut
+
+sub each {
+    my $self = shift;
+    my $cb   = shift;
+
+    my $idx = 0;
+    $self->goto_first_item;
+
+    while (my $record = $self->next) {
+        my $ret = $cb->($record, $idx++, $self);
+        last if defined($ret) && !$ret;
+    }
+
+    return $self;
+}
+
 sub tisql {
     my $self = shift;
     require Jifty::DBI::Tisql;
