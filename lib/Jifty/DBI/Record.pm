@@ -89,8 +89,10 @@ sub import {
     my ($flag) = @_;
     if ( $class->isa(__PACKAGE__) and defined $flag and $flag eq '-base' ) {
         my $descendant = (caller)[0];
-        no strict 'refs';
-        push @{ $descendant . '::ISA' }, $class;
+        unless ( $descendant->isa($class) ) {
+            no strict 'refs';
+            push @{ $descendant . '::ISA' }, $class
+        }
         shift;
 
         # run the schema callback
