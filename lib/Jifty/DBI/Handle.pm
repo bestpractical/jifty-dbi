@@ -814,9 +814,6 @@ sub rollback {
     if ($force) {
         $TRANSDEPTH = 0;
 
-        Jifty::DBI::Record->flush_cache
-            if Jifty::DBI::Record->can('flush_cache');
-
         return ( $dbh->rollback );
     }
 
@@ -830,9 +827,6 @@ sub rollback {
         $TRANSDEPTH--;
         return $TRANSDEPTH;
     }
-
-    Jifty::DBI::Record->flush_cache
-        if Jifty::DBI::Record->can('flush_cache');
 
     my $rv = $dbh->rollback;
     if ($rv) {

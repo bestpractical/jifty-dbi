@@ -87,6 +87,11 @@ sub _record_cache {
 
 }
 
+sub _is_in_transaction {
+    my $self = shift;
+    $Jifty::DBI::Handle::TRANSDEPTH > 0;
+}
+
 =head2 load_from_hash
 
 Overrides the implementation from L<Jifty::DBI::Record> to add caching.
@@ -104,12 +109,12 @@ sub load_from_hash {
         ( $rvalue, $msg ) = $self->SUPER::load_from_hash(@_);
 
         ## Check the return value, if its good, cache it!
-        $self->_store() if ($rvalue);
+        $self->_store() if ($rvalue && !$self->_is_in_transaction);
         return ( $rvalue, $msg );
     } else {    # Called as a class method;
         $self = $self->SUPER::load_from_hash(@_);
         ## Check the return value, if its good, cache it!
-        $self->_store() if ( $self->id );
+        $self->_store() if ( $self->id && !$self->_is_in_transaction );
         return ($self);
     }
 
@@ -144,7 +149,7 @@ sub load_by_cols {
     ## Fetch from the DB!
     my ( $rvalue, $msg ) = $self->SUPER::load_by_cols(%attr);
     ## Check the return value, if its good, cache it!
-    if ($rvalue) {
+    if ($rvalue && !$self->_is_in_transaction) {
         ## Only cache the object if its okay to do so.
         $self->_store();
         $self->_key_cache->set(
