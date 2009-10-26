@@ -287,6 +287,7 @@ sub _db_schema_table_from_model {
                 column    => $column,
                 value_ref => \$default,
             );
+            $default = \"''" if defined $default and not length $default;
             $model->_handle(undef);
         } else {
             $default = '';
