@@ -1810,6 +1810,9 @@ can use its calculations, and sets the L<Jifty::DBI::Collection>
 C<first_row> and C<rows_per_page> so that queries return values from
 the selected page.
 
+If a C<current_page> of C<all> is passed, then paging is basically disabled
+(by setting C<per_page> to the number of entries, and C<current_page> to 1)
+
 =cut
 
 sub set_page_info {
@@ -1824,7 +1827,14 @@ sub set_page_info {
     my $weakself = $self;
     weaken($weakself);
 
-    $self->pager->total_entries( lazy { $weakself->count_all } )
+    my $total_entries = lazy { $weakself->count_all };
+
+    if ($args{'current_page'} eq 'all') {
+        $args{'current_page'} = 1;
+        $args{'per_page'}     = $total_entries;
+    }
+
+    $self->pager->total_entries($total_entries)
         ->entries_per_page( $args{'per_page'} )
         ->current_page( $args{'current_page'} );
 
