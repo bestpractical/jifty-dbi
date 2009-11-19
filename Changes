@@ -1,5 +1,16 @@
 Revision history for Perl extension Jifty::DBI.
 
+0.59 Wed Nov 18 20:12:57 EST 2009
+- Features:
+    * Support a special value of "all" in set_page_info
+
+- Fixes:
+    * Make "default is ''" propagate correctly to ALTER and CREATE TABLE
+      statements
+
+- Installation:
+    * Our Module::Install was hilariously out of date
+
 0.58 Tue Jul 14 03:21:21 EST 2009
 - Possible incompatibilities:
     * Modules which use Jifty::DBI::Schema will have strict and warnings
