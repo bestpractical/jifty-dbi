@@ -1755,7 +1755,11 @@ sub run_validation_for_column {
     my $attr = $args{'value'};
 
     my ( $ret, $results )
-        = $self->_run_callback( name => "validate_" . $key, args => $attr, extra => $args{'extra'} );
+        = $self->_run_callback(
+            name  => "validate_" . $key,
+            args  => $attr,
+            extra => $args{'extra'},
+        );
 
     if ( defined $ret ) {
         return ( 1, 'Validation ok' );
