@@ -1700,12 +1700,14 @@ sub run_canonicalization_for_column {
     my %args = (
         column => undef,
         value  => undef,
+        extra  => [],
         @_
     );
 
     my ( $ret, $value_ref ) = $self->_run_callback(
-        name => "canonicalize_" . $args{'column'},
-        args => $args{'value'},
+        name          => "canonicalize_" . $args{'column'},
+        args          => $args{'value'},
+        extra         => $args{'extra'},
         short_circuit => 0,
     );
     return unless defined $ret;
