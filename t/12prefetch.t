@@ -7,7 +7,7 @@ use Test::More;
 
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
-use constant TESTS_PER_DRIVER => 58;
+use constant TESTS_PER_DRIVER => 59;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 
@@ -95,12 +95,14 @@ SKIP: {
                 column2 => 'employee'
             );
             $collection->prefetch( $phones_alias => 'phones' );
+            $collection->order_by( column => 'id' );
             is( $collection->count, 2 );
             is( scalar( $handle->sql_statement_log ),
                 1, "count is one statement" );
 
             $handle->clear_sql_statement_log;
             my $user = $collection->next;
+            is( $user->name, 'RUZ' );
             is( $user->id, 1, "got our user" );
             my $phones = $user->phones;
             is( $phones->first->id, 1 );
