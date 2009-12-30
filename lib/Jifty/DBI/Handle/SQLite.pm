@@ -95,6 +95,10 @@ sub _make_clause_case_insensitive {
     my $column   = shift;
     my $operator = shift;
     my $value    = shift;
+
+    return ($column, $operator, $value)
+        unless $self->_case_insensitivity_valid( $column, $operator, $value );
+
     return("$column COLLATE NOCASE", $operator, $value);
 }
 
