@@ -716,7 +716,7 @@ sub _case_insensitivity_valid {
 
     return $value ne ''
         && $value ne "''"
-        && ( $operator !~ /IS/ && $value !~ /^null$/i )
+        && ( $operator =~ /^(?:LIKE|=|IN)$/i )
 
         # don't downcase integer values
         && $value !~ /^['"]?\d+['"]?$/;
