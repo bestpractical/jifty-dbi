@@ -1140,8 +1140,13 @@ sub load_by_cols {
                 }
             }
 
-            push @phrases, "$key $op $function";
-            push @bind,    $value;
+            if ($column_obj and $column_obj->no_placeholder and $function eq "?") {
+                push @phrases, "$key $op ".$self->_handle->quote_value($value);
+            } else {
+                push @phrases, "$key $op $function";
+                push @bind,    $value;
+            }
+
         } elsif ( !defined $hash{$key} ) {
             push @phrases, "$key IS NULL";
         } else {

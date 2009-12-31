@@ -42,6 +42,7 @@ my @handy_attrs = qw/
     valid_values
     available_values
     autocompleted
+    no_placeholder
     /;
 
 # compat: this should probably never exist and be deprecated
@@ -138,19 +139,25 @@ known attributes are:
 
 =over
 
-=item     container
+=item container
 
-=item     label hints render_as
+=item label hints render_as
 
-=item     display_length
+=item display_length
 
-=item     valid_values
+=item valid_values
 
-=item     available_values
+=item available_values
 
-=item     autocompleted
+=item autocompleted
 
-=item     documentation
+=item documentation
+
+=item no_placeholder
+
+Setting this to a true value causes L<Jifty::DBI::record/load_by_cols>
+to not use a placeholder when loading the column.  This can allow the
+database to come up with better query plans in some cases.
 
 =back
 
