@@ -739,6 +739,29 @@ sub _make_clause_case_insensitive {
     return ( $column, $operator, $value );
 }
 
+=head2 quote_value VALUE
+
+Calls the database's L<DBD/quote> method and returns the result.
+Additionally, turns on perl's utf8 flag if the returned content is
+UTF8.
+
+=cut
+
+sub quote_value {
+    my $self = shift;
+    my ($value) = @_;
+    my $tmp = $self->dbh->quote($value);
+
+    # Accomodate DBI drivers that don't understand UTF8
+    if ( $] >= 5.007 ) {
+        require Encode;
+        if ( Encode::is_utf8($tmp) ) {
+            Encode::_utf8_on($tmp);
+        }
+    }
+    return $tmp;
+}
+
 =head2 begin_transaction
 
 Tells Jifty::DBI to begin a new SQL transaction. This will

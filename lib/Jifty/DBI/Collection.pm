@@ -1482,22 +1482,10 @@ sub _set_clause {
     $self->{$type} = $value;
 }
 
-# quote the search value
+# stub for back-compat
 sub _quote_value {
     my $self = shift;
-    my ($value) = @_;
-
-    my $tmp = $self->_handle->dbh->quote($value);
-
-    # Accomodate DBI drivers that don't understand UTF8
-    if ( $] >= 5.007 ) {
-        require Encode;
-        if ( Encode::is_utf8($tmp) ) {
-            Encode::_utf8_on($tmp);
-        }
-    }
-    return $tmp;
-
+    return $self->_handle->quote_value(@_);
 }
 
 =head2 order_by_cols DEPRECATED
