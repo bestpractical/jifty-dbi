@@ -1265,15 +1265,15 @@ sub limit {
 
         if ( $args{'quote_value'} && $args{'operator'} !~ /IS/i ) {
             if ( $value_ref eq 'ARRAY' ) {
-                map { $_ = $self->_quote_value($_) } @{ $args{'value'} };
+                map { $_ = $self->_handle->quote_value($_) } @{ $args{'value'} };
             } else {
-                $args{'value'} = $self->_quote_value( $args{'value'} );
+                $args{'value'} = $self->_handle->quote_value( $args{'value'} );
             }
         }
     }
 
     if ( $args{'escape'} ) {
-        $args{'escape'} = 'ESCAPE ' . $self->_quote_value( $args{escape} );
+        $args{'escape'} = 'ESCAPE ' . $self->_handle->quote_value( $args{escape} );
     }
 
     # If we're trying to get a leftjoin restriction, lets set
