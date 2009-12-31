@@ -802,7 +802,7 @@ sub build_select_count_query {
     }
 
     # DISTINCT query only required for multi-table selects
-    if ( $self->_is_joined ) {
+    if ( $self->distinct_required or $self->prefetch_related ) {
         $query_string = $self->_handle->distinct_count( \$query_string );
     } else {
         $query_string = "SELECT count(main.id) FROM " . $query_string;
