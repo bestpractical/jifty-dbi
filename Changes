@@ -1,5 +1,17 @@
 Revision history for Perl extension Jifty::DBI.
 
+0.60 Mon Jan  4 13:02:17 EST 2010
+- Features:
+    * Allow passing of extra parameters to canonicalizers
+    * Add an attribute which controls placeholder use for load_by_cols
+
+- Fixes:
+    * Don't add LOWER() on <= or >= operators, only = and !=
+    * Better case sensitivity tests
+    * Expose quote_value() on Jifty::DBI::Handle
+    * When generating COUT, don't add a DISTINCT unless needed
+    * Fix t/12prefetch.t's assumptions on row ordering
+
 0.59 Wed Nov 18 20:12:57 EST 2009
 - Features:
     * Support a special value of "all" in set_page_info
