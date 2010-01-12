@@ -101,8 +101,10 @@ sub load_by_cols {
     if ($rvalue) {
         $self->_store();
         if ( $key ne $self->_primary_key ) {
-            $MEMCACHED->add( $key, $self->_primary_cache_key,
-                $self->_cache_config->{'cache_for_sec'} );
+            my $cache_key = $self->_primary_cache_key;
+            $MEMCACHED->add( $key, $cache_key,
+                             $self->_cache_config->{'cache_for_sec'} )
+                if defined $cache_key;
             $self->{'loaded_by_cols'} = $key;
         }
     }
