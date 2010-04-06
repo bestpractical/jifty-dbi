@@ -629,7 +629,8 @@ Correct usage is C<is distinct>.
 =head2 virtual
 
 Declares that a column is not backed by an actual column in the
-database, but is instead computed on-the-fly.
+database, but is instead computed on-the-fly. This is usually
+used to have a column whose value is a collection.
 
 =head2 sort_order
 
