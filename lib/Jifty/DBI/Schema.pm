@@ -550,7 +550,7 @@ Synonym for C<references>.
 =head2 by
 
 Helper for C<references>.  Used to specify what column name should be
-used in the referenced model.  See the documentation for C<references>e
+used in the referenced model.  See the documentation for C<references>.
 
 =head2 type
 
