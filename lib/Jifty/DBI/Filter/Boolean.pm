@@ -77,8 +77,8 @@ sub encode {
     my $self = shift;
     my $value_ref = $self->value_ref;
 
-    return unless defined $$value_ref or $self->column->mandatory;
-    return if uc $$value_ref eq "NULL" and not $self->column->mandatory;
+    return unless defined($$value_ref) or $self->column->mandatory;
+    return if uc($$value_ref||'') eq "NULL" and not $self->column->mandatory;
 
     if ($self->_is_true($$value_ref)) {
         $$value_ref = $self->handle->canonical_true;
