@@ -127,6 +127,18 @@ sub is_string {
     return 0;
 }
 
+=head2 is_boolean
+
+Returns true if this column is a boolean
+
+=cut
+
+sub is_boolean {
+    my $self = shift;
+    return 1 if grep { $_->isa('Jifty::DBI::Filter::Boolean') } $self->output_filters;
+    return 1 if $self->type =~ /BOOL/i;
+    return 0;
+}
 
 =head2 serialize_metadata
 
