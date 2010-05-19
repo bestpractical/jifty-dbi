@@ -536,7 +536,7 @@ sub _qualified_record_columns {
     my $alias = shift;
     my $item  = shift;
     return map $alias ."." . $_ ." as ". $alias ."_". $_,
-        map $_->name, grep !$_->virtual, $item->columns;
+        map $_->name, grep { !$_->virtual && !$_->computed } $item->columns;
 }
 
 =head2 prefetch PARAMHASH
