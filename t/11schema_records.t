@@ -9,7 +9,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 67;
+use constant TESTS_PER_DRIVER => 68;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -35,7 +35,8 @@ SKIP: {
         ok($e_id, "Got an id for the new employee: $e_id");
         $emp->load($e_id);
         is($emp->id, $e_id);
-        
+        is($emp->pid, $$);
+
         my $phone_collection = $emp->phones;
         isa_ok($phone_collection, 'TestApp::PhoneCollection');
 
@@ -265,9 +266,12 @@ use base qw/Jifty::DBI::Record/;
 BEGIN {
     use Jifty::DBI::Schema;
     use Jifty::DBI::Record schema {
-    column name => type is 'varchar';
-    column phones => references TestApp::PhoneCollection by 'employee';
-    }
+        column name => type is 'varchar';
+        column phones => references TestApp::PhoneCollection by 'employee';
+        column pid => is computed;
+    };
+
+    sub pid { $$ }
 }
 
 sub _value  {
