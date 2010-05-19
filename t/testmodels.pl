@@ -8,6 +8,7 @@ column name      =>
     is indexed;
 column label     => type is 'varchar';
 column type      => type is 'varchar';
+column age       => is computed;
 
 };
 
