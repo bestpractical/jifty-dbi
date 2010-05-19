@@ -847,6 +847,10 @@ sub __value {
 
     my $column_name = $column->{name}; # Speed optimization
 
+    if ($column->computed) {
+        return $self->$column_name;
+    }
+
     # In the default case of "yeah, we have a value", return it as
     # fast as we can.
     return $self->{'values'}{$column_name}
