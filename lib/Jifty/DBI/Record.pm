@@ -272,10 +272,15 @@ sub _init_methods_for_column {
     no strict 'refs';    # We're going to be defining subs
 
     if ( not $self->can($column_name) ) {
-
         # Accessor
         my $subref;
-        if ( $column->active ) {
+
+        if ($column->computed) {
+            $subref = sub {
+                Carp::croak("column '$column_name' in $package is computed but has no corresponding method");
+            };
+        }
+        elsif ( $column->active ) {
 
             if ( $column->readable ) {
                 if (UNIVERSAL::isa(
