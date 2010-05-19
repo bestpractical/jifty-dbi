@@ -78,7 +78,7 @@ foreach my $d ( @available_drivers ) {
     my $employee = Sample::Employee->new;
     
     isa_ok($employee, 'Sample::Employee');
-    can_ok($employee, qw( label type dexterity ));
+    can_ok($employee, qw( label type dexterity age ));
     
     $ret = $SG->add_model($employee);
 

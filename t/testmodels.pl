@@ -8,8 +8,14 @@ column name      =>
     is indexed;
 column label     => type is 'varchar';
 column type      => type is 'varchar';
+column age       => is computed;
 
 };
+
+sub age {
+    my $self = shift;
+    return $self->dexterity * 2;
+}
 
 sub schema_sqlite {
     return q{

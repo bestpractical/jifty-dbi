@@ -16,6 +16,7 @@ my @attrs = qw/
     max_length
     mandatory
     virtual
+    computed
     distinct
     sort_order
     refers_to by

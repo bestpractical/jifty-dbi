@@ -259,6 +259,9 @@ sub _db_schema_table_from_model {
         # Skip "Virtual" columns - (foreign keys to collections)
         next if $column->virtual;
 
+        # Skip computed columns
+        next if $column->computed;
+
         # If schema_version is defined, make sure columns are for that version
         if ($model->can('schema_version') and defined $model->schema_version) {
 
