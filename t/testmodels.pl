@@ -12,6 +12,11 @@ column age       => is computed;
 
 };
 
+sub age {
+    my $self = shift;
+    return $self->dexterity * 2;
+}
+
 sub schema_sqlite {
     return q{
     CREATE TABLE employees (
