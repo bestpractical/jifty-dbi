@@ -628,9 +628,16 @@ Correct usage is C<is distinct>.
 
 =head2 virtual
 
+Used to declare that a column references a collection, which hides
+it from many parts of Jifty. You probably do not want to set this manually,
+use C<references> instead.
+
+=head2 computed
+
 Declares that a column is not backed by an actual column in the
-database, but is instead computed on-the-fly. This is usually
-used to have a column whose value is a collection.
+database, but is instead computed on-the-fly using a method written by
+the application author. Such columns cannot (yet) be used in searching,
+sorting, and so on, only inspected on an individual record.
 
 =head2 sort_order
 
