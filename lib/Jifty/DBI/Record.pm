@@ -1070,6 +1070,7 @@ whose primary key is $id.
 sub load {
     my $self = shift;
     return unless @_ and defined $_[0];
+    Carp::carp("load called with more than one argument. Did you mean load_by_cols?") if @_ > 1;
 
     return $self->load_by_cols( id => shift );
 }
