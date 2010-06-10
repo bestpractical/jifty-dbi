@@ -291,7 +291,7 @@ sub _init_methods_for_column {
                     $subref = sub {
                         if ( @_ > 1 ) {
                             Carp::carp
-                                "Value passed to column accessor.  You probably want to use the mutator.";
+                                "Value passed to column $column_name accessor.  You probably want to use the mutator.";
                         }
                         # This should be using _value, so we acl_check
                         # appropriately, except the acl checks often
@@ -313,7 +313,7 @@ sub _init_methods_for_column {
                     $subref = sub {
                         if ( @_ > 1 ) {
                             Carp::carp
-                                "Value passed to column accessor.  You probably want to use the mutator.";
+                                "Value passed to column $column_name accessor.  You probably want to use the mutator.";
                         }
                         return ( $_[0]->_value($column_name) );
                     };
