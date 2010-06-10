@@ -1,5 +1,4 @@
 ---
-author: ~
 build_requires:
   DBD::SQLite: 1.14
   ExtUtils::MakeMaker: 6.42
@@ -8,7 +7,7 @@ build_requires:
 configure_requires:
   ExtUtils::MakeMaker: 6.42
 distribution_type: module
-generated_by: 'Module::Install version 0.91'
+generated_by: 'Module::Install version 0.95'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -44,4 +43,4 @@ requires:
   version: 0
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.61
+version: 0.62
