@@ -932,6 +932,51 @@ sub last {
     return ( $self->next );
 }
 
+=head2 distinct_column_values
+
+Takes a column name and returns distinct values of the column.
+Only values in the current collection are returned.
+
+Optional arguments are C<max> and C<sort> to limit number of
+values returned and it makes sense to sort results.
+
+    $col->distinct_column_values('column');
+
+    $col->distinct_column_values(column => 'column');
+
+    $col->distinct_column_values('column', max => 10, sort => 'asc');
+
+=cut
+
+sub distinct_column_values {
+    my $self = shift;
+    my %args = (
+        column => undef,
+        sort   => undef,
+        max    => undef,
+        @_%2 ? (column => @_) : (@_)
+    );
+
+    return () if $self->derived;
+
+    my $query_string = $self->_build_joins;
+    if ( $self->_is_limited ) {
+        $query_string .= ' '. $self->_where_clause . " ";
+    }
+
+    my $column = 'main.'. $args{'column'};
+    $query_string = 'SELECT DISTINCT '. $column .' FROM '. $query_string;
+
+    if ( $args{'sort'} ) {
+        $query_string .= ' ORDER BY '. $column
+            .' '. ($args{'sort'} =~ /^des/i ? 'DESC' : 'ASC');
+    }
+
+    my $dbh = $self->_handle->dbh;
+    my $list = $dbh->selectcol_arrayref( $query_string, { MaxRows => $args{'max'} } );
+    return $list? @$list : ();
+}
+
 =head2 items_array_ref
 
 Return a reference to an array containing all objects found by this
