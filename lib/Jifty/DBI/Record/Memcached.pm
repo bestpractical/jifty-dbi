@@ -229,7 +229,7 @@ sub _gen_load_by_cols_key {
 sub _primary_cache_key {
     my ($self) = @_;
 
-    return undef unless ( $self->id );
+    return undef unless ( defined $self->id );
 
     unless ( $self->{'_jifty_cache_pkey'} ) {
 
