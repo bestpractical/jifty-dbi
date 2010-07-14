@@ -4,6 +4,7 @@ use warnings;
 use strict;
 
 use base qw|Jifty::DBI::Filter|;
+use Encode qw(encode_utf8 is_utf8);
 use MIME::Base64 ();
 
 =head1 NAME
@@ -17,8 +18,9 @@ This filter allow you to store arbitrary data in a column of type
 
 =head2 encode
 
-If value is defined, then encodes it using
-L<MIME::Base64/encode_base64>. Does nothing if value is not defined.
+If value is defined, then encodes it using L<MIME::Base64/encode_base64> after
+passing it through L<Encode/encode_utf8>.  Does nothing if value is not
+defined.
 
 =cut
 
@@ -28,7 +30,9 @@ sub encode {
     my $value_ref = $self->value_ref;
     return unless defined $$value_ref;
 
-    $$value_ref = MIME::Base64::encode_base64($$value_ref);
+    $$value_ref = MIME::Base64::encode_base64(
+        is_utf8($$value_ref) ? encode_utf8($$value_ref) : $$value_ref
+    );
 
     return 1;
 }
