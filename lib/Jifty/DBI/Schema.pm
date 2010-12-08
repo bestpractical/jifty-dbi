@@ -609,7 +609,7 @@ interfaces.  Correct usage is C<is mandatory>.
 
 =head2 not_null
 
-Same as L</mandatory>.  This is deprecated.  Currect usage would be
+Same as L</mandatory>.  This is deprecated.  Correct usage would be
 C<is not_null>.
 
 =head2 autocompleted
@@ -690,7 +690,7 @@ sub till {
 =head2 valid_values
 
 A list of valid values for this column. Jifty will use this to
-autoconstruct a validator for you.  This list may also be used to
+automatically construct a validator for you.  This list may also be used to
 generate the user interface.  Correct usage is C<valid_values are
 qw/foo bar baz/>.
 

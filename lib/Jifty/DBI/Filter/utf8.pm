@@ -15,7 +15,7 @@ Jifty::DBI::Filter::utf8 - Jifty::DBI UTF-8 data filter
 This filter allow you to check that you operate with
 valid UTF-8 data.
 
-Usage as type specific filter is recommneded.
+Usage as type specific filter is recommended.
 
 =head1 METHODS
 
@@ -51,7 +51,7 @@ sub encode {
 =head2 decode
 
 Checks whether value is correct UTF-8 data or not and
-substitute all malformed data with 0xFFFD code point.
+substitute all malformed data with the C<0xFFFD> code point.
 
 Always set UTF-8 flag on the value.
 

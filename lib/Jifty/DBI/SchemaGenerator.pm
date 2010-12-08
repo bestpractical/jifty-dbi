@@ -20,7 +20,7 @@ __PACKAGE__->mk_accessors(qw(_db_schema));
 
 =head1 NAME
 
-Jifty::DBI::SchemaGenerator - Generate table schemas from Jifty::DBI records
+Jifty::DBI::SchemaGenerator - Generate a table schema from Jifty::DBI records
 
 =head1 DESCRIPTION
 
@@ -196,7 +196,7 @@ sub add_model {
 
 =head2 column_definition_sql TABLENAME COLUMNNAME
 
-Given a tablename and a column name, returns the SQL fragment 
+Given a table name and a column name, returns the SQL fragment 
 describing that column for the current database.
 
 =cut

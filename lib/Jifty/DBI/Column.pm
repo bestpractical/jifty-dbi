@@ -63,12 +63,12 @@ for my $attr (@handy_attrs) {
 
 =head1 NAME
 
-Jifty::DBI::Column - Encapsulate's a single column in a Jifty::DBI::Record table
+Jifty::DBI::Column - Encapsulates a single column in a Jifty::DBI::Record table
 
 =head1 DESCRIPTION
 
 
-This class encapsulate's a single column in a Jifty::DBI::Record table
+This class encapsulates a single column in a Jifty::DBI::Record table
 description. It replaces the _accessible method in
 L<Jifty::DBI::Record>.
 

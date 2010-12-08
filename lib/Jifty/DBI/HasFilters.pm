@@ -14,7 +14,7 @@ __PACKAGE__->mk_accessors qw/
 
 Jifty::DBI::HasFilters - abstract class for objects that has filters
 
-=head1 SYNOPSYS
+=head1 SYNOPSIS
 
   my $record = Jifty::DBI::Record->new(...);
   $record->input_filters( 'Jifty::DBI::Filter::Truncate',

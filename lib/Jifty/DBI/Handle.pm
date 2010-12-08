@@ -279,8 +279,8 @@ sub log_sql_statements {
 
 Used in instrumenting the SQL logging. You can use this to, for example, get a
 stack trace for each query (so you can find out where the query is being made).
-The name is required so that multiple hooks can be installed without stepping
-on eachother's toes.
+The name is required so that multiple hooks can be installed, and inspected, by
+name.
 
 The coderef is run in scalar context and (currently) receives no arguments.
 
@@ -650,7 +650,7 @@ Returns the database's version.
 
 If argument C<short> is true returns short variant, in other
 case returns whatever database handle/driver returns. By default
-returns short version, e.g. '4.1.23' or '8.0-rc4'.
+returns short version, e.g. C<4.1.23> or C<8.0-rc4>.
 
 Returns empty string on error or if database couldn't return version.
 

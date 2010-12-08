@@ -1011,7 +1011,7 @@ Should return a new object of the correct type for the current collection.
 L</record_class> method is used to determine class of the object.
 
 Each record class at least once is loaded using require. This method is
-called each time a record fetched so load atemts are cached to avoid
+called each time a record fetched so load attempts are cached to avoid
 penalties. If you're sure that all record classes are loaded before
 first use then you can override this method.
 
@@ -1068,7 +1068,7 @@ sub record_class {
 =head2 redo_search
 
 Takes no arguments.  Tells Jifty::DBI::Collection that the next time
-it's asked for a record, it should requery the database
+it is asked for a record, it should re-execute the query.
 
 =cut
 
@@ -1121,9 +1121,9 @@ wanted (that means we can't do recursive joins as for now).
 
 =item alias
 
-Unless alias is set, the join criterias will be taken from EXT_LINKcolumn
-and INT_LINKcolumn and added to the criterias.  If alias is set, new
-criterias about the foreign table will be added.
+Unless alias is set, the join criteria will be taken from EXT_LINKcolumn
+and INT_LINKcolumn and added to the criteria.  If alias is set, new
+criteria about the foreign table will be added.
 
 =item column
 
@@ -1145,7 +1145,7 @@ operator is the SQL operator to use for this phrase.  Possible choices include:
 
 =item "!="
 
-Any other standard SQL comparision operators that your underlying
+Any other standard SQL comparison operators that your underlying
 database supports are also valid.
 
 =item "LIKE"
@@ -1162,7 +1162,7 @@ starts_with is like LIKE, except it only appends a % at the end of the string
 
 =item "ends_with"
 
-ENDSWITH is like LIKE, except it prepends a % to the beginning of the string
+ends_with is like LIKE, except it prepends a % to the beginning of the string
 
 =item "IN"
 
@@ -1396,8 +1396,8 @@ sub limit {
 
 =head2 open_paren CLAUSE
 
-Places an open paren at the current location in the given C<CLAUSE>.
-Note that this can be used for Deep Magic, and has a high likelyhood
+Places an open parenthesis at the current location in the given C<CLAUSE>.
+Note that this can be used for Deep Magic, and has a high likelihood
 of allowing you to construct malformed SQL queries.  Its interface
 will probably change in the near future, but its presence allows for
 arbitrarily complex queries.
@@ -1440,8 +1440,8 @@ sub open_paren {
 
 =head2 close_paren CLAUSE
 
-Places a close paren at the current location in the given C<CLAUSE>.
-Note that this can be used for Deep Magic, and has a high likelyhood
+Places a close parenthesis at the current location in the given C<CLAUSE>.
+Note that this can be used for Deep Magic, and has a high likelihood
 of allowing you to construct malformed SQL queries.  Its interface
 will probably change in the near future, but its presence allows for
 arbitrarily complex queries.
@@ -1793,7 +1793,7 @@ sub _get_alias {
 
 Join instructs Jifty::DBI::Collection to join two tables.  
 
-The standard form takes a param hash with keys C<alias1>, C<column1>, C<alias2>
+The standard form takes a paramhash with keys C<alias1>, C<column1>, C<alias2>
 and C<column2>. C<alias1> and C<alias2> are column aliases obtained from
 $self->new_alias or a $self->limit. C<column1> and C<column2> are the columns 
 in C<alias1> and C<alias2> that should be linked, respectively.  For this
@@ -1890,7 +1890,7 @@ the number of rows the database should display.
 =head2 first_row
 
 Get or set the first row of the result set the database should return.
-Takes an optional single integer argrument. Returns the currently set
+Takes an optional single integer argument. Returns the currently set
 integer first row that the database should return.
 
 
@@ -2130,9 +2130,9 @@ sub columns {
 
 =head2 columns_in_db table
 
-Return a list of columns in table, lowercased.
+Return a list of columns in table, in lowercase.
 
-TODO: Why are they lowercased?
+TODO: Why are they in lowercase?
 
 =cut
 
@@ -2212,7 +2212,7 @@ sub clone {
 Returns list of the object's fields that should be copied.
 
 If your subclass store references in the object that should be copied while
-clonning then you probably want override this method and add own values to
+cloning then you probably want override this method and add own values to
 the list.
 
 =cut

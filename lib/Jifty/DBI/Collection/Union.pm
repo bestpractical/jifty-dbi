@@ -145,7 +145,7 @@ sub last {
 
 =head2 count
 
-Returns the total number of elements in the Union'ed Collection
+Returns the total number of elements in the union collection
 
 =cut
 

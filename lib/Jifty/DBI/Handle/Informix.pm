@@ -76,7 +76,7 @@ sub apply_limits {
 
 =head2 disconnect
 
-Disconnects and completely unreferences the handle for Informix.
+Disconnects and removes the reference to the handle for Informix.
 
 =cut
 

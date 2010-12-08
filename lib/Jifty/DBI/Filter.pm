@@ -69,7 +69,7 @@ with here.
 
 =item handle
 
-A L<Jifty::DBI::Handle> object, because some filters (ie
+A L<Jifty::DBI::Handle> object, because some filters (i.e.
 L<Jifty::DBI::Filter::Boolean>) depend on what database system is being used.
 
 =back

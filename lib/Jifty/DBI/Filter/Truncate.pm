@@ -12,7 +12,7 @@ Jifty::DBI::Filter::Truncate - Filter used to enforce max_length column trait
 
 =head1 DESCRIPTION
 
-You do not need to use this filter explicitly. This filter is used internally to enforce the L<Jifty::DBI::Schema/max_length> retrictions on columns:
+You do not need to use this filter explicitly. This filter is used internally to enforce the L<Jifty::DBI::Schema/max_length> restrictions on columns:
 
   column name =>
       type is 'text',

@@ -15,13 +15,13 @@ Jifty::DBI deals with databases, so that you don't have to.
 This module provides an object-oriented mechanism for retrieving and
 updating data in a DBI-accessible database. 
 
-This module is the direct descendent of L<DBIx::SearchBuilder>. If you're familiar
+This module is the direct descendant of L<DBIx::SearchBuilder>. If you're familiar
 with SearchBuilder, Jifty::DBI should be quite familiar to you.
 
 =head2 Purpose
 
 Jifty::DBI::Record abstracts the agony of writing the common and generally 
-simple SQL statements needed to serialize and de-serialize an object to the
+simple SQL statements needed to serialize and deserialize an object to the
 database.  In a traditional system, you would define various methods on 
 your object 'create', 'read', 'update', and 'delete' being the most common. 
 In each method you would have a SQL statement like: 
@@ -156,12 +156,12 @@ the last example.
  print "Foo : ", $s->foo(), "\n";
  print "Bar : ", $s->bar(), "\n";
 
-Thats all you have to to get the data, now to change the data!
+That's all you have to to get the data, now to change the data!
 
 
  $s->set_bar('NewBar');
 
-Pretty simple! Thats really all there is to it.  Set<Field>($) returns 
+Pretty simple! That's really all there is to it.  Set<Field>($) returns 
 a boolean and a string describing the problem.  Lets look at an example of
 what will happen if we try to set a 'Id' which we previously defined as 
 read only. 
@@ -199,8 +199,8 @@ object!
 
 And it's gone. 
 
-For simple use, thats more or less all there is to it.  In the future, I hope to exapand 
-this HowTo to discuss using container classes,  overloading, and what 
+For simple use, that's more or less all there is to it.  In the future, I hope to expand 
+this how-to to discuss using container classes,  overloading, and what 
 ever else I think of.
 
 =head1 LICENSE

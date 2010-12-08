@@ -83,7 +83,7 @@ SKIP: {
         is($msg, 'Immutable column', 'id is immutable column');
         is($rec->id, $id, "The record still has its id");
 
-# Check some non existant column
+# Check some non existent column
         ok( !eval{ $rec->some_unexpected_column }, "The record has no 'some_unexpected_column'");
         {
                 # test produce DBI warning
@@ -134,7 +134,7 @@ SKIP: {
         is($val, 0, "didn't find object");
         is($msg, "Missing a primary key?", "reason is missing PK");
 
-# _load_from_sql and not existant row
+# _load_from_sql and not existent row
         $newrec = TestApp::Address->new( handle => $handle );
         ($val, $msg) = $newrec->_load_from_sql('SELECT id FROM addresses WHERE id = ?', 0);
         is($val, 0, "didn't find object");
