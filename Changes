@@ -1,5 +1,33 @@
 Revision history for Perl extension Jifty::DBI.
 
+0.64 Wed Dec  8 15:21:17 EST 2010
+- Installation:
+    * Minor distribution fixes
+
+0.63 Wed Dec  8 15:14:17 EST 2010
+- Features:
+    * distinct_column_values method, docs and tests
+
+- Fixes:
+    * Warn about load(arg => value)
+    * Include column_name in the value passed to reader warning
+    * It is a rare but possible case that 0 is a valid id
+    * Ensure encode_base64 doesn't choke on utf8
+
+0.62 Thu May 20 13:58:53 EST 2010
+- Features:
+    * Computed columns let you have the Jifty-DBI scaffolding but without
+      touching the database
+    * Column->is_boolean
+
+- Fixes:
+    * Don't attempt to store undef values in memcached
+    * Avoid undef warnings
+
+0.61 Mon Jan  4 13:04:20 EST 2010
+- Installation:
+    * Minor distribution fixes
+
 0.60 Mon Jan  4 13:02:17 EST 2010
 - Features:
     * Allow passing of extra parameters to canonicalizers
