@@ -68,6 +68,7 @@ t/01searches.t
 t/02-column_constraints.t
 t/02records_cachable.t
 t/02records_object.t
+t/02searches_distinct_values.t
 t/02searches_joins.t
 t/03rebless.t
 t/03rename_column.t
@@ -75,6 +76,7 @@ t/03rename_table.t
 t/04memcached.t
 t/05raw_value.t
 t/06filter.t
+t/06filter_base64.t
 t/06filter_boolean.t
 t/06filter_datetime.t
 t/06filter_duration.t
@@ -94,9 +96,10 @@ t/17virtualtypes.t
 t/18triggers.t
 t/19reference.t
 t/20overload.t
+t/99-pod-coverage.t
+t/99-pod-spelling.t
+t/99-pod.t
 t/case_sensitivity.t
 t/metadata.t
-t/pod-coverage.t
-t/pod.t
 t/testmodels.pl
 t/utils.pl

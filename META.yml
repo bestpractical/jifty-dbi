@@ -7,7 +7,7 @@ build_requires:
 configure_requires:
   ExtUtils::MakeMaker: 6.42
 distribution_type: module
-generated_by: 'Module::Install version 0.95'
+generated_by: 'Module::Install version 1.00'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -19,6 +19,7 @@ no_index:
     - inc
     - t
 requires:
+  Cache::Memcached: 0
   Cache::Simple::TimedExpiry: 0.21
   Class::Accessor::Fast: 0
   Class::Data::Inheritable: 0
@@ -37,10 +38,13 @@ requires:
   Lingua::EN::Inflect: 0
   Object::Declare: 0.22
   Scalar::Defer: 0.1
+  Time::Duration: 0
+  Time::Duration::Parse: 0.06
   UNIVERSAL::require: 0.11
+  URI: 0
   YAML::Syck: 0
   perl: 5.8.3
   version: 0
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.62
+version: 0.63
