@@ -5,7 +5,6 @@ Makefile
 Makefile.old
 SIGNATURE
 blib/
-inc/
 pm_to_blib
 .prove
 *.sw[po]
