@@ -6,7 +6,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 13;
+use constant TESTS_PER_DRIVER => 29;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -34,17 +34,21 @@ SKIP: {
         {my $ret = init_schema( 'TestApp::Food', $handle );
         isa_ok($ret,'DBI::st', "Inserted the schema. got a statement handle back" );}
 
-        my $rec = TestApp::Currency->new( handle => $handle );
-        isa_ok($rec, 'Jifty::DBI::Record');
+        my $usd = TestApp::Currency->new( handle => $handle );
+        isa_ok($usd, 'Jifty::DBI::Record');
 
-        my ($id) = $rec->create( name => "USD" );
+        my ($id) = $usd->create( name => "USD" );
 
-        $rec = TestApp::Food->new( handle => $handle );
+        ok($id, "got id");
+        ok($usd->load($id), "loaded the just created currency record");
+
+        my $rec = TestApp::Food->new( handle => $handle );
         isa_ok($rec, 'Jifty::DBI::Record');
 
         my ($paella) = $rec->create( name => "paella" );
         $rec->create( name => "nigiri" );
 
+        # create using currency string
         $rec = TestApp::User->new( handle => $handle );
         ($id) = $rec->create( currency => 'USD' );
 
@@ -54,12 +58,48 @@ SKIP: {
         is($rec->currency->name, 'USD');
 
         is( $rec->food, undef, 'null_reference option in effect' );
+        
+        {
+            no warnings 'once';
+            local *TestApp::User::null_reference = sub {0};
+            $rec->load($id);
+            isa_ok($rec->food, 'TestApp::Food', 'referee is null but shuold still return an object');
+            is($rec->food->id, undef);
+        }
 
-        no warnings 'once';
-        local *TestApp::User::null_reference = sub {0};
-        $rec->load($id);
-        isa_ok($rec->food, 'TestApp::Food', 'referee is null but shuold still return an object');
-        is($rec->food->id, undef);
+        # create using currency object
+        $rec = TestApp::User->new( handle => $handle );
+        ($id) = $rec->create( currency => $usd );
+
+        ok($id);
+        ok($rec->load($id), "Loaded the record");
+        isa_ok($rec->currency, 'TestApp::Currency');
+        is($rec->currency->name, 'USD');
+
+        my $food = TestApp::Food->new( handle => $handle );
+        $food->load($paella);
+
+        # create with undef, set using currency string
+        $rec = TestApp::User->new( handle => $handle );
+        ($id) = $rec->create(food => $food);
+
+        ok($id);
+        ok($rec->load($id), "Loaded the record");
+        is($rec->currency, undef, 'No currency object');
+        $rec->set_currency('USD');
+        isa_ok($rec->currency, 'TestApp::Currency');
+        is($rec->currency->name, 'USD');
+
+        # create with undef, set using currency object
+        $rec = TestApp::User->new( handle => $handle );
+        ($id) = $rec->create(food => $food);
+
+        ok($id);
+        ok($rec->load($id), "Loaded the record");
+        is($rec->currency, undef, 'No currency object');
+        $rec->set_currency($usd);
+        isa_ok($rec->currency, 'TestApp::Currency');
+        is($rec->currency->name, 'USD');
 }
 }
 

@@ -349,8 +349,12 @@ sub _init_methods_for_column {
                         my $self = shift;
                         my $val  = shift;
 
-                        $val = $val->id
-                            if UNIVERSAL::isa( $val, 'Jifty::DBI::Record' );
+                        if (UNIVERSAL::isa( $val, 'Jifty::DBI::Record' )) {
+                            my $col = $self->column($column_name);
+                            my $by  = defined $col->by ? $col->by : 'id';
+                            $val = $val->$by;
+                        }
+
                         return (
                             $self->_set(
                                 column => $column_name,
@@ -1404,11 +1408,12 @@ sub __create {
         }
         if (    $column->readable
             and $column->refers_to
-            and UNIVERSAL::isa( $column->refers_to, "Jifty::DBI::Record" ) )
+            and UNIVERSAL::isa( $column->refers_to, "Jifty::DBI::Record" )
+            and UNIVERSAL::isa( $attribs{$column_name}, 'Jifty::DBI::Record' ) )
         {
-            $attribs{$column_name} = $attribs{$column_name}->id
-                if UNIVERSAL::isa( $attribs{$column_name},
-                'Jifty::DBI::Record' );
+            # lookup the column referenced or default to id
+            my $by = defined $column->by ? $column->by : 'id';
+            $attribs{$column_name} = $attribs{$column_name}->$by;
         }
 
         $self->_apply_input_filters(
