@@ -1134,9 +1134,8 @@ sub load_by_cols {
             }
 
             if ( blessed $value && $value->isa('Jifty::DBI::Record') ) {
-
-                # XXX TODO: check for proper foriegn keyness here
-                $value = $value->id;
+                my $by  = defined $column_obj->by ? $column_obj->by : 'id';
+                $value = $value->$by;
             }
 
             $self->_apply_input_filters(

@@ -1275,17 +1275,23 @@ sub limit {
         if ( ( $value_ref ne 'ARRAY' )
             && $args{value}->isa('Jifty::DBI::Record') )
         {
-            $args{value} = $args{value}->id;
+            my $by = (defined $column_obj and defined $column_obj->by)
+                        ? $column_obj->by
+                        : 'id';
+            $args{value} = $args{value}->$by;
         } elsif ( $value_ref eq 'ARRAY' ) {
 
             # Don't modify the original reference, it isn't polite
             $args{value} = [ @{ $args{value} } ];
             map {
+                my $by = (defined $column_obj and defined $column_obj->by)
+                            ? $column_obj->by
+                            : 'id';
                 $_ = (
                       ( ref $_ && $_->isa('Jifty::DBI::Record') )
-                    ? ( $_->id )
+                    ? ( $_->$by )
                     : $_
-                    )
+                )
             } @{ $args{value} };
         }
     }

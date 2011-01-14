@@ -6,7 +6,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 29;
+use constant TESTS_PER_DRIVER => 40;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -34,14 +34,24 @@ SKIP: {
         {my $ret = init_schema( 'TestApp::Food', $handle );
         isa_ok($ret,'DBI::st', "Inserted the schema. got a statement handle back" );}
 
+        # USD
         my $usd = TestApp::Currency->new( handle => $handle );
         isa_ok($usd, 'Jifty::DBI::Record');
 
         my ($id) = $usd->create( name => "USD" );
-
         ok($id, "got id");
-        ok($usd->load($id), "loaded the just created currency record");
+        ok($usd->load($id), "loaded the just created currency record (USD)");
+        is($usd->name, "USD", "same name");
 
+        # GBP
+        my $gbp = TestApp::Currency->new(handle=>$handle);
+        isa_ok($usd, 'Jifty::DBI::Record');
+
+        my ($gid) = $gbp->create( name => "GBP" );
+        ok($gid, "got id");
+        ok($gbp->load($gid), "loaded the just created currency record (GBP)");
+        is($gbp->name, "GBP", "same name");
+        
         my $rec = TestApp::Food->new( handle => $handle );
         isa_ok($rec, 'Jifty::DBI::Record');
 
@@ -97,9 +107,32 @@ SKIP: {
         ok($id);
         ok($rec->load($id), "Loaded the record");
         is($rec->currency, undef, 'No currency object');
-        $rec->set_currency($usd);
+        $rec->set_currency($gbp);
         isa_ok($rec->currency, 'TestApp::Currency');
-        is($rec->currency->name, 'USD');
+        is($rec->currency->name, 'GBP');
+
+        # load_by_cols with object
+        $rec = TestApp::User->new(handle=>$handle);
+        $rec->load_by_cols( currency => $usd );
+
+        ok($rec->id, "got id");
+        is($rec->currency->name, "USD", "got currency");
+
+        # limit with object
+        my $users = TestApp::UserCollection->new(handle => $handle);
+        $users->limit( column => 'currency', value => $usd );
+
+        is($users->count, 3, "got 3 users");
+        is($users->first->currency->name, "USD", "got USD");
+
+        $users = TestApp::UserCollection->new(handle => $handle);
+        $users->limit( column => 'currency', value => $gbp );
+        is($users->count, 1, "got 1 users");
+        
+        # limit with mixed array
+        $users = TestApp::UserCollection->new(handle => $handle);
+        $users->limit( column => 'currency', value => [$gbp, 'USD'] );
+        is($users->count, 4, "got 4 users");
 }
 }
 
@@ -238,5 +271,8 @@ column food    =>
   refers_to TestApp::Food;
 
 };
+
+package TestApp::UserCollection;
+use base qw/Jifty::DBI::Collection/;
 
 1;
