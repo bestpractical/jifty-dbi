@@ -6,6 +6,9 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
+eval "use URI";
+plan skip_all => "URI required for testing the URI filter" if $@;
+
 use constant TESTS_PER_DRIVER => 14;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
@@ -33,7 +36,7 @@ SKIP: {
         my $rec = TestApp::User->new( handle => $handle );
         isa_ok($rec, 'Jifty::DBI::Record');
 
-        use URI;
+        require URI;
         my $uri = URI->new( 'http://bestpractical.com/foo' );
         my ($id) = $rec->create(uri => $uri);
         ok($id, "Successfuly created a user");
