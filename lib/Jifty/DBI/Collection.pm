@@ -1255,7 +1255,9 @@ sub limit {
         : $args{'column'};
     my $clause_id = $args{'subclause'} || $qualified_column;
 
-    # XXX: when is column_obj undefined?
+    # $column_obj is undefined when the table2 argument to the join is a table
+    # name and not a collection model class.  In that case, the class key
+    # doesn't exist for the join.
     my $class
         = $self->{joins}{ $args{alias} }
         && $self->{joins}{ $args{alias} }{class}
