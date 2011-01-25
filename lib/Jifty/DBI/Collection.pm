@@ -1269,7 +1269,7 @@ sub limit {
     $self->new_item->_apply_input_filters(
         column    => $column_obj,
         value_ref => \$args{'value'},
-    ) if $column_obj && $column_obj->encode_on_select;
+    ) if $column_obj && $column_obj->encode_on_select && $args{operator} !~ /IS/;
 
     # make passing in an object DTRT
     my $value_ref = ref( $args{value} );
