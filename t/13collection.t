@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 8;
+use Test::More tests => 10;
 
 my $package;
 BEGIN { 
@@ -123,5 +123,26 @@ is $obj->_order_clause,
    ' ORDER BY ab.msg_id DESC, main.yaks ASC ',
    "add_order_by works when passing a list-as-hash directly";
 
+# test specifying just function
+$obj->order_by(
+    function => 'min(foo)',
+);
+
+is $obj->_order_clause,
+   ' ORDER BY min(foo) ASC ',
+   "order_by function and column works";
+
+# test specifying function and column
+$obj->order_by(
+    function => 'lower',
+    column => 'name',
+    order => 'DESC',
+);
+
+is $obj->_order_clause,
+   ' ORDER BY lower(main.name) DESC ',
+   "order_by function and column works";
+
 $obj->clear_order_by;
 is($obj->_order_clause, '', "clear_order_by works");
+

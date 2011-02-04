@@ -1568,6 +1568,10 @@ the function value. Note that if you want use a column as argument of
 the function then you have to build correct reference with alias
 in the C<alias.column> format.
 
+If you specify C<function> and C<column>, the column (and C<alias>) will be
+wrapped in the function.  This is useful for simple functions like C<min> or
+C<lower>.
+
 Use array of hashes to order by many columns/functions.
 
 Calling this I<sets> the ordering, it doesn't refine it. If you want to keep
@@ -1648,7 +1652,7 @@ sub _order_clause {
             $rowhash{'order'} = "ASC";
         }
 
-        if ( $rowhash{'function'} ) {
+        if ( $rowhash{'function'} and not defined $rowhash{'column'} ) {
             $clause .= ( $clause ? ", " : " " );
             $clause .= $rowhash{'function'} . ' ';
             $clause .= $rowhash{'order'};
@@ -1658,9 +1662,11 @@ sub _order_clause {
         {
 
             $clause .= ( $clause ? ", " : " " );
+            $clause .= $rowhash{'function'} . "(" if $rowhash{'function'};
             $clause .= $rowhash{'alias'} . "." if $rowhash{'alias'};
-            $clause .= $rowhash{'column'} . " ";
-            $clause .= $rowhash{'order'};
+            $clause .= $rowhash{'column'};
+            $clause .= ")" if $rowhash{'function'};
+            $clause .= " " . $rowhash{'order'};
         }
     }
     $clause = " ORDER BY$clause " if $clause;
