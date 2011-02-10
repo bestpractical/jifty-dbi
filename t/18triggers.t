@@ -7,7 +7,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 62;
+use constant TESTS_PER_DRIVER => 66;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -90,9 +90,10 @@ sub register_triggers {
         my $arg = shift;
         isa_ok($self, 'TestApp::Address');
         is(ref $arg, 'HASH', 'arg is a hash');
-        is(scalar(keys %$arg), 2, 'hash has 2 keys');
+        is(scalar(keys %$arg), 3, 'hash has 3 keys');
         ok($arg->{column}, "column arg is set");
         ok($arg->{value}, "value arg is set");
+        ok($arg->{old_value}, "old_value arg is set");
     });
     $self->add_trigger(before_delete => sub {
         my $self = shift;
@@ -111,8 +112,8 @@ sub register_triggers_for_column {
     my $self   = shift;
     my $column = shift;
 
-    my $value = $column eq 'name' ? 'zostay'
-              :                     '098 765 4321';
+    my $old_value = $column eq 'name' ? 'Sterling' : '123 456 7890';
+    my $value     = $column eq 'name' ? 'zostay'   : '098 765 4321';
 
     $self->add_trigger('before_set_'.$column => sub {
         my $self = shift;
@@ -129,9 +130,10 @@ sub register_triggers_for_column {
         my $arg = shift;
         isa_ok($self, 'TestApp::Address');
         is(ref $arg, 'HASH', 'arg is a hash');
-        is(scalar(keys %$arg), 2, 'hash has 2 keys');
+        is(scalar(keys %$arg), 3, 'hash has 3 keys');
         is($arg->{column}, $column, "column arg is $column");
         is($arg->{value}, $value, "value arg is $value");
+        is($arg->{old_value}, $old_value, "old_value arg is $old_value");
     });
 }
 

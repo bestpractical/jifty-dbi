@@ -913,6 +913,9 @@ sub _set {
     );
     return $ok if ( not defined $ok );
 
+    # Fetch the old value for the benefit of the triggers
+    my $old_value = $self->_value( $args{column} );
+
     $ok = $self->__set(%args);
     return $ok if not $ok;
 
@@ -922,13 +925,13 @@ sub _set {
     # Call the general after_set triggers
     $self->_run_callback(
         name => "after_set",
-        args => { column => $args{column}, value => $value },
+        args => { column => $args{column}, value => $value, old_value => $old_value },
     );
 
     # Call the specific after_set_column triggers
     $self->_run_callback(
         name => "after_set_" . $args{column},
-        args => { column => $args{column}, value => $value },
+        args => { column => $args{column}, value => $value, old_value => $old_value },
     );
 
     return $ok;
