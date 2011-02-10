@@ -5,7 +5,7 @@ use warnings;
 use Test::More;
 use version;
 
-use constant TESTS_PER_DRIVER => 77;
+use constant TESTS_PER_DRIVER => 87;
 our @available_drivers;
 
 BEGIN {
@@ -111,6 +111,7 @@ foreach my $d ( @available_drivers ) {
 
     for my $version (qw/ 0.2.0 0.2.4 0.2.6 0.2.8 0.2.9 /) {
 
+        Sample::Address->_COLUMNS_CACHE(undef);
         Sample::Address->schema_version($version);
 
         my $SG = Jifty::DBI::SchemaGenerator->new($handle, $version);
@@ -131,6 +132,11 @@ foreach my $d ( @available_drivers ) {
         else {
             ok(!Sample::Address->COLUMNS->{street}->active, 'street not active');
         }
+
+        # employee_id shows up twice when we map over name because employee
+        # is automagically injected as an aliased column
+        is_deeply([map { $_->name } Sample::Address->all_columns], [qw(id employee_id employee_id name phone street)], "got all columns");
+        is_deeply([map { $_->name } Sample::Address->columns], [qw(id employee_id employee_id name phone), ($street_added ? qw(street) : ())], "got all active columns");
 
         my $address_version_schema = $street_added ? "${address_schema}_024"
             :                                         $address_schema;

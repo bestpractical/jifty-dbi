@@ -573,18 +573,9 @@ sub columns {
     my $self = shift;
     return @{
         $self->_COLUMNS_CACHE() || $self->_COLUMNS_CACHE(
-            [   sort {
-                    ( ( ( $b->type || '' ) eq 'serial' )
-                        <=> ( ( $a->type || '' ) eq 'serial' ) )
-                        or (
-                        ( $a->sort_order || 0 ) <=> ( $b->sort_order || 0 ) )
-                        or ( $a->name cmp $b->name )
-                    } grep {
-                    $_->active
-                    } values %{ $self->_columns_hashref }
-            ]
+            [ grep { $_->active } $self->all_columns ]
         )
-        };
+    };
 }
 
 =head2 all_columns
@@ -600,11 +591,10 @@ sub all_columns {
 
     # Not cached because it's not expected to be used often
     return sort {
-        ( ( ( $b->type || '' ) eq 'serial' )
-            <=> ( ( $a->type || '' ) eq 'serial' ) )
-            or ( ( $a->sort_order || 0 ) <=> ( $b->sort_order || 0 ) )
-            or ( $a->name cmp $b->name )
-    } values %{ $self->_columns_hashref || {} };
+        ((($b->type || '') eq 'serial') <=> (($a->type || '') eq 'serial'))
+        or       (($a->sort_order || 0) <=> ($b->sort_order || 0))
+        or                   ( $a->name cmp $b->name )
+    } values %{ $self->_columns_hashref }
 }
 
 sub _columns_hashref {
