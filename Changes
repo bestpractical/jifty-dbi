@@ -1,5 +1,19 @@
 Revision history for Perl extension Jifty::DBI.
 
+0.66 2011-02-14
+- Features:
+    * Provide a sane way to wrap a function around an aliased column in order_by
+
+- Fixes:
+    * Respect the 'by' attribute for refers_to columns in create and set
+    * Use the right FK when using a record object in load_by_cols or
+      limit [rt.cpan.org #64779]
+    * Don't encode fields when attempting to limit with IS
+    * Fix since/till by refactoring columns to use an updated all_columns
+
+- Installation:
+    * Only run these URI filter tests if we have URI [rt.cpan.org #65047]
+
 0.64 Wed Dec  8 15:21:17 EST 2010
 - Installation:
     * Minor distribution fixes
