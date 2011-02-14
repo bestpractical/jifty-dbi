@@ -3,6 +3,7 @@ Revision history for Perl extension Jifty::DBI.
 0.66 2011-02-14
 - Features:
     * Provide a sane way to wrap a function around an aliased column in order_by
+    * Pass old_value to triggers on column update
 
 - Fixes:
     * Respect the 'by' attribute for refers_to columns in create and set
