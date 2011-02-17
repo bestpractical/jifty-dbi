@@ -972,9 +972,16 @@ sub distinct_column_values {
             .' '. ($args{'sort'} =~ /^des/i ? 'DESC' : 'ASC');
     }
 
-    my $dbh = $self->_handle->dbh;
-    my $list = $dbh->selectcol_arrayref( $query_string, { MaxRows => $args{'max'} } );
-    return $list? @$list : ();
+    my $sth  = $self->_handle->simple_query( $query_string ) or return;
+    my $value;
+    $sth->bind_col(1, \$value) or return;
+    my @col;
+    if ($args{max}) {
+        push @col, $value while 0 < $args{max}-- && $sth->fetch;
+    } else {
+        push @col, $value while $sth->fetch;
+    }
+    return @col;
 }
 
 =head2 items_array_ref
