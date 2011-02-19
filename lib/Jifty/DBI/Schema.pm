@@ -73,7 +73,7 @@ use Object::Declare (
                              # looks like a type name but not found
                              return ($_[0] => 1) unless $typehandler;
                              return $typehandler->();
-			 },
+        },
         are         => '',
         as          => '',
         ajax        => 'ajax_',
@@ -208,26 +208,26 @@ sub schema (&) {
     my $from = caller;
 
     my $new_code = sub {
-	no warnings 'redefine';
-	local *_ = sub { my $args = \@_; defer { _(@$args) } };
-	$from->_init_columns;
+        no warnings 'redefine';
+        local *_ = sub { my $args = \@_; defer { _(@$args) } };
+        $from->_init_columns;
 
-	my @columns = &declare($code);
+        my @columns = &declare($code);
 
-	# Unimport all our symbols from the calling package,
-        # except for "lazy" and "defer".
-	foreach my $sym (@EXPORT) {
-            next if $sym eq 'lazy' or $sym eq 'defer';
+# Unimport all our symbols from the calling package,
+            # except for "lazy" and "defer".
+        foreach my $sym (@EXPORT) {
+                next if $sym eq 'lazy' or $sym eq 'defer';
 
-	    no strict 'refs';
-	    undef *{"$from\::$sym"}
-		if \&{"$from\::$sym"} == \&$sym;
-	}
+            no strict 'refs';
+            undef *{"$from\::$sym"}
+            if \&{"$from\::$sym"} == \&$sym;
+        }
 
-	foreach my $column (@columns) {
-	    next if !ref($column);
-	    _init_column($column);
-	}
+        foreach my $column (@columns) {
+            next if !ref($column);
+            _init_column($column);
+        }
 
         $from->_init_methods_for_columns;
     };

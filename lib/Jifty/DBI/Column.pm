@@ -55,7 +55,7 @@ for my $attr (@handy_attrs) {
     no strict 'refs';
     *$attr = sub {
         my $self = shift;
-	$self->attributes({}) unless $self->attributes;
+        $self->attributes({}) unless $self->attributes;
         return $self->attributes->{$attr} unless @_;
         $self->attributes->{$attr} = (@_ == 1 ? $_[0] : [@_]);
     }
@@ -91,7 +91,7 @@ sub new {
     # not in @attrs into attributes and just pass the whole hash
     $self->attributes({});
     for (keys %$args) {
-	$self->can($_) ? $self->$_($args->{$_}) : $self->attributes->{$_} = $args->{$_};
+        $self->can($_) ? $self->$_($args->{$_}) : $self->attributes->{$_} = $args->{$_};
     }
 
     return $self;

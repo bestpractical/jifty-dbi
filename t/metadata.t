@@ -33,12 +33,12 @@ SKIP: {
         my $rec = TestApp::User->new( handle => $handle );
         isa_ok($rec, 'Jifty::DBI::Record');
 
-	my $col = $rec->column('name');
-	is($col->label, 'Name');
+        my $col = $rec->column('name');
+        is($col->label, 'Name');
 
-	is($col->attributes->{arbitary_data}, 'fooo');
+        is($col->attributes->{arbitary_data}, 'fooo');
 
-	is_deeply($col->serialize_metadata, { type => 'varchar', label => 'Name', sort_order => 0, writable => 1, name => 'name', readable => 1 });
+        is_deeply($col->serialize_metadata, { type => 'varchar', label => 'Name', sort_order => 0, writable => 1, name => 'name', readable => 1 });
 
         cleanup_schema( 'TestApp', $handle );
         disconnect_handle( $handle );
