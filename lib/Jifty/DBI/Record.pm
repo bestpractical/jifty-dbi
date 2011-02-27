@@ -1215,7 +1215,8 @@ sub load_from_hash {
         # Optimization for loading from database
         $self->{values} = $hashref;
         $self->{fetched}{$_} = 1 for keys %{$hashref};
-        $self->{raw_values} = {};
+        # copy $hashref so changing 'values' doesn't change 'raw_values'
+        $self->{raw_values}{$_} = $hashref->{$_} for keys %{$hashref};
         $self->{decoded} = {};
         return $self->{values}{id};
     }
@@ -1231,6 +1232,7 @@ sub load_from_hash {
     foreach my $col ( grep exists $hashref->{ lc $_ }, map $_->name, $self->columns ) {
         $self->{'fetched'}{$col} = 1;
         $self->{'values'}{$col} = $hashref->{ lc $col };
+        $self->{'raw_values'}{$col} = $hashref->{ lc $col };
     }
 
     $self->{'decoded'} = {};
