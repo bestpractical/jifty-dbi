@@ -99,6 +99,7 @@ t/20overload.t
 t/99-pod-coverage.t
 t/99-pod-spelling.t
 t/99-pod.t
+t/99-tabs.t
 t/case_sensitivity.t
 t/metadata.t
 t/testmodels.pl
