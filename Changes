@@ -1,5 +1,17 @@
 Revision history for Perl extension Jifty::DBI.
 
+0.67 2011-02-28
+- Features:
+    * Make ->distinct_column_values use ->simple_query, thus going through our
+      SQL logging infrastructure (Alex Vandiver)
+
+- Fixes:
+    * Set raw_values in load_by_hash so the __raw_value method works when the
+      record is loaded by a collection (Thomas Sibley)
+
+- Tests:
+    * Author tests for no tabs (Shawn M Moore)
+
 0.66 2011-02-14
 - Features:
     * Provide a sane way to wrap a function around an aliased column in order_by
