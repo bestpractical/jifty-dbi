@@ -1308,27 +1308,24 @@ sub limit {
     #since we're changing the search criteria, we need to redo the search
     $self->redo_search();
 
-    if ( $args{'column'} ) {
+    #If it's a like, we supply the %s around the search term
+    if ( $args{'operator'} =~ /MATCHES/i ) {
+        $args{'value'} = "%" . $args{'value'} . "%";
+    } elsif ( $args{'operator'} =~ /STARTS_?WITH/i ) {
+        $args{'value'} = $args{'value'} . "%";
+    } elsif ( $args{'operator'} =~ /ENDS_?WITH/i ) {
+        $args{'value'} = "%" . $args{'value'};
+    }
+    $args{'operator'} =~ s/(?:MATCHES|ENDS_?WITH|STARTS_?WITH)/LIKE/i;
 
-        #If it's a like, we supply the %s around the search term
-        if ( $args{'operator'} =~ /MATCHES/i ) {
-            $args{'value'} = "%" . $args{'value'} . "%";
-        } elsif ( $args{'operator'} =~ /STARTS_?WITH/i ) {
-            $args{'value'} = $args{'value'} . "%";
-        } elsif ( $args{'operator'} =~ /ENDS_?WITH/i ) {
-            $args{'value'} = "%" . $args{'value'};
-        }
-        $args{'operator'} =~ s/(?:MATCHES|ENDS_?WITH|STARTS_?WITH)/LIKE/i;
+    #if we're explicitly told not to to quote the value or
+    # we're doing an IS or IS NOT (null), don't quote the operator.
 
-        #if we're explicitly told not to to quote the value or
-        # we're doing an IS or IS NOT (null), don't quote the operator.
-
-        if ( $args{'quote_value'} && $args{'operator'} !~ /IS/i ) {
-            if ( $value_ref eq 'ARRAY' ) {
-                map { $_ = $self->_handle->quote_value($_) } @{ $args{'value'} };
-            } else {
-                $args{'value'} = $self->_handle->quote_value( $args{'value'} );
-            }
+    if ( $args{'quote_value'} && $args{'operator'} !~ /IS/i ) {
+        if ( $value_ref eq 'ARRAY' ) {
+            map { $_ = $self->_handle->quote_value($_) } @{ $args{'value'} };
+        } else {
+            $args{'value'} = $self->_handle->quote_value( $args{'value'} );
         }
     }
 
