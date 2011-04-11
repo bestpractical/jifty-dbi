@@ -1346,10 +1346,14 @@ sub limit {
     }
     $args{'operator'} =~ s/(?:MATCHES|ENDS_?WITH|STARTS_?WITH)/LIKE/i;
 
-    #if we're explicitly told not to to quote the value or
-    # we're doing an IS or IS NOT (null), don't quote the operator.
+    # Force the value to NULL (non-quoted) if the operator is IS.
+    if ($args{'operator'} =~ /^IS(\s*NOT)?$/i) {
+        $args{'quote_value'} = 0;
+        $args{'value'} = 'NULL';
+    }
 
-    if ( $args{'quote_value'} && $args{'operator'} !~ /IS/i ) {
+    # Quote the value
+    if ( $args{'quote_value'} ) {
         if ( $value_ref eq 'ARRAY' ) {
             map { $_ = $self->_handle->quote_value($_) } @{ $args{'value'} };
         } else {
