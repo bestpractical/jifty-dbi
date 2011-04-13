@@ -251,18 +251,26 @@ sub distinct_query {
             = [ @{ $collection->{group_by} || [] }, { column => 'id' } ];
         local $collection->{order_by} = [
             map {
-                      ( $_->{alias} and $_->{alias} ne "main" )
-                    ? { %{$_}, column => "min(" . $_->{column} . ")" }
-                    : $_
+                my $alias = $_->{alias} || '';
+                my $column = $_->{column};
+                $alias .= '.' if $alias;
+
+                ( ( !$alias or $alias eq 'main.' ) and $column eq 'id' )
+                    ? $_
+                    : { %{$_}, alias => '', column => "min($alias$column)" }
                 } @{ $collection->{order_by} }
         ];
         my $group = $collection->_group_clause;
         my $order = $collection->_order_clause;
         $$statementref
-            = "SELECT main.* FROM ( SELECT main.id FROM $$statementref $group $order ) distinctquery, $table main WHERE (main.id = distinctquery.id)";
+            = "SELECT "
+            . $collection->query_columns
+            . " FROM ( SELECT main.id FROM $$statementref $group $order ) distinctquery, $table main WHERE (main.id = distinctquery.id)";
     } else {
         $$statementref
-            = "SELECT main.* FROM ( SELECT DISTINCT main.id FROM $$statementref ) distinctquery, $table main WHERE (main.id = distinctquery.id) ";
+            = "SELECT "
+            . $collection->query_columns
+            . " FROM ( SELECT DISTINCT main.id FROM $$statementref ) distinctquery, $table main WHERE (main.id = distinctquery.id) ";
         $$statementref .= $collection->_group_clause;
         $$statementref .= $collection->_order_clause;
     }
