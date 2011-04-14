@@ -1,5 +1,19 @@
 Revision history for Perl extension Jifty::DBI.
 
+0.68 2011-04-14
+- Security:
+    * Prevent SQL injection in column names, operators, order and group by
+      (Alex Vandiver)
+    * Fix distinct_query to catch injection and correctly rewrite to
+      function => '' (Alex Vandiver)
+    * Prevent SQL injection via IS
+
+- Fixes:
+    * There is no need to check $args{column} around our LIKE adjustments
+      (Alex Vandiver)
+    * Slightly unify nigh-identical codepaths between Pg and Oracle
+      (Alex Vandiver)
+
 0.67 2011-02-28
 - Features:
     * Make ->distinct_column_values use ->simple_query, thus going through our
