@@ -38,8 +38,8 @@ SKIP: {
         is( $rec->_accessible('id' => 'write'), 0, 'id is not accessible for write' );
         is( $rec->_accessible('id'), undef, "any column is not accessible in undefined mode" );
         is( $rec->_accessible('unexpected_column' => 'read'), undef, "column doesn't exist and can't be accessible for read" );
-        is_deeply( [sort($rec->readable_attributes)], [sort qw(address employee_id id name phone)], 'readable attributes' );
-        is_deeply( [sort($rec->writable_attributes)], [sort qw(address employee_id name phone)], 'writable attributes' );
+        is_deeply( [sort($rec->readable_attributes)], [sort qw/address employee_id id name phone/], 'readable attributes' );
+        is_deeply( [sort($rec->writable_attributes)], [sort qw/address employee_id name phone/], 'writable attributes' );
 
         can_ok($rec,'create');
 

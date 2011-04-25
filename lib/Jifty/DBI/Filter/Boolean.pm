@@ -5,8 +5,8 @@ use strict;
 
 use base 'Jifty::DBI::Filter';
 
-use constant TRUE_VALUES  => qw(1 t true y yes TRUE);
-use constant FALSE_VALUES => ('', qw(0 f false n no FALSE));
+use constant TRUE_VALUES  => qw/1 t true y yes TRUE/;
+use constant FALSE_VALUES => ('', qw/0 f false n no FALSE/);
 
 sub _is_true {
     my $self = shift;

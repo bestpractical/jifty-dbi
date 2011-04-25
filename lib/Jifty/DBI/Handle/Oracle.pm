@@ -1,8 +1,8 @@
 package Jifty::DBI::Handle::Oracle;
 use base qw/Jifty::DBI::Handle/;
-use DBD::Oracle qw(:ora_types ORA_OCI);
+use DBD::Oracle qw/:ora_types ORA_OCI/;
 
-use vars qw($VERSION $DBIHandle $DEBUG);
+use vars qw/$VERSION $DBIHandle $DEBUG/;
 
 =head1 NAME
 

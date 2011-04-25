@@ -1,6 +1,6 @@
 package Jifty::DBI::Record::Cachable;
 
-use base qw(Jifty::DBI::Record);
+use base qw/Jifty::DBI::Record/;
 
 use Jifty::DBI::Handle;
 

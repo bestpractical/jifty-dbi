@@ -4,7 +4,7 @@ use warnings;
 use strict;
 
 use base qw|Jifty::DBI::Filter|;
-use Encode qw(encode_utf8 is_utf8);
+use Encode qw/encode_utf8 is_utf8/;
 use MIME::Base64 ();
 
 =head1 NAME

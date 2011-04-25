@@ -16,9 +16,9 @@ Jifty::DBI::Record::Plugin - Record model mixins for Jifty::DBI
   use base qw/ Jifty::DBI::Record::Plugin /;
 
   # Define which methods you want to put in the host model
-  our @EXPORT = qw(
+  our @EXPORT = qw/
       favorite_complementary_color
-  );
+  /;
 
   use Jifty::DBI::Schema;
   use Jifty::DBI::Record schema {
@@ -90,7 +90,7 @@ To build a mixin, just create a model that inherits from this package, C<Jifty::
 
 A mixin may define an C<@EXPORT> variable, which works exactly as advertised in L<Exporter>. That is, given the name of any methods or variable names in the mixin, the host model will gain those methods. 
 
-  our @EXPORT = qw( autocomplete_swallow_type );
+  our @EXPORT = qw/ autocomplete_swallow_type /;
 
   sub autocomplete_swallow_type {
       my $self  = shift;

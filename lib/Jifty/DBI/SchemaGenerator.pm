@@ -3,7 +3,7 @@ use warnings;
 
 package Jifty::DBI::SchemaGenerator;
 
-use base qw(Class::Accessor::Fast);
+use base qw/Class::Accessor::Fast/;
 use DBIx::DBSchema;
 use DBIx::DBSchema::Column;
 use DBIx::DBSchema::Table;
@@ -13,10 +13,10 @@ use version;
 our $VERSION = '0.01';
 
 # Public accessors
-__PACKAGE__->mk_accessors(qw(handle));
+__PACKAGE__->mk_accessors(qw/handle/);
 
 # Internal accessors: do not use from outside class
-__PACKAGE__->mk_accessors(qw(_db_schema));
+__PACKAGE__->mk_accessors(qw/_db_schema/);
 
 =head1 NAME
 
@@ -57,7 +57,7 @@ See L<Jifty::DBI> for details about the first two parts.
   use warnings;
   use strict;
 
-  use base qw(Jifty::DBI::Record);
+  use base qw/Jifty::DBI::Record/;
   # your custom code goes here.
   1;
 

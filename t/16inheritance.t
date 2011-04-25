@@ -131,7 +131,7 @@ use Jifty::DBI::Record schema {
 
 package TestApp::CrazyUser;
 BEGIN {
-our @ISA =qw(TestApp::User);
+our @ISA =qw/TestApp::User/;
 }
 use Jifty::DBI::Schema;
 use Jifty::DBI::Record schema {

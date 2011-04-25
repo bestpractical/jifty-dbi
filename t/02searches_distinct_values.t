@@ -45,22 +45,22 @@ diag "distinct_column_values on clean" if $ENV{'TEST_VERBOSE'};
 {
     is_deeply(
         [sort $users_obj->distinct_column_values('country')],
-        [qw(br ru us)],
+        [qw/br ru us/],
         "full on non limitted collection"
     );
     is_deeply(
         [$users_obj->distinct_column_values('country', sort => 'asc')],
-        [qw(br ru us)],
+        [qw/br ru us/],
         "sorting in DB"
     );
     is_deeply(
         [$users_obj->distinct_column_values('country', sort => 'desc')],
-        [qw(us ru br)],
+        [qw/us ru br/],
         "reverse sorting in DB"
     );
     is_deeply(
         [$users_obj->distinct_column_values('country', sort => 'desc', max => 2)],
-        [qw(us ru)],
+        [qw/us ru/],
         "sorting and limitted"
     );
 }

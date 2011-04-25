@@ -78,7 +78,7 @@ foreach my $d ( @available_drivers ) {
     my $employee = Sample::Employee->new;
     
     isa_ok($employee, 'Sample::Employee');
-    can_ok($employee, qw( label type dexterity age ));
+    can_ok($employee, qw/ label type dexterity age /);
     
     $ret = $SG->add_model($employee);
 
@@ -91,7 +91,7 @@ foreach my $d ( @available_drivers ) {
     my $corporation = Sample::Corporation->new;
     
     isa_ok($corporation, 'Sample::Corporation');
-    can_ok($corporation, qw( name ));
+    can_ok($corporation, qw/ name /);
     
     $ret = $SG->add_model($corporation);
 
@@ -135,8 +135,8 @@ foreach my $d ( @available_drivers ) {
 
         # employee_id shows up twice when we map over name because employee
         # is automagically injected as an aliased column
-        is_deeply([map { $_->name } Sample::Address->all_columns], [qw(id employee_id employee_id name phone street)], "got all columns");
-        is_deeply([map { $_->name } Sample::Address->columns], [qw(id employee_id employee_id name phone), ($street_added ? qw(street) : ())], "got all active columns");
+        is_deeply([map { $_->name } Sample::Address->all_columns], [qw/id employee_id employee_id name phone street/], "got all columns");
+        is_deeply([map { $_->name } Sample::Address->columns], [qw/id employee_id employee_id name phone/, ($street_added ? qw/street/ : ())], "got all active columns");
 
         my $address_version_schema = $street_added ? "${address_schema}_024"
             :                                         $address_schema;

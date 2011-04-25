@@ -7,7 +7,7 @@ use Class::ReturnValue  ();
 use Lingua::EN::Inflect ();
 use Jifty::DBI::Column  ();
 use UNIVERSAL::require  ();
-use Scalar::Util qw(blessed);
+use Scalar::Util qw/blessed/;
 use Class::Trigger;    # exports by default
 use Scalar::Defer 'force';
 

@@ -88,7 +88,7 @@ sub geolocation {
     my ($column, $from) = @_;
     my $name = $column->name;
     $column->virtual(1);
-    for (qw(x y)) {
+    for (qw/x y/) {
         Jifty::DBI::Schema::_init_column_for(
             Jifty::DBI::Column->new({ type => 'double',
                                       name => $name."_$_",
@@ -97,7 +97,7 @@ sub geolocation {
             $from);
     }
     no strict 'refs';
-    *{$from.'::'.$name} = sub { return { map { my $method = "${name}_$_"; $_ => $_[0]->$method } qw(x y) } };
+    *{$from.'::'.$name} = sub { return { map { my $method = "${name}_$_"; $_ => $_[0]->$method } qw/x y/ } };
     *{$from.'::'.'set_'.$name} = sub { die "not yet" };
 }
 
