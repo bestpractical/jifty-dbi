@@ -4,11 +4,7 @@ use warnings;
 use strict;
 
 use base qw/Class::Accessor::Fast/;
-__PACKAGE__->mk_accessors qw/
-    input_filters
-    output_filters
-    filters
-    /;
+__PACKAGE__->mk_accessors(qw/ input_filters output_filters filters /);
 
 =head1 NAME
 
