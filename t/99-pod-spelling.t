@@ -1,16 +1,16 @@
-#!/usr/bin/env perl -w
-
 use strict;
-use Test::More;
-eval "use Test::Spelling";
-plan skip_all => "Spelling tests only run for authors" unless (-d 'inc/.author');
+use warnings;
 
-plan skip_all => "Test::Spelling required for testing POD spelling" if $@;
+use Test::More;
+BEGIN {
+    plan skip_all => "Spelling tests only run for authors"
+        unless -d 'inc/.author';
+}
+
+eval "use Test::Spelling 0.12";
+plan skip_all => "Test::Spelling 0.12 required for testing POD spelling" if $@;
 
 add_stopwords(<DATA>);
-
-local $ENV{LC_ALL} = 'C';
-set_spell_cmd('aspell list -l en');
 
 all_pod_files_spelling_ok();
 
