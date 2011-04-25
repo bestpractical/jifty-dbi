@@ -3,7 +3,7 @@
 use strict;
 use Test::More;
 eval "use Test::Spelling";
-plan skip_all => "Coverage tests only run for authors" unless (-d 'inc/.author');
+plan skip_all => "Spelling tests only run for authors" unless (-d 'inc/.author');
 
 plan skip_all => "Test::Spelling required for testing POD spelling" if $@;
 
