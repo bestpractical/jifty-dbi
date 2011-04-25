@@ -4,7 +4,7 @@
 use strict;
 use warnings;
 use File::Spec;
-use Test::More;# import => [qw/isa_ok skip plan/];
+use Test::More;# import => [qw(isa_ok skip plan)];
 use Test::Warn;
 
 BEGIN { require "t/utils.pl" }

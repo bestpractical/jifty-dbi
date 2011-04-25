@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 use Test::More;
-use Digest::MD5 qw/ md5_hex /;
+use Digest::MD5 qw( md5_hex );
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 

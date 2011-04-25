@@ -1,8 +1,8 @@
 package Jifty::DBI::Handle::Pg;
 use strict;
 
-use vars qw/$VERSION @ISA $DBIHandle $DEBUG/;
-use base qw/Jifty::DBI::Handle/;
+use vars qw($VERSION @ISA $DBIHandle $DEBUG);
+use base qw(Jifty::DBI::Handle);
 
 use strict;
 

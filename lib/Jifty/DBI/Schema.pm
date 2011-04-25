@@ -50,7 +50,7 @@ See L<Scalar::Defer> for more information about C<defer>.
 
 use Carp qw/croak carp/;
 use Scalar::Defer;
-use base qw/Class::Data::Inheritable/;
+use base qw(Class::Data::Inheritable);
 __PACKAGE__->mk_classdata('TYPES' => {});
 
 use Object::Declare (
@@ -84,7 +84,7 @@ use Object::Declare (
 use Class::Data::Inheritable;
 use UNIVERSAL::require ();
 
-our @EXPORT = qw/ defer lazy column schema by render_as since till literal/;
+our @EXPORT = qw( defer lazy column schema by render_as since till literal);
 
 sub by ($) { @_ }
 sub render_as ($) { render as @_ }
@@ -105,7 +105,7 @@ use Exporter::Lite ();
 my $old_sig_die;
 
 sub import {
-    no warnings qw/ uninitialized numeric /;
+    no warnings qw( uninitialized numeric );
     $old_sig_die ||= $SIG{__DIE__};
     $SIG{__DIE__} = \&filter_die unless $SIG{__DIE__} and $SIG{__DIE__} == \&filter_die;
 
@@ -437,7 +437,7 @@ __PACKAGE__->register_types(
     boolean => sub {
         encode_on_select is 1,
         type is 'boolean',
-        filters are qw/Jifty::DBI::Filter::Boolean/,
+        filters are qw(Jifty::DBI::Filter::Boolean),
         default is 'false',
         render_as 'Checkbox',
         _init_handler is sub {

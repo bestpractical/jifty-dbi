@@ -62,7 +62,7 @@ name for the class -- see the L</SYNOPSIS> for an example.
 
 =cut
 
-use vars qw/$VERSION/;
+use vars qw($VERSION);
 
 use Data::Page;
 use Clone;
@@ -149,7 +149,7 @@ sub clean_slate {
     $self->{'alias_count'}      = 0;
     $self->{'first_row'}        = 0;
 
-    delete $self->{$_} for qw/
+    delete $self->{$_} for qw(
         items
         joins
         raw_rows
@@ -158,7 +158,7 @@ sub clean_slate {
         restrictions
         _open_parens
         criteria_count
-    /;
+    );
 
     $self->rows_per_page(0);
     $self->implicit_clauses(%args);
@@ -1082,7 +1082,7 @@ it is asked for a record, it should re-execute the query.
 sub redo_search {
     my $self = shift;
     $self->{'must_redo_search'} = 1;
-    delete $self->{$_} for qw/items raw_rows count_all/;
+    delete $self->{$_} for qw(items raw_rows count_all);
     $self->{'itemscount'} = 0;
 }
 
@@ -1551,7 +1551,7 @@ sub _compile_generic_restrictions {
             } else {
                 $result .= join ' ',
                     grep {defined}
-                    @{$entry}{qw/column operator value escape/};
+                    @{$entry}{qw(column operator value escape)};
             }
         }
         $result .= ')';
@@ -2276,11 +2276,11 @@ the list.
 =cut
 
 sub _cloned_attributes {
-    return qw/
+    return qw(
         joins
         subclauses
         restrictions
-    /;
+    );
 }
 
 =head2 each CALLBACK

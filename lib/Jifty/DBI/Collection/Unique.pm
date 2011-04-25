@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 use base 'Exporter';
-our @EXPORT  = qw/AddRecord/;
+our @EXPORT  = qw(AddRecord);
 our $VERSION = "0.01";
 
 =head2 add_record

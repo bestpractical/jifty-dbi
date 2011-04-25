@@ -1,8 +1,8 @@
 package Jifty::DBI::Handle::mysqlPP;
 use Jifty::DBI::Handle::mysql;
-@ISA = qw/Jifty::DBI::Handle::mysql/;
+@ISA = qw(Jifty::DBI::Handle::mysql);
 
-use vars qw/$VERSION @ISA $DBIHandle $DEBUG/;
+use vars qw($VERSION @ISA $DBIHandle $DEBUG);
 use strict;
 
 1;

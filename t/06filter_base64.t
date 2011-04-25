@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-use Encode qw/decode_utf8 is_utf8/;
+use Encode qw(decode_utf8 is_utf8);
 
 use Test::More;
 BEGIN { require "t/utils.pl" }

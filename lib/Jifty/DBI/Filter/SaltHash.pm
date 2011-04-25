@@ -4,7 +4,7 @@ use warnings;
 use strict;
 
 use base qw|Jifty::DBI::Filter|;
-use Digest::MD5 qw/md5_hex/;
+use Digest::MD5 qw(md5_hex);
 
 =head1 NAME
 

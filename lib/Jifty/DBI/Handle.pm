@@ -7,7 +7,7 @@ use Encode             ();
 
 use base qw/Jifty::DBI::HasFilters/;
 
-use vars qw/%DBIHandle $PrevHandle $DEBUG $TRANSDEPTH/;
+use vars qw(%DBIHandle $PrevHandle $DEBUG $TRANSDEPTH);
 
 $TRANSDEPTH = 0;
 
@@ -1347,7 +1347,7 @@ Returns a list of the drivers L<Jifty::DBI> supports.
 =cut
 
 sub supported_drivers {
-    return qw/
+    return qw(
         SQLite
         Informix
         mysql
@@ -1356,7 +1356,7 @@ sub supported_drivers {
         Oracle
         Pg
         Sybase
-    /;
+    );
 }
 
 =head2 available_drivers

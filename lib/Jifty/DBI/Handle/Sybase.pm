@@ -1,8 +1,8 @@
 package Jifty::DBI::Handle::Sybase;
 use Jifty::DBI::Handle;
-@ISA = qw/Jifty::DBI::Handle/;
+@ISA = qw(Jifty::DBI::Handle);
 
-use vars qw/$VERSION @ISA $DBIHandle $DEBUG/;
+use vars qw($VERSION @ISA $DBIHandle $DEBUG);
 use strict;
 
 =head1 NAME

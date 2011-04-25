@@ -1,13 +1,13 @@
 #!/usr/bin/env perl -w
 use strict;
-use Test::More qw/no_plan/;
+use Test::More qw(no_plan);
 
 # by Eric Wilhelm in response to Randal Schwartz pointing out that
 # CPAN.pm chokes on the VERSION >... construct
 # I dare not mention it here.
 
 use ExtUtils::MakeMaker;
-use ExtUtils::Manifest qw/maniread/;
+use ExtUtils::Manifest qw(maniread);
 use_ok('Jifty::DBI');
 
 my $minfo = maniread();
