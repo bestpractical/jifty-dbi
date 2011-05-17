@@ -4,6 +4,7 @@
 \B\.svn\b
 \B\.git\b
 ^MANIFEST\.
+^MYMETA\.yml$
 ^Makefile$
 ^blib/
 ^pm_to_blib$
