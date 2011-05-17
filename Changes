@@ -1,5 +1,9 @@
 Revision history for Perl extension Jifty::DBI.
 
+0.69 2011-05-17
+- Fixes:
+    * Remove some instances of qw() as parentheses deprecated in 5.14 (sunnavy)
+
 0.68 2011-04-14
 - Security:
     * Prevent SQL injection in column names, operators, order and group by
