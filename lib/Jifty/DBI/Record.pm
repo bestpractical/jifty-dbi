@@ -734,7 +734,9 @@ for every column set.
 This hook will be called after a value is successfully set in the
 database. It will be called with a reference to a paramhash that
 contains C<column> and C<value> keys. If C<value> was a SQL function,
-it will now contain the actual value that was set.
+it will now contain the actual value that was set. If C<column> has
+filters on it, C<value> will be the result of going through an encode
+and decode cycle.
 
 This hook's return value is ignored.
 
