@@ -584,21 +584,21 @@ sub simple_query {
     }
 
     if ( $@ or !$executed ) {
-        if ($DEBUG) {
-            die "$self couldn't execute the query '$query_string'"
-                . $self->dbh->errstr . "\n";
+        my $message = "$self couldn't execute the query '$query_string': "
+                        . ($self->dbh->errstr || $@);
 
+        if ($DEBUG) {
+            die "$message\n";
         } else {
 
  # XXX: This warn doesn't show up because we mask logging in Jifty::Test::END.
  # and it usually fails because the test server is still running.
-            warn "$self couldn't execute the query '$query_string'";
+            warn "$message\n";
 
             my $ret = Class::ReturnValue->new();
             $ret->as_error(
                 errno   => '-1',
-                message => "Couldn't execute the query '$query_string'"
-                    . $self->dbh->errstr,
+                message => $message,
                 do_backtrace => undef
             );
             return ( $ret->return_value );
