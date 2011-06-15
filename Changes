@@ -1,5 +1,13 @@
 Revision history for Perl extension Jifty::DBI.
 
+0.70 2011-06-15
+- Fixes:
+    * Respect manual column sort_orders (Thomas Sibley)
+    * Produce more useful error messages during schema upgrades (Thomas Sibley)
+
+- Documentation:
+    * Clarify what value after_set_* hooks receive (Thomas Sibley)
+
 0.69 2011-05-17
 - Fixes:
     * Remove some instances of qw() as parentheses deprecated in 5.14 (sunnavy)
