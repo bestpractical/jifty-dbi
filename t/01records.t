@@ -8,7 +8,7 @@ use Test::More;
 BEGIN { require "t/utils.pl" }
 our (@available_drivers);
 
-use constant TESTS_PER_DRIVER => 71;
+use constant TESTS_PER_DRIVER => 72;
 
 my $total = scalar(@available_drivers) * TESTS_PER_DRIVER;
 plan tests => $total;
@@ -40,6 +40,8 @@ SKIP: {
         is( $rec->_accessible('unexpected_column' => 'read'), undef, "column doesn't exist and can't be accessible for read" );
         is_deeply( [sort($rec->readable_attributes)], [sort qw(address employee_id id name phone)], 'readable attributes' );
         is_deeply( [sort($rec->writable_attributes)], [sort qw(address employee_id name phone)], 'writable attributes' );
+
+        is $rec->column('employee_id')->sort_order, -1, "got manual sort order";
 
         can_ok($rec,'create');
 
@@ -309,7 +311,8 @@ column address =>
   default is '';
 
 column employee_id =>
-  type is 'int(8)';
+  type is 'int(8)',
+  order is -1;
 }
 }
 1;
