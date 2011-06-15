@@ -326,7 +326,8 @@ sub _init_column_for {
     # XXX: deprecated
     $column->mandatory(1) if delete $column->attributes->{not_null};
 
-    $column->sort_order($SORT_ORDERS->{$from}++);
+    $column->sort_order($SORT_ORDERS->{$from}++)
+        unless defined $column->sort_order;
 
     $column->input_filters($column->{input_filters} || []);
     $column->output_filters($column->{output_filters} || []);
