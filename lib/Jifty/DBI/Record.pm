@@ -1746,7 +1746,8 @@ sub has_canonicalizer_for_column {
     my $method = "canonicalize_$key";
     if ( $self->can($method) ) {
         return 1;
-    } elsif ( Class::Trigger::__fetch_all_triggers($self, $method) ) {
+    # We have to force context here because we're reaching inside Class::Trigger
+    } elsif ( my @sighs = Class::Trigger::__fetch_all_triggers($self, $method) ) {
         return 1;
     } else {
         return undef;
@@ -1797,7 +1798,8 @@ sub has_validator_for_column {
     my $method = "validate_$key";
     if ( $self->can( $method ) ) {
         return 1;
-    } elsif ( Class::Trigger::__fetch_all_triggers($self, $method) ) {
+    # We have to force context here because we're reaching inside Class::Trigger
+    } elsif ( my @sighs = Class::Trigger::__fetch_all_triggers($self, $method) ) {
         return 1;
     } else {
         return undef;
