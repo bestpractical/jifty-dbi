@@ -1,5 +1,10 @@
 Revision history for Perl extension Jifty::DBI.
 
+0.71 2011-06-17
+- Fixes:
+    * Ensure canonicalization and validation triggers are properly found
+      (Thomas Sibley)
+
 0.70 2011-06-15
 - Fixes:
     * Respect manual column sort_orders (Thomas Sibley)

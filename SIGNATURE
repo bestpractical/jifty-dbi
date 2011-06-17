@@ -15,9 +15,9 @@ not run its Makefile.PL or Build.PL.
 Hash: SHA1
 
 SHA1 74f8212259f8d8cd02a39dbbf8026ff0c3485f5b .gitignore
-SHA1 3cd30a38b78ff6532331996b5e39db1896970700 Changes
+SHA1 7a40cacb89acb4b67a40f7e671b04cfcd5094a0d Changes
 SHA1 c2fb135f967d7093a6191d1b7e5e596e30040246 MANIFEST
-SHA1 f93c6f04ff28915905daad393e0f7589ced44552 META.yml
+SHA1 96ae1f72065ab51db5b7206c410aed913dbdac8b META.yml
 SHA1 48bd6ca8a37ec79b7cae91028d7e9489ad33a03b Makefile.PL
 SHA1 e29d7b270f78a5a406921571b08290c46f2a42f6 README
 SHA1 82d6ac3f6def48558d09f8b6e3b53ed4194d8c81 ROADMAP
@@ -41,7 +41,7 @@ SHA1 73ab91490a628452cc140db72ef9d13a1326d211 inc/Module/Install/Makefile.pm
 SHA1 8ce3f2b414e4617e6233dd4ba10830f8c5d672ec inc/Module/Install/Metadata.pm
 SHA1 3b0acd2eeac93a0afe48120f5648f0db362e5bbf inc/Module/Install/Win32.pm
 SHA1 f08924f051e623f8e09fa6a121993c4a9cf7d9eb inc/Module/Install/WriteAll.pm
-SHA1 b14d7ade0805a1ee2a3dee442b80f1ae597e5b8c lib/Jifty/DBI.pm
+SHA1 867699c1c76ee490806be5faa204c41c10db41c9 lib/Jifty/DBI.pm
 SHA1 fcab228fade86231a4a6024bd2c06813bbe4e555 lib/Jifty/DBI/Collection.pm
 SHA1 503ca4cf6693580dedf8adee58267532f8467908 lib/Jifty/DBI/Collection/Union.pm
 SHA1 bcba77fd2bacf0475aea1de97f57365c8de92ca6 lib/Jifty/DBI/Collection/Unique.pm
@@ -69,7 +69,7 @@ SHA1 bba2314c20fcc3ef71cc69090f1cd6bd515cd9b4 lib/Jifty/DBI/Handle/Sybase.pm
 SHA1 cf80896a175702a157770f64ae469430678c3357 lib/Jifty/DBI/Handle/mysql.pm
 SHA1 f2cc4fcce79c9a88a023d4e6bd96c2089eef1ced lib/Jifty/DBI/Handle/mysqlPP.pm
 SHA1 af372dca1ebf532924f2209c65fdda8ea21c36e8 lib/Jifty/DBI/HasFilters.pm
-SHA1 8089494cef07547c97b9236177c4bde77c32a615 lib/Jifty/DBI/Record.pm
+SHA1 230a62ba703b654d5fa2d318db99f44ceee4be67 lib/Jifty/DBI/Record.pm
 SHA1 663978b31373520d1e2deec87e957d1dbfd1347c lib/Jifty/DBI/Record/Cachable.pm
 SHA1 e30b1a3be2101d839a0a57e921e6f87889ef8da1 lib/Jifty/DBI/Record/Memcached.pm
 SHA1 53834b3315a509ba33a8647681f472d3ae7b0557 lib/Jifty/DBI/Record/Plugin.pm
@@ -122,7 +122,7 @@ SHA1 653c2f961d8b4f195e5391cd261f37815068e8d5 t/utils.pl
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.10 (GNU/Linux)
 
-iD8DBQFN+RlvHdv9ZfNcOAcRAkaMAKCpDibOkjaoGgiVw6gKanehdvFyJACfWuTz
-NB/Z/2eXNBcGKpX+Pqk4HZA=
-=TWol
+iD8DBQFN+7qKHdv9ZfNcOAcRApeeAJsHOvEWwuLTFGePu/uRliaqjWhe4QCfZWNd
+BXlq1dEs6wkmWu5d9zQBWkM=
+=+/px
 -----END PGP SIGNATURE-----
