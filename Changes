@@ -1,5 +1,12 @@
 Revision history for Perl extension Jifty::DBI.
 
+0.72 2011-10-17
+- Fixes:
+    * Handle DBH connection errors, retry the query (Luke Closs)
+
+- Documentation:
+    * Mention old_value in after_* hooks (Thomas Sibley)
+
 0.71 2011-06-17
 - Fixes:
     * Ensure canonicalization and validation triggers are properly found
