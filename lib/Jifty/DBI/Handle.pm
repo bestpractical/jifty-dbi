@@ -521,6 +521,7 @@ Execute the SQL string specified in QUERY_STRING
 
 =cut
 
+our $retry_simple_query = 1;
 sub simple_query {
     my $self         = shift;
     my $query_string = shift;
@@ -571,10 +572,15 @@ sub simple_query {
         eval { $executed = $sth->execute(@bind_values) };
 
         # try to ping and reconnect, if the DB connection failed
-        if ($@ and !$self->dbh->ping) {
+        if (($@ or not $executed) and !$self->dbh->ping) {
             $self->dbh(undef); # don't try pinging again, just connect
             $self->connect; 
-            eval { $executed = $sth->execute(@bind_values) };
+
+            # Need to call ourselves, to create a new sth from the new dbh
+            if ($retry_simple_query) {
+                local $retry_simple_query = 0;
+                return $self->simple_query($query_string, @_);
+            }
         }
     }
     if ( $self->log_sql_statements ) {
