@@ -508,7 +508,9 @@ sub query_columns {
             $reference = $class;
         }
 
-        push @cols, $self->_qualified_record_columns( $alias => $reference );
+        my $only_cols = $prefetch_related{$alias}{columns};
+
+        push @cols, $self->_qualified_record_columns( $alias => $reference, $only_cols );
     }
     return CORE::join( ', ', @cols );
 }
@@ -535,8 +537,13 @@ sub _qualified_record_columns {
     my $self  = shift;
     my $alias = shift;
     my $item  = shift;
-    return map $alias ."." . $_ ." as ". $alias ."_". $_,
-        map $_->name, grep { !$_->virtual && !$_->computed } $item->columns;
+    my $only_cols = shift;
+    my @columns = map { $_->name } grep { !$_->virtual && !$_->computed } $item->columns;
+    if ($only_cols) {
+        my %wanted = map { +($_ => 1) } @{ $only_cols };
+        @columns = grep { $wanted{$_} } @columns;
+    }
+    return map {$alias ."." . $_ ." as ". $alias ."_". $_} @columns
 }
 
 =head2 prefetch PARAMHASH
@@ -603,6 +610,7 @@ sub prefetch {
         name      => undef,
         class     => undef,
         reference => undef,
+        columns   => undef,
         @_,
     );
 
@@ -641,7 +649,7 @@ sub prefetch {
     $self->prefetch_related( {} ) unless $self->prefetch_related;
     $self->prefetch_related->{ $args{alias} } = {};
     $self->prefetch_related->{ $args{alias} }{$_} = $args{$_}
-        for qw/alias class name/;
+        for qw/alias class name columns/;
 
     # Return the alias, in case we made it
     return $args{alias};
