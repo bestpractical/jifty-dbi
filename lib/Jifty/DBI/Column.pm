@@ -91,7 +91,11 @@ sub new {
     # not in @attrs into attributes and just pass the whole hash
     $self->attributes({});
     for (keys %$args) {
-        $self->can($_) ? $self->$_($args->{$_}) : $self->attributes->{$_} = $args->{$_};
+        if ($self->can($_)) {
+            $self->$_($args->{$_});
+        } else {
+            $self->attributes->{$_} = $args->{$_};
+        }
     }
 
     return $self;
