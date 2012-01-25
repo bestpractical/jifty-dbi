@@ -15,9 +15,9 @@ not run its Makefile.PL or Build.PL.
 Hash: SHA1
 
 SHA1 812aba5682ab0d585d430938a048041041bcce40 .gitignore
-SHA1 5f2ff122bbc8cb16ed23ab0a9da0fa31df9d2830 Changes
+SHA1 5420ed277e7e363172d2978c29612055cfb2c828 Changes
 SHA1 c2fb135f967d7093a6191d1b7e5e596e30040246 MANIFEST
-SHA1 7f3bc156a91f0f2a0dd8c5d1f9d55767b8426b7c META.yml
+SHA1 dab8996ab00fc5b7d73efa7ad517e432c5e3a479 META.yml
 SHA1 48bd6ca8a37ec79b7cae91028d7e9489ad33a03b Makefile.PL
 SHA1 e29d7b270f78a5a406921571b08290c46f2a42f6 README
 SHA1 82d6ac3f6def48558d09f8b6e3b53ed4194d8c81 ROADMAP
@@ -41,7 +41,7 @@ SHA1 474ff5d11d1dd3327487f13d44d3c7b3945050a8 inc/Module/Install/Makefile.pm
 SHA1 fdf68f7c27a463011640b0739299834a65268056 inc/Module/Install/Metadata.pm
 SHA1 fe19e1641d3642424ba4088909e0f2e05747c76f inc/Module/Install/Win32.pm
 SHA1 b71a7355e7c74219f0d24aedf057121981ff0f95 inc/Module/Install/WriteAll.pm
-SHA1 8020e2814fde02f17ecb6806b5f76fed0084a152 lib/Jifty/DBI.pm
+SHA1 61beee59992f5ffddcccc40eabb2f830f6829f25 lib/Jifty/DBI.pm
 SHA1 b649a3e5794f18259e14ae3f2f29b83ba4c75121 lib/Jifty/DBI/Collection.pm
 SHA1 503ca4cf6693580dedf8adee58267532f8467908 lib/Jifty/DBI/Collection/Union.pm
 SHA1 bcba77fd2bacf0475aea1de97f57365c8de92ca6 lib/Jifty/DBI/Collection/Unique.pm
@@ -122,7 +122,7 @@ SHA1 653c2f961d8b4f195e5391cd261f37815068e8d5 t/utils.pl
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.11 (GNU/Linux)
 
-iD8DBQFPIHV+Hdv9ZfNcOAcRAprJAJ411ljTtg5Xdp/ui8Bvq9buJioy5wCfbpCl
-t/aIdxvwlppVG6ZD5OXWnBI=
-=zi0h
+iD8DBQFPIHdcHdv9ZfNcOAcRAly6AKCpsh3CPnlkI9Z11c/QvaRaT329twCdF22X
+TBZamwbmro9VOIVkkiipDR8=
+=dzvW
 -----END PGP SIGNATURE-----
