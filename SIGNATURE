@@ -17,7 +17,7 @@ Hash: SHA1
 SHA1 812aba5682ab0d585d430938a048041041bcce40 .gitignore
 SHA1 5f2ff122bbc8cb16ed23ab0a9da0fa31df9d2830 Changes
 SHA1 c2fb135f967d7093a6191d1b7e5e596e30040246 MANIFEST
-SHA1 09277bdc51900a9981e1cca8b2d700395ae6287c META.yml
+SHA1 7f3bc156a91f0f2a0dd8c5d1f9d55767b8426b7c META.yml
 SHA1 48bd6ca8a37ec79b7cae91028d7e9489ad33a03b Makefile.PL
 SHA1 e29d7b270f78a5a406921571b08290c46f2a42f6 README
 SHA1 82d6ac3f6def48558d09f8b6e3b53ed4194d8c81 ROADMAP
@@ -30,22 +30,22 @@ SHA1 c28087e498978a1a314dfcaa584844703f31ac8c doc/notes/on_intuitive_schema_defi
 SHA1 584c0f6cdebcbf760dfca8413c94783586120214 ex/Example/Model/Address.pm
 SHA1 7cea1a5289f79c2a87837924a83feb583f6e8890 ex/Example/Model/Employee.pm
 SHA1 a9d62e4f5b43b2f78066172a4771238ee7df6339 ex/create_tables.pl
-SHA1 5d94bc10deff1dd74e4bc5dfa6fc015e39271f15 inc/Module/AutoInstall.pm
-SHA1 40106479d4e07f379cb82ca1d69fca92e3a40f47 inc/Module/Install.pm
-SHA1 34a24a530ecf0365cc02e4150b06c9bed702a441 inc/Module/Install/AutoInstall.pm
-SHA1 ae8aa01a73cb83da31c39e8eed1120c59cb530a1 inc/Module/Install/Base.pm
-SHA1 5c87d2d0e2c08b5173259006c88ad81c24303f9d inc/Module/Install/Can.pm
-SHA1 98daf9d8c50b4b7e8988cf1fa2b86044ad219533 inc/Module/Install/Fetch.pm
-SHA1 f3e008113f7f49b0625083b6cc358a312854f613 inc/Module/Install/Include.pm
-SHA1 e67589fcbacdda6c98ff34d8e26a004ab0467bdc inc/Module/Install/Makefile.pm
-SHA1 209ea405d4ab94475661bb450d0ea042d2ec25b5 inc/Module/Install/Metadata.pm
-SHA1 1326052d1df1065debee74f9d8583a734b9b3d00 inc/Module/Install/Win32.pm
-SHA1 bb607f3715c40fc3bc1c46496587cdb215bc4fa2 inc/Module/Install/WriteAll.pm
-SHA1 56f65e1bc75a866aa102fa1131185ab63f47c745 lib/Jifty/DBI.pm
-SHA1 fcab228fade86231a4a6024bd2c06813bbe4e555 lib/Jifty/DBI/Collection.pm
+SHA1 517832230e29ff1d48b465a5605d242dbb27f358 inc/Module/AutoInstall.pm
+SHA1 7ba8556ded0e1b8465b2ebe703e073b416d454d7 inc/Module/Install.pm
+SHA1 5580f47c04e225825aa16235c63d57028251f76f inc/Module/Install/AutoInstall.pm
+SHA1 69a3a256888658cbbe0164171744838e53dc06e3 inc/Module/Install/Base.pm
+SHA1 17be8c56d695ed14cf77e37542438a5eebf1c9e1 inc/Module/Install/Can.pm
+SHA1 b842371af51441beb020ce37349f96123841f684 inc/Module/Install/Fetch.pm
+SHA1 29f6c217d420ca8c44977dad69a873c328ed6efc inc/Module/Install/Include.pm
+SHA1 474ff5d11d1dd3327487f13d44d3c7b3945050a8 inc/Module/Install/Makefile.pm
+SHA1 fdf68f7c27a463011640b0739299834a65268056 inc/Module/Install/Metadata.pm
+SHA1 fe19e1641d3642424ba4088909e0f2e05747c76f inc/Module/Install/Win32.pm
+SHA1 b71a7355e7c74219f0d24aedf057121981ff0f95 inc/Module/Install/WriteAll.pm
+SHA1 8020e2814fde02f17ecb6806b5f76fed0084a152 lib/Jifty/DBI.pm
+SHA1 b649a3e5794f18259e14ae3f2f29b83ba4c75121 lib/Jifty/DBI/Collection.pm
 SHA1 503ca4cf6693580dedf8adee58267532f8467908 lib/Jifty/DBI/Collection/Union.pm
 SHA1 bcba77fd2bacf0475aea1de97f57365c8de92ca6 lib/Jifty/DBI/Collection/Unique.pm
-SHA1 3ff96d74a769439111fba7b42b0c100d180ba6cd lib/Jifty/DBI/Column.pm
+SHA1 c1040807672358fb8a998c13e908dfcd43ac3c48 lib/Jifty/DBI/Column.pm
 SHA1 9f6a6435d358a79108e98e379e252139457c1e9f lib/Jifty/DBI/Filter.pm
 SHA1 05d100a1a9cd24c6c0285660edf3758d5f04c1c7 lib/Jifty/DBI/Filter/Boolean.pm
 SHA1 d0addaa43cfa8950cb33d42a364a3c3c56a2dd59 lib/Jifty/DBI/Filter/Date.pm
@@ -122,7 +122,7 @@ SHA1 653c2f961d8b4f195e5391cd261f37815068e8d5 t/utils.pl
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.11 (GNU/Linux)
 
-iD8DBQFOnFrqHdv9ZfNcOAcRAoVwAJ9I4cfx8Eh1hKb3I1IW6nyKrwE/SACgoFiZ
-K8G51gJ81CWJd6aT390POyM=
-=dN1T
+iD8DBQFPIHV+Hdv9ZfNcOAcRAprJAJ411ljTtg5Xdp/ui8Bvq9buJioy5wCfbpCl
+t/aIdxvwlppVG6ZD5OXWnBI=
+=zi0h
 -----END PGP SIGNATURE-----
