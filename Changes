@@ -7,7 +7,7 @@ Revision history for Perl extension Jifty::DBI.
 0.73 2012-01-25
 - Fixes:
     * Allow prefetching of only a subset of the other table's columns (Alex Vandiver)
-    * Avoid a compilation failure on blead caused by incorrect precedence (Thomas Sibley)
+    * Avoid a run-time failure on blead caused by incorrect precedence (Thomas Sibley)
 
 0.72 2011-10-17
 - Fixes:
