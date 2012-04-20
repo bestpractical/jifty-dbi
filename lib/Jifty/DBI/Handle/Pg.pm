@@ -210,6 +210,7 @@ sub distinct_query {
             map {
                 my $alias = $_->{alias} || '';
                 my $column = $_->{column};
+                my $order = $_->{order};
                 if ($column =~ /\W/) {
                     warn "Possible SQL injection in column '$column' in order_by\n";
                     next;
@@ -218,7 +219,7 @@ sub distinct_query {
 
                 ( ( !$alias or $alias eq 'main.' ) and $column eq 'id' )
                     ? $_
-                    : { %{$_}, column => undef, function => "min($alias$column)" }
+                    : { %{$_}, column => undef, function => ($order =~ /^des/i ? 'MAX':'MIN'). "($alias$column)" }
                 } @{ $collection->{order_by} }
         ];
         my $group = $collection->_group_clause;
