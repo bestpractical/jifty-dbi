@@ -165,12 +165,6 @@ sub _get () {
     @{$self}{ keys %$data } = values %$data;    # deserialize
 }
 
-sub __value {
-    my $self   = shift;
-    my $column = shift;
-    return ( $self->SUPER::__value($column) );
-}
-
 # Function: _store
 # Type    : private instance
 # Args    : string(cache_key)
