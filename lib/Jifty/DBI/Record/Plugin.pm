@@ -179,7 +179,11 @@ sub import {
         $caller->_init_methods_for_column($_);
         $caller->COLUMNS->{ $_->name } = $_ unless $_->virtual;
     }
-    $self->export_to_level(1,undef);
+    {
+        # this prevents the redefine warnings
+        local ($^W) = 0;
+        $self->export_to_level(1,undef);
+    }
     
     if (my $triggers =  $self->can('register_triggers') ) {
         $triggers->($caller)
