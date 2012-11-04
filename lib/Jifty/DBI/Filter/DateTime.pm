@@ -104,6 +104,14 @@ sub decode {
 # but we need Jifty::DBI::Handle here to get DB type
 
     my $str = join('T', split ' ', $$value_ref, 2);
+
+    # The ISO8601 parser accepts 2012-11-04T12:34:56+00
+    #                        and 2012-11-04T12:34:56.789+00:00
+    #                    but not 2012-11-04T12:34:56.789+00
+    # Postgres returns sub-second times as the last one; append ":00" to
+    # change it into the acceptable second option.
+    $str .= ":00" if $str =~ /\d\.\d+[+-]\d\d$/;
+
     my $dt;
     eval { $dt  = $self->_parser->parse_datetime($str) };
 
