@@ -962,65 +962,68 @@ sub __set {
         return ( $ret->return_value );
     }
 
-    $self->_apply_input_filters(
-        column    => $column,
-        value_ref => \$args{'value'}
-    );
+    my $unmunged_value;
+    unless ($args{is_sql_function}) {
+        $self->_apply_input_filters(
+            column    => $column,
+            value_ref => \$args{'value'}
+        );
 
-    # if value is not fetched or it's already decoded
-    # then we don't check eqality
-    # we also don't call __value because it decodes value, but
-    # we need encoded value
-    if ( $self->{'fetched'}{ $column->name }
-        || !$self->{'decoded'}{ $column->name } )
-    {
-        if ((      !defined $args{'value'}
-                && !defined $self->{'values'}{ $column->name }
-            )
-            || (   defined $args{'value'}
-                && defined $self->{'values'}{ $column->name }
-
-                # XXX: This is a bloody hack to stringify DateTime
-                # and other objects for compares
-                && $args{value}
-                . "" eq ""
-                . $self->{'values'}{ $column->name }
-            )
-            )
+        # if value is not fetched or it's already decoded
+        # then we don't check eqality
+        # we also don't call __value because it decodes value, but
+        # we need encoded value
+        if ( $self->{'fetched'}{ $column->name }
+            || !$self->{'decoded'}{ $column->name } )
         {
-            $ret->as_array( 1, "That is already the current value" );
-            return ( $ret->return_value );
+            if ((      !defined $args{'value'}
+                    && !defined $self->{'values'}{ $column->name }
+                )
+                || (   defined $args{'value'}
+                    && defined $self->{'values'}{ $column->name }
+
+                    # XXX: This is a bloody hack to stringify DateTime
+                    # and other objects for compares
+                    && $args{value}
+                    . "" eq ""
+                    . $self->{'values'}{ $column->name }
+                )
+                )
+            {
+                $ret->as_array( 1, "That is already the current value" );
+                return ( $ret->return_value );
+            }
         }
-    }
 
-    if ( my $sub = $column->validator ) {
-        my ( $ok, $msg ) = $sub->( $self, $args{'value'} );
-        unless ($ok) {
-            $ret->as_array( 0, 'Illegal value for ' . $column->name );
-            $ret->as_error(
-                errno        => 3,
-                do_backtrace => 0,
-                message      => "Illegal value for " . $column->name
-            );
-            return ( $ret->return_value );
+        if ( my $sub = $column->validator ) {
+            my ( $ok, $msg ) = $sub->( $self, $args{'value'} );
+            unless ($ok) {
+                $ret->as_array( 0, 'Illegal value for ' . $column->name );
+                $ret->as_error(
+                    errno        => 3,
+                    do_backtrace => 0,
+                    message      => "Illegal value for " . $column->name
+                );
+                return ( $ret->return_value );
+            }
         }
-    }
 
-    # Implement 'is distinct' checking
-    if ( $column->distinct ) {
-        my $ret = $self->is_distinct( $column->name, $args{'value'} );
-        return ($ret) if not($ret);
-    }
+        # Implement 'is distinct' checking
+        if ( $column->distinct ) {
+            my $ret = $self->is_distinct( $column->name, $args{'value'} );
+            return ($ret) if not($ret);
+        }
 
-    # The blob handling will destroy $args{'value'}. But we assign
-    # that back to the object at the end. this works around that
-    my $unmunged_value = $args{'value'};
+        # The blob handling will destroy $args{'value'}. But we assign
+        # that back to the object at the end. this works around that
+        $unmunged_value = $args{'value'};
 
-    if ( $column->type =~ /^(text|longtext|clob|blob|lob|bytea)$/i ) {
-        my $bhash
-            = $self->_handle->blob_params( $column->name, $column->type );
-        $bhash->{'value'} = $args{'value'};
-        $args{'value'} = $bhash;
+        if ( $column->type =~ /^(text|longtext|clob|blob|lob|bytea)$/i ) {
+            my $bhash
+                = $self->_handle->blob_params( $column->name, $column->type );
+            $bhash->{'value'} = $args{'value'};
+            $args{'value'} = $bhash;
+        }
     }
 
     my $val = $self->_handle->update_record_value(
