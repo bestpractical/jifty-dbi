@@ -58,6 +58,12 @@ package main;
             column => 'session_offset',
             order  => 'asc'
           },
+          {
+            function => 'max',
+            alias  => 'foo',
+            column => 'items',
+            order  => 'desc',
+          },
         ],
     }, 'Foo::Bar::Collection';
     my $stmt = 'select * from users';
@@ -65,7 +71,7 @@ package main;
     is $stmt,
        'SELECT blah FROM ( SELECT main.id FROM select * from users  GROUP BY main.id'
        . '   ORDER BY main.id ASC, min(main.name) DESC, min(foo.id) DESC, '
-       . 'min(foo.name) DESC, id ASC, min(blood) ASC, min(session_offset) ASC  ) '
+       . 'min(foo.name) DESC, id ASC, min(blood) ASC, min(session_offset) ASC, max(foo.items) DESC  ) '
        . 'distinctquery, bars main WHERE (main.id = distinctquery.id)',
        'distinct_query works';
 }
