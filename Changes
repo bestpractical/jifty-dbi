@@ -1,5 +1,22 @@
 Revision history for Perl extension Jifty::DBI.
 
+0.75 2013-01-29
+- Bug fixes:
+    * backport a sort order fix for Pg handles from Searchbuilder
+    * Work around Pg's sub-second formatting and DateTime::Parser::ISO8601
+    * Don't attempt to filter, eq-check, validate, or otherwise munge functions
+
+- Tests:
+    * Fix failures on 5.17.6, reported as [rt.cpan.org #82978]
+    * Update test to account for the ported bug fix in f9439a0
+
+- Cleanup:
+    * remove a useless wrapper function
+
+- Documentation:
+    * SPROUT points out that the second fix in 0.73 is actually a run-time
+      error, of course
+
 0.74 2012-01-25
 - Documentation:
     * Re-release of 0.73, now with a proper changelog

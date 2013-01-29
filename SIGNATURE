@@ -1,5 +1,5 @@
 This file contains message digests of all files listed in MANIFEST,
-signed via the Module::Signature module, version 0.68.
+signed via the Module::Signature module, version 0.69.
 
 To verify the content in this distribution, first make sure you have
 Module::Signature installed, then type:
@@ -15,9 +15,9 @@ not run its Makefile.PL or Build.PL.
 Hash: SHA1
 
 SHA1 812aba5682ab0d585d430938a048041041bcce40 .gitignore
-SHA1 5420ed277e7e363172d2978c29612055cfb2c828 Changes
+SHA1 413f832d66c33b059f95f21cc348488388e7da6e Changes
 SHA1 c2fb135f967d7093a6191d1b7e5e596e30040246 MANIFEST
-SHA1 dab8996ab00fc5b7d73efa7ad517e432c5e3a479 META.yml
+SHA1 edfc72963a3d41284b39d6513335aaf5a184cc50 META.yml
 SHA1 48bd6ca8a37ec79b7cae91028d7e9489ad33a03b Makefile.PL
 SHA1 e29d7b270f78a5a406921571b08290c46f2a42f6 README
 SHA1 82d6ac3f6def48558d09f8b6e3b53ed4194d8c81 ROADMAP
@@ -30,18 +30,18 @@ SHA1 c28087e498978a1a314dfcaa584844703f31ac8c doc/notes/on_intuitive_schema_defi
 SHA1 584c0f6cdebcbf760dfca8413c94783586120214 ex/Example/Model/Address.pm
 SHA1 7cea1a5289f79c2a87837924a83feb583f6e8890 ex/Example/Model/Employee.pm
 SHA1 a9d62e4f5b43b2f78066172a4771238ee7df6339 ex/create_tables.pl
-SHA1 517832230e29ff1d48b465a5605d242dbb27f358 inc/Module/AutoInstall.pm
-SHA1 7ba8556ded0e1b8465b2ebe703e073b416d454d7 inc/Module/Install.pm
-SHA1 5580f47c04e225825aa16235c63d57028251f76f inc/Module/Install/AutoInstall.pm
-SHA1 69a3a256888658cbbe0164171744838e53dc06e3 inc/Module/Install/Base.pm
-SHA1 17be8c56d695ed14cf77e37542438a5eebf1c9e1 inc/Module/Install/Can.pm
-SHA1 b842371af51441beb020ce37349f96123841f684 inc/Module/Install/Fetch.pm
-SHA1 29f6c217d420ca8c44977dad69a873c328ed6efc inc/Module/Install/Include.pm
-SHA1 474ff5d11d1dd3327487f13d44d3c7b3945050a8 inc/Module/Install/Makefile.pm
-SHA1 fdf68f7c27a463011640b0739299834a65268056 inc/Module/Install/Metadata.pm
-SHA1 fe19e1641d3642424ba4088909e0f2e05747c76f inc/Module/Install/Win32.pm
-SHA1 b71a7355e7c74219f0d24aedf057121981ff0f95 inc/Module/Install/WriteAll.pm
-SHA1 61beee59992f5ffddcccc40eabb2f830f6829f25 lib/Jifty/DBI.pm
+SHA1 06c410f05488c1612ed66b06d3a86b2580581e4a inc/Module/AutoInstall.pm
+SHA1 8a924add836b60fb23b25c8506d45945e02f42f4 inc/Module/Install.pm
+SHA1 61ab1dd37e33ddbe155907ce51df8a3e56ac8bbf inc/Module/Install/AutoInstall.pm
+SHA1 2d0fad3bf255f8c1e7e1e34eafccc4f595603ddc inc/Module/Install/Base.pm
+SHA1 f0e01fff7d73cd145fbf22331579918d4628ddb0 inc/Module/Install/Can.pm
+SHA1 7328966e4fda0c8451a6d3850704da0b84ac1540 inc/Module/Install/Fetch.pm
+SHA1 66d3d335a03492583a3be121a7d888f63f08412c inc/Module/Install/Include.pm
+SHA1 b62ca5e2d58fa66766ccf4d64574f9e1a2250b34 inc/Module/Install/Makefile.pm
+SHA1 1aa925be410bb3bfcd84a16985921f66073cc1d2 inc/Module/Install/Metadata.pm
+SHA1 e4196994fa75e98bdfa2be0bdeeffef66de88171 inc/Module/Install/Win32.pm
+SHA1 c3a6d0d5b84feb3280622e9599e86247d58b0d18 inc/Module/Install/WriteAll.pm
+SHA1 f1f8c6785de973e0ffb33dd2ea42d46ff260e7d0 lib/Jifty/DBI.pm
 SHA1 b649a3e5794f18259e14ae3f2f29b83ba4c75121 lib/Jifty/DBI/Collection.pm
 SHA1 503ca4cf6693580dedf8adee58267532f8467908 lib/Jifty/DBI/Collection/Union.pm
 SHA1 bcba77fd2bacf0475aea1de97f57365c8de92ca6 lib/Jifty/DBI/Collection/Unique.pm
@@ -49,7 +49,7 @@ SHA1 c1040807672358fb8a998c13e908dfcd43ac3c48 lib/Jifty/DBI/Column.pm
 SHA1 9f6a6435d358a79108e98e379e252139457c1e9f lib/Jifty/DBI/Filter.pm
 SHA1 05d100a1a9cd24c6c0285660edf3758d5f04c1c7 lib/Jifty/DBI/Filter/Boolean.pm
 SHA1 d0addaa43cfa8950cb33d42a364a3c3c56a2dd59 lib/Jifty/DBI/Filter/Date.pm
-SHA1 92528e882daf77aea6aff118c223f578f702f87a lib/Jifty/DBI/Filter/DateTime.pm
+SHA1 0fd9a9a59d4220ea20b75c7214ebd5a2619a4f5d lib/Jifty/DBI/Filter/DateTime.pm
 SHA1 561ee05d174cb1a40be59cd1ef271b6a6c458d27 lib/Jifty/DBI/Filter/Duration.pm
 SHA1 79649ca3fb9f8aa9d2fdda00d6d7c7c99fe4092f lib/Jifty/DBI/Filter/SaltHash.pm
 SHA1 45ff3c7d2c03136acf98b74c659e2fe8c734d929 lib/Jifty/DBI/Filter/Storable.pm
@@ -63,18 +63,18 @@ SHA1 82594c1948a59f865873f03e896a24fbcb3fcd76 lib/Jifty/DBI/Handle.pm
 SHA1 719a11c911aac5306baa4b44f683aa76261100c7 lib/Jifty/DBI/Handle/Informix.pm
 SHA1 338116a45f8eb6bfca5e76e8d3be78fb61fffe81 lib/Jifty/DBI/Handle/ODBC.pm
 SHA1 8281a163b21bb4a5cb0f2b24ce4a55dab716c408 lib/Jifty/DBI/Handle/Oracle.pm
-SHA1 754666e0c41143aec23a34ea3326bf4fd1b8a24e lib/Jifty/DBI/Handle/Pg.pm
+SHA1 bb51b0281d27fefd0b0afebe1890c4b13eab2c24 lib/Jifty/DBI/Handle/Pg.pm
 SHA1 2f4c08340712bd21679282ebd669ce7b99d6d646 lib/Jifty/DBI/Handle/SQLite.pm
 SHA1 bba2314c20fcc3ef71cc69090f1cd6bd515cd9b4 lib/Jifty/DBI/Handle/Sybase.pm
 SHA1 cf80896a175702a157770f64ae469430678c3357 lib/Jifty/DBI/Handle/mysql.pm
 SHA1 f2cc4fcce79c9a88a023d4e6bd96c2089eef1ced lib/Jifty/DBI/Handle/mysqlPP.pm
 SHA1 af372dca1ebf532924f2209c65fdda8ea21c36e8 lib/Jifty/DBI/HasFilters.pm
-SHA1 0d9382588a34a798431934a55ec1aeb4d658d491 lib/Jifty/DBI/Record.pm
+SHA1 41437eed66a8404df67c9516da6472db4b2c494d lib/Jifty/DBI/Record.pm
 SHA1 663978b31373520d1e2deec87e957d1dbfd1347c lib/Jifty/DBI/Record/Cachable.pm
-SHA1 e30b1a3be2101d839a0a57e921e6f87889ef8da1 lib/Jifty/DBI/Record/Memcached.pm
+SHA1 d52720a641a75826ef3eeae26a17a0a2d20bc148 lib/Jifty/DBI/Record/Memcached.pm
 SHA1 53834b3315a509ba33a8647681f472d3ae7b0557 lib/Jifty/DBI/Record/Plugin.pm
 SHA1 c21f26b802ccf5a24db866ad4d6d1e3961f89892 lib/Jifty/DBI/Schema.pm
-SHA1 0e347c238e62424ca029d60ac03fce75bb2af2a2 lib/Jifty/DBI/SchemaGenerator.pm
+SHA1 71ba2f402f5fc891be47f6be682200084f157d99 lib/Jifty/DBI/SchemaGenerator.pm
 SHA1 32834b7c4cf5a8d131382fccc8db341be8768291 t/00.load.t
 SHA1 9aa7fed2b2409faa4c71d2a45db210721f47403e t/01-version_checks.t
 SHA1 13c9fe3eeec0d000a7c86ea2474e30186cbc37e2 t/01basics.t
@@ -100,11 +100,11 @@ SHA1 1c0727c29fb58462710e4578a237d557b8453a07 t/06filter_storable.t
 SHA1 f0f6ce9d48f419de6ac6154684f9065f32e30ddd t/06filter_truncate.t
 SHA1 2e9777a47e3a920d063bfbf9d56375c67c5b89c5 t/06filter_utf8.t
 SHA1 bb91f506a251d7b27d2fcd29c482a345318ef04f t/06filter_yaml.t
-SHA1 92d6516ea923555ff5b54774d3d9b483170a6a4a t/10schema.t
+SHA1 3b94f4d11b550cb97e49ca3dec782e064ff29e70 t/10schema.t
 SHA1 f4b0e5a9c9c22b873f12551e8b4aea7592fd94d3 t/11schema_records.t
 SHA1 164ebb7144e978617c81306f5017bdcbcf41b801 t/12prefetch.t
 SHA1 6792dbe544de8f24dccf9c412b96c913b4ff6388 t/13collection.t
-SHA1 41b7fbaf031d103a4f2066f177cc3bee84ab0458 t/14handle-pg.t
+SHA1 be7d8495eb1daee249f17af18be1ec9f41c66b8a t/14handle-pg.t
 SHA1 4f41229caa246bf6ebb369010deb0c1eb8809666 t/15types.t
 SHA1 5958e59e29d29fbf3862b5d3471472cbd82d191e t/16inheritance.t
 SHA1 c7004285662f16abca274918f86d17ea43fe8c90 t/17virtualtypes.t
@@ -122,7 +122,7 @@ SHA1 653c2f961d8b4f195e5391cd261f37815068e8d5 t/utils.pl
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.11 (GNU/Linux)
 
-iD8DBQFPIHdcHdv9ZfNcOAcRAly6AKCpsh3CPnlkI9Z11c/QvaRaT329twCdF22X
-TBZamwbmro9VOIVkkiipDR8=
-=dzvW
+iD8DBQFRCC3NHdv9ZfNcOAcRAqfBAJoCIlsD8Zs+MTIep8VITwW+5AZkJgCePauJ
+DvL7E0X0U38+j0S2Fm8K3fM=
+=BMm6
 -----END PGP SIGNATURE-----
