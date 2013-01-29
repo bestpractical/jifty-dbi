@@ -64,8 +64,8 @@ package main;
     $package->distinct_query(\$stmt, $collection);
     is $stmt,
        'SELECT blah FROM ( SELECT main.id FROM select * from users  GROUP BY main.id'
-       . '   ORDER BY main.id ASC, min(main.name) DESC, min(foo.id) DESC, '
-       . 'min(foo.name) DESC, id ASC, min(blood) ASC, min(session_offset) ASC  ) '
+       . '   ORDER BY main.id ASC, MAX(main.name) DESC, MAX(foo.id) DESC, '
+       . 'MAX(foo.name) DESC, id ASC, MIN(blood) ASC, MIN(session_offset) ASC  ) '
        . 'distinctquery, bars main WHERE (main.id = distinctquery.id)',
        'distinct_query works';
 }
