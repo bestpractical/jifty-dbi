@@ -219,7 +219,9 @@ the models added to the SchemaGenerator.
 sub create_table_sql_statements {
     my $self = shift;
 
-    return $self->_db_schema->sql( $self->handle->dbh );
+    return  map { $self->_db_schema->table($_)->sql_create_table($self->handle->dbh) }
+           sort { $a cmp $b }
+                $self->_db_schema->tables;
 }
 
 =head2 create_table_sql_text

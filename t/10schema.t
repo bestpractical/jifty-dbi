@@ -98,8 +98,8 @@ foreach my $d ( @available_drivers ) {
     ok($ret != 0, "added model from an instantiated object");
 
     is_ignoring_space($SG->create_table_sql_text, 
-                      Sample::Address->$address_schema. Sample::Employee->$employee_schema . Sample::Corporation->$corporation_schema, 
-                      "got the right Address+Employee+Corporation schema for $d");
+                      Sample::Address->$address_schema. Sample::Corporation->$corporation_schema . Sample::Employee->$employee_schema, 
+                      "got the right Address+Corporation+Employee schema for $d");
     
     my $manually_make_text = join ' ', map { "$_;" } $SG->create_table_sql_statements;
      is_ignoring_space($SG->create_table_sql_text, 
