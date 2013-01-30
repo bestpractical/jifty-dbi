@@ -3,6 +3,7 @@ name ('Jifty-DBI');
 license ('perl');
 version_from('lib/Jifty/DBI.pm');
 perl_version('5.8.3');
+repository('https://github.com/bestpractical/jifty-dbi');
 requires('Cache::Simple::TimedExpiry' => '0.21');
 requires('Class::Accessor::Fast' => 0);
 requires('Class::Data::Inheritable');
@@ -49,4 +50,3 @@ features(
 );
 auto_install();
 &WriteAll;
-
