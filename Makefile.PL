@@ -30,7 +30,7 @@ build_requires('DBD::SQLite' => 1.14);
 no_index directory => 'ex';
 features( 
     'Memcached support' => [
-        -default => 1,
+        -default => ($^O eq 'MSWin32'?0:1),
         'Cache::Memcached' => ''
     ],
     'YAML filter' => [
