@@ -1,5 +1,11 @@
 Revision history for Perl extension Jifty::DBI.
 
+0.76 2013-06-17
+    * Provide source repository info in metadata
+    * Default Cached::Memcached dependency off on Windows due to known build problems
+
+    Thanks to Alexandr Ciornii for both.
+
 0.75 2013-01-29
 - Bug fixes:
     * backport a sort order fix for Pg handles from Searchbuilder

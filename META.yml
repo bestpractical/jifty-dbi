@@ -48,4 +48,5 @@ requires:
   version: 0
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.75
+  repository: https://github.com/bestpractical/jifty-dbi
+version: 0.76
