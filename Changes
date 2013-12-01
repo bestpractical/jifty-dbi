@@ -1,5 +1,9 @@
 Revision history for Perl extension Jifty::DBI.
 
+0.77 2013-12-01
+    * Fix for perl 5.19.4 parsing of @{ foo { ... } }
+    * Fix signature
+
 0.76 2013-06-17
     * Provide source repository info in metadata
     * Default Cached::Memcached dependency off on Windows due to known build problems

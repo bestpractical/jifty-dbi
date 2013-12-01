@@ -49,4 +49,5 @@ features(
     ],
 );
 auto_install();
+sign;
 &WriteAll;

@@ -49,4 +49,4 @@ requires:
 resources:
   license: http://dev.perl.org/licenses/
   repository: https://github.com/bestpractical/jifty-dbi
-version: 0.76
+version: 0.77
