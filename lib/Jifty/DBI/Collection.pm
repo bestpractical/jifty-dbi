@@ -2210,14 +2210,14 @@ sub columns_in_db {
 
     # TODO: memoize this
 
-    return map lc( $_->[0] ), @{
+    return map lc( $_->[0] ), @{ (
         eval {
             $dbh->column_info( '', '', $table, '' )->fetchall_arrayref( [3] );
             }
             || $dbh->selectall_arrayref("DESCRIBE $table;")
             || $dbh->selectall_arrayref("DESCRIBE \u$table;")
             || []
-        };
+        ) };
 }
 
 =head2 has_column  { table => undef, column => undef }
