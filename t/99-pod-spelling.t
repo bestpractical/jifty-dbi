@@ -34,6 +34,7 @@ dbh
 DBI
 deserialize
 dsn
+durations
 formatter
 Glasser
 Hanenkamp
@@ -50,6 +51,7 @@ lookups
 lossy
 marshalling
 memcached
+MERCHANTABILITY
 metadata
 mhat
 mixin
@@ -59,6 +61,7 @@ myscript
 mysql's
 NULLs
 ODBC
+optimizations
 OtherClass
 OtherCollection
 paramhash
@@ -69,6 +72,7 @@ prefetch
 prefetched
 prefetches
 preload
+preloaded
 prepends
 PrintError
 QUERYSTRING
@@ -94,6 +98,7 @@ Syck
 TABLENAME
 Tappe
 TODO
+transactional
 unimported
 unlimit
 unmarshalling
