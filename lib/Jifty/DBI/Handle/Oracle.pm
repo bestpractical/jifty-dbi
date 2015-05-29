@@ -1,4 +1,8 @@
 package Jifty::DBI::Handle::Oracle;
+
+use strict;
+use warnings;
+
 use base qw/Jifty::DBI::Handle/;
 use DBD::Oracle qw(:ora_types ORA_OCI);
 
