@@ -4,6 +4,7 @@ use warnings;
 
 # WARNING --- This is still development code.  It is experimental.
 
+#our $VERSION = '0.01';
 our $VERSION = '0';
 
 # This could inherit from Jifty::DBI, but there are _a lot_
